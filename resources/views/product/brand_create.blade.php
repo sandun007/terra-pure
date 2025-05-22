@@ -37,7 +37,7 @@ Brand Create
         <div class="add-item d-flex">
             <div class="page-title">
                 <h4 class="fw-bold">Create Brand</h4>
-                <h6>Create new product</h6>
+                <h6>Create new brand</h6>
             </div>
         </div>
         <ul class="table-top-head">

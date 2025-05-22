@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BrandController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
@@ -26,5 +27,9 @@ Route::prefix('admin')->group(function(){
 
     Route::prefix('brand')->group(function(){
         Route::get('/',[BrandController::class,'create'])->name('brand.create');
+    });
+
+    Route::prefix('category')->group(function(){
+        Route::get('/',[CategoryController::class,'create'])->name('category.create');
     });
 });
