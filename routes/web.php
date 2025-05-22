@@ -27,6 +27,7 @@ Route::prefix('admin')->group(function(){
     });
 
     Route::prefix('brand')->group(function(){
+        Route::get('/list',[BrandController::class,'index'])->name('brand.index');
         Route::get('/',[BrandController::class,'create'])->name('brand.create');
     });
 

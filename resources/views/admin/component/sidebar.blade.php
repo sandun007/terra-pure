@@ -20,7 +20,7 @@
                                     <span>Dashboard</span><span class="menu-arrow"></span></a>
                                 <ul>
                                     <li><a href="https://dreamspos.dreamstechnologies.com/html/template/index.html"
-                                           class="active">Admin Dashboard</a></li>
+                                          >Admin Dashboard</a></li>
                                     <li>
                                         <a href="https://dreamspos.dreamstechnologies.com/html/template/sales-dashboard.html">Sales
                                             Dashboard</a></li>

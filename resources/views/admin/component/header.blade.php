@@ -3,13 +3,13 @@
     <!-- Logo -->
     <div class="header-left active">
         <a href="" class="logo logo-normal">
-            <img src="{{asset('asset/img/dx.png')}}logo.webp" alt="">
+            <img src="{{asset('asset/img/wordmark.png')}}" alt="">
         </a>
         <a href="" class="logo logo-white">
             <img src="{{asset('asset/img/theme/logo-white.webp')}}" alt="">
         </a>
         <a href="" class="logo-small">
-            <img src="Dreams%20Pos%20Admin%20Template_files/logo-small.webp" alt="">
+            <img src="{{asset('asset/img/dx.png')}}" alt="">
         </a>
         <a id="toggle_btn" href="javascript:void(0);">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"

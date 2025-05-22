@@ -73,66 +73,19 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <tr>
-                            <td>ITM/00001</td>
-                            <td>Laptop</td>
-                            <td>Colombo</td>
-                            <td>15000</td>
-                            <td>Laptop</td>
-                            <td>Dell</td>
-                            <td><span class="badge bg-success">Active</span></td>
-                            <td>
-                                <button class="btn btn-primary btn-sm">
-                                    <i class="bi bi-eye"></i> View
-                                </button>
-                                <button class="btn btn-warning btn-sm">
-                                    <i class="bi bi-pencil-square"></i> Update
-                                </button>
-                                <button class="btn btn-danger btn-sm">
-                                    <i class="bi bi-trash"></i> Delete
-                                </button>
-                            </td>
-                        </tr><tr>
-                            <td>ITM/00001</td>
-                            <td>Laptop</td>
-                            <td>Colombo</td>
-                            <td>15000</td>
-                            <td>Laptop</td>
-                            <td>Dell</td>
-                            <td><span class="badge bg-success">Active</span></td>
-                            <td>
-                                <button class="btn btn-primary btn-sm">
-                                    <i class="bi bi-eye"></i> View
-                                </button>
-                                <button class="btn btn-warning btn-sm">
-                                    <i class="bi bi-pencil-square"></i> Update
-                                </button>
-                                <button class="btn btn-danger btn-sm">
-                                    <i class="bi bi-trash"></i> Delete
-                                </button>
-                            </td>
-                        </tr><tr>
-                            <td>ITM/00001</td>
-                            <td>Laptop</td>
-                            <td>Colombo</td>
-                            <td>15000</td>
-                            <td>Laptop</td>
-                            <td>Dell</td>
-                            <td><span class="badge bg-success">Active</span></td>
-                            <td>
-                                <button class="btn btn-primary btn-sm">
-                                    <i class="bi bi-eye"></i> View
-                                </button>
-                                <button class="btn btn-warning btn-sm">
-                                    <i class="bi bi-pencil-square"></i> Update
-                                </button>
-                                <button class="btn btn-danger btn-sm">
-                                    <i class="bi bi-trash"></i> Delete
-                                </button>
-                            </td>
-                        </tr>
+                        <td>ITM/00001</td>
+                        <td>Laptop</td>
+                        <td>Colombo</td>
+                        <td>15000</td>
+                        <td>Laptop</td>
+                        <td>Dell</td>
+                        <td>Active</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm">view</button>
+                            <button class="btn btn-warning btn-sm">Update</button>
+                            <button class="btn btn-danger btn-sm">Delete</button>
+                        </td>
                         </tbody>
-
                     </table>
                 </div>
             </div>
