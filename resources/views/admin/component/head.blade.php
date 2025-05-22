@@ -41,7 +41,15 @@
     <link rel="stylesheet" href="{{asset('asset/css/theme/theme-ecf0ae99.css')}}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 
-    <style>.swal2-popup.swal2-toast {
+    <style>
+        /*.sidebar .slimScrollDiv,*/
+        /*.sidebars .slimScrollDiv {*/
+        /*    background: linear-gradient(to bottom, #013220, #025310, #037d50) !important;*/
+        /*}*/
+
+
+
+        .swal2-popup.swal2-toast {
             flex-direction: row;
             align-items: center;
             width: auto;
