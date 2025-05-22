@@ -14,4 +14,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/',[PageController::class,'dashboard']);
+Route::get('/',[PageController::class,'login'])->name('login');
+Route::prefix('admin')->group(function(){
+    Route::get('/',[PageController::class,'dashboard'])->name('admin.dashboard');
+});
