@@ -40,7 +40,7 @@
     <link rel="stylesheet" href="{{asset('asset/css/theme/style.css')}}">
     <link rel="stylesheet" href="{{asset('asset/css/theme/theme-ecf0ae99.css')}}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         /*.sidebar .slimScrollDiv,*/
         /*.sidebars .slimScrollDiv {*/

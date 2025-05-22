@@ -30,7 +30,7 @@
             <div style="width: 500px">
                 <div class="row">
                     <div class="col-12 d-flex justify-content-center">
-                        <img src="{{asset('asset/img/logo.jpg')}}" alt="" width="300">
+                        <img src="{{asset('asset/img/dx.png')}}" alt="" width="200">
                     </div>
                     <form action="">
                     <div class="col-12 mb-2">

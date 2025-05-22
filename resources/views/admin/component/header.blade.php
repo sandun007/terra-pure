@@ -3,7 +3,7 @@
     <!-- Logo -->
     <div class="header-left active">
         <a href="" class="logo logo-normal">
-            <img src="{{asset('asset/img/theme/logo.webp')}}logo.webp" alt="">
+            <img src="{{asset('asset/img/dx.png')}}logo.webp" alt="">
         </a>
         <a href="" class="logo logo-white">
             <img src="{{asset('asset/img/theme/logo-white.webp')}}" alt="">

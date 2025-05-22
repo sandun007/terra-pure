@@ -22,6 +22,7 @@ Route::prefix('admin')->group(function(){
     Route::get('/',[PageController::class,'dashboard'])->name('admin.dashboard');
 
     Route::prefix('product')->group(function(){
+        Route::get('/list',[ProductController::class,'index'])->name('product.index');
         Route::get('/',[ProductController::class,'create'])->name('product.create');
     });
 
