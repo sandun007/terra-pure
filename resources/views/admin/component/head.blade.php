@@ -16,6 +16,8 @@
     <script src="{{ asset('asset/js/theme/apexcharts.common-4fae8482.js')}}" type="text/javascript"></script>
 
     <!-- Favicon -->
+    <!-- Add this in the <head> section -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 
     <!-- Bootstrap CSS -->

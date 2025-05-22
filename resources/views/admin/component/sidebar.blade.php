@@ -3135,3 +3135,14 @@
         </ul>
     </div>
 </div>
+<script>
+    document.getElementById('toggle-sidebar').addEventListener('click', function () {
+        const sidebar = document.getElementById('application-sidebar');
+        const content = document.getElementById('main-content');
+
+        sidebar.classList.toggle('sidebar-collapsed');
+        content.classList.toggle('content-expanded');
+    });
+
+
+</script>

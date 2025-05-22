@@ -7,44 +7,44 @@
         <div class="col-xl-3 col-sm-6 col-12 d-flex">
             <div class="dash-widget w-100">
                 <div class="dash-widgetimg">
-                    <span><img src="Dreams%20Pos%20Admin%20Template_files/dash1.svg" alt="img"></span>
+                    <span><img src="{{asset('asset/img/theme/dash1.svg')}}" alt="img"></span>
                 </div>
                 <div class="dash-widgetcontent">
-                    <h5>$<span class="counters" data-count="307144.00">307144</span></h5>
-                    <h6>Total Purchase Due</h6>
+                    <h5>RS.<span class="counters" data-count="307144.00">307144</span></h5>
+                    <h6>Total Sales</h6>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-sm-6 col-12 d-flex">
             <div class="dash-widget dash1 w-100">
                 <div class="dash-widgetimg">
-                    <span><img src="Dreams%20Pos%20Admin%20Template_files/dash2.svg" alt="img"></span>
+                    <span><img src="{{asset('asset/img/theme/dash2.svg')}}" alt="img"></span>
                 </div>
                 <div class="dash-widgetcontent">
-                    <h5>$<span class="counters" data-count="4385.00">4385</span></h5>
-                    <h6>Total Sales Due</h6>
+                    <h5>RS.<span class="counters" data-count="4385.00">4385</span></h5>
+                    <h6>Total Profit</h6>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-sm-6 col-12 d-flex">
             <div class="dash-widget dash2 w-100">
                 <div class="dash-widgetimg">
-                    <span><img src="Dreams%20Pos%20Admin%20Template_files/dash3.svg" alt="img"></span>
+                    <span><i class="fas fa-user-tag"></i></span>
                 </div>
                 <div class="dash-widgetcontent">
-                    <h5>$<span class="counters" data-count="385656.50">385656.5</span></h5>
-                    <h6>Total Sale Amount</h6>
+                    <h5><span class="counters" data-count="385656.50">385656.5</span></h5>
+                    <h6>Total Seller</h6>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-sm-6 col-12 d-flex">
             <div class="dash-widget dash3 w-100">
                 <div class="dash-widgetimg">
-                    <span><img src="Dreams%20Pos%20Admin%20Template_files/dash4.svg" alt="img"></span>
+                    <span><img src="{{asset('asset/img/theme/dash4.svg')}}" alt="img"></span>
                 </div>
                 <div class="dash-widgetcontent">
-                    <h5>$<span class="counters" data-count="40000.00">40000</span></h5>
-                    <h6>Total Expense Amount</h6>
+                    <h5>RS.<span class="counters" data-count="40000.00">40000</span></h5>
+                    <h6>Total Commission</h6>
                 </div>
             </div>
         </div>
@@ -88,7 +88,7 @@
                     <h5>Purchase Invoice</h5>
                 </div>
                 <div class="dash-imgs">
-                    <img src="Dreams%20Pos%20Admin%20Template_files/file-text-icon-01.svg" class="img-fluid"
+                    <img src="{{asset('asset/img/theme/file-text-icon-01.svg')}}" class="img-fluid"
                          alt="icon">
                 </div>
             </div>
@@ -805,16 +805,16 @@
         </div>
         <div class="col-xl-5 col-sm-12 col-12 d-flex">
             <div class="card flex-fill default-cover mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="card-title mb-0">Recent Products</h4>
+                <div class="bg-danger card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0 text-white">Low Stock Product</h4>
                     <div class="view-all-link">
-                        <a href="javascript:void(0);" class="view-all d-flex align-items-center">
+                        <a href="javascript:void(0);" class="view-all d-flex align-items-center text-white">
                             View All<span class="ps-2 d-flex align-items-center"><svg
                                     xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                     stroke-linecap="round" stroke-linejoin="round"
-                                    class="feather feather-arrow-right feather-16"><line x1="5" y1="12" x2="19"
-                                                                                         y2="12"></line><polyline
+                                    class="feather feather-arrow-right feather-16">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line><polyline
                                         points="12 5 19 12 12 19"></polyline></svg></span>
                         </a>
                     </div>
@@ -827,60 +827,46 @@
                                 <th>#</th>
                                 <th>Products</th>
                                 <th>Price</th>
+                                <th>Current Stock</th>
                             </tr>
                             </thead>
                             <tbody>
                             <tr>
                                 <td>1</td>
-                                <td class="productimgname">
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/product-list.html"
-                                       class="product-img">
-                                        <img src="Dreams%20Pos%20Admin%20Template_files/stock-img-01.webp"
-                                             alt="product">
-                                    </a>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/product-list.html">Lenevo
-                                        3rd Generation</a>
+                                <td >
+                                    Lenevo 3rd Generation</a>
                                 </td>
                                 <td>$12500</td>
+                                <td>10</td>
+                            </tr><tr>
+                                <td>1</td>
+                                <td >
+                                    Lenevo 3rd Generation</a>
+                                </td>
+                                <td>$12500</td>
+                                <td>10</td>
+                            </tr><tr>
+                                <td>1</td>
+                                <td >
+                                    Lenevo 3rd Generation</a>
+                                </td>
+                                <td>$12500</td>
+                                <td>10</td>
+                            </tr><tr>
+                                <td>1</td>
+                                <td >
+                                    Lenevo 3rd Generation</a>
+                                </td>
+                                <td>$12500</td>
+                                <td>10</td>
                             </tr>
                             <tr>
-                                <td>2</td>
-                                <td class="productimgname">
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/product-list.html"
-                                       class="product-img">
-                                        <img src="Dreams%20Pos%20Admin%20Template_files/stock-img-06.webp"
-                                             alt="product">
-                                    </a>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/product-list.html">Bold
-                                        V3.2</a>
+                                <td>1</td>
+                                <td>
+                                    Lenevo 3rd Generation</a>
                                 </td>
-                                <td>$1600</td>
-                            </tr>
-                            <tr>
-                                <td>3</td>
-                                <td class="productimgname">
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/product-list.html"
-                                       class="product-img">
-                                        <img src="Dreams%20Pos%20Admin%20Template_files/stock-img-02.webp"
-                                             alt="product">
-                                    </a>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/product-list.html">Nike
-                                        Jordan</a>
-                                </td>
-                                <td>$2000</td>
-                            </tr>
-                            <tr>
-                                <td>4</td>
-                                <td class="productimgname">
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/product-list.html"
-                                       class="product-img">
-                                        <img src="Dreams%20Pos%20Admin%20Template_files/stock-img-03.webp"
-                                             alt="product">
-                                    </a>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/product-list.html">Apple
-                                        Series 5 Watch</a>
-                                </td>
-                                <td>$800</td>
+                                <td>$12500</td>
+                                <td>10</td>
                             </tr>
                             </tbody>
                         </table>
@@ -891,187 +877,104 @@
     </div>
     <div class="card">
         <div class="card-header">
-            <h4 class="card-title">Expired Products</h4>
+            <h4 class="card-title">Return Order</h4>
         </div>
         <div class="card-body">
             <div class="table-responsive dataview">
                 <table class="table dashboard-expired-products">
                     <thead>
                     <tr>
-                        <th class="no-sort">
-                            <label class="checkboxs">
-                                <input type="checkbox" id="select-all">
-                                <span class="checkmarks"></span>
-                            </label>
-                        </th>
-                        <th>Product</th>
-                        <th>SKU</th>
-                        <th>Manufactured Date</th>
-                        <th>Expired Date</th>
+                        <th>Order No</th>
+                        <th>Customer Name</th>
+                        <th>Seller Name</th>
+                        <th>Delivery Date</th>
+                        <th>Return Date</th>
+                        <th>Price</th>
                         <th class="no-sort">Action</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr>
                         <td>
-                            <label class="checkboxs">
-                                <input type="checkbox">
-                                <span class="checkmarks"></span>
-                            </label>
+                           ORD/00001
                         </td>
-                        <td>
-                            <div class="productimgname">
-                                <a href="javascript:void(0);" class="product-img stock-img">
-                                    <img src="Dreams%20Pos%20Admin%20Template_files/expire-product-01.webp"
-                                         alt="product">
-                                </a>
-                                <a href="javascript:void(0);">Red Premium Handy </a>
-                            </div>
-                        </td>
-                        <td><a href="javascript:void(0);">PT006</a></td>
-                        <td>17 Jan 2023</td>
+                        <td>Suranga</td>
+                        <td>Sudarshana</td>
                         <td>29 Mar 2023</td>
-                        <td class="action-table-data">
-                            <div class="edit-delete-action">
-                                <a class="me-2 p-2" href="#">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                         stroke-linecap="round" stroke-linejoin="round"
-                                         class="feather feather-edit">
-                                        <path
-                                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                        <path
-                                            d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                    </svg>
-                                </a>
-                                <a class=" confirm-text p-2" href="javascript:void(0);">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                         stroke-linecap="round" stroke-linejoin="round"
-                                         class="feather feather-trash-2">
-                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                        <path
-                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                                        <line x1="14" y1="11" x2="14" y2="17"></line>
-                                    </svg>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <label class="checkboxs">
-                                <input type="checkbox">
-                                <span class="checkmarks"></span>
-                            </label>
-                        </td>
-                        <td>
-                            <div class="productimgname">
-                                <a href="javascript:void(0);" class="product-img stock-img">
-                                    <img src="Dreams%20Pos%20Admin%20Template_files/expire-product-02.webp"
-                                         alt="product">
-                                </a>
-                                <a href="javascript:void(0);">Iphone 14 Pro</a>
-                            </div>
-                        </td>
-                        <td><a href="javascript:void(0);">PT007</a></td>
-                        <td>22 Feb 2023</td>
-                        <td>04 Apr 2023</td>
-                        <td class="action-table-data">
-                            <div class="edit-delete-action">
-                                <a class="me-2 p-2" href="#">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                         stroke-linecap="round" stroke-linejoin="round"
-                                         class="feather feather-edit">
-                                        <path
-                                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                        <path
-                                            d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                    </svg>
-                                </a>
-                                <a class="confirm-text p-2" href="javascript:void(0);">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                         stroke-linecap="round" stroke-linejoin="round"
-                                         class="feather feather-trash-2">
-                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                        <path
-                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                                        <line x1="14" y1="11" x2="14" y2="17"></line>
-                                    </svg>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <label class="checkboxs">
-                                <input type="checkbox">
-                                <span class="checkmarks"></span>
-                            </label>
-                        </td>
-                        <td>
-                            <div class="productimgname">
-                                <a href="javascript:void(0);" class="product-img stock-img">
-                                    <img src="Dreams%20Pos%20Admin%20Template_files/expire-product-03.webp"
-                                         alt="product">
-                                </a>
-                                <a href="javascript:void(0);">Black Slim 200 </a>
-                            </div>
-                        </td>
-                        <td><a href="javascript:void(0);">PT008</a></td>
-                        <td>18 Mar 2023</td>
-                        <td>13 May 2023</td>
-                        <td class="action-table-data">
-                            <div class="edit-delete-action">
-                                <a class="me-2 p-2" href="#">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                         stroke-linecap="round" stroke-linejoin="round"
-                                         class="feather feather-edit">
-                                        <path
-                                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                        <path
-                                            d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                    </svg>
-                                </a>
-                                <a class=" confirm-text p-2" href="javascript:void(0);">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                         stroke-linecap="round" stroke-linejoin="round"
-                                         class="feather feather-trash-2">
-                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                        <path
-                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                                        <line x1="14" y1="11" x2="14" y2="17"></line>
-                                    </svg>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <label class="checkboxs">
-                                <input type="checkbox">
-                                <span class="checkmarks"></span>
-                            </label>
-                        </td>
-                        <td>
-                            <div class="productimgname">
-                                <a href="javascript:void(0);" class="product-img stock-img">
-                                    <img src="Dreams%20Pos%20Admin%20Template_files/expire-product-04.webp"
-                                         alt="product">
-                                </a>
-                                <a href="javascript:void(0);">Woodcraft Sandal</a>
-                            </div>
-                        </td>
-                        <td><a href="javascript:void(0);">PT009</a></td>
                         <td>29 Mar 2023</td>
-                        <td>27 May 2023</td>
+                        <td>Rs.1500.00</td>
+                        <td class="action-table-data">
+                            <div class="edit-delete-action">
+                                <a class="me-2 p-2" href="#">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                         stroke-linecap="round" stroke-linejoin="round"
+                                         class="feather feather-edit">
+                                        <path
+                                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path
+                                            d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                </a>
+                                <a class=" confirm-text p-2" href="javascript:void(0);">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                         stroke-linecap="round" stroke-linejoin="round"
+                                         class="feather feather-trash-2">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path
+                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                                    </svg>
+                                </a>
+                            </div>
+                        </td>
+                    </tr><tr>
+                        <td>
+                           ORD/00001
+                        </td>
+                        <td>Suranga</td>
+                        <td>Sudarshana</td>
+                        <td>29 Mar 2023</td>
+                        <td>29 Mar 2023</td>
+                        <td>Rs.1500.00</td>
+                        <td class="action-table-data">
+                            <div class="edit-delete-action">
+                                <a class="me-2 p-2" href="#">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                         stroke-linecap="round" stroke-linejoin="round"
+                                         class="feather feather-edit">
+                                        <path
+                                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path
+                                            d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                </a>
+                                <a class=" confirm-text p-2" href="javascript:void(0);">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                         stroke-linecap="round" stroke-linejoin="round"
+                                         class="feather feather-trash-2">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path
+                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                                    </svg>
+                                </a>
+                            </div>
+                        </td>
+                    </tr><tr>
+                        <td>
+                           ORD/00001
+                        </td>
+                        <td>Suranga</td>
+                        <td>Sudarshana</td>
+                        <td>29 Mar 2023</td>
+                        <td>29 Mar 2023</td>
+                        <td>Rs.1500.00</td>
                         <td class="action-table-data">
                             <div class="edit-delete-action">
                                 <a class="me-2 p-2" href="#">
@@ -1100,54 +1003,7 @@
                             </div>
                         </td>
                     </tr>
-                    <tr>
-                        <td>
-                            <label class="checkboxs">
-                                <input type="checkbox">
-                                <span class="checkmarks"></span>
-                            </label>
-                        </td>
-                        <td>
-                            <div class="productimgname">
-                                <a href="javascript:void(0);" class="product-img stock-img">
-                                    <img src="Dreams%20Pos%20Admin%20Template_files/stock-img-03.webp"
-                                         alt="product">
-                                </a>
-                                <a href="javascript:void(0);">Apple Series 5 Watch </a>
-                            </div>
-                        </td>
-                        <td><a href="javascript:void(0);">PT010</a></td>
-                        <td>24 Mar 2023</td>
-                        <td>26 May 2023</td>
-                        <td class="action-table-data">
-                            <div class="edit-delete-action">
-                                <a class="me-2 p-2" href="#" data-bs-toggle="modal"
-                                   data-bs-target="#edit-units">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                         stroke-linecap="round" stroke-linejoin="round"
-                                         class="feather feather-edit">
-                                        <path
-                                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                        <path
-                                            d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                    </svg>
-                                </a>
-                                <a class=" confirm-text p-2" href="javascript:void(0);">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                         stroke-linecap="round" stroke-linejoin="round"
-                                         class="feather feather-trash-2">
-                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                        <path
-                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                                        <line x1="14" y1="11" x2="14" y2="17"></line>
-                                    </svg>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
+
                     </tbody>
                 </table>
             </div>
