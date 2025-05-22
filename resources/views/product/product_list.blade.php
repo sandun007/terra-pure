@@ -1,6 +1,6 @@
 @extends('admin.app')
 @push('title')
- Product Create
+    Product List
 @endpush
 @push('css')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
@@ -27,7 +27,8 @@
             border-radius: 50%;
             padding: 2px;
         }
-        .bg-green{
+
+        .bg-green {
             background-color: var(--main-theme-color) !important;
         }
     </style>
@@ -73,25 +74,65 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <td>ITM/00001</td>
-                        <td>Laptop</td>
-                        <td>Colombo</td>
-                        <td>15000</td>
-                        <td>Laptop</td>
-                        <td>Dell</td>
-                        <td>Active</td>
-                        <td>
-                            <button class="btn btn-primary btn-sm">view</button>
-                            <button class="btn btn-warning btn-sm">Update</button>
-                            <button class="btn btn-danger btn-sm">Delete</button>
-                        </td>
+                        <tr>
+                            <td>ITM/00001</td>
+                            <td>Laptop</td>
+                            <td>Colombo</td>
+                            <td>15000</td>
+                            <td>Laptop</td>
+                            <td>Dell</td>
+                            <td>Active</td>
+                            <td>
+                                <button class="btn btn-primary btn-sm">view</button>
+                                <button class="btn btn-warning btn-sm">Update</button>
+                                <button class="btn btn-danger btn-sm">Delete</button>
+                            </td>
+                        </tr><tr>
+                            <td>ITM/00001</td>
+                            <td>Laptop</td>
+                            <td>Colombo</td>
+                            <td>15000</td>
+                            <td>Laptop</td>
+                            <td>Dell</td>
+                            <td>Active</td>
+                            <td>
+                                <button class="btn btn-primary btn-sm">view</button>
+                                <button class="btn btn-warning btn-sm">Update</button>
+                                <button class="btn btn-danger btn-sm">Delete</button>
+                            </td>
+                        </tr><tr>
+                            <td>ITM/00001</td>
+                            <td>Laptop</td>
+                            <td>Colombo</td>
+                            <td>15000</td>
+                            <td>Laptop</td>
+                            <td>Dell</td>
+                            <td>Active</td>
+                            <td>
+                                <button class="btn btn-primary btn-sm">view</button>
+                                <button class="btn btn-warning btn-sm">Update</button>
+                                <button class="btn btn-danger btn-sm">Delete</button>
+                            </td>
+                        </tr><tr>
+                            <td>ITM/00001</td>
+                            <td>Laptop</td>
+                            <td>Colombo</td>
+                            <td>15000</td>
+                            <td>Laptop</td>
+                            <td>Dell</td>
+                            <td>Active</td>
+                            <td>
+                                <button class="btn btn-primary btn-sm">view</button>
+                                <button class="btn btn-warning btn-sm">Update</button>
+                                <button class="btn btn-danger btn-sm">Delete</button>
+                            </td>
+                        </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
-
 
 @endsection
 @push('script')

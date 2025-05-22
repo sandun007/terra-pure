@@ -1,6 +1,6 @@
 @extends('admin.app')
 @push('title')
- Product Create
+Brand List
 @endpush
 @push('css')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">

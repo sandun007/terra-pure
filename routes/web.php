@@ -32,6 +32,7 @@ Route::prefix('admin')->group(function(){
     });
 
     Route::prefix('category')->group(function(){
+        Route::get('/list',[CategoryController::class,'index'])->name('category.index');
         Route::get('/',[CategoryController::class,'create'])->name('category.create');
     });
 });

@@ -17,61 +17,7 @@
                                         <rect x="14" y="14" width="7" height="7"></rect>
                                         <rect x="3" y="14" width="7" height="7"></rect>
                                     </svg>
-                                    <span>Dashboard</span><span class="menu-arrow"></span></a>
-                                <ul>
-                                    <li><a href="https://dreamspos.dreamstechnologies.com/html/template/index.html"
-                                          >Admin Dashboard</a></li>
-                                    <li>
-                                        <a href="https://dreamspos.dreamstechnologies.com/html/template/sales-dashboard.html">Sales
-                                            Dashboard</a></li>
-                                </ul>
-                            </li>
-                            <li class="submenu">
-                                <a href="javascript:void(0);">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                         stroke-linecap="round" stroke-linejoin="round"
-                                         class="feather feather-smartphone">
-                                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
-                                        <line x1="12" y1="18" x2="12.01" y2="18"></line>
-                                    </svg>
-                                    <span>Application</span><span class="menu-arrow"></span></a>
-                                <ul>
-                                    <li><a href="https://dreamspos.dreamstechnologies.com/html/template/chat.html">Chat</a>
-                                    </li>
-                                    <li class="submenu submenu-two"><a href="javascript:void(0);">Call<span
-                                                class="menu-arrow inside-submenu"></span></a>
-                                        <ul>
-                                            <li>
-                                                <a href="https://dreamspos.dreamstechnologies.com/html/template/video-call.html">Video
-                                                    Call</a></li>
-                                            <li>
-                                                <a href="https://dreamspos.dreamstechnologies.com/html/template/audio-call.html">Audio
-                                                    Call</a></li>
-                                            <li>
-                                                <a href="https://dreamspos.dreamstechnologies.com/html/template/call-history.html">Call
-                                                    History</a></li>
-                                        </ul>
-                                    </li>
-                                    <li>
-                                        <a href="https://dreamspos.dreamstechnologies.com/html/template/calendar.html">Calendar</a>
-                                    </li>
-                                    <li><a href="https://dreamspos.dreamstechnologies.com/html/template/email.html">Email</a>
-                                    </li>
-                                    <li><a href="https://dreamspos.dreamstechnologies.com/html/template/todo.html">To
-                                            Do</a></li>
-                                    <li><a href="https://dreamspos.dreamstechnologies.com/html/template/notes.html">Notes</a>
-                                    </li>
-                                    <li>
-                                        <a href="https://dreamspos.dreamstechnologies.com/html/template/file-manager.html">File
-                                            Manager</a></li>
-                                    <li>
-                                        <a href="https://dreamspos.dreamstechnologies.com/html/template/social-feed.html">Social
-                                            Feed</a></li>
-                                    <li>
-                                        <a href="https://dreamspos.dreamstechnologies.com/html/template/kanban-view.html">Kanban</a>
-                                    </li>
-                                </ul>
+                                    <span>Dashboard</span></a>
                             </li>
                         </ul>
                     </li>

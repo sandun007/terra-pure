@@ -51,7 +51,7 @@ Category Create
             </li>
         </ul>
         <div class="page-btn mt-0">
-            <a href="" class="btn btn-secondary">View Category List</a>
+            <a href="{{route('category.index')}}" class="btn btn-secondary">View Category List</a>
         </div>
     </div>
     <form action="https://dreamspos.dreamstechnologies.com/html/template/add-product.html" class="add-product-form">
