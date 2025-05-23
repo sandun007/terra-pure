@@ -6,6 +6,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SellerController;
+use App\Http\Controllers\StockController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -47,5 +48,8 @@ Route::prefix('admin')->group(function(){
         Route::get('/return-order',[OrderController::class,'returnOrder'])->name('return-order');
         Route::get('/rescheduling-order',[OrderController::class,'reschedulingOrder'])->name('rescheduling-order');
         Route::get('/pending-order',[OrderController::class,'pendingOrder'])->name('pending-order');
+    });
+    Route::prefix('stock')->group(function(){
+        Route::get('/low-stock',[StockController::class,'low_stock'])->name('low-stock');
     });
 });
