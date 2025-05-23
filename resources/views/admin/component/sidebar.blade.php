@@ -46,7 +46,7 @@
                                     </svg>
                                     <span>Create Product</span></a></li>
                             <li>
-                                <a href="https://dreamspos.dreamstechnologies.com/html/template/expired-products.html">
+                                <a href="{{route('complete-order')}}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                          stroke-linecap="round" stroke-linejoin="round"
@@ -59,7 +59,7 @@
                                         <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
                                         <line x1="12" y1="22.08" x2="12" y2="12"></line>
                                     </svg>
-                                    <span>Expired Products</span></a></li>
+                                    <span>Order</span></a></li>
                             <li><a href="https://dreamspos.dreamstechnologies.com/html/template/low-stocks.html">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"

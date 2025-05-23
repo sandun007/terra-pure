@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SellerController;
@@ -40,5 +41,11 @@ Route::prefix('admin')->group(function(){
     Route::prefix('seller')->group(function(){
         Route::get('/list',[SellerController::class,'index'])->name('seller.list');
         Route::get('/',[SellerController::class,'create'])->name('seller.create');
+    });
+    Route::prefix('order')->group(function(){
+        Route::get('/complete-order',[OrderController::class,'completeOrder'])->name('complete-order');
+        Route::get('/return-order',[OrderController::class,'returnOrder'])->name('return-order');
+        Route::get('/rescheduling-order',[OrderController::class,'reschedulingOrder'])->name('rescheduling-order');
+        Route::get('/pending-order',[OrderController::class,'pendingOrder'])->name('pending-order');
     });
 });
