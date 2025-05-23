@@ -52,7 +52,7 @@
             </li>
         </ul>
         <div class="page-btn mt-0">
-            <a href="{{route('product.index')}}" class="btn btn-secondary">View Seller List</a>
+            <a href="{{route('seller.list')}}" class="btn btn-secondary">View Seller List</a>
         </div>
     </div>
     <form action="https://dreamspos.dreamstechnologies.com/html/template/add-product.html" class="add-product-form">

@@ -38,6 +38,7 @@ Route::prefix('admin')->group(function(){
     });
 
     Route::prefix('seller')->group(function(){
+        Route::get('/list',[SellerController::class,'index'])->name('seller.list');
         Route::get('/',[SellerController::class,'create'])->name('seller.create');
     });
 });
