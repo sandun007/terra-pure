@@ -7,7 +7,7 @@
                         <h6 class="submenu-hdr">Main</h6>
                         <ul>
                             <li class="submenu">
-                                <a href="javascript:void(0);" class="subdrop active">
+                                <a href="{{route('admin.dashboard')}}" class="subdrop active">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                          stroke-linecap="round" stroke-linejoin="round"
@@ -102,7 +102,8 @@
                                         <line x1="7" y1="7" x2="7.01" y2="7"></line>
                                     </svg>
                                     <span>Brands</span></a></li>
-                            <li><a href="https://dreamspos.dreamstechnologies.com/html/template/units.html">
+                            <li>
+                                <a href="{{route('seller.create')}}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                          stroke-linecap="round" stroke-linejoin="round"
@@ -111,7 +112,7 @@
                                         <circle cx="12" cy="14" r="4"></circle>
                                         <line x1="12" y1="6" x2="12.01" y2="6"></line>
                                     </svg>
-                                    <span>Units</span></a></li>
+                                    <span>Seller</span></a></li>
                             <li>
                                 <a href="https://dreamspos.dreamstechnologies.com/html/template/varriant-attributes.html">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"

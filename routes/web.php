@@ -4,6 +4,7 @@ use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\SellerController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -34,5 +35,9 @@ Route::prefix('admin')->group(function(){
     Route::prefix('category')->group(function(){
         Route::get('/list',[CategoryController::class,'index'])->name('category.index');
         Route::get('/',[CategoryController::class,'create'])->name('category.create');
+    });
+
+    Route::prefix('seller')->group(function(){
+        Route::get('/',[SellerController::class,'create'])->name('seller.create');
     });
 });
