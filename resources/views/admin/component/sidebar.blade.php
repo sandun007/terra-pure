@@ -114,7 +114,7 @@
                                     </svg>
                                     <span>Seller</span></a></li>
                             <li>
-                                <a href="https://dreamspos.dreamstechnologies.com/html/template/varriant-attributes.html">
+                                <a href="{{route('shop.index')}}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                          stroke-linecap="round" stroke-linejoin="round"
@@ -123,7 +123,7 @@
                                         <polyline points="2 17 12 22 22 17"></polyline>
                                         <polyline points="2 12 12 17 22 12"></polyline>
                                     </svg>
-                                    <span>Variant Attributes</span></a></li>
+                                    <span>Shop</span></a></li>
                             <li><a href="https://dreamspos.dreamstechnologies.com/html/template/warranty.html">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"

@@ -6,6 +6,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SellerController;
+use App\Http\Controllers\ShopController;
 use App\Http\Controllers\StockController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,36 +21,39 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/',[PageController::class,'login'])->name('login');
-Route::prefix('admin')->group(function(){
-    Route::get('/',[PageController::class,'dashboard'])->name('admin.dashboard');
+Route::get('/', [PageController::class, 'login'])->name('login');
+Route::prefix('admin')->group(function () {
+    Route::get('/', [PageController::class, 'dashboard'])->name('admin.dashboard');
 
-    Route::prefix('product')->group(function(){
-        Route::get('/list',[ProductController::class,'index'])->name('product.index');
-        Route::get('/',[ProductController::class,'create'])->name('product.create');
-    });
-
-    Route::prefix('brand')->group(function(){
-        Route::get('/list',[BrandController::class,'index'])->name('brand.index');
-        Route::get('/',[BrandController::class,'create'])->name('brand.create');
+    Route::prefix('product')->group(function () {
+        Route::get('/list', [ProductController::class, 'index'])->name('product.index');
+        Route::get('/', [ProductController::class, 'create'])->name('product.create');
     });
 
-    Route::prefix('category')->group(function(){
-        Route::get('/list',[CategoryController::class,'index'])->name('category.index');
-        Route::get('/',[CategoryController::class,'create'])->name('category.create');
+    Route::prefix('brand')->group(function () {
+        Route::get('/list', [BrandController::class, 'index'])->name('brand.index');
+        Route::get('/', [BrandController::class, 'create'])->name('brand.create');
     });
 
-    Route::prefix('seller')->group(function(){
-        Route::get('/list',[SellerController::class,'index'])->name('seller.list');
-        Route::get('/',[SellerController::class,'create'])->name('seller.create');
+    Route::prefix('category')->group(function () {
+        Route::get('/list', [CategoryController::class, 'index'])->name('category.index');
+        Route::get('/', [CategoryController::class, 'create'])->name('category.create');
     });
-    Route::prefix('order')->group(function(){
-        Route::get('/complete-order',[OrderController::class,'completeOrder'])->name('complete-order');
-        Route::get('/return-order',[OrderController::class,'returnOrder'])->name('return-order');
-        Route::get('/rescheduling-order',[OrderController::class,'reschedulingOrder'])->name('rescheduling-order');
-        Route::get('/pending-order',[OrderController::class,'pendingOrder'])->name('pending-order');
+
+    Route::prefix('seller')->group(function () {
+        Route::get('/list', [SellerController::class, 'index'])->name('seller.list');
+        Route::get('/', [SellerController::class, 'create'])->name('seller.create');
     });
-    Route::prefix('stock')->group(function(){
-        Route::get('/low-stock',[StockController::class,'low_stock'])->name('low-stock');
+    Route::prefix('order')->group(function () {
+        Route::get('/complete-order', [OrderController::class, 'completeOrder'])->name('complete-order');
+        Route::get('/return-order', [OrderController::class, 'returnOrder'])->name('return-order');
+        Route::get('/rescheduling-order', [OrderController::class, 'reschedulingOrder'])->name('rescheduling-order');
+        Route::get('/pending-order', [OrderController::class, 'pendingOrder'])->name('pending-order');
+    });
+    Route::prefix('stock')->group(function () {
+        Route::get('/low-stock', [StockController::class, 'low_stock'])->name('low-stock');
+    });
+    Route::prefix('page')->group(function () {
+        Route::get('/',[ShopController::class,'index'])->name('shop.index');
     });
 });
