@@ -11,12 +11,17 @@ class SellerController extends Controller
     {
         return view('seller.dashboard');
     }
+
+    public function shop()
+    {
+        return view('seller.shop.shop');
+    }
     public function index()
     {
-        return view('saller.saller_list');
+        return view('seller.seller_list');
     }
     public function create()
     {
-        return view('saller.seller_create');
+        return view('seller.seller_create');
     }
 }

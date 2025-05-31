@@ -15,5 +15,8 @@ class ProductController extends Controller
         return view('product.product_create');
     }
 
-
+    public function product_view($id)
+    {
+        return view('product.product_view');
+    }
 }

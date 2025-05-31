@@ -53,8 +53,10 @@ Route::prefix('admin')->group(function () {
     Route::prefix('stock')->group(function () {
         Route::get('/low-stock', [StockController::class, 'low_stock'])->name('low-stock');
     });
-    Route::prefix('page')->group(function () {
+    Route::prefix('shop')->group(function () {
         Route::get('/',[ShopController::class,'index'])->name('shop.index');
+        Route::get('product/{id}', [ProductController::class, 'product_view'])->name('product.product_view');
+
     });
 });
 
@@ -62,6 +64,8 @@ Route::prefix('seller')->group(function () {
     Route::get('/dashboard', [SellerController::class, 'dashboard'])->name('seller.dashboard');
 
     Route::prefix('shop')->group(function () {
-        Route::get('/',[ShopController::class,'index'])->name('seller.shop');
+        Route::get('/',[SellerController::class,'shop'])->name('seller.shop');
+        Route::get('product/{id}', [ProductController::class, 'product_view'])->name('seller.product.product_view');
+
     });
 });
