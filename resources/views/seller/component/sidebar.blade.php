@@ -60,7 +60,7 @@
                             </li>
 
                             <li>
-                                <a href="{{route('product.create')}}">
+                                <a href="{{route('seller.product.index')}}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                          stroke-linecap="round" stroke-linejoin="round"
@@ -69,7 +69,7 @@
                                         <line x1="12" y1="8" x2="12" y2="16"></line>
                                         <line x1="8" y1="12" x2="16" y2="12"></line>
                                     </svg>
-                                    <span>Create Product</span></a></li>
+                                    <span>My Product</span></a></li>
 
                             <li><a href="{{route('low-stock')}}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -79,7 +79,7 @@
                                         <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline>
                                         <polyline points="17 18 23 18 23 12"></polyline>
                                     </svg>
-                                    <span>Low Stocks</span></a></li>
+                                    <span>Payment</span></a></li>
                             <li>
                                 <a href="{{route('category.create')}}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"

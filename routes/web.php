@@ -76,4 +76,8 @@ Route::prefix('seller')->group(function () {
         Route::get('/rescheduling-order', [SellerController::class, 'reschedulingOrder'])->name('seller.rescheduling-order');
         Route::get('/pending-order', [SellerController::class, 'pendingOrder'])->name('seller.pending-order');
     });
+
+    Route::prefix('product')->group(function () {
+        Route::get('/',[SellerController::class,'seller_product'])->name('seller.product.index');
+    });
 });

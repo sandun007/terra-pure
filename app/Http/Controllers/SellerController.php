@@ -44,4 +44,9 @@ class SellerController extends Controller
     {
         return view('seller.pending_order_list');
     }
+
+    public function seller_product()
+    {
+        return view('seller.seller_product');
+    }
 }
