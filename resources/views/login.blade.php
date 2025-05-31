@@ -15,7 +15,7 @@
         }
 
         body {
-            background-image: url("{{ asset('asset/img/bg2.png') }}");
+            background-image: url("{{ asset('asset/img/bg3.png') }}");
             background-repeat: no-repeat;
             background-size: cover;
             background-position: center center;
