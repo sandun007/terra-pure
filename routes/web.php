@@ -57,3 +57,11 @@ Route::prefix('admin')->group(function () {
         Route::get('/',[ShopController::class,'index'])->name('shop.index');
     });
 });
+
+Route::prefix('seller')->group(function () {
+    Route::get('/dashboard', [SellerController::class, 'dashboard'])->name('seller.dashboard');
+
+    Route::prefix('shop')->group(function () {
+        Route::get('/',[ShopController::class,'index'])->name('seller.shop');
+    });
+});

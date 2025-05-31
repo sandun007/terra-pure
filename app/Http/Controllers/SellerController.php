@@ -7,6 +7,10 @@ use Illuminate\Http\Request;
 class SellerController extends Controller
 {
 
+    public function dashboard()
+    {
+        return view('seller.dashboard');
+    }
     public function index()
     {
         return view('saller.saller_list');
