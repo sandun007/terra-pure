@@ -7,7 +7,7 @@
                         <h6 class="submenu-hdr">Main</h6>
                         <ul>
                             <li class="submenu">
-                                <a href="{{route('admin.dashboard')}}" class="subdrop active">
+                                <a href="{{route('seller.dashboard')}}" class="subdrop active">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                          stroke-linecap="round" stroke-linejoin="round"
@@ -42,18 +42,20 @@
                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                         stroke-linecap="round" stroke-linejoin="round" class="feather feather-box mr-1">
-                                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                         stroke-linecap="round" stroke-linejoin="round"
+                                         class="feather feather-box mr-1">
+                                        <path
+                                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
                                         <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
                                         <line x1="12" y1="22.08" x2="12" y2="12"></line>
                                     </svg>
                                     <span>Order</span>
                                 </a>
                                 <div class="dropdown-menu" aria-labelledby="orderDropdown">
-                                    <a class="dropdown-item" href="">New Order</a>
-                                    <a class="dropdown-item" href="">Complete Order</a>
-                                    <a class="dropdown-item" href="">Reschedule Order</a>
-                                    <a class="dropdown-item" href="">Return Order</a>
+                                    <a class="dropdown-item" href="{{route('seller.new-order')}}">New Order</a>
+                                    <a class="dropdown-item" href="{{route('seller.complete-order')}}">Complete Order</a>
+                                    <a class="dropdown-item" href="{{route('seller.rescheduling-order')}}">Reschedule Order</a>
+                                    <a class="dropdown-item" href="{{route('seller.return-order')}}">Return Order</a>
                                 </div>
                             </li>
 
@@ -68,21 +70,7 @@
                                         <line x1="8" y1="12" x2="16" y2="12"></line>
                                     </svg>
                                     <span>Create Product</span></a></li>
-                            <li>
-                                <a href="{{route('complete-order')}}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                         stroke-linecap="round" stroke-linejoin="round"
-                                         class="feather feather-codesandbox">
-                                        <path
-                                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                                        <polyline points="7.5 4.21 12 6.81 16.5 4.21"></polyline>
-                                        <polyline points="7.5 19.79 7.5 14.6 3 12"></polyline>
-                                        <polyline points="21 12 16.5 14.6 16.5 19.79"></polyline>
-                                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
-                                    </svg>
-                                    <span>Order</span></a></li>
+
                             <li><a href="{{route('low-stock')}}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -735,7 +723,8 @@
                                             </li>
                                         </ul>
                                     </li>
-                                    <li class="submenu submenu-two"><a href="javascript:void(0);">Email Verification<span
+                                    <li class="submenu submenu-two"><a href="javascript:void(0);">Email
+                                            Verification<span
                                                 class="menu-arrow inside-submenu"></span></a>
                                         <ul>
                                             <li>

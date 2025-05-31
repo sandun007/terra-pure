@@ -61,11 +61,19 @@ Route::prefix('admin')->group(function () {
 });
 
 Route::prefix('seller')->group(function () {
-    Route::get('/dashboard', [SellerController::class, 'dashboard'])->name('seller.dashboard');
+    Route::get('/', [SellerController::class, 'dashboard'])->name('seller.dashboard');
 
     Route::prefix('shop')->group(function () {
         Route::get('/',[SellerController::class,'shop'])->name('seller.shop');
         Route::get('product/{id}', [ProductController::class, 'product_view'])->name('seller.product.product_view');
 
+    });
+
+    Route::prefix('order')->group(function () {
+        Route::get('new-order', [SellerController::class, 'new_order'])->name('seller.new-order');
+        Route::get('/complete-order', [SellerController::class, 'completeOrder'])->name('seller.complete-order');
+        Route::get('/return-order', [SellerController::class, 'returnOrder'])->name('seller.return-order');
+        Route::get('/rescheduling-order', [SellerController::class, 'reschedulingOrder'])->name('seller.rescheduling-order');
+        Route::get('/pending-order', [SellerController::class, 'pendingOrder'])->name('seller.pending-order');
     });
 });

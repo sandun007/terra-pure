@@ -6,6 +6,11 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
+
+    public function new_order()
+    {
+        return view('seller.new_order');
+    }
     public function completeOrder()
     {
         return view('sales.complete_order_list');
