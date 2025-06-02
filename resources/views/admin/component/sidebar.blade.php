@@ -1,7 +1,35 @@
+<style>
+    /* Outer wrapper */
+    .sidebar {
+        height: 100vh; /* Full viewport height */
+        overflow: hidden; /* Prevent double scrollbars */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 250px; /* Adjust as needed */
+        background: #fff;
+        z-index: 1000;
+    }
+
+    /* Inner scrollable container */
+    .sidebar-inner {
+        height: 100%;
+        overflow-y: auto;
+        padding-bottom: 50px; /* Optional: ensures space for last item */
+    }
+
+    /* Optional: make sure ul stretches properly */
+    .sidebar-menu ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+
+</style>
 <div class="sidebar" id="sidebar">
-    <div class="slimScrollDiv" style="position: relative; overflow: hidden; width: 100%; height: 867px;">
-        <div class="sidebar-inner slimscroll" style="overflow: hidden; width: 100%; height: 867px;">
-            <div id="sidebar-menu" class="sidebar-menu">
+    <div class="sidebar-inner">
+        <div id="sidebar-menu" class="sidebar-menu">
                 <ul>
                     <li class="submenu-open">
                         <h6 class="submenu-hdr">Main</h6>

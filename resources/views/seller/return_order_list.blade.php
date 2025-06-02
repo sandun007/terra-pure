@@ -96,8 +96,7 @@
                             <td>Rs.2560.00</td>
                             <td>
                                 <button class="btn btn-primary btn-sm">view</button>
-                                <button class="btn btn-warning btn-sm">Update</button>
-                                <button class="btn btn-danger btn-sm">Delete</button>
+
                             </td>
                         </tr>
                         <tr>
@@ -113,8 +112,7 @@
                             <td>Rs.2560.00</td>
                             <td>
                                 <button class="btn btn-primary btn-sm">view</button>
-                                <button class="btn btn-warning btn-sm">Update</button>
-                                <button class="btn btn-danger btn-sm">Delete</button>
+
                             </td>
                         </tr>
                         <tr>
@@ -130,8 +128,7 @@
                             <td>Rs.2560.00</td>
                             <td>
                                 <button class="btn btn-primary btn-sm">view</button>
-                                <button class="btn btn-warning btn-sm">Update</button>
-                                <button class="btn btn-danger btn-sm">Delete</button>
+
                             </td>
                         </tr>
                         <tr>
@@ -147,8 +144,7 @@
                             <td>Rs.2560.00</td>
                             <td>
                                 <button class="btn btn-primary btn-sm">view</button>
-                                <button class="btn btn-warning btn-sm">Update</button>
-                                <button class="btn btn-danger btn-sm">Delete</button>
+
                             </td>
                         </tr>
                         </tbody>
