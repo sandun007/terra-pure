@@ -3,12 +3,12 @@
     .sidebar {
         height: 100vh; /* Full viewport height */
         overflow: hidden; /* Prevent double scrollbars */
-        position: fixed;
-        top: 0;
+        /*position: fixed;*/
+        top: 20;
         left: 0;
         width: 250px; /* Adjust as needed */
-        background: #fff;
-        z-index: 1000;
+        /*background: #fff;*/
+        /*z-index: 1000;*/
     }
 
     /* Inner scrollable container */
@@ -109,7 +109,7 @@
                                     <span>Payment</span>
                                 </a>
                                 <div class="dropdown-menu" aria-labelledby="orderDropdown">
-                                    <a class="dropdown-item" href="">My Payment</a>
+                                    <a class="dropdown-item" href="{{route('seller.my_payment')}}">My Payment</a>
                                     <a class="dropdown-item" href="">Withdraw</a>
                                     <a class="dropdown-item" href="">Payment History</a>
                                     <a class="dropdown-item" href="">Return Order</a>

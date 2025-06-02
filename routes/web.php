@@ -6,6 +6,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SellerController;
+use App\Http\Controllers\SellerPaymentController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\StockController;
 use Illuminate\Support\Facades\Route;
@@ -79,5 +80,9 @@ Route::prefix('seller')->group(function () {
 
     Route::prefix('product')->group(function () {
         Route::get('/',[SellerController::class,'seller_product'])->name('seller.product.index');
+    });
+
+    Route::prefix('payment')->group(function () {
+        Route::get('/my-payment',[SellerPaymentController::class,'my_payment'])->name('seller.my_payment');
     });
 });
