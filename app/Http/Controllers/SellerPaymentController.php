@@ -10,4 +10,9 @@ class SellerPaymentController extends Controller
     {
         return view('seller.payment.my_payment');
     }
+
+    public function withdraw()
+    {
+        return view('seller.payment.seller_withdraw');
+    }
 }

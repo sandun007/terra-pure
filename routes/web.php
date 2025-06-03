@@ -84,5 +84,6 @@ Route::prefix('seller')->group(function () {
 
     Route::prefix('payment')->group(function () {
         Route::get('/my-payment',[SellerPaymentController::class,'my_payment'])->name('seller.my_payment');
+        Route::get('/withdraw',[SellerPaymentController::class,'withdraw'])->name('seller.withdraw');
     });
 });

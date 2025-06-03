@@ -109,7 +109,7 @@
                             </a>
                             <div class="dropdown-menu" aria-labelledby="orderDropdown">
                                 <a class="dropdown-item" href="{{route('seller.my_payment')}}">My Payment</a>
-                                <a class="dropdown-item" href="">Withdraw</a>
+                                <a class="dropdown-item" href="{{route('seller.withdraw')}}">Withdraw</a>
                                 <a class="dropdown-item" href="">Payment History</a>
                                 <a class="dropdown-item" href="">Return Order</a>
                             </div>
@@ -216,40 +216,6 @@
                                 <span>Customer Report</span></a></li>
                         <li>
 
-                    </ul>
-                </li>
-                <li class="submenu-open">
-                    <h6 class="submenu-hdr">User Management</h6>
-                    <ul>
-                        <li><a href="https://dreamspos.dreamstechnologies.com/html/template/users.html">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                     stroke-linecap="round" stroke-linejoin="round"
-                                     class="feather feather-user-check">
-                                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="8.5" cy="7" r="4"></circle>
-                                    <polyline points="17 11 19 13 23 9"></polyline>
-                                </svg>
-                                <span>Users</span></a></li>
-                        <li>
-                            <a href="https://dreamspos.dreamstechnologies.com/html/template/roles-permissions.html">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                     stroke-linecap="round" stroke-linejoin="round"
-                                     class="feather feather-shield">
-                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                                </svg>
-                                <span>Roles &amp; Permissions</span></a></li>
-                        <li>
-                            <a href="https://dreamspos.dreamstechnologies.com/html/template/delete-account.html">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                     stroke-linecap="round" stroke-linejoin="round"
-                                     class="feather feather-lock">
-                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                                </svg>
-                                <span>Delete Account Request</span></a></li>
                     </ul>
                 </li>
                 <li class="submenu-open">
