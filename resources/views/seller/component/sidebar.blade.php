@@ -110,8 +110,8 @@
                             <div class="dropdown-menu" aria-labelledby="orderDropdown">
                                 <a class="dropdown-item" href="{{route('seller.my_payment')}}">My Payment</a>
                                 <a class="dropdown-item" href="{{route('seller.withdraw')}}">Withdraw</a>
-                                <a class="dropdown-item" href="">Payment History</a>
-                                <a class="dropdown-item" href="">Return Order</a>
+                                <a class="dropdown-item" href="{{route('seller.payment_history')}}">Payment History</a>
+{{--                                <a class="dropdown-item" href="">Return Order</a>--}}
                             </div>
                         </li>
                         <li>

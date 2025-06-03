@@ -15,4 +15,9 @@ class SellerPaymentController extends Controller
     {
         return view('seller.payment.seller_withdraw');
     }
+
+    public function payment_history()
+    {
+        return view('seller.payment.payment_history');
+    }
 }
