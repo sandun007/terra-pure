@@ -3,13 +3,13 @@
     <!-- Logo -->
     <div class="header-left active">
         <a href="" class="logo logo-normal">
-            <img src="{{asset('asset/img/wordmark.png')}}" alt="">
+            <img class="ml-5"  src="{{asset('asset/img/wordmark.png')}}" alt="">
         </a>
         <a href="" class="logo logo-white">
-            <img src="{{asset('asset/img/theme/logo-white.webp')}}" alt="">
+            <img  class="ml-5" src="{{asset('asset/img/theme/logo-white.webp')}}" alt="">
         </a>
         <a href="" class="logo-small">
-            <img src="{{asset('asset/img/dx.png')}}" alt="">
+            <img class="ml-5"  src="{{asset('asset/img/dx.png')}}" alt="" style="width: 100px;">
         </a>
         <a id="toggle_btn" href="javascript:void(0);">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -40,17 +40,7 @@
                     <i class="fa fa-search"></i>
                 </a>
                 <form action="#" class="dropdown">
-                    <div class="searchinputs dropdown-toggle" id="dropdownMenuClickable" data-bs-toggle="dropdown"
-                         data-bs-auto-close="false">
-                        <input type="text" placeholder="Search">
-                        <div class="search-addon">
-                                <span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                           fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                           stroke-linejoin="round" class="feather feather-x-circle feather-14"><circle
-                                            cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line
-                                            x1="9" y1="9" x2="15" y2="15"></line></svg></span>
-                        </div>
-                    </div>
+
                     <div class="dropdown-menu search-dropdown" aria-labelledby="dropdownMenuClickable">
                         <div class="search-info">
                             <h6><span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -111,64 +101,7 @@
                 </form>
             </div>
         </li>
-        <!-- /Search -->
 
-
-        <!-- Select Store -->
-        <li class="nav-item dropdown has-arrow main-drop select-store-dropdown">
-            <a href="javascript:void(0);" class="dropdown-toggle nav-link select-store" data-bs-toggle="dropdown">
-						<span class="user-info">
-							<span class="user-letter">
-								<img src="Dreams%20Pos%20Admin%20Template_files/store-01.webp" alt="Store Logo"
-                                     class="img-fluid">
-							</span>
-							<span class="user-detail">
-								<span class="user-name">Select Store</span>
-							</span>
-						</span>
-            </a>
-            <div class="dropdown-menu dropdown-menu-right">
-                <a href="javascript:void(0);" class="dropdown-item">
-                    <img src="Dreams%20Pos%20Admin%20Template_files/store-01.webp" alt="Store Logo"
-                         class="img-fluid"> Grocery Alpha
-                </a>
-                <a href="javascript:void(0);" class="dropdown-item">
-                    <img src="Dreams%20Pos%20Admin%20Template_files/store-02.webp" alt="Store Logo"
-                         class="img-fluid"> Grocery Apex
-                </a>
-                <a href="javascript:void(0);" class="dropdown-item">
-                    <img src="Dreams%20Pos%20Admin%20Template_files/store-03.webp" alt="Store Logo"
-                         class="img-fluid"> Grocery Bevy
-                </a>
-                <a href="javascript:void(0);" class="dropdown-item">
-                    <img src="Dreams%20Pos%20Admin%20Template_files/store-04.webp" alt="Store Logo"
-                         class="img-fluid"> Grocery Eden
-                </a>
-            </div>
-        </li>
-        <!-- /Select Store -->
-
-        <!-- Flag -->
-        <li class="nav-item dropdown has-arrow flag-nav nav-item-box">
-            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="javascript:void(0);" role="button">
-                <img src="Dreams%20Pos%20Admin%20Template_files/us.webp" alt="Language" class="img-fluid">
-            </a>
-            <div class="dropdown-menu dropdown-menu-right">
-                <a href="javascript:void(0);" class="dropdown-item active">
-                    <img src="Dreams%20Pos%20Admin%20Template_files/us.webp" alt="" height="16"> English
-                </a>
-                <a href="javascript:void(0);" class="dropdown-item">
-                    <img src="Dreams%20Pos%20Admin%20Template_files/fr.webp" alt="" height="16"> French
-                </a>
-                <a href="javascript:void(0);" class="dropdown-item">
-                    <img src="Dreams%20Pos%20Admin%20Template_files/es.webp" alt="" height="16"> Spanish
-                </a>
-                <a href="javascript:void(0);" class="dropdown-item">
-                    <img src="Dreams%20Pos%20Admin%20Template_files/de.webp" alt="" height="16"> German
-                </a>
-            </div>
-        </li>
-        <!-- /Flag -->
 
         <li class="nav-item nav-item-box">
             <a href="javascript:void(0);" id="btnFullscreen">
