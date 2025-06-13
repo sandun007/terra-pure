@@ -17,10 +17,6 @@ return new class extends Migration
             $table->string('email');
             $table->string('phone');
             $table->string('address');
-            $table->date('BOD');
-            $table->string('NIC_no');
-            $table->string('NIC_front');
-            $table->string('NIC_back');
             $table->string('img');
             $table->timestamps();
         });
