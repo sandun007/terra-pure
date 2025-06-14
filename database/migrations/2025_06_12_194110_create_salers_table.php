@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('district');
             $table->string('phone');
             $table->string('whatsapp');
+            $table->string('email');
             $table->string('NIC_no');
             $table->string('NIC_front');
             $table->string('NIC_back');

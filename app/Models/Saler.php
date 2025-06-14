@@ -15,6 +15,7 @@ class Saler extends Model
         'district',
         'phone',
         'whatsapp',
+        'email',
         'NIC_no',
         'NIC_front',
         'NIC_back',

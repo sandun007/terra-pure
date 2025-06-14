@@ -55,7 +55,8 @@
             <a href="{{route('seller.list')}}" class="btn btn-secondary">View Seller List</a>
         </div>
     </div>
-    <form action="{{route('admin.seller.store')}}" class="add-product-form">
+    <form action="{{route('admin.seller.store')}}" class="add-product-form" method="post" enctype="multipart/form-data">
+        @csrf
         <div class="add-product">
             <div class="accordions-items-seperate" id="accordionSpacingExample">
                 <div class="accordion-item border mb-4">
@@ -97,15 +98,21 @@
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
-                                        <label class="form-label">Mobile No 01<span
+                                        <label class="form-label">Mobile No<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="mobile_01" class="form-control" placeholder="Mobile No 01">
+                                        <input type="text" name="phone" class="form-control" placeholder="Mobile No 01">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
-                                        <label class="form-label">Mobile No 02<span class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="mobile_02" class="form-control" placeholder="Mobile No 02">
+                                        <label class="form-label">Whatsapp<span class="text-danger ms-1">*</span></label>
+                                        <input type="text" name="whatsapp" class="form-control" placeholder="Whatsapp No">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Email<span class="text-danger ms-1">*</span></label>
+                                        <input type="email" name="email" class="form-control" placeholder="Email">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
@@ -127,8 +134,8 @@
                                     </div>
                                 </div><div class="col-sm-6 col-12">
                                     <div class="mb-3">
-                                        <label class="form-label">Postal Code<span class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="postal_code" class="form-control" placeholder="Postal Code">
+                                        <label class="form-label">Password<span class="text-danger ms-1">*</span></label>
+                                        <input type="password" name="password" class="form-control" placeholder="Postal Code">
                                     </div>
                                 </div>
 

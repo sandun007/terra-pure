@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Saler;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -33,6 +34,7 @@ class SellerController extends Controller
     {
         $NIC_front = ImageUploader::uploadImage($request->file('nic_front'), 'seler/nic_front');
         $NIC_back = ImageUploader::uploadImage($request->file('nic_back'), 'saler/nic_back');
+//        dd($request->whatsapp);
 
         try {
             Saler::query()->create([
@@ -42,13 +44,23 @@ class SellerController extends Controller
                 'district'=>$request->district,
                 'phone'=>$request->phone,
                 'whatsapp'=>$request->whatsapp,
-                'NIC_no'=>$request->NIC_no,
+                'email'=>$request->email,
+                'NIC_no'=>$request->nic_no,
                 'NIC_front'=>$NIC_front,
                 'NIC_back'=>$NIC_back,
                 'username'=>$request->username,
                 'password'=>Hash::make($request->password),
                 'view_password'=>$request->password,
          ]);
+
+            User::query()->create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'username' => $request->username,
+                'password' => Hash::make($request->password),
+                'view_password' => $request->password,
+                'type' => 'seller',
+            ]);
             return redirect()->back();
         } catch (\Exception $e) {
             return $e;
