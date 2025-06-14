@@ -8,4 +8,18 @@ use Illuminate\Database\Eloquent\Model;
 class Saler extends Model
 {
     use HasFactory;
+    protected $fillable=[
+        'code',
+        'name',
+        'address',
+        'district',
+        'phone',
+        'whatsapp',
+        'NIC_no',
+        'NIC_front',
+        'NIC_back',
+        'username',
+        'password',
+        'view_password'
+    ];
 }

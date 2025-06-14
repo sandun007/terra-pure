@@ -55,7 +55,7 @@
             <a href="{{route('seller.list')}}" class="btn btn-secondary">View Seller List</a>
         </div>
     </div>
-    <form action="https://dreamspos.dreamstechnologies.com/html/template/add-product.html" class="add-product-form">
+    <form action="{{route('admin.seller.store')}}" class="add-product-form">
         <div class="add-product">
             <div class="accordions-items-seperate" id="accordionSpacingExample">
                 <div class="accordion-item border mb-4">
@@ -71,7 +71,6 @@
                                     </svg>
                                     <span>Seller Information</span></h5>
                             </div>
-
                     </h2>
                     <div id="SpacingOne">
                         <div class="accordion-body border-top">
@@ -80,84 +79,92 @@
                                     <div class="mb-3">
                                         <label class="form-label">Seller Code<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="code" class="form-control">
+                                        <input type="text" name="code" class="form-control" placeholder="Seller Code">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Full Name<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="name" class="form-control">
+                                        <input type="text" name="name" class="form-control" placeholder="Full Name">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">NIC No<span class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="name" class="form-control">
+                                        <input type="text" name="nic_no" class="form-control" placeholder="NIC NO">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Mobile No 01<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="name" class="form-control">
+                                        <input type="text" name="mobile_01" class="form-control" placeholder="Mobile No 01">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Mobile No 02<span class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="name" class="form-control">
+                                        <input type="text" name="mobile_02" class="form-control" placeholder="Mobile No 02">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
-                                        <label class="form-label">Address Line 1<span class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="name" class="form-control">
+                                        <label class="form-label">Address <span class="text-danger ms-1">*</span></label>
+                                        <input type="text" name="address" class="form-control" placeholder="Address">
                                     </div>
-                                </div><div class="col-sm-6 col-12">
+                                </div>
+                                <div class="col-sm-6 col-12">
                                     <div class="mb-3">
-                                        <label class="form-label">Address Line 2<span class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="name" class="form-control">
+                                        <label class="form-label">Postal Code<span class="text-danger ms-1">*</span></label>
+                                        <input type="text" name="postal_code" class="form-control" placeholder="Postal Code">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Username<span class="text-danger ms-1">*</span></label>
+                                        <input type="text" name="username" class="form-control" placeholder="Usernamr">
                                     </div>
                                 </div><div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Postal Code<span class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="name" class="form-control">
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">District</label>
-                                        <select class="form-control">
-                                            <option data-select2-id="6">Select</option>
-                                            <option>Lavish Warehouse</option>
-                                            <option>Quaint Warehouse</option>
-                                            <option>Traditional Warehouse</option>
-                                            <option>Cool Warehouse</option>
-                                            <option>Overflow Warehouse</option>
-                                            <option>Nova Storage Hub</option>
-                                            <option>Retail Supply Hub</option>
-                                            <option>EdgeWare Solutions</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Type</label>
-                                        <select class="form-control">
-                                            <option data-select2-id="6">Select</option>
-                                            <option>Lavish Warehouse</option>
-                                            <option>Quaint Warehouse</option>
-                                            <option>Traditional Warehouse</option>
-                                            <option>Cool Warehouse</option>
-                                            <option>Overflow Warehouse</option>
-                                            <option>Nova Storage Hub</option>
-                                            <option>Retail Supply Hub</option>
-                                            <option>EdgeWare Solutions</option>
-                                        </select>
+                                        <input type="text" name="postal_code" class="form-control" placeholder="Postal Code">
                                     </div>
                                 </div>
 
+                                <div class="col-sm-6 col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">District</label>
+                                        <select class="form-control" name="district">
+                                            <option value="">Select</option>
+                                            <option>Ampara</option>
+                                            <option>Anuradhapura</option>
+                                            <option>Badulla</option>
+                                            <option>Batticaloa</option>
+                                            <option>Colombo</option>
+                                            <option>Galle</option>
+                                            <option>Gampaha</option>
+                                            <option>Hambantota</option>
+                                            <option>Jaffna</option>
+                                            <option>Kalutara</option>
+                                            <option>Kandy</option>
+                                            <option>Kegalle</option>
+                                            <option>Kilinochchi</option>
+                                            <option>Kurunegala</option>
+                                            <option>Mannar</option>
+                                            <option>Matale</option>
+                                            <option>Matara</option>
+                                            <option>Monaragala</option>
+                                            <option>Mullaitivu</option>
+                                            <option>Nuwara Eliya</option>
+                                            <option>Polonnaruwa</option>
+                                            <option>Puttalam</option>
+                                            <option>Ratnapura</option>
+                                            <option>Trincomalee</option>
+                                            <option>Vavuniya</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -175,7 +182,6 @@
                                     </svg>
                                     <span>NIC Image</span></h5>
                             </div>
-
                     </h2>
                     <div class="row">
                         <div class="col-6">
@@ -186,7 +192,7 @@
                                             <div class="add-choosen">
                                                 <div class="mb-3">
                                                     <div class="image-upload image-upload-two">
-                                                        <input type="file" id="nicFront" multiple>
+                                                        <input type="file" id="nicFront" name="nic_front" multiple>
                                                         <div class="image-uploads">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                                  viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -219,7 +225,7 @@
                                             <div class="add-choosen">
                                                 <div class="mb-3">
                                                     <div class="image-upload image-upload-two">
-                                                        <input type="file" id="nicBack" multiple>
+                                                        <input type="file" id="nicBack" name="nic_back" multiple>
                                                         <div class="image-uploads">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                                  viewBox="0 0 24 24" fill="none" stroke="currentColor"

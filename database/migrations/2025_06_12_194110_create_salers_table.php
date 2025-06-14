@@ -16,12 +16,15 @@ return new class extends Migration
             $table->string('code');
             $table->string('name');
             $table->string('address');
-            $table->string('company_name');
+            $table->string('district');
             $table->string('phone');
             $table->string('whatsapp');
             $table->string('NIC_no');
             $table->string('NIC_front');
             $table->string('NIC_back');
+            $table->string('username');
+            $table->string('password');
+            $table->string('view_password');
             $table->timestamps();
         });
     }

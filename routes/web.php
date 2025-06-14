@@ -47,6 +47,7 @@ Route::prefix('admin')->group(function () {
     Route::prefix('seller')->group(function () {
         Route::get('/list', [SellerController::class, 'index'])->name('seller.list');
         Route::get('/', [SellerController::class, 'create'])->name('seller.create');
+        Route::post('/',[SellerController::class,'store'])->name('admin.seller.store');
     });
     Route::prefix('order')->group(function () {
         Route::get('/complete-order', [OrderController::class, 'completeOrder'])->name('complete-order');
@@ -62,6 +63,7 @@ Route::prefix('admin')->group(function () {
         Route::get('product/{id}', [ProductController::class, 'product_view'])->name('product.product_view');
 
     });
+
 });
 
 Route::prefix('seller')->group(function () {
