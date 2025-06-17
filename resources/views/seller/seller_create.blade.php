@@ -80,69 +80,69 @@
                                     <div class="mb-3">
                                         <label class="form-label">Seller Code<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="code" class="form-control" placeholder="Seller Code">
+                                        <input type="text" name="code" class="form-control" placeholder="Seller Code" required>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Full Name<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="name" class="form-control" placeholder="Full Name">
+                                        <input type="text" name="name" class="form-control" placeholder="Full Name" required>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">NIC No<span class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="nic_no" class="form-control" placeholder="NIC NO">
+                                        <input type="text" name="nic_no" class="form-control" placeholder="NIC NO" required>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Mobile No<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="phone" class="form-control" placeholder="Mobile No 01">
+                                        <input type="text" name="phone" class="form-control" placeholder="Mobile No 01" required>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Whatsapp<span class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="whatsapp" class="form-control" placeholder="Whatsapp No">
+                                        <input type="text" name="whatsapp" class="form-control" placeholder="Whatsapp No" required>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Email<span class="text-danger ms-1">*</span></label>
-                                        <input type="email" name="email" class="form-control" placeholder="Email">
+                                        <input type="email" name="email" class="form-control" placeholder="Email" required>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Address <span class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="address" class="form-control" placeholder="Address">
+                                        <input type="text" name="address" class="form-control" placeholder="Address" required>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Postal Code<span class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="postal_code" class="form-control" placeholder="Postal Code">
+                                        <input type="text" name="postal_code" class="form-control" placeholder="Postal Code" required>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Username<span class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="username" class="form-control" placeholder="Usernamr">
+                                        <input type="text" name="username" class="form-control" placeholder="Username" required>
                                     </div>
                                 </div><div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Password<span class="text-danger ms-1">*</span></label>
-                                        <input type="password" name="password" class="form-control" placeholder="Postal Code">
+                                        <input type="password" name="password" class="form-control" placeholder="Password" required>
                                     </div>
                                 </div>
 
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">District</label>
-                                        <select class="form-control" name="district">
+                                        <select class="form-control" name="district" required>
                                             <option value="">Select</option>
                                             <option>Ampara</option>
                                             <option>Anuradhapura</option>
@@ -199,7 +199,7 @@
                                             <div class="add-choosen">
                                                 <div class="mb-3">
                                                     <div class="image-upload image-upload-two">
-                                                        <input type="file" id="nicFront" name="nic_front" multiple>
+                                                        <input type="file" id="nicFront" name="nic_front" multiple required>
                                                         <div class="image-uploads">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                                  viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -232,7 +232,7 @@
                                             <div class="add-choosen">
                                                 <div class="mb-3">
                                                     <div class="image-upload image-upload-two">
-                                                        <input type="file" id="nicBack" name="nic_back" multiple>
+                                                        <input type="file" id="nicBack" name="nic_back" multiple required>
                                                         <div class="image-uploads">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                                  viewBox="0 0 24 24" fill="none" stroke="currentColor"

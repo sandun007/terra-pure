@@ -73,7 +73,7 @@ Admin Create
                                     <div class="mb-3">
                                         <label class="form-label">Admin Code<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="code" class="form-control" placeholder="Admin Code">
+                                        <input type="text" name="code" class="form-control" placeholder="Admin Code" required>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
@@ -110,7 +110,7 @@ Admin Create
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Password<span class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="password" class="form-control" placeholder="password">
+                                        <input type="password" name="password" class="form-control" placeholder="password">
                                     </div>
                                 </div>
                             </div>
