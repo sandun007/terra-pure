@@ -46,7 +46,8 @@
     <div class="text-center mb-3">
         <img src="{{ asset('asset/img/dx.png') }}" alt="Logo" width="200">
     </div>
-    <form action="" method="POST">
+    <form action="{{route('login.check')}}" method="POST">
+        @csrf
         <div class="mb-2">
             <label>Username</label>
             <input type="text" class="form-control" name="username" required>
@@ -56,7 +57,7 @@
             <input type="password" class="form-control" name="password" required>
         </div>
         <div class="mb-3">
-            <a href="{{ route('admin.dashboard') }}" class="btn w-100 text-white" style="background-color: var(--main-theme-color)">Login</a>
+            <button type="submit" class="btn w-100 text-white" style="background-color: var(--main-theme-color)">Login</button>
         </div>
         <div class="row">
             <div class="col-6 text-start">

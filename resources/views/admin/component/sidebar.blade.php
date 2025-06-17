@@ -47,12 +47,12 @@
                                     </svg>
                                     <span>Dashboard</span></a>
                             </li>
-                            <li class="submenu">
-                                <a href="{{ route('seller.dashboard') }}" class="subdrop active">
-                                    <i class="fas fa-store me-2"></i>
-                                    <span>Seller Dashboard</span>
-                                </a>
-                            </li>
+{{--                            <li class="submenu">--}}
+{{--                                <a href="{{ route('seller.dashboard') }}" class="subdrop active">--}}
+{{--                                    <i class="fas fa-store me-2"></i>--}}
+{{--                                    <span>Seller Dashboard</span>--}}
+{{--                                </a>--}}
+{{--                            </li>--}}
 
                         </ul>
                     </li>
