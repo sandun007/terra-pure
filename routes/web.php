@@ -29,6 +29,7 @@ Route::post('/',[LoginController::class,'loginCheck'])->name('login.check');
 
 Route::middleware('auth:admin')->group(function(){
     Route::prefix('admin')->group(function () {
+        Route::post('/logout', [LoginController::class, 'logout'])->name('admin.logout');
         Route::get('/', [PageController::class, 'dashboard'])->name('admin.dashboard');
         Route::get('/create',[AdminController::class,'create'])->name('admin.create');
         Route::post('/',[AdminController::class,'store'])->name('admin.store');
@@ -74,6 +75,7 @@ Route::middleware('auth:admin')->group(function(){
 
 Route::middleware('auth:seller')->group(function(){
     Route::prefix('seller')->group(function () {
+        Route::post('/logout', [LoginController::class, 'logout'])->name('seller.logout');
         Route::get('/', [SellerController::class, 'dashboard'])->name('seller.dashboard');
 
         Route::prefix('shop')->group(function () {

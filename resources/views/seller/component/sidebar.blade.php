@@ -132,7 +132,7 @@
                 <li class="submenu-open">
                     <h6 class="submenu-hdr">Sales</h6>
                     <ul>
-                        <li><a href="https://dreamspos.dreamstechnologies.com/html/template/sales-list.html">
+                        <li><a href="">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                      stroke-linecap="round" stroke-linejoin="round"
@@ -144,7 +144,7 @@
                                 </svg>
                                 <span>Sales</span></a></li>
                         <li>
-                            <a href="https://dreamspos.dreamstechnologies.com/html/template/invoice-report.html">
+                            <a href="">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                      stroke-linecap="round" stroke-linejoin="round"
@@ -156,7 +156,7 @@
                                     <polyline points="10 9 9 9 8 9"></polyline>
                                 </svg>
                                 <span>Invoices</span></a></li>
-                        <li><a href="https://dreamspos.dreamstechnologies.com/html/template/sales-returns.html">
+                        <li><a href="">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                      stroke-linecap="round" stroke-linejoin="round"
@@ -166,7 +166,7 @@
                                 </svg>
                                 <span>Sales Return</span></a></li>
                         <li>
-                            <a href="https://dreamspos.dreamstechnologies.com/html/template/quotation-list.html">
+                            <a href="">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                      stroke-linecap="round" stroke-linejoin="round"
@@ -182,7 +182,7 @@
                 <li class="submenu-open">
                     <h6 class="submenu-hdr">Reports</h6>
                     <ul>
-                        <li><a href="https://dreamspos.dreamstechnologies.com/html/template/sales-report.html">
+                        <li><a href="">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                      stroke-linecap="round" stroke-linejoin="round"
@@ -193,7 +193,7 @@
                                 </svg>
                                 <span>Sales Report</span></a></li>
                         <li>
-                            <a href="https://dreamspos.dreamstechnologies.com/html/template/inventory-report.html">
+                            <a href="">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                      stroke-linecap="round" stroke-linejoin="round"
@@ -205,7 +205,7 @@
                                 <span>Inventory Report</span></a></li>
                         <li>
 
-                            <a href="https://dreamspos.dreamstechnologies.com/html/template/customer-report.html">
+                            <a href="">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                      stroke-linecap="round" stroke-linejoin="round"
@@ -234,13 +234,13 @@
                                 <span>General Settings</span><span class="menu-arrow"></span></a>
                             <ul>
                                 <li>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/general-settings.html">Profile</a>
+                                    <a href="">Profile</a>
                                 </li>
                                 <li>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/security-settings.html">Security</a>
+                                    <a href="">Security</a>
                                 </li>
                                 <li>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/notification.html">Notifications</a>
+                                    <a href="">Notifications</a>
                                 </li>
                             </ul>
                         </li>
@@ -248,28 +248,28 @@
 
                             <ul>
                                 <li>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/system-settings.html">System
+                                    <a href="">System
                                         Settings</a></li>
                                 <li>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/company-settings.html">Company
+                                    <a href="">Company
                                         Settings </a></li>
                                 <li>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/localization-settings.html">Localization</a>
+                                    <a href="">Localization</a>
                                 </li>
                                 <li>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/prefixes.html">Prefixes</a>
+                                    <a href="">Prefixes</a>
                                 </li>
                                 <li>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/preference.html">Preference</a>
+                                    <a href="">Preference</a>
                                 </li>
                                 <li>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/appearance.html">Appearance</a>
+                                    <a href="">Appearance</a>
                                 </li>
                                 <li>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/social-authentication.html">Social
+                                    <a href="">Social
                                         Authentication</a></li>
                                 <li>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/language-settings.html">Language</a>
+                                    <a href="">Language</a>
                                 </li>
                             </ul>
                         </li>
@@ -277,16 +277,16 @@
 
                             <ul>
                                 <li>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/invoice-settings.html">Invoice</a>
+                                    <a href="">Invoice</a>
                                 </li>
                                 <li>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/printer-settings.html">Printer</a>
+                                    <a href="">Printer</a>
                                 </li>
                                 <li>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/pos-settings.html">POS</a>
+                                    <a href="">POS</a>
                                 </li>
                                 <li>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/custom-fields.html">Custom
+                                    <a href="">Custom
                                         Fields</a></li>
                             </ul>
                         </li>
@@ -304,16 +304,16 @@
                             </a>
                             <ul>
                                 <li>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/email-settings.html">Email</a>
+                                    <a href="">Email</a>
                                 </li>
                                 <li>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/sms-gateway.html">SMS
+                                    <a href="">SMS
                                         Gateways</a></li>
                                 <li>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/otp-settings.html">OTP</a>
+                                    <a href="">OTP</a>
                                 </li>
                                 <li>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/gdpr-settings.html">GDPR
+                                    <a href="">GDPR
                                         Cookies</a></li>
                             </ul>
                         </li>
@@ -330,27 +330,21 @@
                             </a>
                             <ul>
                                 <li>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/bank-settings-grid.html">Bank
+                                    <a href="">Bank
                                         Accounts</a></li>
                                 <li>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/tax-rates.html">Tax
+                                    <a href="">Tax
                                         Rates</a></li>
                                 <li>
-                                    <a href="https://dreamspos.dreamstechnologies.com/html/template/currency-settings.html">Currencies</a>
+                                    <a href="">Currencies</a>
                                 </li>
                             </ul>
                         </li>
                         <li>
-                            <a href="https://dreamspos.dreamstechnologies.com/html/template/signin.html">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                     stroke-linecap="round" stroke-linejoin="round"
-                                     class="feather feather-log-out">
-                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                    <polyline points="16 17 21 12 16 7"></polyline>
-                                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                                </svg>
-                                <span>Logout</span> </a>
+                            <form action="{{ route('seller.logout') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn btn-danger">Logout</button>
+                            </form>
                         </li>
                     </ul>
                 </li>

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
+
 class LoginController extends Controller
 {
     public function loginCheck(Request $request)
@@ -40,4 +41,29 @@ class LoginController extends Controller
             'login' => 'Invalid credentials.',
         ]);
     }
+
+
+    public function logout(Request $request)
+    {
+        if (Auth::guard('admin')->check()) {
+            Auth::guard('admin')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return redirect()->route('login');
+        }
+
+        if (Auth::guard('seller')->check()) {
+            Auth::guard('seller')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return redirect()->route('login');
+        }
+
+        // fallback (optional)
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect()->route('login');
+    }
+
 }
