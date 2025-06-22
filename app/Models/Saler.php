@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\Hash;
 
-class Saler extends Model
+class Saler extends Authenticatable
 {
-    use HasFactory;
-    protected $fillable=[
+    use HasApiTokens, Notifiable;
+
+    protected $fillable = [
         'code',
         'name',
         'address',
@@ -21,6 +24,20 @@ class Saler extends Model
         'NIC_back',
         'username',
         'password',
-        'view_password'
     ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    // Automatically hash password when it's set
+    public function setPasswordAttribute($value)
+    {
+        if (!Hash::needsRehash($value)) {
+            $this->attributes['password'] = $value;
+        } else {
+            $this->attributes['password'] = Hash::make($value);
+        }
+    }
 }

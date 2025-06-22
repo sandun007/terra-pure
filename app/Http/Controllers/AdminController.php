@@ -26,6 +26,9 @@ class AdminController extends Controller
                 'phone' => $request->phone,
                 'address' => $request->address,
                 'img' => $imagePath,
+                'username' => $request->username,
+                'password' => Hash::make($request->password),
+                'view_password' => $request->password,
             ]);
             User::query()->create([
                 'name' => $request->name,

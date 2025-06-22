@@ -1,6 +1,6 @@
 @extends('admin.app')
 @push('title')
-    Product Create
+   Seller Create
 @endpush
 @push('css')
     <style>

@@ -18,6 +18,9 @@ return new class extends Migration
             $table->string('phone');
             $table->string('address');
             $table->string('img');
+            $table->string('username');
+            $table->string('password');
+            $table->string('view_password');
             $table->timestamps();
         });
     }
