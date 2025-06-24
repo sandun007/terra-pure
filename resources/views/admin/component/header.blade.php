@@ -314,12 +314,13 @@
             <a href="javascript:void(0);" class="dropdown-toggle nav-link userset" data-bs-toggle="dropdown">
 						<span class="user-info">
 							<span class="user-letter">
-								<img src="Dreams%20Pos%20Admin%20Template_files/avator1.jpg" alt="" class="img-fluid">
+								<img src="{{ asset('storage/' . auth()->user()->img) }}" alt="" class="img-fluid">
 							</span>
 							<span class="user-detail">
-								<span class="user-name">John Smilga</span>
-								<span class="user-role">Super Admin</span>
-							</span>
+                                        <span class="user-name">{{ auth()->user()->name }}</span>
+                                        <span class="user-role">Admin</span>
+                                </span>
+
 						</span>
             </a>
             <div class="dropdown-menu menu-drop-user">
@@ -373,7 +374,8 @@
                 Profile</a>
             <a class="dropdown-item"
                href="https://dreamspos.dreamstechnologies.com/html/template/general-settings.html">Settings</a>
-            <a class="dropdown-item" href="https://dreamspos.dreamstechnologies.com/html/template/signin.html">Logout</a>
+            <a class="dropdown-item"
+               href="https://dreamspos.dreamstechnologies.com/html/template/signin.html">Logout</a>
         </div>
     </div>
     <!-- /Mobile Menu -->
