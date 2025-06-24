@@ -54,7 +54,8 @@ Category Create
             <a href="{{route('category.index')}}" class="btn btn-secondary">View Category List</a>
         </div>
     </div>
-    <form action="https://dreamspos.dreamstechnologies.com/html/template/add-product.html" class="add-product-form">
+    <form action="{{route('category.store')}}" method="post" enctype="multipart/form-data" class="add-product-form">
+        @csrf
         <div class="add-product">
             <div class="accordions-items-seperate" id="accordionSpacingExample">
                 <div class="accordion-item border mb-4">
@@ -96,7 +97,7 @@ Category Create
                                         <label class="form-label">Category Image<span
                                                 class="text-danger ms-1">*</span></label>
                                         <div class="image-upload image-upload-two">
-                                            <input type="file" id="imageInput" multiple>
+                                            <input type="file" id="imageInput" name="img" multiple>
                                             <div class="image-uploads">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                      viewBox="0 0 24 24" fill="none" stroke="currentColor"
