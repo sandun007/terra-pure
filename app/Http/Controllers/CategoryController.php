@@ -9,7 +9,14 @@ class CategoryController extends Controller
 {
     public function index()
     {
-        return view('product.category_list');
+        try {
+            $categories = Category::all();
+            $count = $categories->count();
+            return view('product.category_list', compact('categories','count'));
+        }
+        catch (\Exception $e) {
+            return $e->getMessage();
+        }
     }
     public function create()
     {

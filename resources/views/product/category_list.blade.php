@@ -38,7 +38,7 @@
         <div class="add-item d-flex">
             <div class="page-title">
                 <h4 class="fw-bold">Category List</h4>
-                <h6>20</h6>
+                <h6>{{$count}}</h6>
             </div>
         </div>
         <ul class="table-top-head">
@@ -68,63 +68,24 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <tr>
-                            <td>CAT/00001</td>
-                            <td>Desktop</td>
-                            <td>
-                                <button class="btn btn-primary btn-sm">
-                                    <i class="bi bi-eye"></i> View
-                                </button>
-                                <button class="btn btn-warning btn-sm">
-                                    <i class="bi bi-pencil-square"></i> Update
-                                </button>
-                                <button class="btn btn-danger btn-sm">
-                                    <i class="bi bi-trash"></i> Delete
-                                </button>
-                            </td>
-                        </tr><tr>
-                            <td>CAT/00001</td>
-                            <td>Desktop</td>
-                            <td>
-                                <button class="btn btn-primary btn-sm">
-                                    <i class="bi bi-eye"></i> View
-                                </button>
-                                <button class="btn btn-warning btn-sm">
-                                    <i class="bi bi-pencil-square"></i> Update
-                                </button>
-                                <button class="btn btn-danger btn-sm">
-                                    <i class="bi bi-trash"></i> Delete
-                                </button>
-                            </td>
-                        </tr><tr>
-                            <td>CAT/00001</td>
-                            <td>Desktop</td>
-                            <td>
-                                <button class="btn btn-primary btn-sm">
-                                    <i class="bi bi-eye"></i> View
-                                </button>
-                                <button class="btn btn-warning btn-sm">
-                                    <i class="bi bi-pencil-square"></i> Update
-                                </button>
-                                <button class="btn btn-danger btn-sm">
-                                    <i class="bi bi-trash"></i> Delete
-                                </button>
-                            </td>
-                        </tr><tr>
-                            <td>CAT/00001</td>
-                            <td>Desktop</td>
-                            <td>
-                                <button class="btn btn-primary btn-sm">
-                                    <i class="bi bi-eye"></i> View
-                                </button>
-                                <button class="btn btn-warning btn-sm">
-                                    <i class="bi bi-pencil-square"></i> Update
-                                </button>
-                                <button class="btn btn-danger btn-sm">
-                                    <i class="bi bi-trash"></i> Delete
-                                </button>
-                            </td>
-                        </tr>
+                        @foreach($categories as $category)
+                            <tr>
+                                <td>{{$category->code}}</td>
+                                <td>{{$category->name}}</td>
+                                <td>
+                                    <button class="btn btn-primary btn-sm">
+                                        <i class="bi bi-eye"></i> View
+                                    </button>
+                                    <button class="btn btn-warning btn-sm">
+                                        <i class="bi bi-pencil-square"></i> Update
+                                    </button>
+                                    <button class="btn btn-danger btn-sm">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        @endforeach
+
                         </tbody>
 
                     </table>
