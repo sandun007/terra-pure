@@ -81,30 +81,14 @@ Brand Create
                                     <div class="mb-3">
                                         <label class="form-label">Brand Code<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="code" class="form-control">
+                                        <input type="text" name="code" class="form-control" required placeholder="Brand Code">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Brand Name<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="name" class="form-control">
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Store</label>
-                                        <select class="form-control">
-                                            <option data-select2-id="6">Select</option>
-                                            <option>Lavish Warehouse</option>
-                                            <option>Quaint Warehouse</option>
-                                            <option>Traditional Warehouse</option>
-                                            <option>Cool Warehouse</option>
-                                            <option>Overflow Warehouse</option>
-                                            <option>Nova Storage Hub</option>
-                                            <option>Retail Supply Hub</option>
-                                            <option>EdgeWare Solutions</option>
-                                        </select>
+                                        <input type="text" name="name" class="form-control" required placeholder="Brand Name">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
@@ -112,7 +96,7 @@ Brand Create
                                         <label class="form-label">Brand Image<span
                                                 class="text-danger ms-1">*</span></label>
                                         <div class="image-upload image-upload-two">
-                                            <input type="file" id="imageInput" multiple>
+                                            <input type="file" id="imageInput" name="img" multiple>
                                             <div class="image-uploads">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                      viewBox="0 0 24 24" fill="none" stroke="currentColor"

@@ -81,14 +81,14 @@
                                     <div class="mb-3">
                                         <label class="form-label">Product Code<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="code" class="form-control">
+                                        <input type="text" name="code" class="form-control" required>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Product Name<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="name" class="form-control">
+                                        <input type="text" name="name" class="form-control" required>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">

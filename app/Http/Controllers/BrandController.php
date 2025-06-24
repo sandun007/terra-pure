@@ -15,4 +15,14 @@ class BrandController extends Controller
     {
         return view('product.brand_create');
     }
+
+    public function store(Request $request)
+    {
+        try {
+            
+        }
+        catch (\Exception $e) {
+            return $e;
+        }
+    }
 }
