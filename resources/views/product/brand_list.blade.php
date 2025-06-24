@@ -64,57 +64,33 @@ Brand List
                         <tr>
                             <th>Brand Code</th>
                             <th>Brand Name</th>
-                            <th>Category</th>
+                            <th>Image</th>
                             <th>Action</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr>
-                            <td>BRD/00001</td>
-                            <td>Dell</td>
-                            <td>Desktop</td>
-                            <td>
-                                <button class="btn btn-primary btn-sm">
-                                    <i class="bi bi-eye"></i> View
-                                </button>
-                                <button class="btn btn-warning btn-sm">
-                                    <i class="bi bi-pencil-square"></i> Update
-                                </button>
-                                <button class="btn btn-danger btn-sm">
-                                    <i class="bi bi-trash"></i> Delete
-                                </button>
-                            </td>
-                        </tr><tr>
-                            <td>BRD/00001</td>
-                            <td>Dell</td>
-                            <td>Desktop</td>
-                            <td>
-                                <button class="btn btn-primary btn-sm">
-                                    <i class="bi bi-eye"></i> View
-                                </button>
-                                <button class="btn btn-warning btn-sm">
-                                    <i class="bi bi-pencil-square"></i> Update
-                                </button>
-                                <button class="btn btn-danger btn-sm">
-                                    <i class="bi bi-trash"></i> Delete
-                                </button>
-                            </td>
-                        </tr><tr>
-                            <td>BRD/00002</td>
-                            <td>Dell</td>
-                            <td>Desktop</td>
-                            <td>
-                                <button class="btn btn-primary btn-sm">
-                                    <i class="bi bi-eye"></i> View
-                                </button>
-                                <button class="btn btn-warning btn-sm">
-                                    <i class="bi bi-pencil-square"></i> Update
-                                </button>
-                                <button class="btn btn-danger btn-sm">
-                                    <i class="bi bi-trash"></i> Delete
-                                </button>
-                            </td>
-                        </tr>
+                        @foreach($brands as $brand)
+                            <tr>
+                                <td>{{$brand->code}}</td>
+                                <td>{{$brand->name}}</td>
+                                <td>
+                                    <img src="{{ asset('storage/' . $brand->img) }}" alt="Brand Image" width="50">
+                                </td>
+
+                                <td>
+                                    <button class="btn btn-primary btn-sm">
+                                        <i class="bi bi-eye"></i> View
+                                    </button>
+                                    <button class="btn btn-warning btn-sm">
+                                        <i class="bi bi-pencil-square"></i> Update
+                                    </button>
+                                    <button class="btn btn-danger btn-sm">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        @endforeach
+
                         </tbody>
 
                     </table>

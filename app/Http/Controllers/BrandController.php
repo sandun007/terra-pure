@@ -10,7 +10,14 @@ class BrandController extends Controller
 
     public function index()
     {
-        return view('product.brand_list');
+        try {
+            $brands = Brand::all();
+            return view('product.brand_list',compact('brands'));
+
+        }
+        catch (\Exception $e) {
+            return $e->getMessage();
+        }
     }
     public function create()
     {
