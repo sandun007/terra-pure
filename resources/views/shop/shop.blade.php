@@ -24,18 +24,19 @@
             </div>
             <div class="col-12">
                 <div class="d-flex flex-wrap gap-3">
-                    @for ($i = 0; $i < 20; $i++) <!-- Example loop -->
+                    @foreach($products as $product)
                     <div class="card" style="width: 12.5%; min-width: 160px; border-top-right-radius: 15px; border-top-left-radius: 15px;">
                         <div class="card-body d-flex justify-content-center">
-                            <img src="{{ asset('asset/img/theme/item.png') }}" width="100px">
+                            <img src="{{ asset('storage/' . $product->img) }}" width="200px">
                         </div>
                         <div class="card-footer">
-                            <p>Test Product {{ $i + 1 }}</p>
+                            <p class="text-dark">{{$product->name}}</p>
+                            <p class="text-secondary">{{$product->code}}</p>
                             <p><span class="text-danger">Rs.500.00</span></p>
                             <button class="w-100 btn btn-success">Buy Now</button>
                         </div>
                     </div>
-                    @endfor
+                    @endforeach
                 </div>
             </div>
         </div>
