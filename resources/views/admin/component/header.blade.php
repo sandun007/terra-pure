@@ -181,7 +181,7 @@
             </a>
         </li>
         <li class="nav-item nav-item-box">
-            <a href="https://dreamspos.dreamstechnologies.com/html/template/email.html">
+            <a href="">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                      class="feather feather-mail">
@@ -210,7 +210,7 @@
                 <div class="noti-content">
                     <ul class="notification-list">
                         <li class="notification-message">
-                            <a href="https://dreamspos.dreamstechnologies.com/html/template/activities.html">
+                            <a href="">
                                 <div class="media d-flex">
 											<span class="avatar flex-shrink-0">
 												<img alt="" src="Dreams%20Pos%20Admin%20Template_files/avatar-02.jpg">
@@ -226,7 +226,7 @@
                             </a>
                         </li>
                         <li class="notification-message">
-                            <a href="https://dreamspos.dreamstechnologies.com/html/template/activities.html">
+                            <a href="">
                                 <div class="media d-flex">
 											<span class="avatar flex-shrink-0">
 												<img alt="" src="Dreams%20Pos%20Admin%20Template_files/avatar-03.webp">
@@ -243,7 +243,7 @@
                             </a>
                         </li>
                         <li class="notification-message">
-                            <a href="https://dreamspos.dreamstechnologies.com/html/template/activities.html">
+                            <a href="">
                                 <div class="media d-flex">
 											<span class="avatar flex-shrink-0">
 												<img alt="" src="Dreams%20Pos%20Admin%20Template_files/avatar-06.jpg">
@@ -261,7 +261,7 @@
                             </a>
                         </li>
                         <li class="notification-message">
-                            <a href="https://dreamspos.dreamstechnologies.com/html/template/activities.html">
+                            <a href="">
                                 <div class="media d-flex">
 											<span class="avatar flex-shrink-0">
 												<img alt="" src="Dreams%20Pos%20Admin%20Template_files/avatar-17.webp">
@@ -326,17 +326,17 @@
             <div class="dropdown-menu menu-drop-user">
                 <div class="profilename">
                     <div class="profileset">
-								<span class="user-img"><img src="Dreams%20Pos%20Admin%20Template_files/avator1.jpg"
-                                                            alt="">
+								<span class="user-img">
+                                    <img src="{{ asset('storage/' . auth()->user()->img) }}" alt="">
 									<span class="status online"></span></span>
                         <div class="profilesets">
-                            <h6>John Smilga</h6>
-                            <h5>Super Admin</h5>
+                            <h6>{{ auth()->user()->name }}</h6>
+                            <h5>Admin</h5>
                         </div>
                     </div>
                     <hr class="m-0">
                     <a class="dropdown-item"
-                       href="https://dreamspos.dreamstechnologies.com/html/template/profile.html">
+                       href="">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                              stroke-linejoin="round" class="feather feather-user me-2">
@@ -345,7 +345,7 @@
                         </svg>
                         My Profile</a>
                     <a class="dropdown-item"
-                       href="https://dreamspos.dreamstechnologies.com/html/template/general-settings.html">
+                       href="">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                              stroke-linejoin="round" class="feather feather-settings me-2">
@@ -356,8 +356,8 @@
                         Settings</a>
                     <hr class="m-0">
                     <a class="dropdown-item logout pb-0"
-                       href="https://dreamspos.dreamstechnologies.com/html/template/signin.html"><img
-                            src="Dreams%20Pos%20Admin%20Template_files/log-out.svg" class="me-2"
+                       href=""><img
+                            src="" class="me-2"
                             alt="img">Logout</a>
                 </div>
             </div>
@@ -370,12 +370,12 @@
         <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"
            aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
         <div class="dropdown-menu dropdown-menu-right">
-            <a class="dropdown-item" href="https://dreamspos.dreamstechnologies.com/html/template/profile.html">My
+            <a class="dropdown-item" href="">My
                 Profile</a>
             <a class="dropdown-item"
-               href="https://dreamspos.dreamstechnologies.com/html/template/general-settings.html">Settings</a>
+               href="">Settings</a>
             <a class="dropdown-item"
-               href="https://dreamspos.dreamstechnologies.com/html/template/signin.html">Logout</a>
+               href="">Logout</a>
         </div>
     </div>
     <!-- /Mobile Menu -->
