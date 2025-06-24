@@ -11,7 +11,14 @@ class ProductController extends Controller
 {
     public function index()
     {
-        return view('product.product_list');
+        try {
+            $products = Product::all();
+            $count = $products->count();
+            return view('product.product_list',compact('products','count'));
+        }
+        catch (\Exception $e) {
+            return $e->getMessage();
+        }
     }
     public function create()
     {

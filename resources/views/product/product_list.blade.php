@@ -39,7 +39,7 @@
         <div class="add-item d-flex">
             <div class="page-title">
                 <h4 class="fw-bold">Product List</h4>
-                <h6>14500</h6>
+                <h6>{{$count}}</h6>
             </div>
         </div>
         <ul class="table-top-head">
@@ -66,7 +66,6 @@
                             <th>Product Code</th>
                             <th>Product Name</th>
                             <th>Store</th>
-                            <th>Price</th>
                             <th>Category</th>
                             <th>Brand</th>
                             <th>Status</th>
@@ -74,59 +73,22 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <tr>
-                            <td>ITM/00001</td>
-                            <td>Laptop</td>
-                            <td>Colombo</td>
-                            <td>15000</td>
-                            <td>Laptop</td>
-                            <td>Dell</td>
-                            <td>Active</td>
-                            <td>
-                                <button class="btn btn-primary btn-sm">view</button>
-                                <button class="btn btn-warning btn-sm">Update</button>
-                                <button class="btn btn-danger btn-sm">Delete</button>
-                            </td>
-                        </tr><tr>
-                            <td>ITM/00001</td>
-                            <td>Laptop</td>
-                            <td>Colombo</td>
-                            <td>15000</td>
-                            <td>Laptop</td>
-                            <td>Dell</td>
-                            <td>Active</td>
-                            <td>
-                                <button class="btn btn-primary btn-sm">view</button>
-                                <button class="btn btn-warning btn-sm">Update</button>
-                                <button class="btn btn-danger btn-sm">Delete</button>
-                            </td>
-                        </tr><tr>
-                            <td>ITM/00001</td>
-                            <td>Laptop</td>
-                            <td>Colombo</td>
-                            <td>15000</td>
-                            <td>Laptop</td>
-                            <td>Dell</td>
-                            <td>Active</td>
-                            <td>
-                                <button class="btn btn-primary btn-sm">view</button>
-                                <button class="btn btn-warning btn-sm">Update</button>
-                                <button class="btn btn-danger btn-sm">Delete</button>
-                            </td>
-                        </tr><tr>
-                            <td>ITM/00001</td>
-                            <td>Laptop</td>
-                            <td>Colombo</td>
-                            <td>15000</td>
-                            <td>Laptop</td>
-                            <td>Dell</td>
-                            <td>Active</td>
-                            <td>
-                                <button class="btn btn-primary btn-sm">view</button>
-                                <button class="btn btn-warning btn-sm">Update</button>
-                                <button class="btn btn-danger btn-sm">Delete</button>
-                            </td>
-                        </tr>
+                        @foreach($products as $product)
+                            <tr>
+                                <td>{{$product->code}}</td>
+                                <td>{{$product->name}}</td>
+                                <td>Main</td>
+                                <td>{{$product->category}}</td>
+                                <td>{{$product->brand}}</td>
+                                <td>{{$product->status}}</td>
+                                <td>
+                                    <button class="btn btn-primary btn-sm">view</button>
+                                    <button class="btn btn-warning btn-sm">Update</button>
+                                    <button class="btn btn-danger btn-sm">Delete</button>
+                                </td>
+                            </tr>
+                        @endforeach
+
                         </tbody>
                     </table>
                 </div>
