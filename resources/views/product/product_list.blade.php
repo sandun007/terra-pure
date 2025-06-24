@@ -84,7 +84,7 @@
                                 <td>
                                     <button class="btn btn-primary btn-sm">view</button>
                                     <button class="btn btn-warning btn-sm">Update</button>
-                                    <button class="btn btn-danger btn-sm">Delete</button>
+                                    <a href="{{route('product.delete',$product->id)}}" class="btn btn-danger btn-sm">Delete</a>
                                 </td>
                             </tr>
                         @endforeach

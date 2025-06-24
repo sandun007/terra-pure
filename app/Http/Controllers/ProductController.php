@@ -62,4 +62,15 @@ class ProductController extends Controller
     {
         return view('product.product_view');
     }
+
+    public function delete($id)
+    {
+        try {
+            Product::query()->find($id)->delete();
+            return redirect()->back();
+        }
+        catch (\Exception $e) {
+            return $e->getMessage();
+        }
+    }
 }
