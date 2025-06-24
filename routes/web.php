@@ -42,6 +42,7 @@ Route::middleware('auth:admin')->group(function(){
         Route::prefix('brand')->group(function () {
             Route::get('/list', [BrandController::class, 'index'])->name('brand.index');
             Route::get('/', [BrandController::class, 'create'])->name('brand.create');
+            Route::post('/', [BrandController::class, 'store'])->name('brand.store');
         });
 
         Route::prefix('category')->group(function () {

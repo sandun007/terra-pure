@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Brand;
 use Illuminate\Http\Request;
 
 class BrandController extends Controller
@@ -18,8 +19,14 @@ class BrandController extends Controller
 
     public function store(Request $request)
     {
+        $imagePath = ImageUploader::uploadImage($request->file('img'), 'brand');
         try {
-            
+            Brand::query()->create([
+                'code'=>$request->code,
+                'name'=>$request->name,
+                'img'=>$imagePath
+            ]);
+            return redirect()->back();
         }
         catch (\Exception $e) {
             return $e;

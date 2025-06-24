@@ -54,7 +54,8 @@ Brand Create
             <a href="{{route('brand.index')}}" class="btn btn-secondary">View Brand List</a>
         </div>
     </div>
-    <form action="https://dreamspos.dreamstechnologies.com/html/template/add-product.html" class="add-product-form">
+    <form action="{{route('brand.store')}}" method="post" enctype="multipart/form-data" class="add-product-form">
+        @csrf
         <div class="add-product">
             <div class="accordions-items-seperate" id="accordionSpacingExample">
                 <div class="accordion-item border mb-4">
