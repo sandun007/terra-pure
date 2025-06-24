@@ -54,7 +54,8 @@
             <a href="{{route('product.index')}}" class="btn btn-secondary">View Product List</a>
         </div>
     </div>
-    <form action="https://dreamspos.dreamstechnologies.com/html/template/add-product.html" class="add-product-form">
+    <form action="{{route('product.store')}}" method="post" enctype="multipart/form-data" class="add-product-form">
+        @csrf
         <div class="add-product">
             <div class="accordions-items-seperate" id="accordionSpacingExample">
                 <div class="accordion-item border mb-4">
@@ -81,51 +82,43 @@
                                     <div class="mb-3">
                                         <label class="form-label">Product Code<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="code" class="form-control" required>
+                                        <input type="text" name="code" class="form-control" required placeholder="Product Code">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Product Name<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="name" class="form-control" required>
+                                        <input type="text" name="name" class="form-control" required placeholder="Product Name">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Barcode<span class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="name" class="form-control">
+                                        <input type="text" name="name" class="form-control" placeholder="Bar Code">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Brand</label>
-                                        <select class="form-control">
-                                            <option data-select2-id="6">Select</option>
-                                            <option>Lavish Warehouse</option>
-                                            <option>Quaint Warehouse</option>
-                                            <option>Traditional Warehouse</option>
-                                            <option>Cool Warehouse</option>
-                                            <option>Overflow Warehouse</option>
-                                            <option>Nova Storage Hub</option>
-                                            <option>Retail Supply Hub</option>
-                                            <option>EdgeWare Solutions</option>
+                                        <select class="form-control" name="brand">
+                                            <option data-select2-id="6">Select Brand</option>
+                                            @foreach($brands as $brand)
+                                                <option value="{{$brand->name}}">{{$brand->name}}</option>
+                                            @endforeach
                                         </select>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Category</label>
-                                        <select class="form-control">
-                                            <option data-select2-id="6">Select</option>
-                                            <option>Lavish Warehouse</option>
-                                            <option>Quaint Warehouse</option>
-                                            <option>Traditional Warehouse</option>
-                                            <option>Cool Warehouse</option>
-                                            <option>Overflow Warehouse</option>
-                                            <option>Nova Storage Hub</option>
-                                            <option>Retail Supply Hub</option>
-                                            <option>EdgeWare Solutions</option>
+                                        <select class="form-control" name="category">
+                                            <option data-select2-id="6">Select Category</option>
+                                            @foreach($categories as $category)
+                                            <option value="{{$category->name}}">{{$category->name}}</option>
+                                            @endforeach
+
+
                                         </select>
                                     </div>
                                 </div>
@@ -133,17 +126,17 @@
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Store</label>
-                                        <select class="form-control">
-                                            <option data-select2-id="6">Select</option>
-                                            <option>Lavish Warehouse</option>
-                                            <option>Quaint Warehouse</option>
-                                            <option>Traditional Warehouse</option>
-                                            <option>Cool Warehouse</option>
-                                            <option>Overflow Warehouse</option>
-                                            <option>Nova Storage Hub</option>
-                                            <option>Retail Supply Hub</option>
-                                            <option>EdgeWare Solutions</option>
+                                        <select class="form-control" name="store">
+                                            <option data-select2-id="6" value="main">Main</option>
                                         </select>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Description</label>
+                                       <textarea rows="6" class="form-control" name="description">
+
+                                       </textarea>
                                     </div>
                                 </div>
                             </div>
@@ -174,7 +167,7 @@
                                     <div class="add-choosen">
                                         <div class="mb-3">
                                             <div class="image-upload image-upload-two">
-                                                <input type="file" id="imageInput" multiple>
+                                                <input type="file" id="imageInput" name="img" multiple>
                                                 <div class="image-uploads">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                          viewBox="0 0 24 24" fill="none" stroke="currentColor"
