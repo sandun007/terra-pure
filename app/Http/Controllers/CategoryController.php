@@ -44,4 +44,15 @@ class CategoryController extends Controller
         }
     }
 
+    public function delete($id)
+    {
+        try {
+            Category::query()->find($id)->delete();
+            return redirect()->back();
+        }
+        catch (\Exception $e) {
+            return $e->getMessage();
+        }
+    }
+
 }

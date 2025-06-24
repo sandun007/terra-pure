@@ -50,6 +50,7 @@ Route::middleware('auth:admin')->group(function(){
             Route::get('/list', [CategoryController::class, 'index'])->name('category.index');
             Route::get('/', [CategoryController::class, 'create'])->name('category.create');
             Route::post('/', [CategoryController::class, 'store'])->name('category.store');
+            Route::get('/{id}', [CategoryController::class, 'delete'])->name('category.delete');
         });
 
         Route::prefix('seller')->group(function () {
