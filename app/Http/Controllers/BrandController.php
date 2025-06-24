@@ -12,13 +12,14 @@ class BrandController extends Controller
     {
         try {
             $brands = Brand::all();
-            return view('product.brand_list',compact('brands'));
+            $brandCount = $brands->count(); // Get total number of brands
 
-        }
-        catch (\Exception $e) {
+            return view('product.brand_list', compact('brands', 'brandCount'));
+        } catch (\Exception $e) {
             return $e->getMessage();
         }
     }
+
     public function create()
     {
         return view('product.brand_create');
@@ -39,4 +40,17 @@ class BrandController extends Controller
             return $e;
         }
     }
+
+    public function delete($id)
+    {
+        try {
+
+            Brand::query()->find($id)->delete();
+            return redirect()->back();
+        }
+        catch (\Exception $e) {
+            return $e;
+        }
+    }
+
 }

@@ -38,7 +38,7 @@ Brand List
         <div class="add-item d-flex">
             <div class="page-title">
                 <h4 class="fw-bold">Brand List</h4>
-                <h6>20</h6>
+                <h6>{{$brandCount}}</h6>
             </div>
         </div>
         <ul class="table-top-head">
@@ -84,9 +84,9 @@ Brand List
                                     <button class="btn btn-warning btn-sm">
                                         <i class="bi bi-pencil-square"></i> Update
                                     </button>
-                                    <button class="btn btn-danger btn-sm">
+                                    <a href="{{route('brand.delete',$brand->id)}}" class="btn btn-danger btn-sm">
                                         <i class="bi bi-trash"></i> Delete
-                                    </button>
+                                    </a>
                                 </td>
                             </tr>
                         @endforeach
