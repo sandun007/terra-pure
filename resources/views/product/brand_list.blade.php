@@ -78,7 +78,7 @@ Brand List
                                 </td>
 
                                 <td>
-                                    <button class="btn btn-primary btn-sm">
+                                    <button class="btn btn-dark btn-sm">
                                         <i class="bi bi-eye"></i> View
                                     </button>
                                     <button class="btn btn-warning btn-sm">

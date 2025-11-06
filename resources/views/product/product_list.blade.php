@@ -68,6 +68,8 @@
                             <th>Store</th>
                             <th>Category</th>
                             <th>Brand</th>
+                             <th>Price</th>
+                            <th>Stock</th>
                             <th>Status</th>
                             <th>Action</th>
                         </tr>
@@ -80,10 +82,12 @@
                                 <td>Main</td>
                                 <td>{{$product->category}}</td>
                                 <td>{{$product->brand}}</td>
+                                 <td>{{$product->display_price}}</td>
+                                <td>{{$product->qty}}</td>
                                 <td>{{$product->status}}</td>
                                 <td>
-                                    <button class="btn btn-primary btn-sm">view</button>
-                                    <button class="btn btn-warning btn-sm">Update</button>
+                                    <button class="btn btn-dark btn-sm">view</button>
+                                    <a href="{{route('product.edit',$product->id)}}" class="btn btn-warning btn-sm">Update</a>
                                     <a href="{{route('product.delete',$product->id)}}" class="btn btn-danger btn-sm">Delete</a>
                                 </td>
                             </tr>

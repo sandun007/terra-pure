@@ -11,7 +11,9 @@ class BrandController extends Controller
     public function index()
     {
         try {
-            $brands = Brand::all();
+            $brands = Brand::query()
+                ->where('seller_code',0)
+                ->get();
             $brandCount = $brands->count(); // Get total number of brands
 
             return view('product.brand_list', compact('brands', 'brandCount'));
@@ -22,15 +24,19 @@ class BrandController extends Controller
 
     public function create()
     {
-        return view('product.brand_create');
+        $codeGenerate = new CodeGenerator();
+        $code = $codeGenerate->newCodeLoad('brand');
+        return view('product.brand_create', compact('code'));
     }
 
     public function store(Request $request)
     {
         $imagePath = ImageUploader::uploadImage($request->file('img'), 'brand');
+        $codeGenerate= new CodeGenerator;
+        $code = $codeGenerate->generateCode('brand');
         try {
             Brand::query()->create([
-                'code'=>$request->code,
+                'code'=>$code,
                 'name'=>$request->name,
                 'img'=>$imagePath
             ]);

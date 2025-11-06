@@ -10,6 +10,7 @@ class Product extends Model
     use HasFactory;
     protected $fillable=[
         'code',
+        'barcode',
         'name',
         'brand',
         'category',
@@ -19,6 +20,13 @@ class Product extends Model
         'add_by',
         'update_by',
         'status',
-        'cancel'
+        'cancel',
+         'stock_price',
+        'display_price',
+        'discount',
+        'qty',
+        'min_qty',
+        'packing_cost',
+        'seller_code'
     ];
 }

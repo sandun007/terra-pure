@@ -15,6 +15,7 @@ class Category extends Model
         'status',
         'add_by',
         'update_by',
-        'cancel'
+        'cancel',
+        'seller_code'
     ];
 }

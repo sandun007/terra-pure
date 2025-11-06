@@ -15,6 +15,8 @@ class Saler extends Authenticatable
         'code',
         'name',
         'address',
+        'city',
+        'postal_code',
         'district',
         'phone',
         'whatsapp',
@@ -24,6 +26,8 @@ class Saler extends Authenticatable
         'NIC_back',
         'username',
         'password',
+        'view_password',
+        'type'
     ];
 
     protected $hidden = [

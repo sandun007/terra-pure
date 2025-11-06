@@ -12,7 +12,9 @@ class ProductController extends Controller
     public function index()
     {
         try {
-            $products = Product::all();
+            $products = Product::query()
+                ->where('seller_code',0)
+                ->get();
             $count = $products->count();
             return view('product.product_list',compact('products','count'));
         }
@@ -23,44 +25,89 @@ class ProductController extends Controller
     public function create()
     {
         try {
-            $brands = Brand::all();
-            $categories = Category::all();
-            return view('product.product_create',compact('brands','categories'));
+            $brands = Brand::query()
+                ->where('seller_code',0)
+                ->get();
+            $categories = Category::query()
+                ->where('seller_code',0)
+                ->get();
+            $codeGenerate = new CodeGenerator();
+            $code = $codeGenerate->newCodeLoad('product');
+
+            return view('product.product_create',compact('brands','categories','code'));
         }
         catch (\Exception $e) {
             return $e->getMessage();
         }
     }
-
-    public function store(Request $request)
+    
+    public function edit($id)
     {
-        $imagePath = ImageUploader::uploadImage($request->file('img'), 'product');
-
         try {
-            Product::query()->create([
-                'code'=>$request->code,
-                'name'=>$request->name,
-                'brand'=>$request->brand,
-                'category'=>$request->category,
-                'description'=>$request->description,
-                'type'=>'stock_item',
-                'img'=>$imagePath,
-                'add_by'=>'admin',
-                'update_by'=>'admin',
-                'status'=>'active',
-                'cancel'=>0,
-            ]);
+            $brands = Brand::query()
+                ->where('seller_code',0)
+                ->get();
+            $categories = Category::query()
+                ->where('seller_code',0)
+                ->get();
+            $codeGenerate = new CodeGenerator();
+            $code = $codeGenerate->newCodeLoad('product');
 
-            return redirect()->back();
+            $product = Product::query()->findOrFail($id);
+
+            return view('product.product_update',compact('brands','categories','code','product'));
         }
         catch (\Exception $e) {
             return $e->getMessage();
         }
     }
 
-    public function product_view($id)
+      public function store(Request $request)
     {
-        return view('product.product_view');
+        try {
+            $productId = $request->id;
+            $imagePath = $request->hasFile('img')
+                ? ImageUploader::uploadImage($request->file('img'), 'product')
+                : null;
+
+            $codeGenerate = new CodeGenerator;
+            $product = $productId ? Product::find($productId) : new Product();
+
+            if (!$productId) {
+                $product->code = $codeGenerate->generateCode('product');
+            }
+            $product->name = $request->name;
+            $product->barcode = $request->barcode;
+            $product->brand = $request->brand;
+            $product->category = $request->category;
+            $product->description = $request->description;
+            $product->stock_price = $request->stock_price;
+            $product->display_price = $request->display_price;
+            $product->discount = $request->discount;
+            $product->qty = $request->qty;
+            $product->min_qty = $request->min_qty;
+            $product->packing_cost = $request->packing_cost;
+            $product->type = 'stock_item';
+            $product->add_by = 'admin';
+            $product->update_by = 'admin';
+            $product->status = 'active';
+            $product->cancel = 0;
+
+            if ($imagePath) {
+                $product->img = $imagePath;
+            }
+            $product->save();
+
+            return redirect()->back()->with('success', 'Product saved successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
+      public function product_view($id)
+    {
+        $product = Product::query()->findOrFail($id);
+        return view('product.product_view',compact('product'));
     }
 
     public function delete($id)

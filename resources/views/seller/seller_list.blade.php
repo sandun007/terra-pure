@@ -1,6 +1,6 @@
 @extends('admin.app')
 @push('title')
-    Product List
+    Seller List
 @endpush
 @push('css')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
@@ -53,7 +53,7 @@
             </li>
         </ul>
         <div class="page-btn mt-0">
-            <a href="{{route('product.create')}}" class="btn btn-secondary">Create New Seller</a>
+            <a href="{{route('seller.create')}}" class="btn btn-secondary">Create New Seller</a>
         </div>
     </div>
     <div class="row">
@@ -66,72 +66,31 @@
                             <th>Seller Code</th>
                             <th>Seller Name</th>
                             <th>NIC</th>
-                            <th>Mobile 01</th>
-                            <th>Mobile 02</th>
+                            <th>Mobile</th>
                             <th>Address</th>
                             <th>District</th>
-                            <th>Level</th>
+                            {{--                            <th>Level</th>--}}
                             <th>Action</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr>
-                            <td>SELL/00001</td>
-                            <td>Suranga</td>
-                            <td>200008800</td>
-                            <td>07xxxxxxx</td>
-                            <td>07xxxxxxx</td>
-                            <td>Thangalle</td>
-                            <td>Hambantota</td>
-                            <td>Biginer</td>
-                            <td>
-                                <button class="btn btn-primary btn-sm">view</button>
-                                <button class="btn btn-warning btn-sm">Update</button>
-                                <button class="btn btn-danger btn-sm">Delete</button>
-                            </td>
-                        </tr><tr>
-                            <td>SELL/00001</td>
-                            <td>Suranga</td>
-                            <td>200008800</td>
-                            <td>07xxxxxxx</td>
-                            <td>07xxxxxxx</td>
-                            <td>Thangalle</td>
-                            <td>Hambantota</td>
-                            <td>Biginer</td>
-                            <td>
-                                <button class="btn btn-primary btn-sm">view</button>
-                                <button class="btn btn-warning btn-sm">Update</button>
-                                <button class="btn btn-danger btn-sm">Delete</button>
-                            </td>
-                        </tr><tr>
-                            <td>SELL/00001</td>
-                            <td>Suranga</td>
-                            <td>200008800</td>
-                            <td>07xxxxxxx</td>
-                            <td>07xxxxxxx</td>
-                            <td>Thangalle</td>
-                            <td>Hambantota</td>
-                            <td>Biginer</td>
-                            <td>
-                                <button class="btn btn-primary btn-sm">view</button>
-                                <button class="btn btn-warning btn-sm">Update</button>
-                                <button class="btn btn-danger btn-sm">Delete</button>
-                            </td>
-                        </tr><tr>
-                            <td>SELL/00001</td>
-                            <td>Suranga</td>
-                            <td>200008800</td>
-                            <td>07xxxxxxx</td>
-                            <td>07xxxxxxx</td>
-                            <td>Thangalle</td>
-                            <td>Hambantota</td>
-                            <td>Biginer</td>
-                            <td>
-                                <button class="btn btn-primary btn-sm">view</button>
-                                <button class="btn btn-warning btn-sm">Update</button>
-                                <button class="btn btn-danger btn-sm">Delete</button>
-                            </td>
-                        </tr>
+                        @foreach($sellers as $seller)
+                            <tr>
+                                <td>{{$seller->code }}</td>
+                                <td>{{$seller->name }}</td>
+                                <td>{{$seller->NIC_no }}</td>
+                                <td>{{$seller->phone }}</td>
+                                <td>{{$seller->address }}</td>
+                                <td>{{$seller->district }}</td>
+                                {{--                           <td>{{$seller->code }}</td>--}}
+                                <td>
+                                    <button class="btn btn-dark btn-sm">view</button>
+                                        <a href="{{route('admin.seller.edit',$seller->id)}}" class="btn btn-warning btn-sm">Update</a>
+                                    <a href="{{route('seller.delete',$seller->id)}}" class="btn btn-danger btn-sm">Delete</a>
+                                </td>
+                            </tr>
+                        @endforeach
+
                         </tbody>
                     </table>
                 </div>

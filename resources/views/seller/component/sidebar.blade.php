@@ -58,6 +58,52 @@
                                 <span>Shop</span>
                             </a>
                         </li>
+                          @if(auth()->user()->type == 'self_seller')
+                        <li>
+                            <a href="{{route('seller.product.index')}}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                     stroke-linecap="round" stroke-linejoin="round" class="feather feather-box">
+                                    <path
+                                        d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                </svg>
+                                <span>My Products</span>
+                            </a>
+                        </li>
+                        @endif
+                        @if(auth()->user()->type == 'self_seller')
+                            <li>
+                                <a href="{{route('seller.brand.index')}}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                         stroke-linecap="round" stroke-linejoin="round" class="feather feather-box">
+                                        <path
+                                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                    </svg>
+                                    <span>My Brand</span>
+                                </a>
+                            </li>
+                        @endif
+                        @if(auth()->user()->type == 'self_seller')
+                            <li>
+                                <a href="{{route('seller.category.index')}}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                         stroke-linecap="round" stroke-linejoin="round" class="feather feather-box">
+                                        <path
+                                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                    </svg>
+                                    <span>My Category</span>
+                                </a>
+                            </li>
+                        @endif
+                      
                         <li class="nav-item dropdown">
                             <a class="dropdown-toggle" href="#" id="orderDropdown" role="button"
                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -114,19 +160,28 @@
 {{--                                <a class="dropdown-item" href="">Return Order</a>--}}
                             </div>
                         </li>
-                        <li>
-                            <a href="">
+                         <li class="nav-item dropdown">
+                            <a class="dropdown-toggle" href="#" id="callDropdown" role="button"
+                               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                      stroke-linecap="round" stroke-linejoin="round"
-                                     class="feather feather-codepen">
-                                    <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"></polygon>
-                                    <line x1="12" y1="22" x2="12" y2="15.5"></line>
-                                    <polyline points="22 8.5 12 15.5 2 8.5"></polyline>
-                                    <polyline points="2 15.5 12 8.5 22 15.5"></polyline>
-                                    <line x1="12" y1="2" x2="12" y2="8.5"></line>
+                                     class="feather feather-box mr-1">
+                                    <path
+                                        d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
                                 </svg>
-                                <span>Call</span></a></li>
+                                <span>Call</span>
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="callDropdown">
+                                <a class="dropdown-item" href="{{route('call.index')}}">Pending Call List</a>
+                                <a class="dropdown-item" href="">Not Answer List</a>
+                                <a class="dropdown-item" href="">Reject List</a>
+                                <a class="dropdown-item" href="">Other</a>
+                                {{--                                <a class="dropdown-item" href="">Return Order</a>--}}
+                            </div>
+                        </li>
                     </ul>
                 </li>
                 <li class="submenu-open">
@@ -343,7 +398,7 @@
                         <li>
                             <form action="{{ route('seller.logout') }}" method="POST">
                                 @csrf
-                                <button type="submit" class="btn btn-danger">Logout</button>
+                                <button type="submit" class="btn btn-danger btn-sm w-100">Logout</button>
                             </form>
                         </li>
                     </ul>

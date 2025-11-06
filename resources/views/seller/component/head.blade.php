@@ -10,6 +10,8 @@
     <title>
         @stack('title')
     </title>
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('asset/img/dx.png') }}">
+    
 
     <script src="{{ asset('asset/js/theme/theme-script.js')}}" type="text/javascript"></script>
     <script src="{{ asset('asset/js/theme/theme-9c065fc6.js')}}" type="text/javascript"></script>
@@ -47,7 +49,63 @@
         /*    background: linear-gradient(to bottom, #013220, #025310, #037d50) !important;*/
         /*}*/
 
+.phone-img {
+            position: relative;
+            display: inline-block;
+            margin: 10px;
+        }
 
+        .phone-img img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .phone-img a {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            padding: 2px;
+        }
+
+        /* Dark background themes with white text */
+        .status-reject {
+            background-color: rgba(127, 0, 0, 0.7) !important;
+            color: white;
+        }
+
+        .status-confirm {
+            background-color: rgba(47, 177, 82, 0.86) !important;
+            color: white;
+        }
+
+        .status-pending {
+            background-color: rgba(6, 90, 108, 0.68) !important;
+            color: #131111;
+        }
+
+        .status-not-answer {
+            background-color: rgba(112, 2, 120, 0.88) !important;
+            color: white;
+        }
+
+        .status-whatsapp {
+            background-color: rgba(62, 89, 83, 0.94) !important;
+            color: white;
+        }
+
+        /* Ensure all <td> text inside rows remains white */
+        .status-reject td,
+        .status-confirm td,
+        .status-pending td,
+        .status-not-answer td,
+        .status-whatsapp td {
+            color: white !important;
+        }
 
         .swal2-popup.swal2-toast {
             flex-direction: row;

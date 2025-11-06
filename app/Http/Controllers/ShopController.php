@@ -10,7 +10,9 @@ class ShopController extends Controller
     public function index()
     {
         try {
-            $products = Product::all();
+            $products = Product::query()
+                ->where('seller_code',0)
+                ->get();
             return view('shop.shop',compact('products'));
         }
         catch (\Exception $e) {

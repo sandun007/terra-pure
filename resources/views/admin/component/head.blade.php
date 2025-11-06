@@ -10,6 +10,8 @@
     <title>
         @stack('title')
     </title>
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('asset/img/dx.png') }}">
+
 
     <script src="{{ asset('asset/js/theme/theme-script.js')}}" type="text/javascript"></script>
     <script src="{{ asset('asset/js/theme/theme-9c065fc6.js')}}" type="text/javascript"></script>
@@ -21,7 +23,7 @@
 
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="{{asset('asset/css/theme/bootstrap.min.css')}}bootstrap.min.css">
+    <link rel="stylesheet" href="{{asset('asset/css/theme/bootstrap.min.css')}}">
 
     <!-- Datetimepicker CSS -->
     <link rel="stylesheet" href="{{asset('asset/css/theme/bootstrap-datetimepicker.min.css')}}">

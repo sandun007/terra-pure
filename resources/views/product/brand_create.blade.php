@@ -82,7 +82,7 @@ Brand Create
                                     <div class="mb-3">
                                         <label class="form-label">Brand Code<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="code" class="form-control" required placeholder="Brand Code">
+                                        <input type="text" name="code" class="form-control" required disabled value="{{$code}}">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
@@ -122,10 +122,10 @@ Brand Create
                 </div>
             </div>
         </div>
-        <div class="col-lg-12">
+        <div class="col-12">
             <div class="d-flex align-items-center justify-content-end mb-4">
-                <button type="button" class="btn btn-secondary me-2" fdprocessedid="2bjap">Cancel</button>
-                <button type="submit" class="btn btn-primary" fdprocessedid="to0jbb">Save</button>
+                <button type="button" class="btn btn-danger me-2" fdprocessedid="2bjap">Cancel</button>
+                <button type="submit" class="btn btn-dark" fdprocessedid="to0jbb">Save</button>
             </div>
         </div>
     </form>

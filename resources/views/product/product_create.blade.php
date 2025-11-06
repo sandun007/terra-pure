@@ -82,7 +82,7 @@
                                     <div class="mb-3">
                                         <label class="form-label">Product Code<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="code" class="form-control" required placeholder="Product Code">
+                                        <input type="text" name="code" class="form-control" required disabled value="{{$code}}">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
@@ -95,7 +95,7 @@
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Barcode<span class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="name" class="form-control" placeholder="Bar Code">
+                                        <input type="text" name="barcode" class="form-control" placeholder="Bar Code">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
@@ -193,6 +193,67 @@
                     </div>
 
                 </div>
+                <div class="accordion-item border mb-4">
+                    <h2 class="accordion-header " id="headingSpacingOne">
+                        <div style="background-color: var(--main-theme-color) !important;" class=" accordion-button bg-white" data-bs-toggle="collapse"
+                             data-bs-target="#SpacingOne" aria-expanded="true" aria-controls="SpacingOne">
+                            <div class="d-flex align-items-center justify-content-between flex-fill">
+                                <h5 class="d-flex align-items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                         stroke-linejoin="round" class="feather feather-info text-primary me-2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                    </svg>
+                                    <span>Stock Information</span></h5>
+                            </div>
+                        </div>
+                    </h2>
+                    <div id="SpacingOne">
+                        <div class="accordion-body border-top">
+                            <div class="row">
+                                <div class="col-sm-6 col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Stock Price<span
+                                                class="text-danger ms-1">*</span></label>
+                                        <input type="number" name="stock_price" class="form-control" required placeholder="Stock Price">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Display Price<span
+                                                class="text-danger ms-1">*</span></label>
+                                        <input type="number" name="display_price" class="form-control" required placeholder="Display Price">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Discount %<span class="text-danger ms-1">*</span></label>
+                                        <input type="number" name="discount" class="form-control" placeholder="Discount">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Qty<span class="text-danger ms-1">*</span></label>
+                                        <input type="number" name="qty" class="form-control" placeholder="Quantity">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Min Qty<span class="text-danger ms-1">*</span></label>
+                                        <input type="number" name="min_qty" class="form-control" placeholder="Min Quantity">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Packing Cost</label>
+                                        <input type="number" name="packing_cost" class="form-control" required placeholder="Packing Cost" >
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
             </div>
         </div>
         <div class="col-lg-12">

@@ -80,7 +80,7 @@
                                     <div class="mb-3">
                                         <label class="form-label">Seller Code<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="code" class="form-control" placeholder="Seller Code" required>
+                                        <input type="text" name="code" class="form-control" required disabled value="{{$code}}">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
@@ -123,6 +123,12 @@
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
+                                        <label class="form-label">City<span class="text-danger ms-1">*</span></label>
+                                        <input type="text" name="city" class="form-control" placeholder="City" required>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 col-12">
+                                    <div class="mb-3">
                                         <label class="form-label">Postal Code<span class="text-danger ms-1">*</span></label>
                                         <input type="text" name="postal_code" class="form-control" placeholder="Postal Code" required>
                                     </div>
@@ -141,37 +147,60 @@
 
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
-                                        <label class="form-label">District</label>
-                                        <select class="form-control" name="district" required>
-                                            <option value="">Select</option>
-                                            <option>Ampara</option>
-                                            <option>Anuradhapura</option>
-                                            <option>Badulla</option>
-                                            <option>Batticaloa</option>
-                                            <option>Colombo</option>
-                                            <option>Galle</option>
-                                            <option>Gampaha</option>
-                                            <option>Hambantota</option>
-                                            <option>Jaffna</option>
-                                            <option>Kalutara</option>
-                                            <option>Kandy</option>
-                                            <option>Kegalle</option>
-                                            <option>Kilinochchi</option>
-                                            <option>Kurunegala</option>
-                                            <option>Mannar</option>
-                                            <option>Matale</option>
-                                            <option>Matara</option>
-                                            <option>Monaragala</option>
-                                            <option>Mullaitivu</option>
-                                            <option>Nuwara Eliya</option>
-                                            <option>Polonnaruwa</option>
-                                            <option>Puttalam</option>
-                                            <option>Ratnapura</option>
-                                            <option>Trincomalee</option>
-                                            <option>Vavuniya</option>
+                                        <label class="form-label">Deposit Amount<span class="text-danger ms-1">*</span></label>
+                                        <input type="number" name="deposit" class="form-control" placeholder="Deposit Amount" required>
+                                    </div>
+                                </div>
+                                   <div class="col-sm-6 col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Seller Type<span class="text-danger ms-1">*</span></label>
+                                        <select class="form-control" name="type" required>
+                                            <option value="self_seller">Self Seller</option>
+                                            <option value="system_seller">System Seller</option>
                                         </select>
                                     </div>
                                 </div>
+                                 <div class="col-sm-6 col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Referral Code<span class="text-danger ms-1">*</span></label>
+                                        <input type="text" name="ref_code" class="form-control" placeholder="Referral Code" value="0" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-sm-6 col-12">
+    <div class="mb-3">
+        <label class="form-label">District</label>
+        <select class="form-control" name="district" required>
+            <option value="">Select</option>
+            <option value="Ampara">Ampara</option>
+            <option value="Anuradhapura">Anuradhapura</option>
+            <option value="Badulla">Badulla</option>
+            <option value="Batticaloa">Batticaloa</option>
+            <option value="Colombo">Colombo</option>
+            <option value="Galle">Galle</option>
+            <option value="Gampaha">Gampaha</option>
+            <option value="Hambantota">Hambantota</option>
+            <option value="Jaffna">Jaffna</option>
+            <option value="Kalutara">Kalutara</option>
+            <option value="Kandy">Kandy</option>
+            <option value="Kegalle">Kegalle</option>
+            <option value="Kilinochchi">Kilinochchi</option>
+            <option value="Kurunegala">Kurunegala</option>
+            <option value="Mannar">Mannar</option>
+            <option value="Matale">Matale</option>
+            <option value="Matara">Matara</option>
+            <option value="Monaragala">Monaragala</option>
+            <option value="Mullaitivu">Mullaitivu</option>
+            <option value="Nuwara Eliya">Nuwara Eliya</option>
+            <option value="Polonnaruwa">Polonnaruwa</option>
+            <option value="Puttalam">Puttalam</option>
+            <option value="Ratnapura">Ratnapura</option>
+            <option value="Trincomalee">Trincomalee</option>
+            <option value="Vavuniya">Vavuniya</option>
+        </select>
+    </div>
+</div>
+
                             </div>
                         </div>
                     </div>

@@ -38,7 +38,7 @@
                     <img src="{{asset('asset/img/wordmark.png')}}" alt="product image" width="150" class="mt-5">
                 </div>
                 <div class="col-12 d-flex justify-content-center">
-                    <img src="{{asset('asset/img/theme/item.png')}}" alt="product image" width="300" style="margin-top: 10px">
+                    <img src="{{ asset('storage/' . $product->img) }}" alt="product image" width="400" style="margin-top: 10px">
                 </div>
             </div>
         </div>
@@ -49,12 +49,12 @@
                 <div class="col-12">
                     <div class="row">
                         <div class="col-6">
-                            <h2><i class="fas fa-box-open text-info"></i> Product Name</h2>
+                            <h2><i class="fas fa-box-open text-info"></i> {{$product->name}}</h2>
                         </div>
                         <div class="col-6">
                             <p class="mt-3">
                                 <i class="fas fa-barcode text-primary"></i> Product Code :
-                                <span class="bg-primary text-white p-2 rounded">ITM/00000000000001</span>
+                                <span class="bg-primary text-white p-2 rounded">{{$product->code}}</span>
                             </p>
                         </div>
                     </div>
@@ -64,41 +64,44 @@
                     <h5><i class="fas fa-align-left text-secondary"></i> Description</h5>
                 </div>
                 <div class="col-12">
-                    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Animi aperiam harum modi quasi quisquam
-                        saepe sit vitae. Est, quibusdam quidem. Animi consectetur cupiditate debitis in ipsa placeat quod.
-                        Accusamus amet asperiores at corporis culpa cumque dolorum eaque exercitationem facere natus numquam
-                        odio qui quibusdam, rerum soluta sunt totam voluptates voluptatibus!</p>
+                    <p>{{$product->description}}</p>
                 </div>
 
                 <div class="col-12">
                     <div class="row">
                         <div class="col-4">
-                            <h2 style="color: orangered">
-                                <i class="fas fa-tag"></i> Rs.1500.00
-                            </h2>
+                            <h3 style="color: orangered">
+                                <span>Price</span> Rs.{{$product->display_price}}.00
+                            </h3>
                         </div>
+                       
+                    </div>
+                    <div class="row">
                         <div class="col-4">
-                            <input type="number" class="form-control" placeholder="Qty">
+                            <h3 style="color: black">
+                                <span>Packing Cost</span> Rs.{{$product->packing_cost}}.00
+                            </h3>
                         </div>
+                       
                     </div>
                 </div>
 
                 <div class="col-12">
                     <h2 class="mt-3">
-                        <i class="fas fa-money-bill-wave text-success"></i> Total Amount : Rs.3000.00
+                        <i class="fas fa-money-bill-wave text-success"></i> Total Cost : Rs.{{$product->packing_cost + $product->display_price}}.00
                     </h2>
                 </div>
+            <div class="col-12">
+                <button class="btn btn-primary w-100 mt-3">
+                    <i class="fas fa-plus-circle"></i> Add My Product
+                </button>
+            </div>
+            <div class="col-12">
+                <button class="btn btn-success w-100 mt-3">
+                    <i class="fas fa-copy"></i> Code Copy
+                </button>
+            </div>
 
-                <div class="col-12">
-                    <button class="btn btn-primary w-100 mt-3">
-                        <i class="fas fa-cart-plus"></i> Add To Cart
-                    </button>
-                </div>
-                <div class="col-12">
-                    <button class="btn btn-success w-100 mt-3">
-                        <i class="fas fa-bolt"></i> Buy Now
-                    </button>
-                </div>
             </div>
         </div>
     </div>

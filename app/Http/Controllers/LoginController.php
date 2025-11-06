@@ -18,6 +18,7 @@ class LoginController extends Controller
 //            'username' => 'required|string',
 //            'password' => 'required|string',
 //        ]);
+
         $check = User::query()
             ->where('username', $request->username)
             ->where('view_password', $request->password)
@@ -34,6 +35,13 @@ class LoginController extends Controller
             if (Auth::guard('seller')->attempt(['username' => $request->username, 'password' => $request->password])) {
                 $user = Auth::guard('seller')->user();
                 return redirect()->route('seller.dashboard');
+            }
+        }
+        
+           elseif ($check && $check->type == 'employee') {
+            if (Auth::guard('employee')->attempt(['username' => $request->username, 'password' => $request->password])) {
+                $user = Auth::guard('employee')->user();
+                return redirect()->route('employee.dashboard');
             }
         }
 
