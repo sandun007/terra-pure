@@ -12,6 +12,7 @@ class LoginController extends Controller
 {
     public function loginCheck(Request $request)
     {
+//        dd($request->all());
 
 //        // Validate the input
 //        $request->validate([
@@ -23,21 +24,22 @@ class LoginController extends Controller
             ->where('username', $request->username)
             ->where('view_password', $request->password)
             ->first();
+
         $password = Hash::make($request->password);
 
-        if ($check && $check->type == 'admin') {
+        if ($check && $check->type === 'admin') {
 //            dd($request->all());
             if (Auth::guard('admin')->attempt(['username' => $request->username, 'password' => $request->password])) {
                 $user = Auth::guard('admin')->user();
                 return redirect()->route('admin.dashboard');
             }
-        } elseif ($check && $check->type == 'seller') {
+        } elseif ($check && $check->type === 'seller') {
             if (Auth::guard('seller')->attempt(['username' => $request->username, 'password' => $request->password])) {
                 $user = Auth::guard('seller')->user();
                 return redirect()->route('seller.dashboard');
             }
         }
-        
+
            elseif ($check && $check->type == 'employee') {
             if (Auth::guard('employee')->attempt(['username' => $request->username, 'password' => $request->password])) {
                 $user = Auth::guard('employee')->user();
