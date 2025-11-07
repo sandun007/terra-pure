@@ -41,6 +41,8 @@ Route::middleware('auth:admin')->group(function(){
 
         Route::post('/logout', [LoginController::class, 'logout'])->name('admin.logout');
 
+        Route::get('/admin/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('admin.dashboard');
+        Route::get('/admin/dashboard/chart-data', [App\Http\Controllers\Admin\DashboardController::class, 'getChartData'])->name('admin.dashboard.chart-data');
         Route::get('/', [PageController::class, 'dashboard'])->name('admin.dashboard');
         Route::get('/create',[AdminController::class,'create'])->name('admin.create');
         Route::post('/',[AdminController::class,'store'])->name('admin.store');
@@ -92,7 +94,7 @@ Route::middleware('auth:admin')->group(function(){
             Route::get('product/{id}', [ProductController::class, 'product_view'])->name('product.product_view');
 
         });
-        
+
           Route::prefix('employee')->group(function () {
             Route::get('/',[EmployeeController::class,'index'])->name('employee.list');
             Route::get('/create',[EmployeeController::class,'create'])->name('employee.create');
