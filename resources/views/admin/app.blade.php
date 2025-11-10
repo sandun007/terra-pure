@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="en">
 @include('admin.component.head')
+<link href="{{ asset('asset/css/pages/dashboard.css') }}" rel="stylesheet">
+
 <body>
 <div id="global-loader" style="display: none;">
     <div class="whirly-loader"></div>
