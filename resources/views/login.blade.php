@@ -35,13 +35,12 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-image: url("{{ asset('asset/img/shop.jpg') }}");
+            background-image: url("{{ asset('asset/img/bg3.png') }}");
             background-repeat: no-repeat;
             background-size: cover;
             background-position: center center;
             background-attachment: fixed;
             min-height: 100vh;
-            min-width: 275vh;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -382,25 +381,13 @@
         .logo-container {
             position: relative;
             z-index: 1;
-            display: flex;
-            justify-content: left;
-            align-items: center;
-        }
-
-        .logo-wrapper {
-            background-color: white;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: var(--shadow-medium);
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
         }
 
         .logo {
             width: 180px;
             height: auto;
-            margin-bottom: 0;
+            margin-bottom: 20px;
+            filter: brightness(0) invert(1);
         }
 
         .right-content {
@@ -512,14 +499,6 @@
                 align-items: flex-start;
                 gap: 15px;
             }
-
-            .logo-wrapper {
-                padding: 15px;
-            }
-
-            .logo {
-                width: 150px;
-            }
         }
     </style>
 </head>
@@ -566,6 +545,16 @@
                 <span>Sign In</span>
             </button>
 
+{{--            <div class="divider">--}}
+{{--                <span class="divider-text">Or continue with</span>--}}
+{{--            </div>--}}
+
+{{--            <div class="social-login">--}}
+{{--                <a href="#" class="social-btn"><i class="fab fa-google"></i></a>--}}
+{{--                <a href="#" class="social-btn"><i class="fab fa-microsoft"></i></a>--}}
+{{--                <a href="#" class="social-btn"><i class="fab fa-apple"></i></a>--}}
+{{--            </div>--}}
+
             <div class="register-link">
                 Don't have an account? <a href="#" class="text-warning">Request Seller Account</a>
             </div>
@@ -580,9 +569,7 @@
     <!-- Right Section - Branding with Green Theme and Animations -->
     <div class="login-right">
         <div class="logo-container">
-            <div class="logo-wrapper animate__animated animate__fadeInRight">
-                <img src="{{ asset('asset/img/dx.png') }}" alt="DX Platform Logo" class="logo">
-            </div>
+            <img src="{{ asset('asset/img/dx.png') }}" alt="DX Platform Logo" class="logo animate__animated animate__fadeInRight">
         </div>
 
         <div class="right-content">

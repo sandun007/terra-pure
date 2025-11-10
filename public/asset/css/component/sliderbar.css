@@ -1,0 +1,273 @@
+/* ===============================================
+   SIDEBAR - DreamX Dashboard (SPACE ISSUE FIXED)
+   =============================================== */
+
+:root {
+    --sidebar-width: 260px;
+    --sidebar-collapsed-width: 70px;
+    --header-height: 70px;
+    --sidebar-bg: #ffffff;
+    --sidebar-border: #e5e7eb;
+    --text-dark: #1f2937;
+    --text-gray: #6b7280;
+    --text-light: #9ca3af;
+    --primary: #10b981;
+    --hover-bg: #f3f4f6;
+    --active-bg: #dcfce7;
+    --active-text: #059669;
+}
+
+/* ========== Sidebar Container ========== */
+.sidebar {
+    position: fixed;
+    top: var(--header-height);
+    left: 0;
+    width: var(--sidebar-width);
+    height: calc(100vh - var(--header-height));
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--sidebar-border);
+    z-index: 1000;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.sidebar-inner {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 20px 0;
+}
+
+/* Scrollbar */
+.sidebar-inner::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-inner::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-inner::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+/* ========== Menu ========== */
+.sidebar-menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.submenu-hdr {
+    padding: 12px 24px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-light);
+    white-space: nowrap;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-menu a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 24px;
+    text-decoration: none;
+    color: var(--text-gray);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.sidebar-menu a:hover {
+    background: var(--hover-bg);
+    color: var(--text-dark);
+}
+
+.sidebar-menu a.active {
+    background: var(--active-bg);
+    color: var(--active-text);
+    border-left: 3px solid var(--primary);
+    padding-left: 21px;
+}
+
+/* Icons */
+.sidebar-menu svg,
+.sidebar-menu i {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    flex-shrink: 0;
+    display: flex !important;
+}
+
+.sidebar-menu a span {
+    transition: opacity 0.3s ease, width 0.3s ease;
+}
+
+/* Submenu */
+.submenu > ul {
+    display: none;
+}
+
+.submenu.submenu-open > ul {
+    display: block;
+}
+
+.submenu ul a {
+    padding-left: 56px;
+    font-size: 13px;
+}
+
+.submenu > a::after {
+    content: '';
+    position: absolute;
+    right: 24px;
+    width: 6px;
+    height: 6px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(-45deg);
+    transition: transform 0.3s ease;
+}
+
+.submenu.submenu-open > a::after {
+    transform: rotate(45deg);
+}
+
+/* ========== Collapsed State ========== */
+.sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
+}
+
+.sidebar.collapsed .submenu-hdr,
+.sidebar.collapsed .sidebar-menu a span {
+    opacity: 0;
+    width: 0;
+}
+
+.sidebar.collapsed .sidebar-menu a {
+    justify-content: center;
+    padding: 12px;
+}
+
+.sidebar.collapsed .submenu > a::after {
+    display: none;
+}
+
+.sidebar.collapsed .submenu ul {
+    display: none !important;
+}
+
+/* Tooltip */
+.sidebar.collapsed .sidebar-menu a:hover::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: calc(100% + 10px);
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 8px 12px;
+    background: var(--text-dark);
+    color: white;
+    font-size: 12px;
+    white-space: nowrap;
+    border-radius: 6px;
+    z-index: 1001;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.sidebar.collapsed .sidebar-menu a:hover::after {
+    content: '';
+    position: absolute;
+    left: calc(100% + 4px);
+    top: 50%;
+    transform: translateY(-50%);
+    border-right: 6px solid var(--text-dark);
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    z-index: 1001;
+}
+
+/* ========== MAIN CONTENT (NO SPACE ISSUE) ========== */
+.main-wrapper,
+.page-content,
+.main-content,
+.page-wrapper {
+    margin-left: var(--sidebar-width);
+    padding: 24px;
+    background: #f5f7fa;
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* When sidebar collapsed - NO SPACE */
+.sidebar.collapsed ~ .main-wrapper,
+.sidebar.collapsed ~ .page-content,
+.sidebar.collapsed ~ .main-content,
+.sidebar.collapsed ~ .page-wrapper {
+    margin-left: var(--sidebar-collapsed-width);
+}
+
+/* Body class method */
+body.sidebar-collapsed .main-wrapper,
+body.sidebar-collapsed .page-content,
+body.sidebar-collapsed .main-content,
+body.sidebar-collapsed .page-wrapper {
+    margin-left: var(--sidebar-collapsed-width);
+}
+
+/* Dashboard Container */
+.dashboard-container {
+    max-width: 100%;
+    padding: 0;
+    margin: 0 !important;
+}
+
+/* ========== Mobile ========== */
+@media (max-width: 1024px) {
+    .sidebar {
+        left: calc(var(--sidebar-width) * -1);
+    }
+
+    .sidebar.active {
+        left: 0;
+    }
+
+    .main-wrapper,
+    .page-content,
+    .main-content,
+    .page-wrapper {
+        margin-left: 0 !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        top: 0;
+        height: 100vh;
+        width: 280px;
+        left: -280px;
+        z-index: 1050;
+    }
+
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1049;
+    }
+
+    .sidebar-overlay.active {
+        display: block;
+    }
+
+    .main-wrapper,
+    .page-content,
+    .main-content {
+        padding: 16px;
+    }
+}
