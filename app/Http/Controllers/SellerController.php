@@ -201,6 +201,7 @@ class SellerController extends Controller
 
     }
 
+// In SellerController
     public function completeOrder()
     {
         return view('seller.complete_order_list');

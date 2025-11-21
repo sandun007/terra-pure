@@ -16,6 +16,7 @@ use App\Http\Controllers\SellerPaymentController;
 use App\Http\Controllers\SellerProductController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\StockController;
+use App\Http\Controllers\WholesalerController;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EmployeeController;
@@ -48,11 +49,13 @@ Route::middleware('auth:admin')->group(function(){
         Route::post('/',[AdminController::class,'store'])->name('admin.store');
 
         Route::prefix('product')->group(function () {
-            Route::get('/list', [ProductController::class, 'index'])->name('product.index');
-            Route::get('/', [ProductController::class, 'create'])->name('product.create');
-            Route::post('/', [ProductController::class, 'store'])->name('product.store');
-            Route::get('/{id}', [ProductController::class, 'delete'])->name('product.delete');
-             Route::get('/edit/{id}', [ProductController::class, 'edit'])->name('product.edit');
+            Route::get('/', [ProductController::class, 'index'])->name('product.index');
+            Route::get('/create', [ProductController::class, 'create'])->name('product.create');
+            Route::post('/create', [ProductController::class, 'store'])->name('product.store');
+            Route::get('/edit/{id}', [ProductController::class, 'edit'])->name('product.edit');
+            Route::post('/update/{id}', [ProductController::class, 'update'])->name('product.update');
+            Route::get('/view/{id}', [ProductController::class, 'product_view'])->name('product.view'); // Added this line
+            Route::get('/delete/{id}', [ProductController::class, 'delete'])->name('product.delete');
         });
 
         Route::prefix('brand')->group(function () {
@@ -86,6 +89,7 @@ Route::middleware('auth:admin')->group(function(){
             Route::get('/rescheduling-order', [OrderController::class, 'reschedulingOrder'])->name('rescheduling-order');
             Route::get('/pending-order', [OrderController::class, 'pendingOrder'])->name('pending-order');
         });
+
         Route::prefix('stock')->group(function () {
             Route::get('/low-stock', [StockController::class, 'low_stock'])->name('low-stock');
         });
@@ -106,7 +110,7 @@ Route::middleware('auth:admin')->group(function(){
 
 });
 
-Route::middleware('auth:seller')->group(function(){
+    Route::middleware('auth:seller')->group(function(){
     Route::prefix('seller')->group(function () {
         Route::post('/logout', [LoginController::class, 'logout'])->name('seller.logout');
         Route::get('/', [SellerController::class, 'dashboard'])->name('seller.dashboard');
@@ -205,3 +209,61 @@ Route::prefix('employee')->group(function(){
 
 });
 
+
+
+
+Route::middleware(['auth:wholesaler'])->group(function (){
+    Route::prefix('wholesaler')->name('wholesaler.')->group(function () {
+        // Authentication
+        Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+        Route::get('/', [WholesalerController::class, 'dashboard'])->name('dashboard');
+        Route::get('/profile', [WholesalerController::class, 'profile'])->name('profile');
+        Route::post('/profile', [WholesalerController::class, 'updateProfile'])->name('profile.update');
+
+        // Shop Routes
+        Route::get('/shop', [WholesalerController::class, 'shop'])->name('shop');
+        Route::get('/shop/edit', [WholesalerController::class, 'editShop'])->name('shop.edit');
+        Route::post('/shop/update', [WholesalerController::class, 'updateShop'])->name('shop.update');
+
+        // Product Routes
+        Route::get('/products', [WholesalerController::class, 'products'])->name('products');
+        Route::get('/products/create', [WholesalerController::class, 'createProduct'])->name('products.create');
+        Route::post('/products', [WholesalerController::class, 'storeProduct'])->name('products.store');
+        Route::get('/products/{id}/edit', [WholesalerController::class, 'editProduct'])->name('products.edit');
+        Route::post('/products/{id}', [WholesalerController::class, 'updateProduct'])->name('products.update');
+        Route::delete('/products/{id}', [WholesalerController::class, 'destroyProduct'])->name('products.destroy');
+
+        // Brand Routes
+        Route::get('/brands', [WholesalerController::class, 'brands'])->name('brands');
+        Route::get('/brands/create', [WholesalerController::class, 'createBrand'])->name('brands.create');
+        Route::post('/brands', [WholesalerController::class, 'storeBrand'])->name('brands.store');
+        Route::get('/brands/{id}/edit', [WholesalerController::class, 'editBrand'])->name('brands.edit');
+        Route::post('/brands/{id}', [WholesalerController::class, 'updateBrand'])->name('brands.update');
+        Route::delete('/brands/{id}', [WholesalerController::class, 'destroyBrand'])->name('brands.destroy');
+
+        // Category Routes
+        Route::get('/categories', [WholesalerController::class, 'categories'])->name('categories');
+        Route::get('/categories/create', [WholesalerController::class, 'createCategory'])->name('categories.create');
+        Route::post('/categories', [WholesalerController::class, 'storeCategory'])->name('categories.store');
+        Route::get('/categories/{id}/edit', [WholesalerController::class, 'editCategory'])->name('categories.edit');
+        Route::post('/categories/{id}', [WholesalerController::class, 'updateCategory'])->name('categories.update');
+        Route::delete('/categories/{id}', [WholesalerController::class, 'destroyCategory'])->name('categories.destroy');
+
+        // Order Routes
+        Route::get('/orders', [WholesalerController::class, 'orders'])->name('orders');
+        Route::get('/orders/{id}', [WholesalerController::class, 'orderDetails'])->name('orders.details');
+        Route::post('/orders/{id}/status', [WholesalerController::class, 'updateOrderStatus'])->name('orders.status.update');
+
+        // Payment Routes
+        Route::get('/payments', [WholesalerController::class, 'payments'])->name('payments');
+        Route::get('/payments/transactions', [WholesalerController::class, 'payments'])->name('payments.transactions'); // Added this line
+        Route::get('/payments/methods', [WholesalerController::class, 'paymentMethods'])->name('payments.methods');
+        Route::get('/payments/methods/create', [WholesalerController::class, 'createPaymentMethod'])->name('payments.methods.create');
+        Route::post('/payments/methods', [WholesalerController::class, 'storePaymentMethod'])->name('payments.methods.store');
+        Route::get('/payments/methods/{id}/edit', [WholesalerController::class, 'editPaymentMethod'])->name('payments.methods.edit');
+        Route::post('/payments/methods/{id}', [WholesalerController::class, 'updatePaymentMethod'])->name('payments.methods.update');
+        Route::delete('/payments/methods/{id}', [WholesalerController::class, 'destroyPaymentMethod'])->name('payments.methods.destroy');
+        Route::get('/payments/withdraw', [WholesalerController::class, 'withdraw'])->name('payments.withdraw');
+        Route::post('/payments/withdraw', [WholesalerController::class, 'processWithdraw'])->name('payments.withdraw.process');
+    });
+});

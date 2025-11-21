@@ -1,319 +1,392 @@
 @extends('admin.app')
 @push('title')
- Product Update
+    Update Product
 @endpush
 @push('css')
     <style>
-        .phone-img {
+        .image-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .preview-card {
             position: relative;
-            display: inline-block;
-            margin: 10px;
+            width: 120px;
+            height: 120px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
         }
 
-        .phone-img img {
-            width: 100px;
-            height: 100px;
+        .preview-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .preview-card img {
+            width: 100%;
+            height: 100%;
             object-fit: cover;
-            border: 1px solid #ccc;
-            border-radius: 4px;
         }
 
-        .phone-img a {
+        .remove-image {
             position: absolute;
-            top: 2px;
-            right: 2px;
-            background: rgba(255, 255, 255, 0.7);
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
-            padding: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
-        .bg-green{
-            background-color: var(--main-theme-color) !important;
+
+        .upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f8f9fa;
+        }
+
+        .upload-area:hover {
+            border-color: var(--main-theme-color);
+            background: rgba(var(--main-theme-color-rgb), 0.05);
+        }
+
+        .upload-area i {
+            font-size: 48px;
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .section-header i {
+            font-size: 20px;
+            margin-right: 10px;
+            color: var(--main-theme-color);
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid #e9ecef;
+        }
+
+        .price-display {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .final-price {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--main-theme-color);
+            border-top: 1px solid #dee2e6;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+
+        .existing-image {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .existing-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
     </style>
-
 @endpush
+
 @section('content')
     <div class="page-header">
-        <div class="add-item d-flex">
-            <div class="page-title">
-                <h4 class="fw-bold">Product Update</h4>
-            </div>
+        <div class="page-title">
+            <h3 class="fw-bold">Update Product</h3>
+            <p class="text-muted">Edit product details and inventory information</p>
         </div>
-        <ul class="table-top-head">
-            <li>
-                <a data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Refresh"
-                   data-bs-original-title="Refresh"><i class="ti ti-refresh"></i></a>
-            </li>
-            <li>
-                <a data-bs-toggle="tooltip" data-bs-placement="top" id="collapse-header" aria-label="Collapse"
-                   data-bs-original-title="Collapse"><i class="ti ti-chevron-up"></i></a>
-            </li>
-        </ul>
-        <div class="page-btn mt-0">
-            <a href="{{route('product.index')}}" class="btn btn-secondary">View Product List</a>
+        <div class="page-actions">
+            <a href="{{route('product.index')}}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Products
+            </a>
         </div>
     </div>
-    <form action="{{route('product.store')}}" method="post" enctype="multipart/form-data" class="add-product-form">
+
+    <form action="{{route('product.update', $product->id)}}" method="post" enctype="multipart/form-data" class="product-form">
         @csrf
-        <input type="hidden" name="id" value="{{$product->id}}">
-        <div class="add-product">
-            <div class="accordions-items-seperate" id="accordionSpacingExample">
-                <div class="accordion-item border mb-4">
-                    <h2 class="accordion-header " id="headingSpacingOne">
-                        <div style="background-color: var(--main-theme-color) !important;" class=" accordion-button bg-white" data-bs-toggle="collapse"
-                             data-bs-target="#SpacingOne" aria-expanded="true" aria-controls="SpacingOne">
-                            <div class="d-flex align-items-center justify-content-between flex-fill">
-                                <h5 class="d-flex align-items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                         stroke-linejoin="round" class="feather feather-info text-primary me-2">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <line x1="12" y1="16" x2="12" y2="12"></line>
-                                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                                    </svg>
-                                    <span>Product Information</span></h5>
+        @method('PUT')
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="form-card">
+                    <div class="section-header">
+                        <i class="fas fa-info-circle"></i>
+                        <h5 class="mb-0">Product Information</h5>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Product Code <span class="text-danger">*</span></label>
+                                <input type="text" name="code" class="form-control" required disabled value="{{$product->code}}">
+                                <div class="form-text">Auto-generated product code</div>
                             </div>
                         </div>
-                    </h2>
-                    <div id="SpacingOne">
-                        <div class="accordion-body border-top">
-                            <div class="row">
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Product Code<span
-                                                class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="code" class="form-control" required disabled value="{{$product->code}}">
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Product Name<span
-                                                class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="name" class="form-control" required placeholder="Product Name" value="{{$product->name}}">
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Barcode<span class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="barcode" class="form-control" placeholder="Bar Code" value="{{$product->barcode}}">
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Brand</label>
-                                        <select class="form-control" name="brand">
-                                            <option value="">Select Brand</option>
-                                            @foreach($brands as $brand)
-                                                <option value="{{ $brand->name }}" {{ (isset($product) && $product->brand == $brand->name) ? 'selected' : '' }}>
-                                                    {{ $brand->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Category</label>
-                                        <select class="form-control" name="category">
-                                            <option data-select2-id="6">Select Category</option>
-                                            @foreach($categories as $category)
-                                            <option value="{{$category->name}}" {{ (isset($product) && $product->category == $category->name) ? 'selected' : '' }}>{{$category->name}}</option>
-                                            @endforeach
-
-
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Store</label>
-                                        <select class="form-control" name="store">
-                                            <option data-select2-id="6" value="main">Main</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Description</label>
-                                        <textarea rows="6" class="form-control" name="description">{{ old('description', $product->description ?? '') }}</textarea>
-
-                                    </div>
-                                </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Product Name <span class="text-danger">*</span></label>
+                                <input type="text" name="name" class="form-control" required placeholder="Enter product name" value="{{$product->name}}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Barcode</label>
+                                <input type="text" name="barcode" class="form-control" placeholder="Enter barcode" value="{{$product->barcode}}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Brand</label>
+                                <select class="form-select" name="brand">
+                                    <option value="">Select Brand</option>
+                                    @foreach($brands as $brand)
+                                        <option value="{{ $brand->name }}" {{ $product->brand == $brand->name ? 'selected' : '' }}>
+                                            {{ $brand->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Category</label>
+                                <select class="form-select" name="category">
+                                    <option value="">Select Category</option>
+                                    @foreach($categories as $category)
+                                        <option value="{{$category->name}}" {{ $product->category == $category->name ? 'selected' : '' }}>
+                                            {{$category->name}}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" name="status">
+                                    <option value="active" {{ $product->status == 'active' ? 'selected' : '' }}>Active</option>
+                                    <option value="inactive" {{ $product->status == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea rows="4" class="form-control" name="description" placeholder="Enter product description">{{ $product->description }}</textarea>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="accordion-item border mb-4">
-                    <h2 class="accordion-header" id="headingSpacingThree">
-                        <div class="accordion-button collapsed bg-white" data-bs-toggle="collapse"
-                             data-bs-target="#SpacingThree" aria-expanded="true" aria-controls="SpacingThree">
-                            <div class="d-flex align-items-center justify-content-between flex-fill">
-                                <h5 class="d-flex align-items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                         stroke-linejoin="round" class="feather feather-image text-primary me-2">
-                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                                        <polyline points="21 15 16 10 5 21"></polyline>
-                                    </svg>
-                                    <span>Images</span></h5>
-                            </div>
-                        </div>
-                    </h2>
-                    <div id="SpacingThree">
-                        <div class="accordion-body border-top">
-                            <div class="text-editor add-list add">
-                                <div class="col-lg-12">
-                                    <div class="add-choosen">
-                                        <div class="mb-3">
-                                            <div class="image-upload image-upload-two">
-                                                <input type="file" id="imageInput" name="img" multiple>
-                                                <div class="image-uploads">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                                         class="feather feather-plus-circle plus-down-add me-0">
-                                                        <circle cx="12" cy="12" r="10"></circle>
-                                                        <line x1="12" y1="8" x2="12" y2="16"></line>
-                                                        <line x1="8" y1="12" x2="16" y2="12"></line>
-                                                    </svg>
-                                                    <h4>Add Images</h4>
-                                                </div>
-                                            </div>
-                                        </div>
 
-                                        <!-- Preview images will appear here -->
-                                        <div id="imagePreviewContainer" class="preview-container">
-                                            @if(isset($product) && $product->img)
-                                                <div class="preview-image-wrapper">
-                                                    <img src="{{ asset('storage/' . $product->img) }}" alt="Product Image" class="preview-image" style="max-width: 150px; max-height: 150px;">
-                                                </div>
-                                            @endif
-                                        </div>
+                <div class="form-card">
+                    <div class="section-header">
+                        <i class="fas fa-images"></i>
+                        <h5 class="mb-0">Product Images</h5>
+                    </div>
 
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="mb-3">
+                        <label class="form-label">Current Image</label>
+                        <div class="existing-image">
+                            <img src="{{ asset('storage/' . $product->img) }}" alt="{{ $product->name }}">
                         </div>
                     </div>
 
-                </div>
-                <div class="accordion-item border mb-4">
-                    <h2 class="accordion-header " id="headingSpacingOne">
-                        <div style="background-color: var(--main-theme-color) !important;" class=" accordion-button bg-white" data-bs-toggle="collapse"
-                             data-bs-target="#SpacingOne" aria-expanded="true" aria-controls="SpacingOne">
-                            <div class="d-flex align-items-center justify-content-between flex-fill">
-                                <h5 class="d-flex align-items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                         stroke-linejoin="round" class="feather feather-info text-primary me-2">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <line x1="12" y1="16" x2="12" y2="12"></line>
-                                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                                    </svg>
-                                    <span>Stock Information</span></h5>
-                            </div>
-                        </div>
-                    </h2>
-                    <div id="SpacingOne">
-                        <div class="accordion-body border-top">
-                            <div class="row">
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Stock Price<span
-                                                class="text-danger ms-1">*</span></label>
-                                        <input type="number" name="stock_price" class="form-control" required placeholder="Stock Price" value="{{$product->stock_price}}">
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Display Price<span
-                                                class="text-danger ms-1">*</span></label>
-                                        <input type="number" name="display_price" class="form-control" required placeholder="Display Price" value="{{$product->display_price}}">
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Discount %<span class="text-danger ms-1">*</span></label>
-                                        <input type="number" name="discount" class="form-control" placeholder="Discount" value="{{$product->discount}}">
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Qty<span class="text-danger ms-1">*</span></label>
-                                        <input type="number" name="qty" class="form-control" placeholder="Quantity" value="{{$product->qty}}">
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Min Qty<span class="text-danger ms-1">*</span></label>
-                                        <input type="number" name="min_qty" class="form-control" placeholder="Min Quantity" value="{{$product->min_qty}}">
-                                    </div>
-                                </div>
-                            <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Packing Cost</label>
-                                        <input type="number" name="packing_cost" class="form-control" required placeholder="Packing Cost" value="{{$product->packing_cost}}">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="upload-area" id="uploadTrigger">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h5>Drag & Drop New Images Here</h5>
+                        <p class="text-muted">or click to browse files</p>
+                        <input type="file" id="imageInput" name="img[]" multiple class="d-none">
+                    </div>
+
+                    <div id="imagePreviewContainer" class="image-preview-container mt-4">
+                        <!-- New preview images will appear here -->
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="col-lg-12">
-            <div class="d-flex align-items-center justify-content-end mb-4">
-                <!--<button type="button" class="btn btn-secondary me-2" fdprocessedid="2bjap">Cancel</button>-->
-                <button type="submit" class="btn btn-dark" fdprocessedid="to0jbb">Update</button>
+
+            <div class="col-lg-4">
+                <div class="form-card">
+                    <div class="section-header">
+                        <i class="fas fa-cube"></i>
+                        <h5 class="mb-0">Inventory & Pricing</h5>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Stock Quantity <span class="text-danger">*</span></label>
+                        <input type="number" name="qty" class="form-control" required placeholder="Enter quantity" value="{{$product->qty}}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Minimum Stock Level <span class="text-danger">*</span></label>
+                        <input type="number" name="min_qty" class="form-control" required placeholder="Enter minimum quantity" value="{{$product->min_qty}}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Cost Price <span class="text-danger">*</span></label>
+                        <input type="number" name="stock_price" class="form-control" required placeholder="Enter cost price" step="0.01" id="costPrice" value="{{$product->stock_price}}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Selling Price <span class="text-danger">*</span></label>
+                        <input type="number" name="display_price" class="form-control" required placeholder="Enter selling price" step="0.01" id="sellingPrice" value="{{$product->display_price}}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Discount %</label>
+                        <input type="number" name="discount" class="form-control" placeholder="Enter discount percentage" step="0.01" id="discountInput" value="{{$product->discount}}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Packing Cost</label>
+                        <input type="number" name="packing_cost" class="form-control" placeholder="Enter packing cost" step="0.01" id="packingCost" value="{{$product->packing_cost}}">
+                    </div>
+
+                    <div class="price-display">
+                        <div class="price-row">
+                            <span>Cost Price:</span>
+                            <span id="costDisplay">Rs. {{ number_format($product->stock_price, 2) }}</span>
+                        </div>
+                        <div class="price-row">
+                            <span>Selling Price:</span>
+                            <span id="sellingDisplay">Rs. {{ number_format($product->display_price, 2) }}</span>
+                        </div>
+                        <div class="price-row">
+                            <span>Packing Cost:</span>
+                            <span id="packingDisplay">Rs. {{ number_format($product->packing_cost, 2) }}</span>
+                        </div>
+                        <div class="price-row">
+                            <span>Discount:</span>
+                            <span id="discountDisplay">Rs. {{ number_format($product->display_price * ($product->discount / 100), 2) }}</span>
+                        </div>
+                        <div class="price-row final-price">
+                            <span>Final Price:</span>
+                            <span id="finalPrice">Rs. {{ number_format($product->display_price - ($product->display_price * ($product->discount / 100)) + $product->packing_cost, 2) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-card">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-save me-2"></i>Update Product
+                        </button>
+                        <a href="{{route('product.index')}}" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </form>
 @endsection
+
 @push('script')
     <script>
+        // Image upload and preview functionality
+        document.getElementById('uploadTrigger').addEventListener('click', function() {
+            document.getElementById('imageInput').click();
+        });
+
         document.getElementById('imageInput').addEventListener('change', function (event) {
             const files = event.target.files;
             const previewContainer = document.getElementById('imagePreviewContainer');
-
-            // Clear previous previews
-            previewContainer.innerHTML = '';
 
             for (const file of files) {
                 if (!file.type.startsWith('image/')) continue;
 
                 const reader = new FileReader();
                 reader.onload = function (e) {
-                    const imgDiv = document.createElement('div');
-                    imgDiv.className = 'phone-img';
+                    const previewCard = document.createElement('div');
+                    previewCard.className = 'preview-card';
 
                     const img = document.createElement('img');
                     img.src = e.target.result;
                     img.alt = 'Uploaded image';
 
-                    const removeBtn = document.createElement('a');
-                    removeBtn.href = 'javascript:void(0);';
-                    removeBtn.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                     viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                     class="feather feather-x x-square-add remove-product">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            `;
+                    const removeBtn = document.createElement('div');
+                    removeBtn.className = 'remove-image';
+                    removeBtn.innerHTML = '<i class="fas fa-times"></i>';
 
-                    removeBtn.onclick = () => imgDiv.remove();
+                    removeBtn.onclick = () => previewCard.remove();
 
-                    imgDiv.appendChild(img);
-                    imgDiv.appendChild(removeBtn);
-                    previewContainer.appendChild(imgDiv);
+                    previewCard.appendChild(img);
+                    previewCard.appendChild(removeBtn);
+                    previewContainer.appendChild(previewCard);
                 };
                 reader.readAsDataURL(file);
             }
         });
-    </script>
 
+        // Price calculation and display
+        const costPriceInput = document.getElementById('costPrice');
+        const sellingPriceInput = document.getElementById('sellingPrice');
+        const discountInput = document.getElementById('discountInput');
+        const packingCostInput = document.getElementById('packingCost');
+
+        const costDisplay = document.getElementById('costDisplay');
+        const sellingDisplay = document.getElementById('sellingDisplay');
+        const discountDisplay = document.getElementById('discountDisplay');
+        const packingDisplay = document.getElementById('packingDisplay');
+        const finalPrice = document.getElementById('finalPrice');
+
+        function updatePriceDisplay() {
+            const costPrice = parseFloat(costPriceInput.value) || 0;
+            const sellingPrice = parseFloat(sellingPriceInput.value) || 0;
+            const discount = parseFloat(discountInput.value) || 0;
+            const packingCost = parseFloat(packingCostInput.value) || 0;
+
+            const discountAmount = sellingPrice * (discount / 100);
+            const finalSellingPrice = sellingPrice - discountAmount + packingCost;
+
+            costDisplay.textContent = `Rs. ${costPrice.toFixed(2)}`;
+            sellingDisplay.textContent = `Rs. ${sellingPrice.toFixed(2)}`;
+            discountDisplay.textContent = `Rs. ${discountAmount.toFixed(2)}`;
+            packingDisplay.textContent = `Rs. ${packingCost.toFixed(2)}`;
+            finalPrice.textContent = `Rs. ${finalSellingPrice.toFixed(2)}`;
+        }
+
+        costPriceInput.addEventListener('input', updatePriceDisplay);
+        sellingPriceInput.addEventListener('input', updatePriceDisplay);
+        discountInput.addEventListener('input', updatePriceDisplay);
+        packingCostInput.addEventListener('input', updatePriceDisplay);
+    </script>
 @endpush

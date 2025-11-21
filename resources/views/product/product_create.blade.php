@@ -1,311 +1,409 @@
 @extends('admin.app')
 @push('title')
- Product Create
+    Create Product
 @endpush
 @push('css')
     <style>
-        .phone-img {
+        .image-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .preview-card {
             position: relative;
-            display: inline-block;
-            margin: 10px;
+            width: 120px;
+            height: 120px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
         }
 
-        .phone-img img {
-            width: 100px;
-            height: 100px;
+        .preview-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .preview-card img {
+            width: 100%;
+            height: 100%;
             object-fit: cover;
-            border: 1px solid #ccc;
-            border-radius: 4px;
         }
 
-        .phone-img a {
+        .remove-image {
             position: absolute;
-            top: 2px;
-            right: 2px;
-            background: rgba(255, 255, 255, 0.7);
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
-            padding: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
-        .bg-green{
-            background-color: var(--main-theme-color) !important;
+
+        .upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f8f9fa;
+        }
+
+        .upload-area:hover {
+            border-color: var(--main-theme-color);
+            background: rgba(var(--main-theme-color-rgb), 0.05);
+        }
+
+        .upload-area i {
+            font-size: 48px;
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .section-header i {
+            font-size: 20px;
+            margin-right: 10px;
+            color: var(--main-theme-color);
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid #e9ecef;
+        }
+
+        .price-display {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .final-price {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--main-theme-color);
+            border-top: 1px solid #dee2e6;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+
+        .discount-badge {
+            background: #28a745;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-left: 10px;
         }
     </style>
-
 @endpush
+
 @section('content')
     <div class="page-header">
-        <div class="add-item d-flex">
-            <div class="page-title">
-                <h4 class="fw-bold">Create Product</h4>
-                <h6>Create new product</h6>
-            </div>
+        <div class="page-title">
+            <h3 class="fw-bold">Create New Product</h3>
+            <p class="text-muted">Add a new product to your inventory</p>
         </div>
-        <ul class="table-top-head">
-            <li>
-                <a data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Refresh"
-                   data-bs-original-title="Refresh"><i class="ti ti-refresh"></i></a>
-            </li>
-            <li>
-                <a data-bs-toggle="tooltip" data-bs-placement="top" id="collapse-header" aria-label="Collapse"
-                   data-bs-original-title="Collapse"><i class="ti ti-chevron-up"></i></a>
-            </li>
-        </ul>
-        <div class="page-btn mt-0">
-            <a href="{{route('product.index')}}" class="btn btn-secondary">View Product List</a>
+        <div class="page-actions">
+            <a href="{{route('product.index')}}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Products
+            </a>
         </div>
     </div>
-    <form action="{{route('product.store')}}" method="post" enctype="multipart/form-data" class="add-product-form">
-        @csrf
-        <div class="add-product">
-            <div class="accordions-items-seperate" id="accordionSpacingExample">
-                <div class="accordion-item border mb-4">
-                    <h2 class="accordion-header " id="headingSpacingOne">
-                        <div style="background-color: var(--main-theme-color) !important;" class=" accordion-button bg-white" data-bs-toggle="collapse"
-                             data-bs-target="#SpacingOne" aria-expanded="true" aria-controls="SpacingOne">
-                            <div class="d-flex align-items-center justify-content-between flex-fill">
-                                <h5 class="d-flex align-items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                         stroke-linejoin="round" class="feather feather-info text-primary me-2">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <line x1="12" y1="16" x2="12" y2="12"></line>
-                                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                                    </svg>
-                                    <span>Product Information</span></h5>
-                            </div>
-                        </div>
-                    </h2>
-                    <div id="SpacingOne">
-                        <div class="accordion-body border-top">
-                            <div class="row">
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Product Code<span
-                                                class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="code" class="form-control" required disabled value="{{$code}}">
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Product Name<span
-                                                class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="name" class="form-control" required placeholder="Product Name">
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Barcode<span class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="barcode" class="form-control" placeholder="Bar Code">
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Brand</label>
-                                        <select class="form-control" name="brand">
-                                            <option data-select2-id="6">Select Brand</option>
-                                            @foreach($brands as $brand)
-                                                <option value="{{$brand->name}}">{{$brand->name}}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Category</label>
-                                        <select class="form-control" name="category">
-                                            <option data-select2-id="6">Select Category</option>
-                                            @foreach($categories as $category)
-                                            <option value="{{$category->name}}">{{$category->name}}</option>
-                                            @endforeach
+    <div class="page-btn mt-0">
+        <a href="{{route('product.index')}}" class="btn btn-secondary">View Product List</a>
+    </div>
 
-
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Store</label>
-                                        <select class="form-control" name="store">
-                                            <option data-select2-id="6" value="main">Main</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Description</label>
-                                       <textarea rows="6" class="form-control" name="description">
-
-                                       </textarea>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="accordion-item border mb-4">
-                    <h2 class="accordion-header" id="headingSpacingThree">
-                        <div class="accordion-button collapsed bg-white" data-bs-toggle="collapse"
-                             data-bs-target="#SpacingThree" aria-expanded="true" aria-controls="SpacingThree">
-                            <div class="d-flex align-items-center justify-content-between flex-fill">
-                                <h5 class="d-flex align-items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                         stroke-linejoin="round" class="feather feather-image text-primary me-2">
-                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                                        <polyline points="21 15 16 10 5 21"></polyline>
-                                    </svg>
-                                    <span>Images</span></h5>
-                            </div>
-                        </div>
-                    </h2>
-                    <div id="SpacingThree">
-                        <div class="accordion-body border-top">
-                            <div class="text-editor add-list add">
-                                <div class="col-lg-12">
-                                    <div class="add-choosen">
-                                        <div class="mb-3">
-                                            <div class="image-upload image-upload-two">
-                                                <input type="file" id="imageInput" name="img" multiple>
-                                                <div class="image-uploads">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                                         class="feather feather-plus-circle plus-down-add me-0">
-                                                        <circle cx="12" cy="12" r="10"></circle>
-                                                        <line x1="12" y1="8" x2="12" y2="16"></line>
-                                                        <line x1="8" y1="12" x2="16" y2="12"></line>
-                                                    </svg>
-                                                    <h4>Add Images</h4>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Preview images will appear here -->
-                                        <div id="imagePreviewContainer" class="preview-container">
-                                            <!-- Dynamically generated previews -->
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-                <div class="accordion-item border mb-4">
-                    <h2 class="accordion-header " id="headingSpacingOne">
-                        <div style="background-color: var(--main-theme-color) !important;" class=" accordion-button bg-white" data-bs-toggle="collapse"
-                             data-bs-target="#SpacingOne" aria-expanded="true" aria-controls="SpacingOne">
-                            <div class="d-flex align-items-center justify-content-between flex-fill">
-                                <h5 class="d-flex align-items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                         stroke-linejoin="round" class="feather feather-info text-primary me-2">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <line x1="12" y1="16" x2="12" y2="12"></line>
-                                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                                    </svg>
-                                    <span>Stock Information</span></h5>
-                            </div>
-                        </div>
-                    </h2>
-                    <div id="SpacingOne">
-                        <div class="accordion-body border-top">
-                            <div class="row">
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Stock Price<span
-                                                class="text-danger ms-1">*</span></label>
-                                        <input type="number" name="stock_price" class="form-control" required placeholder="Stock Price">
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Display Price<span
-                                                class="text-danger ms-1">*</span></label>
-                                        <input type="number" name="display_price" class="form-control" required placeholder="Display Price">
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Discount %<span class="text-danger ms-1">*</span></label>
-                                        <input type="number" name="discount" class="form-control" placeholder="Discount">
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Qty<span class="text-danger ms-1">*</span></label>
-                                        <input type="number" name="qty" class="form-control" placeholder="Quantity">
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Min Qty<span class="text-danger ms-1">*</span></label>
-                                        <input type="number" name="min_qty" class="form-control" placeholder="Min Quantity">
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Packing Cost</label>
-                                        <input type="number" name="packing_cost" class="form-control" required placeholder="Packing Cost" >
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
-        <div class="col-lg-12">
-            <div class="d-flex align-items-center justify-content-end mb-4">
-                <button type="button" class="btn btn-secondary me-2" fdprocessedid="2bjap">Cancel</button>
-                <button type="submit" class="btn btn-primary" fdprocessedid="to0jbb">Save</button>
+    @endif
+
+    <form action="{{ route('product.store') }}" method="post" enctype="multipart/form-data" class="product-form">
+        @csrf
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="form-card">
+                    <div class="section-header">
+                        <i class="fas fa-info-circle"></i>
+                        <h5 class="mb-0">Product Information</h5>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Product Code <span class="text-danger">*</span></label>
+                                <input type="text" name="code" class="form-control" required readonly value="{{ $code }}">
+                                <div class="form-text">Auto-generated product code</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Product Name <span class="text-danger">*</span></label>
+                                <input type="text" name="name" class="form-control" required placeholder="Enter product name" value="{{ old('name') }}">
+                                @error('name')
+                                <div class="text-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Barcode</label>
+                                <input type="text" name="barcode" class="form-control" placeholder="Enter barcode" value="{{ old('barcode') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Brand</label>
+                                <select class="form-select" name="brand">
+                                    <option value="">Select Brand</option>
+                                    @foreach($brands as $brand)
+                                        <option value="{{ $brand->name }}" {{ old('brand') == $brand->name ? 'selected' : '' }}>
+                                            {{ $brand->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Category</label>
+                                <select class="form-select" name="category">
+                                    <option value="">Select Category</option>
+                                    @foreach($categories as $category)
+                                        <option value="{{ $category->name }}" {{ old('category') == $category->name ? 'selected' : '' }}>
+                                            {{ $category->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea rows="4" class="form-control" name="description" placeholder="Enter product description">{{ old('description') }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-card">
+                    <div class="section-header">
+                        <i class="fas fa-images"></i>
+                        <h5 class="mb-0">Product Images</h5>
+                    </div>
+
+                    <div class="upload-area" id="uploadTrigger">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h5>Drag & Drop Images Here</h5>
+                        <p class="text-muted">or click to browse files</p>
+                        <input type="file" id="imageInput" name="img[]" class="d-none" accept="image/*" multiple>
+                    </div>
+
+                    <div id="imagePreviewContainer" class="image-preview-container mt-4">
+                        <!-- Preview images will appear here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="form-card">
+                    <div class="section-header">
+                        <i class="fas fa-cube"></i>
+                        <h5 class="mb-0">Inventory & Pricing</h5>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Stock Quantity <span class="text-danger">*</span></label>
+                        <input type="number" name="qty" class="form-control" required placeholder="Enter quantity" value="{{ old('qty') }}" min="0">
+                        @error('qty')
+                        <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Minimum Stock Level <span class="text-danger">*</span></label>
+                        <input type="number" name="min_qty" class="form-control" required placeholder="Enter minimum quantity" value="{{ old('min_qty') }}" min="0">
+                        @error('min_qty')
+                        <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Cost Price <span class="text-danger">*</span></label>
+                        <input type="number" name="stock_price" class="form-control" required placeholder="Enter cost price" step="0.01" id="costPrice" value="{{ old('stock_price') }}" min="0">
+                        @error('stock_price')
+                        <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Selling Price <span class="text-danger">*</span></label>
+                        <input type="number" name="display_price" class="form-control" required placeholder="Enter selling price" step="0.01" id="sellingPrice" value="{{ old('display_price') }}" min="0">
+                        @error('display_price')
+                        <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Discount %</label>
+                        <input type="number" name="discount" class="form-control" placeholder="Enter discount percentage" step="0.01" id="discountInput" value="{{ old('discount', 0) }}" min="0" max="100">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Packing Cost</label>
+                        <input type="number" name="packing_cost" class="form-control" placeholder="Enter packing cost" step="0.01" id="packingCost" value="{{ old('packing_cost', 0) }}" min="0">
+                    </div>
+
+                    <div class="price-display">
+                        <div class="price-row">
+                            <span>Cost Price:</span>
+                            <span id="costDisplay">Rs. 0.00</span>
+                        </div>
+                        <div class="price-row">
+                            <span>Selling Price:</span>
+                            <span id="sellingDisplay">Rs. 0.00</span>
+                        </div>
+                        <div class="price-row">
+                            <span>Packing Cost:</span>
+                            <span id="packingDisplay">Rs. 0.00</span>
+                        </div>
+                        <div class="price-row">
+                            <span>Discount:</span>
+                            <span id="discountDisplay">Rs. 0.00</span>
+                        </div>
+                        <div class="price-row final-price">
+                            <span>Final Price:</span>
+                            <span id="finalPrice">Rs. 0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-card">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-save me-2"></i>Create Product
+                        </button>
+                        <a href="{{ route('product.index') }}" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </form>
 @endsection
+
 @push('script')
     <script>
-        document.getElementById('imageInput').addEventListener('change', function (event) {
-            const files = event.target.files;
+        document.addEventListener('DOMContentLoaded', function () {
+            // Image upload and preview functionality
+            const uploadTrigger = document.getElementById('uploadTrigger');
+            const imageInput = document.getElementById('imageInput');
             const previewContainer = document.getElementById('imagePreviewContainer');
 
-            // Clear previous previews
-            previewContainer.innerHTML = '';
-
-            for (const file of files) {
-                if (!file.type.startsWith('image/')) continue;
-
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    const imgDiv = document.createElement('div');
-                    imgDiv.className = 'phone-img';
-
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.alt = 'Uploaded image';
-
-                    const removeBtn = document.createElement('a');
-                    removeBtn.href = 'javascript:void(0);';
-                    removeBtn.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                     viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                     class="feather feather-x x-square-add remove-product">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            `;
-
-                    removeBtn.onclick = () => imgDiv.remove();
-
-                    imgDiv.appendChild(img);
-                    imgDiv.appendChild(removeBtn);
-                    previewContainer.appendChild(imgDiv);
-                };
-                reader.readAsDataURL(file);
+            if (uploadTrigger && imageInput) {
+                uploadTrigger.addEventListener('click', function () {
+                    imageInput.click();
+                });
             }
+
+            if (imageInput && previewContainer) {
+                imageInput.addEventListener('change', function (event) {
+                    const files = event.target.files || [];
+
+                    for (const file of files) {
+                        if (!file.type || !file.type.startsWith('image/')) continue;
+
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            const previewCard = document.createElement('div');
+                            previewCard.className = 'preview-card';
+
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.alt = 'Uploaded image';
+
+                            const removeBtn = document.createElement('div');
+                            removeBtn.className = 'remove-image';
+                            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+
+                            removeBtn.onclick = () => previewCard.remove();
+
+                            previewCard.appendChild(img);
+                            previewCard.appendChild(removeBtn);
+                            previewContainer.appendChild(previewCard);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+
+            // Price calculation and display
+            const costPriceInput = document.getElementById('costPrice');
+            const sellingPriceInput = document.getElementById('sellingPrice');
+            const discountInput = document.getElementById('discountInput');
+            const packingCostInput = document.getElementById('packingCost');
+
+            const costDisplay = document.getElementById('costDisplay');
+            const sellingDisplay = document.getElementById('sellingDisplay');
+            const discountDisplay = document.getElementById('discountDisplay');
+            const packingDisplay = document.getElementById('packingDisplay');
+            const finalPrice = document.getElementById('finalPrice');
+
+            function updatePriceDisplay() {
+                const costPrice = costPriceInput ? parseFloat(costPriceInput.value) || 0 : 0;
+                const sellingPrice = sellingPriceInput ? parseFloat(sellingPriceInput.value) || 0 : 0;
+                const discount = discountInput ? parseFloat(discountInput.value) || 0 : 0;
+                const packingCost = packingCostInput ? parseFloat(packingCostInput.value) || 0 : 0;
+
+                const discountAmount = sellingPrice * (discount / 100);
+                const finalSellingPrice = sellingPrice - discountAmount + packingCost;
+
+                if (costDisplay) costDisplay.textContent = `Rs. ${costPrice.toFixed(2)}`;
+                if (sellingDisplay) sellingDisplay.textContent = `Rs. ${sellingPrice.toFixed(2)}`;
+                if (discountDisplay) discountDisplay.textContent = `Rs. ${discountAmount.toFixed(2)}`;
+                if (packingDisplay) packingDisplay.textContent = `Rs. ${packingCost.toFixed(2)}`;
+                if (finalPrice) finalPrice.textContent = `Rs. ${finalSellingPrice.toFixed(2)}`;
+            }
+
+            if (costPriceInput) costPriceInput.addEventListener('input', updatePriceDisplay);
+            if (sellingPriceInput) sellingPriceInput.addEventListener('input', updatePriceDisplay);
+            if (discountInput) discountInput.addEventListener('input', updatePriceDisplay);
+            if (packingCostInput) packingCostInput.addEventListener('input', updatePriceDisplay);
+
+            // Initialize price display
+            updatePriceDisplay();
         });
     </script>
-
 @endpush

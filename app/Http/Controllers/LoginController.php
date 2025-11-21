@@ -7,73 +7,70 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
-
 class LoginController extends Controller
 {
     public function loginCheck(Request $request)
     {
-//        dd($request->all());
 
-//        // Validate the input
-//        $request->validate([
-//            'username' => 'required|string',
-//            'password' => 'required|string',
-//        ]);
 
         $check = User::query()
             ->where('username', $request->username)
             ->where('view_password', $request->password)
             ->first();
 
-        $password = Hash::make($request->password);
+        if (!$check) {
+            return redirect()->route('login')->withErrors([
+                'login' => 'Invalid credentials.',
+            ]);
+        }
 
-        if ($check && $check->type === 'admin') {
-//            dd($request->all());
+        // Admin login
+        if ($check->type === 'admin') {
             if (Auth::guard('admin')->attempt(['username' => $request->username, 'password' => $request->password])) {
-                $user = Auth::guard('admin')->user();
                 return redirect()->route('admin.dashboard');
             }
-        } elseif ($check && $check->type === 'seller') {
+        }
+        // Seller login
+        elseif ($check->type === 'seller') {
             if (Auth::guard('seller')->attempt(['username' => $request->username, 'password' => $request->password])) {
-                $user = Auth::guard('seller')->user();
                 return redirect()->route('seller.dashboard');
             }
         }
+        // Wholesaler login
+        elseif ($check->type === 'wholesalers') {
 
-           elseif ($check && $check->type == 'employee') {
+            if (Auth::guard('wholesaler')->attempt(['username' => $request->username, 'password' => $request->password])) {
+                return redirect()->route('wholesaler.dashboard');
+            }
+        }
+        // Employee login
+        elseif ($check->type === 'employee') {
             if (Auth::guard('employee')->attempt(['username' => $request->username, 'password' => $request->password])) {
-                $user = Auth::guard('employee')->user();
                 return redirect()->route('employee.dashboard');
             }
         }
 
+        // If authentication fails for any guard
         return redirect()->route('login')->withErrors([
-            'login' => 'Invalid credentials.',
+            'login' => 'Invalid credentials or user type.',
         ]);
     }
-
 
     public function logout(Request $request)
     {
         if (Auth::guard('admin')->check()) {
             Auth::guard('admin')->logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-            return redirect()->route('login');
-        }
-
-        if (Auth::guard('seller')->check()) {
+        } elseif (Auth::guard('seller')->check()) {
             Auth::guard('seller')->logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-            return redirect()->route('login');
+        } elseif (Auth::guard('wholesaler')->check()) {
+            Auth::guard('wholesaler')->logout();
+        } elseif (Auth::guard('employee')->check()) {
+            Auth::guard('employee')->logout();
         }
 
-        // fallback (optional)
-        Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect()->route('login');
     }
-
 }

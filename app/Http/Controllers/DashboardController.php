@@ -14,6 +14,7 @@ class DashboardController extends Controller
 {
     public function index()
     {
+
         // Calculate total sales (completed orders)
         $totalSales = Order::where('status', 'completed')->sum('total_amount') ?: 307144.00;
 
