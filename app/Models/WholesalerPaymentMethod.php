@@ -1,4 +1,5 @@
 <?php
+// app/Models/WholesalerPaymentMethod.php
 
 namespace App\Models;
 
@@ -12,13 +13,13 @@ class WholesalerPaymentMethod extends Model
     protected $fillable = [
         'wholesaler_id',
         'method_type',
+        'bank_name',
         'account_name',
         'account_number',
-        'bank_name',
         'branch',
         'mobile_provider',
         'is_default',
-        'status'
+        'status',
     ];
 
     protected $casts = [
@@ -28,5 +29,31 @@ class WholesalerPaymentMethod extends Model
     public function wholesaler()
     {
         return $this->belongsTo(Wholesaler::class);
+    }
+
+    // Accessor for formatted method display
+    public function getFormattedMethodAttribute()
+    {
+        if ($this->method_type == 'bank') {
+            return $this->bank_name . ' - ' . $this->account_number;
+        } else {
+            return ucfirst($this->mobile_provider) . ' - ' . $this->account_number;
+        }
+    }
+
+    // Scopes
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
+
+    public function scopeBank($query)
+    {
+        return $query->where('method_type', 'bank');
+    }
+
+    public function scopeMobile($query)
+    {
+        return $query->where('method_type', 'mobile');
     }
 }

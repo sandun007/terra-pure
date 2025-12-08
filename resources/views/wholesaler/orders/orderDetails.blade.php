@@ -1,4 +1,4 @@
-@extends('wholesaler.app')
+@extends('wholesaler.layouts.app')
 @push('title')
     Order Details - #{{ $order->id }}
 @endpush
@@ -21,7 +21,7 @@
             right: -20%;
             width: 300px;
             height: 300px;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
             border-radius: 50%;
         }
 
@@ -115,10 +115,21 @@
             border-radius: 50px;
         }
 
-        .bg-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important; }
-        .bg-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important; }
-        .bg-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important; }
-        .bg-info { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important; }
+        .bg-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+        }
+
+        .bg-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+        }
+
+        .bg-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+        }
+
+        .bg-info {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+        }
 
         .order-total {
             background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
@@ -302,16 +313,26 @@
                     </div>
 
                     <!-- Update Status Form -->
-                    <form action="{{ route('wholesaler.orders.status.update', $order->id) }}" method="POST" class="mb-4">
+                    <form action="{{ route('wholesaler.orders.status.update', $order->id) }}" method="POST"
+                          class="mb-4">
                         @csrf
                         <div class="mb-3">
                             <label class="form-label fw-bold">Update Order Status</label>
                             <select name="status" class="form-select" onchange="this.form.submit()">
-                                <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="confirmed" {{ $order->status == 'confirmed' ? 'selected' : '' }}>Confirmed</option>
-                                <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>Processing</option>
-                                <option value="completed" {{ $order->status == 'completed' ? 'selected' : '' }}>Completed</option>
-                                <option value="cancelled" {{ $order->status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>Pending
+                                </option>
+                                <option value="confirmed" {{ $order->status == 'confirmed' ? 'selected' : '' }}>
+                                    Confirmed
+                                </option>
+                                <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>
+                                    Processing
+                                </option>
+                                <option value="completed" {{ $order->status == 'completed' ? 'selected' : '' }}>
+                                    Completed
+                                </option>
+                                <option value="cancelled" {{ $order->status == 'cancelled' ? 'selected' : '' }}>
+                                    Cancelled
+                                </option>
                             </select>
                         </div>
                     </form>

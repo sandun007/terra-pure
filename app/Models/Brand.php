@@ -10,11 +10,15 @@ class Brand extends Model
     use HasFactory;
 
     protected $fillable = [
+        'wholesaler_id',
         'code',
         'name',
-        'img',
-        'seller_code',
-        'wholesaler_id' // Added this
+        'image',  // Changed from 'img' to 'image'
+        'status',
+    ];
+
+    protected $casts = [
+        'status' => 'string',
     ];
 
     // Relationship with Wholesaler
@@ -23,10 +27,25 @@ class Brand extends Model
         return $this->belongsTo(Wholesaler::class);
     }
 
-    // Relationship with Products
-    public function products()
+    // Relationship with Wholesaler Products
+    public function wholesalerProducts()
     {
-        return $this->hasMany(Product::class, 'brand', 'name');
+        return $this->hasMany(WholesalerProduct::class, 'brand_id');
+    }
+
+    // Accessor for image URL
+    public function getImageUrlAttribute()
+    {
+        if ($this->image) {
+            return asset('storage/' . $this->image);
+        }
+        return asset('images/default-brand.png');
+    }
+
+    // Scope for active brands
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
     }
 
     // Scope for wholesaler brands

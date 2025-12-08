@@ -54,7 +54,16 @@
 <script src="{{asset('asset/js/theme/bootstrap.bundle.min.js')}}" type="text/javascript"></script>
 <!-- Custom JS -->
 <script src="{{asset('asset/js/theme/script.js')}}" type="text/javascript"></script>
-
+<!-- In the header/navigation area -->
+<li class="nav-item dropdown">
+    <a class="nav-link position-relative" href="{{ route('wholesaler.shop.cart') }}" id="cartDropdown">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle cart-count-badge">
+            {{-- Cart count will be updated via JavaScript --}}
+            0
+        </span>
+    </a>
+</li>
 @stack('script')
 </body>
 </html>

@@ -22,12 +22,10 @@ class Wholesaler extends Authenticatable
         'phone',
         'whatsapp',
         'email',
-        'NIC_no',
-        'NIC_front',
-        'NIC_back',
         'username',
         'password',
-        'view_password',
+        'business_name',
+        'img',
         'type'
     ];
 
@@ -37,13 +35,13 @@ class Wholesaler extends Authenticatable
     ];
 
     protected $casts = [
-        'email_verified_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     // Automatically hash password when it's set
     public function setPasswordAttribute($value)
     {
-        // Only hash if it's not already hashed
         if (!empty($value) && !Hash::needsRehash($value)) {
             $this->attributes['password'] = $value;
         } elseif (!empty($value)) {
@@ -85,5 +83,14 @@ class Wholesaler extends Authenticatable
     public function brands()
     {
         return $this->hasMany(Brand::class);
+    }
+
+    // Accessor for profile image URL
+    public function getProfileImageUrlAttribute()
+    {
+        if ($this->img) {
+            return asset('storage/' . $this->img);
+        }
+        return asset('asset/img/default-avatar.png');
     }
 }

@@ -1,4 +1,4 @@
-@extends('wholesaler.app')
+@extends('wholesaler.layouts.app')
 @push('title')
     My Orders
 @endpush
@@ -22,7 +22,7 @@
             right: -20%;
             width: 300px;
             height: 300px;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
             border-radius: 50%;
         }
 
@@ -33,7 +33,7 @@
         }
 
         .page-title h6 {
-            color: rgba(255,255,255,0.9);
+            color: rgba(255, 255, 255, 0.9);
             font-weight: 500;
         }
 
@@ -83,10 +83,21 @@
             border-radius: 50px;
         }
 
-        .bg-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important; }
-        .bg-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important; }
-        .bg-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important; }
-        .bg-info { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important; }
+        .bg-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+        }
+
+        .bg-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+        }
+
+        .bg-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+        }
+
+        .bg-info {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+        }
 
         .btn-sm {
             padding: 8px 16px;
@@ -146,22 +157,28 @@
             <div class="col-12">
                 <h6 class="mb-3">Filter by Status:</h6>
                 <div class="d-flex flex-wrap">
-                    <a href="{{ route('wholesaler.orders') }}" class="filter-badge {{ !request()->has('status') ? 'active' : 'bg-light text-dark' }}">
+                    <a href="{{ route('wholesaler.orders') }}"
+                       class="filter-badge {{ !request()->has('status') ? 'active' : 'bg-light text-dark' }}">
                         All Orders
                     </a>
-                    <a href="{{ route('wholesaler.orders') }}?status=confirmed" class="filter-badge {{ request()->get('status') == 'confirmed' ? 'active' : 'bg-light text-dark' }}">
+                    <a href="{{ route('wholesaler.orders') }}?status=confirmed"
+                       class="filter-badge {{ request()->get('status') == 'confirmed' ? 'active' : 'bg-light text-dark' }}">
                         <i class="fas fa-check-circle me-2"></i>Confirmed
                     </a>
-                    <a href="{{ route('wholesaler.orders') }}?status=pending" class="filter-badge {{ request()->get('status') == 'pending' ? 'active' : 'bg-light text-dark' }}">
+                    <a href="{{ route('wholesaler.orders') }}?status=pending"
+                       class="filter-badge {{ request()->get('status') == 'pending' ? 'active' : 'bg-light text-dark' }}">
                         <i class="fas fa-clock me-2"></i>Pending
                     </a>
-                    <a href="{{ route('wholesaler.orders') }}?status=processing" class="filter-badge {{ request()->get('status') == 'processing' ? 'active' : 'bg-light text-dark' }}">
+                    <a href="{{ route('wholesaler.orders') }}?status=processing"
+                       class="filter-badge {{ request()->get('status') == 'processing' ? 'active' : 'bg-light text-dark' }}">
                         <i class="fas fa-cog me-2"></i>Processing
                     </a>
-                    <a href="{{ route('wholesaler.orders') }}?status=completed" class="filter-badge {{ request()->get('status') == 'completed' ? 'active' : 'bg-light text-dark' }}">
+                    <a href="{{ route('wholesaler.orders') }}?status=completed"
+                       class="filter-badge {{ request()->get('status') == 'completed' ? 'active' : 'bg-light text-dark' }}">
                         <i class="fas fa-check me-2"></i>Completed
                     </a>
-                    <a href="{{ route('wholesaler.orders') }}?status=cancelled" class="filter-badge {{ request()->get('status') == 'cancelled' ? 'active' : 'bg-light text-dark' }}">
+                    <a href="{{ route('wholesaler.orders') }}?status=cancelled"
+                       class="filter-badge {{ request()->get('status') == 'cancelled' ? 'active' : 'bg-light text-dark' }}">
                         <i class="fas fa-times me-2"></i>Cancelled
                     </a>
                 </div>
@@ -219,10 +236,12 @@
                                 </td>
                                 <td>
                                     <div class="btn-group">
-                                        <a href="{{ route('wholesaler.orders.details', $order->id) }}" class="btn btn-primary btn-sm">
+                                        <a href="{{ route('wholesaler.orders.details', $order->id) }}"
+                                           class="btn btn-primary btn-sm">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#statusModal{{ $order->id }}">
+                                        <button class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                                                data-bs-target="#statusModal{{ $order->id }}">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                     </div>
@@ -233,25 +252,40 @@
                                             <div class="modal-content">
                                                 <div class="modal-header">
                                                     <h5 class="modal-title">Update Order Status</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    <button type="button" class="btn-close"
+                                                            data-bs-dismiss="modal"></button>
                                                 </div>
-                                                <form action="{{ route('wholesaler.orders.status.update', $order->id) }}" method="POST">
+                                                <form action="{{ route('wholesaler.orders.status.update', $order->id) }}"
+                                                      method="POST">
                                                     @csrf
                                                     <div class="modal-body">
                                                         <div class="mb-3">
                                                             <label class="form-label">Order Status</label>
                                                             <select name="status" class="form-select">
-                                                                <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>Pending</option>
-                                                                <option value="confirmed" {{ $order->status == 'confirmed' ? 'selected' : '' }}>Confirmed</option>
-                                                                <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>Processing</option>
-                                                                <option value="completed" {{ $order->status == 'completed' ? 'selected' : '' }}>Completed</option>
-                                                                <option value="cancelled" {{ $order->status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                                                <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>
+                                                                    Pending
+                                                                </option>
+                                                                <option value="confirmed" {{ $order->status == 'confirmed' ? 'selected' : '' }}>
+                                                                    Confirmed
+                                                                </option>
+                                                                <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>
+                                                                    Processing
+                                                                </option>
+                                                                <option value="completed" {{ $order->status == 'completed' ? 'selected' : '' }}>
+                                                                    Completed
+                                                                </option>
+                                                                <option value="cancelled" {{ $order->status == 'cancelled' ? 'selected' : '' }}>
+                                                                    Cancelled
+                                                                </option>
                                                             </select>
                                                         </div>
                                                     </div>
                                                     <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                        <button type="submit" class="btn btn-primary">Update Status</button>
+                                                        <button type="button" class="btn btn-secondary"
+                                                                data-bs-dismiss="modal">Close
+                                                        </button>
+                                                        <button type="submit" class="btn btn-primary">Update Status
+                                                        </button>
                                                     </div>
                                                 </form>
                                             </div>

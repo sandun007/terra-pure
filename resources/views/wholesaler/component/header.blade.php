@@ -460,7 +460,7 @@
 <header class="app-header">
     <!-- Left Section: Logo -->
     <div class="header-left">
-        <a href="{{route('wholesaler.dashboard')}}" class="brand-logo">
+        <a href="{{ route('wholesaler.dashboard') }}" class="brand-logo">
             <img src="{{ asset('asset/img/wordmark.png') }}" alt="DreamX Logo">
             <small class="logo-badge">Wholesale</small>
         </a>
@@ -541,13 +541,34 @@
                     Dashboard
                 </a>
 
-                <a class="dropdown-item" href="{{ route('wholesaler.orders') }}">
+                <a class="dropdown-item" href="{{ route('wholesaler.orders.index') }}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="9" cy="21" r="1"></circle>
                         <circle cx="20" cy="21" r="1"></circle>
                         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
                     </svg>
                     Orders
+                </a>
+
+                <a class="dropdown-item" href="{{ route('wholesaler.products.index') }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m7.5 4.27 9 5.15"></path>
+                        <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path>
+                        <path d="m3.3 7 8.7 5 8.7-5"></path>
+                        <path d="M12 22V12"></path>
+                    </svg>
+                    Products
+                </a>
+
+                <a class="dropdown-item" href="{{ route('wholesaler.shop.index') }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path>
+                        <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path>
+                        <path d="M7 21h10"></path>
+                        <path d="M12 3v18"></path>
+                        <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"></path>
+                    </svg>
+                    My Shop
                 </a>
 
                 <div class="dropdown-divider"></div>
@@ -595,6 +616,13 @@
         searchInput.addEventListener('blur', function() {
             this.parentElement.style.transform = 'scale(1)';
         });
+
+        // Add search functionality
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            // You can implement actual search logic here
+            console.log('Searching for:', searchTerm);
+        });
     }
 
     // Dropdown close on outside click
@@ -607,6 +635,29 @@
                     button.setAttribute('aria-expanded', 'false');
                     dropdown.classList.remove('show');
                 }
+            }
+        });
+    });
+
+    // Notification dropdown functionality
+    const notificationBtn = document.querySelector('.notification-btn');
+    if (notificationBtn) {
+        notificationBtn.addEventListener('click', function() {
+            // You can implement notification fetching here
+            console.log('Fetching notifications...');
+        });
+    }
+
+    // Add active state to current page in dropdown
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentPath = window.location.pathname;
+        const dropdownItems = document.querySelectorAll('.dropdown-item[href]');
+
+        dropdownItems.forEach(item => {
+            if (item.getAttribute('href') === currentPath) {
+                item.style.background = 'linear-gradient(90deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)';
+                item.style.color = '#667eea';
+                item.style.borderLeft = '3px solid #667eea';
             }
         });
     });

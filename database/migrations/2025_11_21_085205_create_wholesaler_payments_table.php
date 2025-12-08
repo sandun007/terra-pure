@@ -1,10 +1,11 @@
 <?php
 
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+class CreateWholesalerPaymentsTable extends Migration
 {
     public function up()
     {
@@ -14,12 +15,19 @@ return new class extends Migration
             $table->string('transaction_id')->unique();
             $table->decimal('amount', 15, 2);
             $table->enum('type', ['credit', 'debit']);
-            $table->string('payment_method');
-            $table->enum('status', ['pending', 'completed', 'failed', 'refunded'])->default('pending');
-            $table->text('description')->nullable();
+            $table->enum('payment_type', ['sale', 'withdrawal', 'refund', 'commission']);
+            $table->string('payment_method')->nullable();
+            $table->enum('status', ['pending', 'completed', 'failed', 'cancelled'])->default('pending');
+            $table->text('description');
+            $table->text('notes')->nullable();
             $table->json('metadata')->nullable();
-            $table->timestamp('paid_at')->nullable();
+            $table->timestamp('processed_at')->nullable();
+            $table->timestamp('completed_at')->nullable();
             $table->timestamps();
+
+            $table->index(['wholesaler_id', 'type', 'status']);
+            $table->index(['transaction_id']);
+            $table->index(['created_at']);
         });
     }
 
@@ -27,4 +35,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('wholesaler_payments');
     }
-};
+}

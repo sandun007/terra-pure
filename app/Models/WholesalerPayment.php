@@ -1,4 +1,5 @@
 <?php
+// app/Models/WholesalerPayment.php
 
 namespace App\Models;
 
@@ -14,21 +15,46 @@ class WholesalerPayment extends Model
         'transaction_id',
         'amount',
         'type',
+        'payment_type',
         'payment_method',
         'status',
         'description',
+        'notes',
         'metadata',
-        'paid_at'
+        'processed_at',
+        'completed_at',
     ];
 
     protected $casts = [
-        'metadata' => 'array',
-        'paid_at' => 'datetime',
         'amount' => 'decimal:2',
+        'metadata' => 'array',
+        'processed_at' => 'datetime',
+        'completed_at' => 'datetime',
     ];
 
     public function wholesaler()
     {
         return $this->belongsTo(Wholesaler::class);
+    }
+
+    // Scopes
+    public function scopeCredit($query)
+    {
+        return $query->where('type', 'credit');
+    }
+
+    public function scopeDebit($query)
+    {
+        return $query->where('type', 'debit');
+    }
+
+    public function scopeCompleted($query)
+    {
+        return $query->where('status', 'completed');
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('status', 'pending');
     }
 }

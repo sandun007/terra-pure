@@ -1,4 +1,4 @@
-@extends('wholesaler.app')
+@extends('wholesaler.layouts.app')
 @push('title')
     My Products
 @endpush
@@ -115,7 +115,8 @@
                             <tr>
                                 <td>
                                     @if($product->image)
-                                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="product-img">
+                                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}"
+                                             class="product-img">
                                     @else
                                         <div class="product-img bg-light d-flex align-items-center justify-content-center">
                                             <i class="fas fa-box text-muted"></i>
@@ -125,7 +126,8 @@
                                 <td>
                                     <strong>{{ $product->name }}</strong>
                                     @if($product->description)
-                                        <br><small class="text-muted">{{ Str::limit($product->description, 50) }}</small>
+                                        <br><small
+                                                class="text-muted">{{ Str::limit($product->description, 50) }}</small>
                                     @endif
                                 </td>
                                 <td><strong>RS. {{ number_format($product->price, 2) }}</strong></td>
@@ -143,10 +145,12 @@
                                 </td>
                                 <td>
                                     <div class="action-buttons">
-                                        <a href="{{ route('wholesaler.products.edit', $product->id) }}" class="btn btn-edit btn-action">
+                                        <a href="{{ route('wholesaler.products.edit', $product->id) }}"
+                                           class="btn btn-edit btn-action">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <button type="button" class="btn btn-delete btn-action" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $product->id }}">
+                                        <button type="button" class="btn btn-delete btn-action" data-bs-toggle="modal"
+                                                data-bs-target="#deleteModal{{ $product->id }}">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
@@ -157,17 +161,22 @@
                                             <div class="modal-content modal-confirm">
                                                 <div class="modal-header">
                                                     <h5 class="modal-title">Confirm Delete</h5>
-                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                    <button type="button" class="btn-close btn-close-white"
+                                                            data-bs-dismiss="modal"></button>
                                                 </div>
                                                 <div class="modal-body">
                                                     <div class="icon-box">
                                                         <i class="fas fa-exclamation-triangle"></i>
                                                     </div>
                                                     <h4>Are you sure?</h4>
-                                                    <p>Do you really want to delete "{{ $product->name }}"? This process cannot be undone.</p>
+                                                    <p>Do you really want to delete "{{ $product->name }}"? This process
+                                                        cannot be undone.</p>
                                                     <div class="d-flex justify-content-center gap-3">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                        <form action="{{ route('wholesaler.products.destroy', $product->id) }}" method="POST">
+                                                        <button type="button" class="btn btn-secondary"
+                                                                data-bs-dismiss="modal">Cancel
+                                                        </button>
+                                                        <form action="{{ route('wholesaler.products.destroy', $product->id) }}"
+                                                              method="POST">
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="submit" class="btn btn-danger">Delete</button>

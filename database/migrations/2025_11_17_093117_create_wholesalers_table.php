@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('wholesalers', function (Blueprint $table) {
@@ -22,22 +19,16 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->string('whatsapp')->nullable();
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('NIC_no')->nullable();
-            $table->string('NIC_front')->nullable(); // Path to NIC front image
-            $table->string('NIC_back')->nullable();  // Path to NIC back image
             $table->string('username')->unique();
             $table->string('password');
-            $table->string('view_password')->nullable(); // Plain text password (if needed for viewing)
-            $table->string('type')->nullable(); // Wholesaler type/category
+            $table->string('business_name')->nullable(); // Added business name
+            $table->string('img')->nullable(); // Profile image
+            $table->string('type')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('wholesalers');

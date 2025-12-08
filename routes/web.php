@@ -16,7 +16,12 @@ use App\Http\Controllers\SellerPaymentController;
 use App\Http\Controllers\SellerProductController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\StockController;
+use App\Http\Controllers\Wholesaler\WholesalerBrandController;
+use App\Http\Controllers\Wholesaler\WholesalerCategoryController;
+use App\Http\Controllers\Wholesaler\WholesalerProductController;
+use App\Http\Controllers\Wholesaler\WholesalerShopController;
 use App\Http\Controllers\WholesalerController;
+use App\Http\Controllers\WholesalerPaymentController;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EmployeeController;
@@ -115,6 +120,7 @@ Route::middleware('auth:admin')->group(function(){
         Route::post('/logout', [LoginController::class, 'logout'])->name('seller.logout');
         Route::get('/', [SellerController::class, 'dashboard'])->name('seller.dashboard');
 
+
         Route::prefix('shop')->group(function () {
            Route::get('/',[SellerController::class,'shop'])->name('seller.shop');
             Route::get('product/{id}', [ProductController::class, 'product_view'])->name('seller.product.product_view');
@@ -209,61 +215,116 @@ Route::prefix('employee')->group(function(){
 
 });
 
-
-
-
-Route::middleware(['auth:wholesaler'])->group(function (){
+Route::middleware(['auth:wholesaler'])->group(function () {
     Route::prefix('wholesaler')->name('wholesaler.')->group(function () {
         // Authentication
         Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
         Route::get('/', [WholesalerController::class, 'dashboard'])->name('dashboard');
+        // Profile Routes
         Route::get('/profile', [WholesalerController::class, 'profile'])->name('profile');
-        Route::post('/profile', [WholesalerController::class, 'updateProfile'])->name('profile.update');
+        Route::post('/profile/update', [WholesalerController::class, 'updateProfile'])->name('profile.update');
+    // SHOP ROUTES - Auto-creates shop
+        Route::prefix('shop')->name('shop.')->group(function () {
+            Route::get('/', [WholesalerShopController::class, 'index'])->name('index');
+            Route::get('/product/{id}', [WholesalerShopController::class, 'showProduct'])->name('product.show');
+            Route::get('/search', [WholesalerShopController::class, 'search'])->name('search');
+            Route::get('/cart', [WholesalerShopController::class, 'viewCart'])->name('cart');
+            Route::get('/checkout', [WholesalerShopController::class, 'checkout'])->name('checkout');
+            Route::post('/checkout/process', [WholesalerShopController::class, 'processCheckout'])->name('checkout.process');
 
-        // Shop Routes
-        Route::get('/shop', [WholesalerController::class, 'shop'])->name('shop');
-        Route::get('/shop/edit', [WholesalerController::class, 'editShop'])->name('shop.edit');
-        Route::post('/shop/update', [WholesalerController::class, 'updateShop'])->name('shop.update');
+            // Buy Now route
+            Route::post('/buy-now', [WholesalerShopController::class, 'buyNow'])->name('buy.now');
 
-        // Product Routes
-        Route::get('/products', [WholesalerController::class, 'products'])->name('products');
-        Route::get('/products/create', [WholesalerController::class, 'createProduct'])->name('products.create');
-        Route::post('/products', [WholesalerController::class, 'storeProduct'])->name('products.store');
-        Route::get('/products/{id}/edit', [WholesalerController::class, 'editProduct'])->name('products.edit');
-        Route::post('/products/{id}', [WholesalerController::class, 'updateProduct'])->name('products.update');
-        Route::delete('/products/{id}', [WholesalerController::class, 'destroyProduct'])->name('products.destroy');
+            // Cart AJAX routes
+            Route::post('/cart/add', [WholesalerShopController::class, 'addToCart'])->name('cart.add');
+            Route::post('/cart/update', [WholesalerShopController::class, 'updateCart'])->name('cart.update');
+            Route::delete('/cart/remove/{id}', [WholesalerShopController::class, 'removeFromCart'])->name('cart.remove');
+            Route::post('/cart/clear', [WholesalerShopController::class, 'clearCart'])->name('cart.clear');
+            Route::get('/cart/count', [WholesalerShopController::class, 'getCartCount'])->name('cart.count');
+        });
 
-        // Brand Routes
-        Route::get('/brands', [WholesalerController::class, 'brands'])->name('brands');
-        Route::get('/brands/create', [WholesalerController::class, 'createBrand'])->name('brands.create');
-        Route::post('/brands', [WholesalerController::class, 'storeBrand'])->name('brands.store');
-        Route::get('/brands/{id}/edit', [WholesalerController::class, 'editBrand'])->name('brands.edit');
-        Route::post('/brands/{id}', [WholesalerController::class, 'updateBrand'])->name('brands.update');
-        Route::delete('/brands/{id}', [WholesalerController::class, 'destroyBrand'])->name('brands.destroy');
+        // Product Management (Using WholesalerProduct model)
+        Route::prefix('/products')->name('products.')->group(function () {
+            Route::get('/', [WholesalerProductController::class, 'index'])->name('index');
+            Route::get('/create', [WholesalerProductController::class, 'create'])->name('create');
+            Route::post('/store', [WholesalerProductController::class, 'store'])->name('store');
+            Route::get('/{id}', [WholesalerProductController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [WholesalerProductController::class, 'edit'])->name('edit');
+            Route::put('/{id}/update', [WholesalerProductController::class, 'update'])->name('update');
+            Route::delete('/{id}/destroy', [WholesalerProductController::class, 'destroy'])->name('destroy');
+            Route::post('/{id}/status', [WholesalerProductController::class, 'updateStatus'])->name('updateStatus');
+        });
 
-        // Category Routes
-        Route::get('/categories', [WholesalerController::class, 'categories'])->name('categories');
-        Route::get('/categories/create', [WholesalerController::class, 'createCategory'])->name('categories.create');
-        Route::post('/categories', [WholesalerController::class, 'storeCategory'])->name('categories.store');
-        Route::get('/categories/{id}/edit', [WholesalerController::class, 'editCategory'])->name('categories.edit');
-        Route::post('/categories/{id}', [WholesalerController::class, 'updateCategory'])->name('categories.update');
-        Route::delete('/categories/{id}', [WholesalerController::class, 'destroyCategory'])->name('categories.destroy');
+        // Order Management
 
-        // Order Routes
-        Route::get('/orders', [WholesalerController::class, 'orders'])->name('orders');
-        Route::get('/orders/{id}', [WholesalerController::class, 'orderDetails'])->name('orders.details');
-        Route::post('/orders/{id}/status', [WholesalerController::class, 'updateOrderStatus'])->name('orders.status.update');
+        // Brand Management
+        Route::prefix('brands')->name('brands.')->group(function () {
+            Route::get('/', [WholesalerBrandController::class, 'index'])->name('index');
+            Route::get('/create', [WholesalerBrandController::class, 'create'])->name('create');
+            Route::post('/', [WholesalerBrandController::class, 'store'])->name('store');
+            Route::get('/{brand}/edit', [WholesalerBrandController::class, 'edit'])->name('edit');
+            Route::put('/{brand}', [WholesalerBrandController::class, 'update'])->name('update');
+            Route::delete('/{brand}', [WholesalerBrandController::class, 'destroy'])->name('destroy');
+        });
 
-        // Payment Routes
-        Route::get('/payments', [WholesalerController::class, 'payments'])->name('payments');
-        Route::get('/payments/transactions', [WholesalerController::class, 'payments'])->name('payments.transactions'); // Added this line
-        Route::get('/payments/methods', [WholesalerController::class, 'paymentMethods'])->name('payments.methods');
-        Route::get('/payments/methods/create', [WholesalerController::class, 'createPaymentMethod'])->name('payments.methods.create');
-        Route::post('/payments/methods', [WholesalerController::class, 'storePaymentMethod'])->name('payments.methods.store');
-        Route::get('/payments/methods/{id}/edit', [WholesalerController::class, 'editPaymentMethod'])->name('payments.methods.edit');
-        Route::post('/payments/methods/{id}', [WholesalerController::class, 'updatePaymentMethod'])->name('payments.methods.update');
-        Route::delete('/payments/methods/{id}', [WholesalerController::class, 'destroyPaymentMethod'])->name('payments.methods.destroy');
-        Route::get('/payments/withdraw', [WholesalerController::class, 'withdraw'])->name('payments.withdraw');
-        Route::post('/payments/withdraw', [WholesalerController::class, 'processWithdraw'])->name('payments.withdraw.process');
+        // Category Management - FIXED ROUTE
+        Route::prefix('categories')->name('categories.')->group(function () {
+            Route::get('/', [WholesalerCategoryController::class, 'index'])->name('index');
+            Route::get('/create', [WholesalerCategoryController::class, 'create'])->name('create');
+            Route::post('/', [WholesalerCategoryController::class, 'store'])->name('store');
+            Route::get('/{id}/edit', [WholesalerCategoryController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [WholesalerCategoryController::class, 'update'])->name('update');
+            Route::delete('/{id}', [WholesalerCategoryController::class, 'destroy'])->name('destroy');
+
+            // Show category details
+            Route::get('/{id}', [WholesalerCategoryController::class, 'show'])->name('show');
+        });
+
+        // Order Management
+        Route::prefix('/orders')->name('orders.')->group(function () {
+            Route::get('/', [WholesalerController::class, 'ordersIndex'])->name('index');
+            Route::get('/{id}', [WholesalerController::class, 'orderDetails'])->name('details');
+            Route::post('/{id}/status', [WholesalerController::class, 'updateOrderStatus'])->name('updateStatus');
+        });
+// Payment Routes - Use only WholesalerPaymentController
+        Route::prefix('payments')->name('payments.')->group(function () {
+            Route::get('/', [WholesalerPaymentController::class, 'index'])->name('index');
+            Route::get('/history', [WholesalerPaymentController::class, 'paymentHistory'])->name('history');
+            Route::get('/{id}', [WholesalerPaymentController::class, 'show'])->name('show');
+            Route::get('/withdraw', [WholesalerPaymentController::class, 'withdraw'])->name('withdraw');
+            Route::post('/withdraw', [WholesalerPaymentController::class, 'processWithdraw'])->name('process-withdraw');
+            Route::post('/withdraw/{id}/cancel', [WholesalerPaymentController::class, 'cancelWithdraw'])->name('cancel-withdraw');
+            Route::get('/export', [WholesalerPaymentController::class, 'exportPayments'])->name('export');
+
+            // Payment Methods
+            Route::get('/methods', [WholesalerPaymentController::class, 'paymentMethods'])->name('methods');
+            Route::get('/methods/create', [WholesalerPaymentController::class, 'createPaymentMethod'])->name('methods.create');
+            Route::post('/methods', [WholesalerPaymentController::class, 'storePaymentMethod'])->name('methods.store');
+            Route::get('/methods/{id}/edit', [WholesalerPaymentController::class, 'editPaymentMethod'])->name('methods.edit');
+            Route::put('/methods/{id}', [WholesalerPaymentController::class, 'updatePaymentMethod'])->name('methods.update');
+            Route::delete('/methods/{id}', [WholesalerPaymentController::class, 'destroyPaymentMethod'])->name('methods.destroy');
+
+            // Payment Gateways
+            Route::get('/gateways', [WholesalerPaymentController::class, 'gateways'])->name('gateways');
+            Route::get('/gateways/create', [WholesalerPaymentController::class, 'createGateway'])->name('gateways.create');
+            Route::post('/gateways', [WholesalerPaymentController::class, 'storeGateway'])->name('gateways.store');
+            Route::get('/gateways/{id}/test', [WholesalerPaymentController::class, 'testGateway'])->name('gateways.test');
+            Route::delete('/gateways/{id}', [WholesalerPaymentController::class, 'destroyGateway'])->name('gateways.destroy');
+
+            // Checkout
+            Route::post('/checkout', [WholesalerPaymentController::class, 'createCheckoutSession'])->name('checkout');
+            Route::get('/success', [WholesalerPaymentController::class, 'paymentSuccess'])->name('success');
+            Route::get('/cancel', [WholesalerPaymentController::class, 'paymentCancel'])->name('cancel');
+        });
+
+// Webhook Routes (no auth required)
+        Route::prefix('webhook')->name('webhook.')->group(function () {
+            Route::post('/stripe', [WholesalerPaymentController::class, 'webhookHandler'])->name('stripe');
+            Route::post('/paypal', [WholesalerPaymentController::class, 'webhookHandler'])->name('paypal');
+            Route::post('/jazzcash', [WholesalerPaymentController::class, 'webhookHandler'])->name('jazzcash');
+        });
+
+        });
     });
-});
+
+

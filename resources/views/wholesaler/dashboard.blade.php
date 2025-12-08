@@ -1,11 +1,12 @@
-@extends('wholesaler.app')
+@extends('wholesaler.layouts.app')
 @push('title')
     Wholesale Dashboard
 @endpush
 
 @push('css')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+          rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
@@ -36,7 +37,7 @@
             right: -20%;
             width: 500px;
             height: 500px;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
             border-radius: 50%;
         }
 
@@ -47,7 +48,7 @@
             left: -10%;
             width: 400px;
             height: 400px;
-            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
             border-radius: 50%;
         }
 
@@ -61,11 +62,11 @@
             font-size: 32px;
             font-weight: 800;
             margin-bottom: 10px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .header-title p {
-            color: rgba(255,255,255,0.9);
+            color: rgba(255, 255, 255, 0.9);
             font-size: 16px;
             margin-bottom: 0;
         }
@@ -75,14 +76,14 @@
         }
 
         .business-badge .badge {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(10px);
             color: white;
             padding: 10px 20px;
             font-size: 14px;
             font-weight: 600;
             border-radius: 50px;
-            border: 2px solid rgba(255,255,255,0.3);
+            border: 2px solid rgba(255, 255, 255, 0.3);
         }
 
         /* Statistics Grid */
@@ -459,55 +460,6 @@
                 height: 250px;
             }
         }
-
-        /* Loading Animation */
-        @keyframes shimmer {
-            0% {
-                background-position: -1000px 0;
-            }
-            100% {
-                background-position: 1000px 0;
-            }
-        }
-
-        .loading {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-            background-size: 1000px 100%;
-            animation: shimmer 2s infinite;
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-        }
-
-        /* Pulse Animation for New Content */
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.7;
-            }
-        }
-
-        .new-indicator {
-            animation: pulse 2s infinite;
-        }
     </style>
 @endpush
 
@@ -535,7 +487,7 @@
                         <i class="fas fa-boxes"></i>
                     </div>
                 </div>
-                <div class="wholesale-stat-value">{{ $totalProducts }}</div>
+                <div class="wholesale-stat-value">{{ $stats['total_products'] }}</div>
                 <div class="wholesale-stat-change">
                     <i class="fas fa-chart-line"></i>
                     <span>Manage your product catalog</span>
@@ -549,7 +501,7 @@
                         <i class="fas fa-shopping-cart"></i>
                     </div>
                 </div>
-                <div class="wholesale-stat-value">{{ $totalOrders }}</div>
+                <div class="wholesale-stat-value">{{ $stats['total_orders'] }}</div>
                 <div class="wholesale-stat-change">
                     <i class="fas fa-chart-line"></i>
                     <span>Track all customer orders</span>
@@ -563,7 +515,7 @@
                         <i class="fas fa-check-circle"></i>
                     </div>
                 </div>
-                <div class="wholesale-stat-value">{{ $confirmedOrders }}</div>
+                <div class="wholesale-stat-value">{{ $stats['confirmed_orders'] }}</div>
                 <div class="wholesale-stat-change">
                     <i class="fas fa-chart-line"></i>
                     <span>Ready for processing</span>
@@ -577,7 +529,7 @@
                         <i class="fas fa-dollar-sign"></i>
                     </div>
                 </div>
-                <div class="wholesale-stat-value">RS. {{ number_format($totalRevenue, 2) }}</div>
+                <div class="wholesale-stat-value">RS. {{ number_format($stats['total_revenue'], 2) }}</div>
                 <div class="wholesale-stat-change">
                     <i class="fas fa-chart-line"></i>
                     <span>From completed orders</span>
@@ -606,7 +558,7 @@
                 <div class="dashboard-section">
                     <div class="section-header">
                         <h3 class="section-title">Recent Orders</h3>
-                        <a href="{{ route('wholesaler.orders') }}" class="view-all-link">
+                        <a href="{{ route('wholesaler.orders.index') }}" class="view-all-link">
                             View All <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
@@ -623,14 +575,6 @@
                             </tr>
                             </thead>
                             <tbody>
-                            @php
-                                $recentOrders = \App\Models\Order::where('wholesaler_id', $wholesaler->id)
-                                    ->with('customer')
-                                    ->orderBy('created_at', 'desc')
-                                    ->limit(5)
-                                    ->get();
-                            @endphp
-
                             @forelse($recentOrders as $order)
                                 <tr>
                                     <td><strong>#{{ $order->id }}</strong></td>
@@ -656,7 +600,8 @@
                             @empty
                                 <tr>
                                     <td colspan="5" class="text-center text-muted" style="padding: 40px;">
-                                        <i class="fas fa-inbox" style="font-size: 48px; color: #cbd5e1; margin-bottom: 15px; display: block;"></i>
+                                        <i class="fas fa-inbox"
+                                           style="font-size: 48px; color: #cbd5e1; margin-bottom: 15px; display: block;"></i>
                                         No orders found
                                     </td>
                                 </tr>
@@ -679,11 +624,11 @@
                             <i class="fas fa-plus-circle quick-action-icon"></i>
                             <span>Add New Product</span>
                         </a>
-                        <a href="{{ route('wholesaler.orders') }}?status=pending" class="quick-action-btn">
+                        <a href="{{ route('wholesaler.orders.index') }}?status=pending" class="quick-action-btn">
                             <i class="fas fa-clock quick-action-icon"></i>
                             <span>Pending Orders</span>
                         </a>
-                        <a href="{{ route('wholesaler.products') }}" class="quick-action-btn">
+                        <a href="{{ route('wholesaler.products.index') }}" class="quick-action-btn">
                             <i class="fas fa-box-open quick-action-icon"></i>
                             <span>Manage Products</span>
                         </a>
@@ -700,28 +645,48 @@
                         <h3 class="section-title">Stock Alerts</h3>
                     </div>
 
-                    @php
-                        $lowStockProducts = \App\Models\Product::where('wholesaler_id', $wholesaler->id)
-                            ->where('stock', '<', 10)
-                            ->limit(5)
-                            ->get();
-                    @endphp
-
                     @forelse($lowStockProducts as $product)
                         <div class="alert alert-warning d-flex align-items-center mb-3">
                             <i class="fas fa-exclamation-triangle me-3"></i>
                             <div>
                                 <strong>{{ $product->name }}</strong>
                                 <br>
-                                <small>Only {{ $product->stock }} left in stock</small>
+                                <small>Only {{ $product->qty }} left in stock</small>
                             </div>
                         </div>
                     @empty
                         <div class="text-center" style="padding: 30px;">
-                            <i class="fas fa-check-circle" style="font-size: 48px; color: #10b981; margin-bottom: 15px; display: block;"></i>
+                            <i class="fas fa-check-circle"
+                               style="font-size: 48px; color: #10b981; margin-bottom: 15px; display: block;"></i>
                             <p class="text-muted mb-0">All products are well stocked</p>
                         </div>
                     @endforelse
+                </div>
+
+                <!-- Additional Quick Links -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h3 class="section-title">Business Management</h3>
+                    </div>
+
+                    <div class="quick-actions">
+                        <a href="{{ route('wholesaler.payments.index') }}" class="quick-action-btn">
+                            <i class="fas fa-store quick-action-icon"></i>
+                            <span>My Shop</span>
+                        </a>
+                        <a href="{{ route('wholesaler.brands.index') }}" class="quick-action-btn">
+                            <i class="fas fa-tags quick-action-icon"></i>
+                            <span>Brands</span>
+                        </a>
+                        <a href="{{ route('wholesaler.categories.index') }}" class="quick-action-btn">
+                            <i class="fas fa-layer-group quick-action-icon"></i>
+                            <span>Categories</span>
+                        </a>
+                        <a href="{{ route('wholesaler.payments.index') }}" class="quick-action-btn">
+                            <i class="fas fa-credit-card quick-action-icon"></i>
+                            <span>Payments</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -730,7 +695,7 @@
 
 @push('script')
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Add entrance animations
             const cards = document.querySelectorAll('.wholesale-stat-card, .dashboard-section');
             cards.forEach((card, index) => {
@@ -749,35 +714,10 @@
             // Chart period switcher
             const chartBtns = document.querySelectorAll('.chart-btn');
             chartBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function () {
                     chartBtns.forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
                     updateChart(this.dataset.period);
-                });
-            });
-
-            // Refresh dashboard data with animation
-            const refreshBtn = document.getElementById('refreshBtn');
-            if (refreshBtn) {
-                refreshBtn.addEventListener('click', function() {
-                    const icon = this.querySelector('i');
-                    icon.classList.add('fa-spin');
-
-                    setTimeout(() => {
-                        icon.classList.remove('fa-spin');
-                        location.reload();
-                    }, 1000);
-                });
-            }
-
-            // Add smooth scroll behavior
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const target = document.querySelector(this.getAttribute('href'));
-                    if (target) {
-                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
                 });
             });
         });
@@ -787,14 +727,20 @@
         function initializeSalesChart() {
             const ctx = document.getElementById('salesChart').getContext('2d');
 
-            // Sample data - in real application, this would come from your controller
+            // Use actual monthly sales data from controller if available
             const monthlyData = {
                 labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                 orders: [12, 19, 15, 25, 22, 30, 28, 35, 32, 40, 38, 45],
                 revenue: [12000, 19000, 15000, 25000, 22000, 30000, 28000, 35000, 32000, 40000, 38000, 45000]
             };
 
-            salesChart = new Chart(ctx, {
+            // If you have real data from $monthlySales, you can use it here
+            @if(isset($monthlySales) && $monthlySales->count() > 0)
+            const realData = @json($monthlySales);
+            // Process real data for chart here
+            @endif
+
+                salesChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: monthlyData.labels,
@@ -866,7 +812,7 @@
                             },
                             ticks: {
                                 color: '#64748b',
-                                callback: function(value) {
+                                callback: function (value) {
                                     return 'RS. ' + value.toLocaleString();
                                 }
                             }
@@ -888,7 +834,7 @@
                             borderColor: '#334155',
                             borderWidth: 1,
                             callbacks: {
-                                label: function(context) {
+                                label: function (context) {
                                     let label = context.dataset.label || '';
                                     if (label.includes('Revenue')) {
                                         return label + ': RS. ' + context.parsed.y.toLocaleString();
@@ -908,10 +854,9 @@
 
         function updateChart(period) {
             // In a real application, you would fetch new data from the server based on the period
-            // For now, we'll just update with sample data
             let newData;
 
-            switch(period) {
+            switch (period) {
                 case 'quarterly':
                     newData = {
                         labels: ['Q1', 'Q2', 'Q3', 'Q4'],
