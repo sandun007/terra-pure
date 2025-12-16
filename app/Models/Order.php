@@ -2,82 +2,68 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Order extends Model
 {
-    use HasFactory;
+    protected $table = 'orders'; // Make sure table name matches
 
     protected $fillable = [
-        'order_no',
-        'date',
-        'delivery_date',
-        'seller_no',
-        'item_code',
-        'item_name',
-        'qty',
-        'price',
-        'total',
-        'customer_name',
-        'customer_phone_01',
-        'customer_phone_02',
-        'customer_address',
-        'city',
-        'remark',
-        'status_date',
-        'status',
-        'wholesaler_id', // Added this
-        'customer_id',
+        'wholesaler_id',
+        'order_no', // This is what the error shows
+        'order_number', // You might have both fields
+        'subtotal',
+        'tax',
+        'shipping',
         'total_amount',
+        'payment_method',
         'payment_status',
-        'shipping_address'
+        'status',
+        'shipping_address',
+        'customer_name',
+        'customer_email',
+        'customer_phone',
+        'notes',
+        'order_date',
+        'status_updated_at',
+        'status_notes',
+        'cancelled_at'
     ];
 
-    // Cast attributes
     protected $casts = [
-        'total_amount' => 'decimal:2',
-        'date' => 'date',
-        'delivery_date' => 'date',
-        'status_date' => 'datetime',
+        'order_date' => 'datetime',
+        'status_updated_at' => 'datetime',
+        'cancelled_at' => 'datetime',
+        'subtotal' => 'decimal:2',
+        'tax' => 'decimal:2',
+        'shipping' => 'decimal:2',
+        'total_amount' => 'decimal:2'
     ];
 
-    // Relationship with Wholesaler
-    public function wholesaler()
+    public function wholesaler(): BelongsTo
     {
         return $this->belongsTo(Wholesaler::class);
     }
 
-    // Relationship with Customer
-    public function customer()
-    {
-        return $this->belongsTo(Customer::class);
-    }
-
-    // Relationship with Order Items
-    public function orderItems()
+    public function orderItems(): HasMany
     {
         return $this->hasMany(OrderItem::class);
     }
 
-    // Scope for wholesaler orders
-    public function scopeForWholesaler($query, $wholesalerId)
+    public function getFormattedStatusAttribute()
     {
-        return $query->where('wholesaler_id', $wholesalerId);
+        return ucfirst(str_replace('_', ' ', $this->status));
     }
 
-    // Get status badge color
-    public function getStatusColorAttribute()
+    public function getFormattedPaymentStatusAttribute()
     {
-        $colors = [
-            'pending' => 'warning',
-            'confirmed' => 'primary',
-            'processing' => 'info',
-            'shipped' => 'secondary',
-            'delivered' => 'success',
-            'cancelled' => 'danger'
-        ];
+        return ucfirst(str_replace('_', ' ', $this->payment_status));
+    }
 
-        return $colors[$this->status] ?? 'secondary';
+    public function getFormattedTotalAttribute()
+    {
+        return 'Rs. ' . number_format($this->total_amount, 2);
     }
 }

@@ -13,12 +13,15 @@ class Category extends Model
         'wholesaler_id',
         'code',
         'name',
+        'slug',
+        'description',
         'img',
         'image',
         'status',
         'add_by',
         'update_by',
         'cancel',
+        'parent_id',
         'seller_code'
     ];
 
@@ -34,7 +37,7 @@ class Category extends Model
     // Relationship with Products
     public function products()
     {
-        return $this->hasMany(WholesalerProduct::class, 'category', 'name');
+        return $this->hasMany(WholesalerProduct::class, 'category_id');
     }
 
     // Scope for wholesaler categories

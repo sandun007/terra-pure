@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Schema; // Add this import
+use Illuminate\Support\Facades\Schema;
 
 class WholesalerProductController extends Controller
 {
@@ -39,7 +39,6 @@ class WholesalerProductController extends Controller
         try {
             $wholesaler = Auth::guard('wholesaler')->user();
 
-            // Safe query with column existence check
             $categories = Category::where('wholesaler_id', $wholesaler->id)
                 ->when(Schema::hasColumn('categories', 'status'), function($query) {
                     return $query->where('status', 'active');
@@ -52,15 +51,15 @@ class WholesalerProductController extends Controller
                 })
                 ->get();
 
-            // Generate product code - use both variables for compatibility
             $productCode = 'WHP' . date('Ymd') . strtoupper(Str::random(6));
-            $code = $productCode; // Add this line for backward compatibility
+            $code = $productCode;
 
             return view('wholesaler.products.create', compact('categories', 'brands', 'productCode', 'code'));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error loading form: ' . $e->getMessage());
         }
     }
+
     public function store(Request $request)
     {
         try {
@@ -70,14 +69,14 @@ class WholesalerProductController extends Controller
                 'code' => 'required|string|unique:wholesaler_products,code',
                 'name' => 'required|string|max:255',
                 'description' => 'nullable|string',
-                'display_price' => 'required|numeric|min:0',
-                'wholesale_price' => 'required|numeric|min:0',
+                'cost_price' => 'required|numeric|min:0',
+                'selling_price' => 'required|numeric|min:0',
+                'discount' => 'nullable|numeric|min:0|max:100',
+                'packaging_cost' => 'nullable|numeric|min:0',
                 'qty' => 'required|integer|min:0',
-                'min_order_quantity' => 'required|integer|min:1',
+                'min_stock_level' => 'required|integer|min:1',
                 'category_id' => 'nullable|exists:categories,id',
                 'brand_id' => 'nullable|exists:brands,id',
-                'weight' => 'nullable|numeric|min:0',
-                'dimensions' => 'nullable|string|max:255',
                 'features' => 'nullable|string',
                 'barcode' => 'nullable|string|max:255|unique:wholesaler_products,barcode',
                 'status' => 'required|in:active,inactive',
@@ -95,14 +94,14 @@ class WholesalerProductController extends Controller
                 'code' => $validated['code'],
                 'name' => $validated['name'],
                 'description' => $validated['description'],
-                'display_price' => $validated['display_price'],
-                'wholesale_price' => $validated['wholesale_price'],
+                'cost_price' => $validated['cost_price'],
+                'selling_price' => $validated['selling_price'],
+                'discount' => $validated['discount'] ?? 0,
+                'packaging_cost' => $validated['packaging_cost'] ?? 0,
                 'qty' => $validated['qty'],
-                'min_order_quantity' => $validated['min_order_quantity'],
+                'min_stock_level' => $validated['min_stock_level'],
                 'category_id' => $validated['category_id'],
                 'brand_id' => $validated['brand_id'],
-                'weight' => $validated['weight'],
-                'dimensions' => $validated['dimensions'],
                 'features' => $validated['features'],
                 'barcode' => $validated['barcode'],
                 'status' => $validated['status'],
@@ -136,7 +135,6 @@ class WholesalerProductController extends Controller
             $product = WholesalerProduct::where('wholesaler_id', $wholesaler->id)
                 ->findOrFail($id);
 
-            // Safe query with column existence check
             $categories = Category::where('wholesaler_id', $wholesaler->id)
                 ->when(Schema::hasColumn('categories', 'status'), function($query) {
                     return $query->where('status', 'active');
@@ -165,14 +163,14 @@ class WholesalerProductController extends Controller
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'description' => 'nullable|string',
-                'display_price' => 'required|numeric|min:0',
-                'wholesale_price' => 'required|numeric|min:0',
+                'cost_price' => 'required|numeric|min:0',
+                'selling_price' => 'required|numeric|min:0',
+                'discount' => 'nullable|numeric|min:0|max:100',
+                'packaging_cost' => 'nullable|numeric|min:0',
                 'qty' => 'required|integer|min:0',
-                'min_order_quantity' => 'required|integer|min:1',
+                'min_stock_level' => 'required|integer|min:1',
                 'category_id' => 'nullable|exists:categories,id',
                 'brand_id' => 'nullable|exists:brands,id',
-                'weight' => 'nullable|numeric|min:0',
-                'dimensions' => 'nullable|string|max:255',
                 'features' => 'nullable|string',
                 'barcode' => 'nullable|string|max:255|unique:wholesaler_products,barcode,' . $id,
                 'status' => 'required|in:active,inactive',

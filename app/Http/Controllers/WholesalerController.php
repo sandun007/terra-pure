@@ -10,24 +10,32 @@ use App\Models\Brand;
 use App\Models\WholesalerShop;
 use App\Models\WholesalerPayment;
 use App\Models\WholesalerPaymentMethod;
+use App\Services\WholesalerStorageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class WholesalerController extends Controller
 {
+    protected $storageService;
+
     public function __construct()
     {
         $this->middleware('auth:wholesaler');
+        $this->storageService = new WholesalerStorageService();
     }
 
+    /**
+     * Display wholesaler dashboard
+     */
     public function dashboard()
     {
         try {
             $wholesaler = Auth::guard('wholesaler')->user();
 
+            // Calculate statistics
             $stats = [
                 'total_products' => WholesalerProduct::where('wholesaler_id', $wholesaler->id)->count(),
                 'total_orders' => Order::where('wholesaler_id', $wholesaler->id)->count(),
@@ -42,10 +50,10 @@ class WholesalerController extends Controller
                     ->count(),
             ];
 
-            // Payment statistics for dashboard
+            // Payment statistics
             $paymentStats = $this->calculatePaymentStats($wholesaler->id);
 
-            // Recent orders for dashboard
+            // Recent orders
             $recentOrders = Order::where('wholesaler_id', $wholesaler->id)
                 ->with('customer')
                 ->orderBy('created_at', 'desc')
@@ -65,13 +73,25 @@ class WholesalerController extends Controller
                 ->limit(5)
                 ->get();
 
+            // Monthly sales data for chart
+            $monthlySales = $this->getMonthlySalesData($wholesaler->id);
+
+            // Get storage service data
+            $storageScript = $this->storageService->getLocalStorageScript();
+            $storageLocations = $this->storageService->getStorageLocations();
+            $diskUsage = $this->calculateDiskUsage($wholesaler->id);
+
             return view('wholesaler.dashboard', compact(
                 'wholesaler',
                 'stats',
                 'paymentStats',
                 'recentOrders',
                 'lowStockProducts',
-                'recentPayments'
+                'recentPayments',
+                'monthlySales',
+                'storageScript',
+                'storageLocations',
+                'diskUsage'
             ));
 
         } catch (\Exception $e) {
@@ -79,7 +99,33 @@ class WholesalerController extends Controller
         }
     }
 
-    // Shop Management
+    /**
+     * Get storage information
+     */
+    public function getStorageInfo()
+    {
+        try {
+            $wholesaler = Auth::guard('wholesaler')->user();
+
+            return response()->json([
+                'success' => true,
+                'wholesaler_id' => $wholesaler->id,
+                'storage_paths' => $this->storageService->getStorageLocations(),
+                'base_path' => $this->storageService->getBaseStoragePath(),
+                'disk_usage' => $this->calculateDiskUsage($wholesaler->id)
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error getting storage info: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Shop Management
+     */
     public function shopIndex()
     {
         try {
@@ -138,13 +184,15 @@ class WholesalerController extends Controller
             $validated['shop_slug'] = Str::slug($validated['shop_name']) . '-' . uniqid('', true);
             $validated['status'] = 'active';
 
-            // Handle file uploads
+            // Handle file uploads using storage service
             if ($request->hasFile('logo')) {
-                $validated['logo'] = $request->file('logo')->store('wholesaler/shop/logo', 'public');
+                $path = $this->storageService->getStorageLocations()['shop_logos'];
+                $validated['logo'] = $request->file('logo')->store($path, 'public');
             }
 
             if ($request->hasFile('banner')) {
-                $validated['banner'] = $request->file('banner')->store('wholesaler/shop/banner', 'public');
+                $path = $this->storageService->getStorageLocations()['shop_banners'];
+                $validated['banner'] = $request->file('banner')->store($path, 'public');
             }
 
             $shop = WholesalerShop::create($validated);
@@ -218,24 +266,28 @@ class WholesalerController extends Controller
                 'banner' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
             ]);
 
-            // Handle logo upload
+            // Handle logo upload using storage service
             if ($request->hasFile('logo')) {
                 // Delete old logo
                 if ($shop->logo) {
                     Storage::disk('public')->delete($shop->logo);
                 }
-                $validated['logo'] = $request->file('logo')->store('wholesaler/shop/logo', 'public');
+
+                $path = $this->storageService->getStorageLocations()['shop_logos'];
+                $validated['logo'] = $request->file('logo')->store($path, 'public');
             } else {
                 $validated['logo'] = $shop->logo;
             }
 
-            // Handle banner upload
+            // Handle banner upload using storage service
             if ($request->hasFile('banner')) {
                 // Delete old banner
                 if ($shop->banner) {
                     Storage::disk('public')->delete($shop->banner);
                 }
-                $validated['banner'] = $request->file('banner')->store('wholesaler/shop/banner', 'public');
+
+                $path = $this->storageService->getStorageLocations()['shop_banners'];
+                $validated['banner'] = $request->file('banner')->store($path, 'public');
             } else {
                 $validated['banner'] = $shop->banner;
             }
@@ -269,7 +321,7 @@ class WholesalerController extends Controller
                 ], 404);
             }
 
-            // Delete associated files
+            // Delete associated files using storage service paths
             if ($shop->logo) {
                 Storage::disk('public')->delete($shop->logo);
             }
@@ -292,7 +344,9 @@ class WholesalerController extends Controller
         }
     }
 
-    // Order Management
+    /**
+     * Order Management
+     */
     public function ordersIndex(Request $request)
     {
         try {
@@ -349,7 +403,9 @@ class WholesalerController extends Controller
         }
     }
 
-    // Brand Management
+    /**
+     * Brand Management
+     */
     public function brandsIndex()
     {
         try {
@@ -383,7 +439,8 @@ class WholesalerController extends Controller
 
             $imagePath = null;
             if ($request->hasFile('image')) {
-                $imagePath = $request->file('image')->store('wholesaler/brands', 'public');
+                $path = $this->storageService->getStorageLocations()['brand_images'];
+                $imagePath = $request->file('image')->store($path, 'public');
             }
 
             Brand::create([
@@ -433,7 +490,9 @@ class WholesalerController extends Controller
                 if ($brand->image) {
                     Storage::disk('public')->delete($brand->image);
                 }
-                $validated['image'] = $request->file('image')->store('wholesaler/brands', 'public');
+
+                $path = $this->storageService->getStorageLocations()['brand_images'];
+                $validated['image'] = $request->file('image')->store($path, 'public');
             } else {
                 $validated['image'] = $brand->image;
             }
@@ -477,7 +536,9 @@ class WholesalerController extends Controller
         }
     }
 
-    // Category Management
+    /**
+     * Category Management
+     */
     public function categoriesIndex()
     {
         try {
@@ -511,7 +572,8 @@ class WholesalerController extends Controller
 
             $imagePath = null;
             if ($request->hasFile('image')) {
-                $imagePath = $request->file('image')->store('wholesaler/categories', 'public');
+                $path = $this->storageService->getStorageLocations()['category_images'];
+                $imagePath = $request->file('image')->store($path, 'public');
             }
 
             Category::create([
@@ -561,7 +623,9 @@ class WholesalerController extends Controller
                 if ($category->img) {
                     Storage::disk('public')->delete($category->img);
                 }
-                $validated['img'] = $request->file('image')->store('wholesaler/categories', 'public');
+
+                $path = $this->storageService->getStorageLocations()['category_images'];
+                $validated['img'] = $request->file('image')->store($path, 'public');
             } else {
                 $validated['img'] = $category->img;
             }
@@ -605,12 +669,8 @@ class WholesalerController extends Controller
         }
     }
 
-    // =========================================================================
-    // PAYMENT MANAGEMENT METHODS
-    // =========================================================================
-
     /**
-     * Display payment dashboard with statistics
+     * Payment Management
      */
     public function paymentsIndex()
     {
@@ -662,9 +722,6 @@ class WholesalerController extends Controller
         }
     }
 
-    /**
-     * Display payment history with filtering
-     */
     public function paymentHistory(Request $request)
     {
         try {
@@ -702,9 +759,6 @@ class WholesalerController extends Controller
         }
     }
 
-    /**
-     * Display payment details
-     */
     public function paymentShow($id)
     {
         try {
@@ -719,9 +773,6 @@ class WholesalerController extends Controller
         }
     }
 
-    /**
-     * Payment methods management
-     */
     public function paymentMethods()
     {
         try {
@@ -858,9 +909,6 @@ class WholesalerController extends Controller
         }
     }
 
-    /**
-     * Display withdrawal page
-     */
     public function withdraw()
     {
         try {
@@ -888,9 +936,6 @@ class WholesalerController extends Controller
         }
     }
 
-    /**
-     * Process withdrawal request
-     */
     public function processWithdraw(Request $request)
     {
         try {
@@ -944,9 +989,6 @@ class WholesalerController extends Controller
         }
     }
 
-    /**
-     * Cancel pending withdrawal
-     */
     public function cancelWithdraw($id)
     {
         try {
@@ -966,9 +1008,6 @@ class WholesalerController extends Controller
         }
     }
 
-    /**
-     * Export payments to CSV
-     */
     public function exportPayments(Request $request)
     {
         try {
@@ -1027,7 +1066,9 @@ class WholesalerController extends Controller
         }
     }
 
-    // Profile Management
+    /**
+     * Profile Management
+     */
     public function profile()
     {
         try {
@@ -1048,7 +1089,6 @@ class WholesalerController extends Controller
         }
     }
 
-// In WholesalerController.php - updateProfile method
     public function updateProfile(Request $request)
     {
         try {
@@ -1067,22 +1107,16 @@ class WholesalerController extends Controller
                 'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             ]);
 
-            // Handle profile image upload
+            // Handle profile image upload using storage service
             if ($request->hasFile('img')) {
                 // Delete old image if exists
                 if ($wholesaler->img && Storage::disk('public')->exists($wholesaler->img)) {
                     Storage::disk('public')->delete($wholesaler->img);
                 }
 
-                // Store new image
-                $imagePath = $request->file('img')->store('wholesaler/profile', 'public');
-
-                // Optimize image (optional - requires intervention/image package)
-                // $image = Image::make(storage_path('app/public/' . $imagePath))
-                //     ->fit(400, 400)
-                //     ->save(storage_path('app/public/' . $imagePath));
-
-                $validated['img'] = $imagePath;
+                // Store new image using storage service
+                $path = $this->storageService->getStorageLocations()['profile_images'];
+                $validated['img'] = $request->file('img')->store($path, 'public');
             }
 
             $wholesaler->update($validated);
@@ -1100,18 +1134,25 @@ class WholesalerController extends Controller
             ], 500);
         }
     }
+
     public function logout(Request $request)
     {
+        // Get clear storage script before logout
+        $clearScript = $this->storageService->getClearStorageScript();
+
         Auth::guard('wholesaler')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/wholesaler/login');
+        // Return with clear script to be executed on client side
+        return redirect('/wholesaler/login')->with('clear_storage_script', $clearScript);
     }
 
-    // =========================================================================
-    // PRIVATE HELPER METHODS
-    // =========================================================================
+    /**
+     * =========================================================================
+     * PRIVATE HELPER METHODS
+     * =========================================================================
+     */
 
     /**
      * Calculate available balance for withdrawal
@@ -1168,5 +1209,101 @@ class WholesalerController extends Controller
             'net_balance' => $netBalance,
             'available_balance' => $availableBalance,
         ];
+    }
+
+    /**
+     * Get monthly sales data for chart
+     */
+    private function getMonthlySalesData($wholesalerId)
+    {
+        $currentYear = date('Y');
+        $monthlyData = [];
+
+        for ($month = 1; $month <= 12; $month++) {
+            $orders = Order::where('wholesaler_id', $wholesalerId)
+                ->whereYear('created_at', $currentYear)
+                ->whereMonth('created_at', $month)
+                ->where('status', 'completed')
+                ->get();
+
+            $monthlyData[] = [
+                'month' => date('M', mktime(0, 0, 0, $month, 1)),
+                'orders' => $orders->count(),
+                'revenue' => $orders->sum('total_amount')
+            ];
+        }
+
+        return $monthlyData;
+    }
+
+    /**
+     * Calculate disk usage for wholesaler
+     */
+    private function calculateDiskUsage($wholesalerId)
+    {
+        $basePath = "wholesaler/{$wholesalerId}";
+        $totalSize = 0;
+        $files = [];
+
+        try {
+            if (Storage::disk('public')->exists($basePath)) {
+                $files = Storage::disk('public')->allFiles($basePath);
+                foreach ($files as $file) {
+                    $totalSize += Storage::disk('public')->size($file);
+                }
+            }
+        } catch (\Exception $e) {
+            // Log error if needed
+            \Log::error('Error calculating disk usage: ' . $e->getMessage());
+        }
+
+        return [
+            'total_bytes' => $totalSize,
+            'total_mb' => round($totalSize / 1024 / 1024, 2),
+            'total_gb' => round($totalSize / 1024 / 1024 / 1024, 3),
+            'total_files' => count($files),
+            'storage_path' => $basePath
+        ];
+    }
+
+    /**
+     * Clean old files from storage (optional cleanup method)
+     */
+    public function cleanupStorage(Request $request)
+    {
+        try {
+            $wholesaler = Auth::guard('wholesaler')->user();
+            $days = $request->get('days', 30); // Default 30 days
+
+            $deletedFiles = [];
+            $basePath = "wholesaler/{$wholesaler->id}";
+
+            if (Storage::disk('public')->exists($basePath)) {
+                $files = Storage::disk('public')->allFiles($basePath);
+
+                foreach ($files as $file) {
+                    $lastModified = Storage::disk('public')->lastModified($file);
+                    $ageInDays = (time() - $lastModified) / (60 * 60 * 24);
+
+                    if ($ageInDays > $days) {
+                        Storage::disk('public')->delete($file);
+                        $deletedFiles[] = $file;
+                    }
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Storage cleanup completed',
+                'deleted_files' => count($deletedFiles),
+                'remaining_files' => count($files ?? []) - count($deletedFiles)
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error cleaning storage: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

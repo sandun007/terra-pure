@@ -192,6 +192,11 @@
         table.dataTable tbody tr:hover {
             background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
         }
+
+        /* Loading overlay */
+        .swal2-container .swal2-loader {
+            border-color: var(--main-theme-color) transparent var(--main-theme-color) transparent;
+        }
     </style>
 @endpush
 
@@ -370,6 +375,9 @@
             </div>
         </div>
     @endif
+
+    <!-- CSRF Token Meta Tag -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 @endsection
 
 @push('script')
@@ -396,7 +404,7 @@
                     }
                 },
                 columnDefs: [
-                    { orderable: false, targets: [0, 6] }, // Disable sorting for image and actions columns
+                    { orderable: false, targets: [0, 6] },
                     { className: "align-middle", targets: "_all" }
                 ],
                 order: [[1, 'asc']],
@@ -409,14 +417,19 @@
                 }
             });
 
+            // Get CSRF token from meta tag
+            const csrfToken = $('meta[name="csrf-token"]').attr('content');
+
             // SweetAlert for delete confirmation
-            $('.delete-category').on('click', function() {
+            $(document).on('click', '.delete-category', function() {
                 const categoryId = $(this).data('id');
                 const categoryName = $(this).data('name');
+                const deleteUrl = "{{ route('wholesaler.categories.destroy', ':id') }}".replace(':id', categoryId);
 
                 Swal.fire({
                     title: 'Are you sure?',
-                    text: `You are about to delete category "${categoryName}". This action cannot be undone!`,
+                    html: `<strong>Category:</strong> ${categoryName}<br><br>
+                           This action will permanently delete the category and cannot be undone.`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
@@ -425,34 +438,42 @@
                     cancelButtonText: 'Cancel',
                     showLoaderOnConfirm: true,
                     preConfirm: () => {
-                        return fetch(`/wholesaler/categories/${categoryId}`, {
-                            method: 'DELETE',
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json'
-                            }
-                        })
-                            .then(response => {
-                                if (!response.ok) {
-                                    throw new Error(response.statusText);
+                        return $.ajax({
+                            url: deleteUrl,
+                            type: 'DELETE',
+                            data: {
+                                _token: csrfToken
+                            },
+                            dataType: 'json',
+                            success: function(response) {
+                                if (response.success) {
+                                    return response;
+                                } else {
+                                    throw new Error(response.message || 'Delete failed');
                                 }
-                                return response.json();
-                            })
-                            .catch(error => {
-                                Swal.showValidationMessage(
-                                    `Request failed: ${error}`
-                                );
-                            });
+                            },
+                            error: function(xhr) {
+                                let errorMessage = 'Request failed';
+                                if (xhr.responseJSON && xhr.responseJSON.message) {
+                                    errorMessage = xhr.responseJSON.message;
+                                } else if (xhr.statusText) {
+                                    errorMessage = xhr.statusText;
+                                }
+                                throw new Error(errorMessage);
+                            }
+                        });
                     },
                     allowOutsideClick: () => !Swal.isLoading()
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        Swal.fire(
-                            'Deleted!',
-                            'Category has been deleted successfully.',
-                            'success'
-                        ).then(() => {
+                        Swal.fire({
+                            title: 'Deleted!',
+                            text: 'Category has been deleted successfully.',
+                            icon: 'success',
+                            timer: 2000,
+                            timerProgressBar: true,
+                            showConfirmButton: false
+                        }).then(() => {
                             location.reload();
                         });
                     }

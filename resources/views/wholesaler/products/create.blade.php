@@ -430,12 +430,28 @@
 
                     <div class="mb-4">
                         <label class="form-label d-flex align-items-center">
-                            <span class="material-icons-outlined">shopping_cart</span>
-                            <span class="required">Minimum Order Quantity</span>
+                            <span class="material-icons-outlined">warning</span>
+                            <span class="required">Minimum Stock Level</span>
                         </label>
-                        <input type="number" name="min_order_quantity" class="form-control" required
-                               placeholder="Enter minimum quantity" value="{{ old('min_order_quantity', 1) }}" min="1">
-                        @error('min_order_quantity')
+                        <input type="number" name="min_stock_level" class="form-control" required
+                               placeholder="Enter minimum stock level" value="{{ old('min_stock_level', 10) }}" min="1">
+                        @error('min_stock_level')
+                        <div class="text-danger mt-2 d-flex align-items-center">
+                            <span class="material-icons-outlined me-1" style="font-size: 1rem;">error</span>
+                            {{ $message }}
+                        </div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label d-flex align-items-center">
+                            <span class="material-icons-outlined">attach_money</span>
+                            <span class="required">Cost Price (Rs.)</span>
+                        </label>
+                        <input type="number" name="cost_price" class="form-control" required
+                               placeholder="Enter cost price" step="0.01" id="costPrice"
+                               value="{{ old('cost_price') }}" min="0">
+                        @error('cost_price')
                         <div class="text-danger mt-2 d-flex align-items-center">
                             <span class="material-icons-outlined me-1" style="font-size: 1rem;">error</span>
                             {{ $message }}
@@ -446,12 +462,12 @@
                     <div class="mb-4">
                         <label class="form-label d-flex align-items-center">
                             <span class="material-icons-outlined">price_check</span>
-                            <span class="required">Display Price (Rs.)</span>
+                            <span class="required">Selling Price (Rs.)</span>
                         </label>
-                        <input type="number" name="display_price" class="form-control" required
-                               placeholder="Enter display price" step="0.01" id="displayPrice"
-                               value="{{ old('display_price') }}" min="0">
-                        @error('display_price')
+                        <input type="number" name="selling_price" class="form-control" required
+                               placeholder="Enter selling price" step="0.01" id="sellingPrice"
+                               value="{{ old('selling_price') }}" min="0">
+                        @error('selling_price')
                         <div class="text-danger mt-2 d-flex align-items-center">
                             <span class="material-icons-outlined me-1" style="font-size: 1rem;">error</span>
                             {{ $message }}
@@ -461,13 +477,12 @@
 
                     <div class="mb-4">
                         <label class="form-label d-flex align-items-center">
-                            <span class="material-icons-outlined">store</span>
-                            <span class="required">Wholesale Price (Rs.)</span>
+                            <span class="material-icons-outlined">percent</span>
+                            Discount (%)
                         </label>
-                        <input type="number" name="wholesale_price" class="form-control" required
-                               placeholder="Enter wholesale price" step="0.01" id="wholesalePrice"
-                               value="{{ old('wholesale_price') }}" min="0">
-                        @error('wholesale_price')
+                        <input type="number" name="discount" class="form-control" placeholder="Enter discount percentage"
+                               step="0.01" id="discount" value="{{ old('discount', 0) }}" min="0" max="100">
+                        @error('discount')
                         <div class="text-danger mt-2 d-flex align-items-center">
                             <span class="material-icons-outlined me-1" style="font-size: 1rem;">error</span>
                             {{ $message }}
@@ -477,20 +492,17 @@
 
                     <div class="mb-4">
                         <label class="form-label d-flex align-items-center">
-                            <span class="material-icons-outlined">weight</span>
-                            Weight (kg)
+                            <span class="material-icons-outlined">inventory</span>
+                            Packaging Cost (Rs.)
                         </label>
-                        <input type="number" name="weight" class="form-control" placeholder="Enter weight" step="0.01"
-                               value="{{ old('weight') }}" min="0">
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label d-flex align-items-center">
-                            <span class="material-icons-outlined">straighten</span>
-                            Dimensions
-                        </label>
-                        <input type="text" name="dimensions" class="form-control" placeholder="e.g., 10x5x2 cm"
-                               value="{{ old('dimensions') }}">
+                        <input type="number" name="packaging_cost" class="form-control" placeholder="Enter packaging cost"
+                               step="0.01" id="packagingCost" value="{{ old('packaging_cost', 0) }}" min="0">
+                        @error('packaging_cost')
+                        <div class="text-danger mt-2 d-flex align-items-center">
+                            <span class="material-icons-outlined me-1" style="font-size: 1rem;">error</span>
+                            {{ $message }}
+                        </div>
+                        @enderror
                     </div>
 
                     <div class="mb-4">
@@ -517,29 +529,35 @@
                             Price Summary
                         </h6>
                         <div class="price-row">
-                            <span class="d-flex align-items-center">
-                                <span class="material-icons-outlined me-1" style="font-size: 1.2rem;">price_check</span>
-                                Display Price:
-                            </span>
-                            <span id="displayPriceDisplay" class="fw-bold">Rs. 0.00</span>
+            <span class="d-flex align-items-center">
+                <span class="material-icons-outlined me-1" style="font-size: 1.2rem;">attach_money</span>
+                Total Cost:
+            </span>
+                            <span id="totalCostDisplay" class="fw-bold">Rs. 0.00</span>
                         </div>
                         <div class="price-row">
-                            <span class="d-flex align-items-center">
-                                <span class="material-icons-outlined me-1" style="font-size: 1.2rem;">store</span>
-                                Wholesale Price:
-                            </span>
-                            <span id="wholesalePriceDisplay" class="fw-bold" style="color: #10b981;">Rs. 0.00</span>
+            <span class="d-flex align-items-center">
+                <span class="material-icons-outlined me-1" style="font-size: 1.2rem;">price_check</span>
+                Selling Price:
+            </span>
+                            <span id="sellingPriceDisplay" class="fw-bold">Rs. 0.00</span>
+                        </div>
+                        <div class="price-row">
+            <span class="d-flex align-items-center">
+                <span class="material-icons-outlined me-1" style="font-size: 1.2rem;">percent</span>
+                After Discount:
+            </span>
+                            <span id="finalPriceDisplay" class="fw-bold" style="color: #10b981;">Rs. 0.00</span>
                         </div>
                         <div class="price-row final-price">
-                            <span class="d-flex align-items-center">
-                                <span class="material-icons-outlined me-1" style="font-size: 1.2rem;">trending_up</span>
-                                Margin:
-                            </span>
-                            <span id="priceDifference" class="fw-bold">Rs. 0.00</span>
+            <span class="d-flex align-items-center">
+                <span class="material-icons-outlined me-1" style="font-size: 1.2rem;">trending_up</span>
+                Profit Margin:
+            </span>
+                            <span id="profitMargin" class="fw-bold">0.00%</span>
                         </div>
                     </div>
                 </div>
-
                 <!-- Action Buttons -->
                 <div class="form-card">
                     <div class="d-grid gap-2">
@@ -643,53 +661,76 @@
                 reader.readAsDataURL(file);
             }
 
-            // ========== Price Calculation ==========
-            const displayPriceInput = document.getElementById('displayPrice');
-            const wholesalePriceInput = document.getElementById('wholesalePrice');
-            const displayPriceDisplay = document.getElementById('displayPriceDisplay');
-            const wholesalePriceDisplay = document.getElementById('wholesalePriceDisplay');
-            const priceDifference = document.getElementById('priceDifference');
+// ========== Price Calculation ==========
+            const costPriceInput = document.getElementById('costPrice');
+            const sellingPriceInput = document.getElementById('sellingPrice');
+            const discountInput = document.getElementById('discount');
+            const packagingCostInput = document.getElementById('packagingCost');
+            const totalCostDisplay = document.getElementById('totalCostDisplay');
+            const sellingPriceDisplay = document.getElementById('sellingPriceDisplay');
+            const finalPriceDisplay = document.getElementById('finalPriceDisplay');
+            const profitMargin = document.getElementById('profitMargin');
 
             function updatePriceDisplay() {
-                const displayPrice = displayPriceInput ? parseFloat(displayPriceInput.value) || 0 : 0;
-                const wholesalePrice = wholesalePriceInput ? parseFloat(wholesalePriceInput.value) || 0 : 0;
-                const difference = displayPrice - wholesalePrice;
-                const marginPercent = wholesalePrice > 0 ? (difference / wholesalePrice) * 100 : 0;
+                const costPrice = costPriceInput ? parseFloat(costPriceInput.value) || 0 : 0;
+                const sellingPrice = sellingPriceInput ? parseFloat(sellingPriceInput.value) || 0 : 0;
+                const discount = discountInput ? parseFloat(discountInput.value) || 0 : 0;
+                const packagingCost = packagingCostInput ? parseFloat(packagingCostInput.value) || 0 : 0;
 
-                if (displayPriceDisplay) {
-                    displayPriceDisplay.textContent = `Rs. ${displayPrice.toLocaleString('en-IN', {
+                // Calculations
+                const totalCost = costPrice + packagingCost;
+                const discountAmount = sellingPrice * (discount / 100);
+                const finalPrice = sellingPrice - discountAmount;
+                const profit = finalPrice - totalCost;
+                const marginPercent = totalCost > 0 ? (profit / totalCost) * 100 : 0;
+
+                if (totalCostDisplay) {
+                    totalCostDisplay.textContent = `Rs. ${totalCost.toLocaleString('en-IN', {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2
                     })}`;
                 }
 
-                if (wholesalePriceDisplay) {
-                    wholesalePriceDisplay.textContent = `Rs. ${wholesalePrice.toLocaleString('en-IN', {
+                if (sellingPriceDisplay) {
+                    sellingPriceDisplay.textContent = `Rs. ${sellingPrice.toLocaleString('en-IN', {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2
                     })}`;
                 }
 
-                if (priceDifference) {
-                    priceDifference.textContent = `Rs. ${difference.toLocaleString('en-IN', {
+                if (finalPriceDisplay) {
+                    finalPriceDisplay.textContent = `Rs. ${finalPrice.toLocaleString('en-IN', {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2
-                    })} (${marginPercent.toFixed(2)}%)`;
+                    })}`;
 
-                    if (difference > 0) {
-                        priceDifference.style.color = '#10b981';
-                    } else if (difference < 0) {
-                        priceDifference.style.color = '#ef4444';
+                    if (discount > 0) {
+                        finalPriceDisplay.innerHTML += ` <small class="text-success">(-${discount}%)</small>`;
+                    }
+                }
+
+                if (profitMargin) {
+                    profitMargin.textContent = `${marginPercent.toLocaleString('en-IN', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    })}%`;
+
+                    if (marginPercent > 20) {
+                        profitMargin.style.color = '#10b981';
+                    } else if (marginPercent > 0) {
+                        profitMargin.style.color = '#f59e0b';
                     } else {
-                        priceDifference.style.color = '#6b7280';
+                        profitMargin.style.color = '#ef4444';
                     }
                 }
             }
 
-            if (displayPriceInput) displayPriceInput.addEventListener('input', updatePriceDisplay);
-            if (wholesalePriceInput) wholesalePriceInput.addEventListener('input', updatePriceDisplay);
+            if (costPriceInput) costPriceInput.addEventListener('input', updatePriceDisplay);
+            if (sellingPriceInput) sellingPriceInput.addEventListener('input', updatePriceDisplay);
+            if (discountInput) discountInput.addEventListener('input', updatePriceDisplay);
+            if (packagingCostInput) packagingCostInput.addEventListener('input', updatePriceDisplay);
 
-            // ========== Form Validation ==========
+// ========== Form Validation ==========
             const form = document.getElementById('productForm');
             if (form) {
                 form.addEventListener('submit', function (e) {
@@ -702,12 +743,14 @@
                     }
 
                     // Check price validation
-                    const displayPrice = parseFloat(displayPriceInput.value) || 0;
-                    const wholesalePrice = parseFloat(wholesalePriceInput.value) || 0;
+                    const costPrice = parseFloat(costPriceInput.value) || 0;
+                    const sellingPrice = parseFloat(sellingPriceInput.value) || 0;
+                    const discount = parseFloat(discountInput.value) || 0;
+                    const finalPrice = sellingPrice - (sellingPrice * (discount / 100));
 
-                    if (wholesalePrice > displayPrice) {
+                    if (finalPrice < costPrice) {
                         e.preventDefault();
-                        showAlert('Wholesale price cannot be higher than display price.', 'error');
+                        showAlert('Final price after discount cannot be lower than cost price.', 'error');
                         return false;
                     }
 

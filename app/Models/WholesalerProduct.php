@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class WholesalerProduct extends Model
 {
@@ -12,17 +13,19 @@ class WholesalerProduct extends Model
 
     protected $fillable = [
         'wholesaler_id',
-        'code',
-        'name',
-        'description',
-        'display_price',
-        'wholesale_price',
-        'qty',
-        'min_order_quantity',
         'category_id',
         'brand_id',
-        'weight',
-        'dimensions',
+        'code',
+        'name',
+        'slug',
+        'sku',
+        'description',
+        'cost_price',
+        'selling_price',
+        'discount',
+        'packaging_cost',
+        'qty',
+        'min_stock_level',
         'features',
         'barcode',
         'image',
@@ -33,9 +36,10 @@ class WholesalerProduct extends Model
     ];
 
     protected $casts = [
-        'display_price' => 'decimal:2',
-        'wholesale_price' => 'decimal:2',
-        'weight' => 'decimal:2',
+        'cost_price' => 'decimal:2',
+        'selling_price' => 'decimal:2',
+        'discount' => 'decimal:2',
+        'packaging_cost' => 'decimal:2',
         'features' => 'array',
     ];
 
@@ -84,19 +88,62 @@ class WholesalerProduct extends Model
      */
     public function isLowStock(): bool
     {
-        return $this->qty < 10;
+        return $this->qty <= $this->min_stock_level;
     }
 
     /**
-     * Get the final price after discount.
+     * Calculate final selling price after discount.
      */
     public function getFinalPriceAttribute(): float
     {
-        return $this->display_price;
+        if ($this->discount > 0) {
+            return $this->selling_price - ($this->selling_price * ($this->discount / 100));
+        }
+        return $this->selling_price;
     }
+
+    /**
+     * Calculate total cost including packaging.
+     */
+    public function getTotalCostAttribute(): float
+    {
+        return $this->cost_price + $this->packaging_cost;
+    }
+
+    /**
+     * Calculate profit margin.
+     */
+    public function getProfitMarginAttribute(): float
+    {
+        $totalCost = $this->total_cost;
+        $sellingPrice = $this->final_price;
+
+        if ($totalCost > 0) {
+            return (($sellingPrice - $totalCost) / $totalCost) * 100;
+        }
+
+        return 0;
+    }
+
+    /**
+     * Calculate profit amount.
+     */
+    public function getProfitAmountAttribute(): float
+    {
+        return $this->final_price - $this->total_cost;
+    }
+
+    // Add these methods to WholesalerProduct model
+
+    // In WholesalerProduct model, update the reviews method:
     public function reviews()
     {
-        return $this->hasMany(ProductReview::class)->where('approved', true)->orderBy('created_at', 'desc');
+        return $this->hasMany(ProductReview::class, 'product_id')->where('status', 'active')->orderBy('created_at', 'desc');
+    }
+
+    public function activeReviews()
+    {
+        return $this->reviews()->where('status', 'active')->orderBy('created_at', 'desc');
     }
 
     public function calculateAverageRating()
@@ -113,10 +160,12 @@ class WholesalerProduct extends Model
         ]);
     }
 
-    public function getPriceAttribute($value)
+    /**
+     * Get the display price for customers.
+     */
+    public function getDisplayPriceAttribute()
     {
-        // If display_price is set, use it, otherwise use wholesale_price
-        return $this->display_price ?: $this->wholesale_price;
+        return $this->final_price;
     }
 
     /**
@@ -131,5 +180,45 @@ class WholesalerProduct extends Model
         return Storage::disk('public')->exists($this->image)
             ? asset('storage/' . $this->image)
             : asset('images/default-product.png');
+    }
+    /**
+     * Check if product is out of stock.
+     */
+    public function isOutOfStock(): bool
+    {
+        return $this->qty === 0;
+    }
+
+    /**
+     * Check if product needs restocking.
+     */
+    public function needsRestocking(): bool
+    {
+        return $this->qty <= $this->min_stock_level;
+    }
+
+    /**
+     * Update stock quantity.
+     */
+    public function updateStock($quantity, $type = 'add')
+    {
+        if ($type === 'add') {
+            $this->increment('qty', $quantity);
+        } elseif ($type === 'subtract') {
+            $this->decrement('qty', $quantity);
+        } elseif ($type === 'set') {
+            $this->update(['qty' => $quantity]);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Calculate recommended reorder quantity.
+     */
+    public function getReorderQuantity(): int
+    {
+        // Calculate based on min_stock_level and average monthly sales
+        return max($this->min_stock_level * 3, 100);
     }
 }

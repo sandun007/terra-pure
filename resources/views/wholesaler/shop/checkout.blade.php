@@ -5,123 +5,78 @@
 @push('css')
     <style>
         :root {
-            --primary-color: #3a86ff;
-            --secondary-color: #8338ec;
-            --accent-color: #ff006e;
-            --dark-color: #1a1a2e;
-            --light-color: #f8f9fa;
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --accent-color: #f59e0b;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+        }
+
+        .checkout-container {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+
+        .checkout-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin: 2rem 0;
         }
 
         .checkout-header {
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
-            border-radius: 15px;
             padding: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .checkout-progress {
-            display: flex;
-            justify-content: space-between;
+            text-align: center;
             position: relative;
-            margin: 2rem 0;
+            overflow: hidden;
         }
 
-        .checkout-progress::before {
+        .checkout-header::before {
             content: '';
             position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: #e2e8f0;
-            z-index: 1;
-        }
-
-        .progress-step {
-            position: relative;
-            z-index: 2;
-            text-align: center;
-            flex: 1;
-        }
-
-        .step-circle {
-            width: 50px;
-            height: 50px;
+            top: -50%;
+            right: -20%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
             border-radius: 50%;
-            background: white;
-            border: 4px solid #e2e8f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            color: #94a3b8;
-            margin: 0 auto 10px;
-            transition: all 0.3s ease;
         }
 
-        .step-circle.active {
-            background: var(--primary-color);
-            border-color: var(--primary-color);
-            color: white;
-            transform: scale(1.1);
-        }
-
-        .step-circle.completed {
-            background: #10b981;
-            border-color: #10b981;
-            color: white;
-        }
-
-        .step-label {
-            font-weight: 600;
-            color: #64748b;
-        }
-
-        .step-label.active {
-            color: var(--primary-color);
-        }
-
-        .checkout-card {
-            background: white;
-            border-radius: 15px;
+        .checkout-body {
             padding: 2rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-            margin-bottom: 2rem;
         }
 
-        .section-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--dark-color);
+        .form-group {
             margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid #f1f5f9;
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
 
-        .address-card {
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 1.5rem;
-            cursor: pointer;
+        .form-label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .form-control {
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 1rem;
             transition: all 0.3s ease;
         }
 
-        .address-card:hover {
+        .form-control:focus {
             border-color: var(--primary-color);
-            transform: translateY(-2px);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            outline: none;
         }
 
-        .address-card.selected {
-            border-color: var(--primary-color);
-            background: #f0f9ff;
-        }
-
-        .payment-method {
-            border: 2px solid #e2e8f0;
+        .payment-method-card {
+            border: 2px solid #e5e7eb;
             border-radius: 12px;
             padding: 1.5rem;
             margin-bottom: 1rem;
@@ -129,48 +84,37 @@
             transition: all 0.3s ease;
         }
 
-        .payment-method:hover {
+        .payment-method-card:hover {
             border-color: var(--primary-color);
+            transform: translateY(-2px);
         }
 
-        .payment-method.selected {
+        .payment-method-card.selected {
             border-color: var(--primary-color);
             background: #f0f9ff;
         }
 
-        .payment-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            background: #f1f5f9;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            margin-right: 15px;
-        }
-
         .order-summary {
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            border-radius: 15px;
-            padding: 2rem;
-            border: 1px solid #bae6fd;
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
             position: sticky;
-            top: 20px;
+            top: 2rem;
         }
 
         .summary-item {
             display: flex;
             justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e5e7eb;
         }
 
         .summary-item.total {
-            border-top: 2px solid #cbd5e1;
+            border-top: 2px solid #e5e7eb;
             margin-top: 1rem;
             padding-top: 1rem;
-            font-size: 1.3rem;
+            font-size: 1.25rem;
             font-weight: 700;
             color: var(--primary-color);
         }
@@ -179,31 +123,34 @@
             display: flex;
             align-items: center;
             padding: 1rem 0;
-            border-bottom: 1px solid #f1f5f9;
+            border-bottom: 1px solid #f3f4f6;
         }
 
         .product-image {
-            width: 60px;
-            height: 60px;
+            width: 80px;
+            height: 80px;
             border-radius: 10px;
-            background: #f1f5f9;
-            margin-right: 15px;
+            overflow: hidden;
+            margin-right: 1rem;
+            background: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .product-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            border-radius: 10px;
         }
 
         .btn-checkout {
-            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
             border: none;
-            padding: 18px;
             border-radius: 12px;
-            font-size: 1.1rem;
+            padding: 18px;
+            font-size: 1.125rem;
             font-weight: 600;
             width: 100%;
             display: flex;
@@ -211,35 +158,49 @@
             justify-content: center;
             gap: 10px;
             transition: all 0.3s ease;
-            margin-top: 1.5rem;
+            margin-top: 2rem;
         }
 
-        .btn-checkout:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(58, 134, 255, 0.3);
+        .btn-checkout:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-checkout:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
         .security-badge {
-            background: #10b981;
+            background: var(--success-color);
             color: white;
             padding: 8px 16px;
             border-radius: 20px;
-            font-size: 0.9rem;
             display: inline-flex;
             align-items: center;
             gap: 8px;
             margin-top: 1rem;
         }
 
-        .form-control-lg {
-            padding: 15px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
         }
 
-        .form-control-lg:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(58, 134, 255, 0.1);
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .checkout-error {
+            color: var(--danger-color);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: none;
         }
 
         .coupon-box {
@@ -247,326 +208,314 @@
             border: 2px dashed #f59e0b;
             border-radius: 12px;
             padding: 1.5rem;
-            margin-top: 1rem;
+            margin: 1.5rem 0;
         }
 
-        @media (max-width: 768px) {
-            .checkout-progress {
-                flex-direction: column;
-                gap: 20px;
-            }
+        .is-invalid {
+            border-color: var(--danger-color) !important;
+        }
 
-            .checkout-progress::before {
-                display: none;
-            }
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin: 2rem 0;
+            position: relative;
+        }
 
-            .progress-step {
-                display: flex;
-                align-items: center;
-                gap: 15px;
-            }
+        .progress-steps::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e5e7eb;
+            transform: translateY(-50%);
+            z-index: 1;
+        }
 
-            .step-circle {
-                margin: 0;
-            }
+        .step {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .step.active .step-circle {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .step.completed .step-circle {
+            background: var(--success-color);
+            border-color: var(--success-color);
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+        }
+
+        .step.active .step-label {
+            color: var(--primary-color);
         }
     </style>
 @endpush
 
 @section('content')
-    <div class="checkout-header">
+    <div class="checkout-container">
         <div class="container">
-            <h1 class="fw-bold mb-2">
-                <i class="fas fa-lock me-2"></i>
-                Secure Checkout
-            </h1>
-            <p class="mb-0">Complete your purchase in just a few steps</p>
-        </div>
-    </div>
-
-    <div class="container">
-        <!-- Progress Steps -->
-        <div class="checkout-progress">
-            <div class="progress-step">
-                <div class="step-circle active">
-                    <i class="fas fa-shopping-cart"></i>
-                </div>
-                <div class="step-label active">Cart</div>
-            </div>
-            <div class="progress-step">
-                <div class="step-circle active">
-                    <i class="fas fa-user"></i>
-                </div>
-                <div class="step-label active">Information</div>
-            </div>
-            <div class="progress-step">
-                <div class="step-circle active">
-                    <i class="fas fa-truck"></i>
-                </div>
-                <div class="step-label active">Shipping</div>
-            </div>
-            <div class="progress-step">
-                <div class="step-circle">
-                    <i class="fas fa-credit-card"></i>
-                </div>
-                <div class="step-label">Payment</div>
-            </div>
-            <div class="progress-step">
-                <div class="step-circle">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="step-label">Confirmation</div>
-            </div>
-        </div>
-
-        <div class="row">
-            <!-- Left Column: Checkout Form -->
-            <div class="col-lg-8 mb-4">
-                <!-- Shipping Information -->
-                <div class="checkout-card">
-                    <h3 class="section-title">
-                        <i class="fas fa-truck"></i>
-                        Shipping Information
-                    </h3>
-
-                    <form id="shippingForm">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">First Name *</label>
-                                <input type="text" class="form-control form-control-lg" required>
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="checkout-card">
+                        <!-- Progress Steps -->
+                        <div class="progress-steps">
+                            <div class="step completed">
+                                <div class="step-circle">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <div class="step-label">Cart</div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Last Name *</label>
-                                <input type="text" class="form-control form-control-lg" required>
+                            <div class="step active">
+                                <div class="step-circle">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="step-label">Information</div>
+                            </div>
+                            <div class="step">
+                                <div class="step-circle">
+                                    <i class="fas fa-truck"></i>
+                                </div>
+                                <div class="step-label">Shipping</div>
+                            </div>
+                            <div class="step">
+                                <div class="step-circle">
+                                    <i class="fas fa-credit-card"></i>
+                                </div>
+                                <div class="step-label">Payment</div>
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Email Address *</label>
-                            <input type="email" class="form-control form-control-lg" required>
+                        <div class="checkout-header">
+                            <h1 class="h2 fw-bold mb-3">
+                                <i class="fas fa-lock me-2"></i>
+                                Secure Checkout
+                            </h1>
+                            <p class="mb-0">Complete your purchase in just a few steps</p>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Phone Number *</label>
-                            <input type="tel" class="form-control form-control-lg" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Shipping Address *</label>
-                            <textarea class="form-control form-control-lg" rows="3" required></textarea>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">City *</label>
-                                <input type="text" class="form-control form-control-lg" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">ZIP Code *</label>
-                                <input type="text" class="form-control form-control-lg" required>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Country *</label>
-                            <select class="form-control form-control-lg" required>
-                                <option value="">Select Country</option>
-                                <option value="PK">Pakistan</option>
-                                <!-- Add more countries -->
-                            </select>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Payment Method -->
-                <div class="checkout-card">
-                    <h3 class="section-title">
-                        <i class="fas fa-credit-card"></i>
-                        Payment Method
-                    </h3>
-
-                    <div class="payment-method selected" onclick="selectPayment('credit_card')">
-                        <div class="d-flex align-items-center">
-                            <div class="payment-icon text-primary">
-                                <i class="fas fa-credit-card"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <h6 class="mb-1">Credit/Debit Card</h6>
-                                <p class="text-muted mb-0">Pay securely with your card</p>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="paymentMethod" checked>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="payment-method" onclick="selectPayment('bank_transfer')">
-                        <div class="d-flex align-items-center">
-                            <div class="payment-icon text-success">
-                                <i class="fas fa-university"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <h6 class="mb-1">Bank Transfer</h6>
-                                <p class="text-muted mb-0">Transfer directly to our bank account</p>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="paymentMethod">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="payment-method" onclick="selectPayment('cod')">
-                        <div class="d-flex align-items-center">
-                            <div class="payment-icon text-warning">
-                                <i class="fas fa-money-bill-wave"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <h6 class="mb-1">Cash on Delivery</h6>
-                                <p class="text-muted mb-0">Pay when you receive your order</p>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="paymentMethod">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Card Details (Show only when credit card selected) -->
-                    <div id="cardDetails" class="mt-4">
-                        <div class="row">
-                            <div class="col-12 mb-3">
-                                <label class="form-label">Card Number *</label>
-                                <input type="text" class="form-control form-control-lg" placeholder="1234 5678 9012 3456">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Expiry Date *</label>
-                                <input type="text" class="form-control form-control-lg" placeholder="MM/YY">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">CVV *</label>
-                                <input type="text" class="form-control form-control-lg" placeholder="123">
-                            </div>
-                            <div class="col-12 mb-3">
-                                <label class="form-label">Cardholder Name *</label>
-                                <input type="text" class="form-control form-control-lg" placeholder="John Doe">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Order Notes -->
-                <div class="checkout-card">
-                    <h3 class="section-title">
-                        <i class="fas fa-sticky-note"></i>
-                        Order Notes
-                    </h3>
-                    <textarea class="form-control form-control-lg" rows="4"
-                              placeholder="Add special instructions for your order..."></textarea>
-                </div>
-            </div>
-
-            <!-- Right Column: Order Summary -->
-            <div class="col-lg-4">
-                <div class="order-summary">
-                    <h3 class="section-title">
-                        <i class="fas fa-receipt"></i>
-                        Order Summary
-                    </h3>
-
-                    <!-- Order Items -->
-                    <div class="mb-4">
-                        @foreach($cart as $item)
-                            <div class="product-item">
-                                <div class="product-image">
-                                    @if($item['image'])
-                                        <img src="{{ asset('storage/' . $item['image']) }}" alt="{{ $item['name'] }}">
-                                    @else
-                                        <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-light">
-                                            <i class="fas fa-box text-muted"></i>
+                        <div class="checkout-body">
+                            <div class="row">
+                                <!-- Left Column: Checkout Form -->
+                                <div class="col-lg-8">
+                                    <form id="checkoutForm">
+                                        <!-- Customer Information -->
+                                        <div class="mb-4">
+                                            <h4 class="fw-bold mb-3">
+                                                <i class="fas fa-user me-2"></i>
+                                                Customer Information
+                                            </h4>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="form-label">Full Name *</label>
+                                                        <input type="text" name="customer_name" class="form-control"
+                                                               value="{{ $wholesalerInfo['name'] ?? '' }}" required>
+                                                        <div class="checkout-error" id="nameError"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="form-label">Email Address *</label>
+                                                        <input type="email" name="customer_email" class="form-control"
+                                                               value="{{ $wholesalerInfo['email'] ?? '' }}" required>
+                                                        <div class="checkout-error" id="emailError"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="form-label">Phone Number *</label>
+                                                        <input type="tel" name="customer_phone" class="form-control"
+                                                               value="{{ $wholesalerInfo['phone'] ?? '' }}" required>
+                                                        <div class="checkout-error" id="phoneError"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                    @endif
+
+                                        <!-- Shipping Address -->
+                                        <div class="mb-4">
+                                            <h4 class="fw-bold mb-3">
+                                                <i class="fas fa-truck me-2"></i>
+                                                Shipping Address
+                                            </h4>
+                                            <div class="form-group">
+                                                <label class="form-label">Full Address *</label>
+                                                <textarea name="shipping_address" class="form-control" rows="3" required>{{ $wholesalerInfo['address'] ?? '' }}</textarea>
+                                                <div class="checkout-error" id="addressError"></div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Payment Method -->
+                                        <div class="mb-4">
+                                            <h4 class="fw-bold mb-3">
+                                                <i class="fas fa-credit-card me-2"></i>
+                                                Payment Method
+                                            </h4>
+                                            <div class="payment-method-card selected" data-method="cash_on_delivery">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="form-check me-3">
+                                                        <input class="form-check-input" type="radio" name="payment_method"
+                                                               value="cash_on_delivery" checked>
+                                                    </div>
+                                                    <div class="payment-icon me-3">
+                                                        <i class="fas fa-money-bill-wave fa-2x text-success"></i>
+                                                    </div>
+                                                    <div class="flex-grow-1">
+                                                        <h6 class="fw-bold mb-1">Cash on Delivery</h6>
+                                                        <p class="text-muted mb-0">Pay when you receive your order</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="payment-method-card" data-method="bank_transfer">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="form-check me-3">
+                                                        <input class="form-check-input" type="radio" name="payment_method"
+                                                               value="bank_transfer">
+                                                    </div>
+                                                    <div class="payment-icon me-3">
+                                                        <i class="fas fa-university fa-2x text-primary"></i>
+                                                    </div>
+                                                    <div class="flex-grow-1">
+                                                        <h6 class="fw-bold mb-1">Bank Transfer</h6>
+                                                        <p class="text-muted mb-0">Transfer directly to our bank account</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="payment-method-card" data-method="credit_card">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="form-check me-3">
+                                                        <input class="form-check-input" type="radio" name="payment_method"
+                                                               value="credit_card">
+                                                    </div>
+                                                    <div class="payment-icon me-3">
+                                                        <i class="fas fa-credit-card fa-2x text-warning"></i>
+                                                    </div>
+                                                    <div class="flex-grow-1">
+                                                        <h6 class="fw-bold mb-1">Credit/Debit Card</h6>
+                                                        <p class="text-muted mb-0">Pay securely with your card</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Order Notes -->
+                                        <div class="mb-4">
+                                            <h4 class="fw-bold mb-3">
+                                                <i class="fas fa-sticky-note me-2"></i>
+                                                Order Notes
+                                            </h4>
+                                            <div class="form-group">
+                                                <textarea name="notes" class="form-control" rows="3"
+                                                          placeholder="Add special instructions for your order..."></textarea>
+                                            </div>
+                                        </div>
+
+                                        @csrf
+                                    </form>
                                 </div>
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-1">{{ $item['name'] }}</h6>
-                                    <p class="text-muted mb-1">Qty: {{ $item['quantity'] }}</p>
-                                    <p class="mb-0 fw-bold">Rs. {{ number_format($item['price'] * $item['quantity'], 2) }}</p>
+
+                                <!-- Right Column: Order Summary -->
+                                <div class="col-lg-4">
+                                    <div class="order-summary">
+                                        <h4 class="fw-bold mb-3">
+                                            <i class="fas fa-receipt me-2"></i>
+                                            Order Summary
+                                        </h4>
+
+                                        <!-- Order Items -->
+                                        <div class="mb-4">
+                                            @foreach($cartItems as $item)
+                                                <div class="product-item">
+                                                    <div class="product-image">
+                                                        @if($item['image'])
+                                                            <img src="{{ asset('storage/' . $item['image']) }}" alt="{{ $item['name'] }}">
+                                                        @else
+                                                            <i class="fas fa-box text-muted"></i>
+                                                        @endif
+                                                    </div>
+                                                    <div class="flex-grow-1">
+                                                        <h6 class="fw-bold mb-1">{{ $item['name'] }}</h6>
+                                                        <p class="text-muted mb-1">Qty: {{ $item['quantity'] }}</p>
+                                                        <p class="fw-bold mb-0 text-primary">
+                                                            Rs. {{ number_format($item['subtotal'], 2) }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+
+                                        <!-- Price Breakdown -->
+                                        <div class="summary-item">
+                                            <span>Subtotal</span>
+                                            <span id="subtotal">Rs. {{ number_format($subtotal, 2) }}</span>
+                                        </div>
+                                        <div class="summary-item">
+                                            <span>Shipping</span>
+                                            <span id="shipping" class="text-success">Rs. {{ number_format($shipping, 2) }}</span>
+                                        </div>
+                                        <div class="summary-item">
+                                            <span>Tax ({{ $taxRate }}%)</span>
+                                            <span id="tax">Rs. {{ number_format($tax, 2) }}</span>
+                                        </div>
+                                        <div class="summary-item total">
+                                            <span>Total Amount</span>
+                                            <span id="grandTotal">Rs. {{ number_format($total, 2) }}</span>
+                                        </div>
+
+                                        <!-- Terms and Conditions -->
+                                        <div class="form-check mt-4">
+                                            <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                                            <label class="form-check-label small" for="termsCheck">
+                                                I agree to the <a href="#" class="text-primary">Terms & Conditions</a> and <a href="#" class="text-primary">Privacy Policy</a>
+                                            </label>
+                                        </div>
+
+                                        <!-- Place Order Button -->
+                                        <button class="btn-checkout" onclick="processCheckout()" id="placeOrderBtn">
+                                            <i class="fas fa-lock me-2"></i>
+                                            Place Order
+                                            <div class="loading-spinner" id="orderSpinner"></div>
+                                        </button>
+
+                                        <!-- Security Badge -->
+                                        <div class="text-center mt-3">
+                                            <div class="security-badge">
+                                                <i class="fas fa-shield-alt"></i>
+                                                256-bit SSL Secured
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        @endforeach
-                    </div>
-
-                    <!-- Price Breakdown -->
-                    <div class="summary-item">
-                        <span>Subtotal</span>
-                        <span id="subtotal">Rs. {{ number_format($cartTotal, 2) }}</span>
-                    </div>
-
-                    <div class="summary-item">
-                        <span>Shipping</span>
-                        <span class="text-success">Free</span>
-                    </div>
-
-                    <div class="summary-item">
-                        <span>Tax ({{ $shop->tax_rate ?? 0 }}%)</span>
-                        <span id="tax">Rs. 0.00</span>
-                    </div>
-
-                    <div class="summary-item" id="discountRow" style="display: none;">
-                        <span>Discount</span>
-                        <span class="text-success" id="discount">- Rs. 0.00</span>
-                    </div>
-
-                    <div class="summary-item total">
-                        <span>Total</span>
-                        <span id="grandTotal">Rs. {{ number_format($cartTotal, 2) }}</span>
-                    </div>
-
-                    <!-- Coupon Code -->
-                    <div class="coupon-box">
-                        <h6 class="mb-3">
-                            <i class="fas fa-tag me-2"></i>
-                            Apply Coupon
-                        </h6>
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="couponCode" placeholder="Enter coupon code">
-                            <button class="btn btn-primary" onclick="applyCoupon()">
-                                Apply
-                            </button>
-                        </div>
-                        <div id="couponMessage" class="mt-2 small"></div>
-                    </div>
-
-                    <!-- Terms and Conditions -->
-                    <div class="form-check mt-4">
-                        <input class="form-check-input" type="checkbox" id="termsCheck">
-                        <label class="form-check-label small" for="termsCheck">
-                            I agree to the <a href="#">Terms & Conditions</a> and <a href="#">Privacy Policy</a>
-                        </label>
-                    </div>
-
-                    <!-- Place Order Button -->
-                    <button class="btn-checkout" onclick="placeOrder()">
-                        <i class="fas fa-lock me-2"></i>
-                        Place Order
-                    </button>
-
-                    <!-- Security Badge -->
-                    <div class="text-center mt-3">
-                        <div class="security-badge">
-                            <i class="fas fa-shield-alt"></i>
-                            256-bit SSL Secured
-                        </div>
-                    </div>
-
-                    <!-- Contact Information -->
-                    <div class="mt-4 pt-3 border-top">
-                        <h6 class="mb-3">Need Help?</h6>
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <i class="fas fa-phone text-primary"></i>
-                            <small>{{ $shop->contact_phone ?? 'N/A' }}</small>
-                        </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="fas fa-envelope text-primary"></i>
-                            <small>{{ $shop->contact_email ?? 'N/A' }}</small>
                         </div>
                     </div>
                 </div>
@@ -578,175 +527,143 @@
 @push('script')
     <script>
         // Select payment method
-        function selectPayment(method) {
-            // Remove selected class from all
-            document.querySelectorAll('.payment-method').forEach(card => {
-                card.classList.remove('selected');
-                card.querySelector('input[type="radio"]').checked = false;
+        document.querySelectorAll('.payment-method-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.payment-method-card').forEach(c => {
+                    c.classList.remove('selected');
+                });
+                this.classList.add('selected');
+                const method = this.dataset.method;
+                document.querySelector(`input[value="${method}"]`).checked = true;
             });
+        });
 
-            // Add selected class to clicked
-            event.currentTarget.classList.add('selected');
-            event.currentTarget.querySelector('input[type="radio"]').checked = true;
+        // Process checkout
+        async function processCheckout() {
+            const btn = document.getElementById('placeOrderBtn');
+            const spinner = document.getElementById('orderSpinner');
 
-            // Show/hide card details
-            const cardDetails = document.getElementById('cardDetails');
-            if (method === 'credit_card') {
-                cardDetails.style.display = 'block';
-            } else {
-                cardDetails.style.display = 'none';
-            }
-        }
-
-        // Apply coupon
-        function applyCoupon() {
-            const couponCode = document.getElementById('couponCode').value.trim();
-            const messageDiv = document.getElementById('couponMessage');
-
-            if (!couponCode) {
-                messageDiv.innerHTML = '<span class="text-danger">Please enter a coupon code</span>';
-                return;
-            }
-
-            // Mock implementation - replace with actual API call
-            // For demo, we'll simulate a 10% discount
-            const subtotal = {{ $cartTotal }};
-            const discount = subtotal * 0.1;
-            const newTotal = subtotal - discount;
-
-            // Update totals
-            document.getElementById('subtotal').textContent = `Rs. ${subtotal.toLocaleString('en-IN', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            })}`;
-
-            document.getElementById('discount').textContent = `- Rs. ${discount.toLocaleString('en-IN', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            })}`;
-
-            document.getElementById('grandTotal').textContent = `Rs. ${newTotal.toLocaleString('en-IN', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            })}`;
-
-            // Show discount row
-            document.getElementById('discountRow').style.display = 'flex';
-
-            // Show success message
-            messageDiv.innerHTML = '<span class="text-success">Coupon applied successfully! 10% discount applied.</span>';
-
-            // Disable coupon input
-            document.getElementById('couponCode').disabled = true;
-            event.target.disabled = true;
-            event.target.textContent = 'Applied';
-        }
-
-        // Place order
-        function placeOrder() {
             // Validate form
-            const shippingForm = document.getElementById('shippingForm');
+            const form = document.getElementById('checkoutForm');
             const termsCheck = document.getElementById('termsCheck');
 
-            if (!shippingForm.checkValidity()) {
-                showToast('error', 'Please fill in all required shipping information');
-                shippingForm.reportValidity();
+            if (!form.checkValidity()) {
+                form.reportValidity();
                 return;
             }
 
             if (!termsCheck.checked) {
-                showToast('error', 'Please agree to the Terms & Conditions');
+                showNotification('error', 'Please agree to the Terms & Conditions');
                 return;
-            }
-
-            // Validate payment method
-            const selectedPayment = document.querySelector('.payment-method.selected input[type="radio"]');
-            if (!selectedPayment) {
-                showToast('error', 'Please select a payment method');
-                return;
-            }
-
-            // Validate card details if credit card selected
-            if (selectedPayment.value === 'credit_card') {
-                // Add card validation here
             }
 
             // Show loading
-            const btn = event.target;
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
             btn.disabled = true;
+            spinner.style.display = 'inline-block';
 
-            // Simulate API call
-            setTimeout(() => {
-                // For demo, we'll show success and redirect
-                showToast('success', 'Order placed successfully!');
+            // Get form data
+            const formData = new FormData(form);
+            const formObject = Object.fromEntries(formData);
 
-                // Redirect to order confirmation page
-                setTimeout(() => {
-                    window.location.href = '{{ route("wholesaler.orders.index") }}';
-                }, 2000);
+            try {
+                const response = await fetch('{{ route("wholesaler.shop.checkout.process") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(formObject)
+                });
 
-            }, 2000);
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification('success', data.message);
+
+                    // Redirect to order page
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, 1500);
+                } else {
+                    showNotification('error', data.message);
+                    btn.disabled = false;
+                    spinner.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('error', 'An error occurred. Please try again.');
+                btn.disabled = false;
+                spinner.style.display = 'none';
+            }
         }
 
-        // Validate form inputs
-        document.querySelectorAll('.form-control-lg').forEach(input => {
-            input.addEventListener('blur', function() {
-                if (!this.checkValidity()) {
-                    this.classList.add('is-invalid');
-                } else {
-                    this.classList.remove('is-invalid');
-                }
-            });
+        // Show notification
+        function showNotification(type, message) {
+            // Remove existing notifications
+            document.querySelectorAll('.alert-notification').forEach(alert => alert.remove());
 
-            input.addEventListener('input', function() {
-                if (this.checkValidity()) {
-                    this.classList.remove('is-invalid');
-                }
-            });
-        });
-
-        // Toast notification
-        function showToast(type, message) {
-            const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
-            toast.innerHTML = `
-                <div class="toast-content">
-                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
-                    ${message}
-                </div>
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-notification alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
             `;
 
-            toast.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: ${type === 'success' ? '#10b981' : '#ef4444'};
-                color: white;
-                padding: 15px 20px;
-                border-radius: 10px;
-                z-index: 9999;
-                animation: slideInRight 0.3s ease;
-            `;
+            document.body.appendChild(alertDiv);
 
-            document.body.appendChild(toast);
-
+            // Auto remove after 5 seconds
             setTimeout(() => {
-                toast.style.animation = 'slideOutRight 0.3s ease forwards';
-                setTimeout(() => {
-                    document.body.removeChild(toast);
-                }, 300);
-            }, 3000);
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
         }
 
         // Initialize
-        $(document).ready(function() {
-            // Hide card details initially if not credit card
-            const selectedPayment = document.querySelector('.payment-method.selected input[type="radio"]');
-            if (selectedPayment && selectedPayment.value !== 'credit_card') {
-                document.getElementById('cardDetails').style.display = 'none';
-            }
+        document.addEventListener('DOMContentLoaded', function() {
+            // Validate form inputs in real-time
+            const formInputs = document.querySelectorAll('#checkoutForm input, #checkoutForm textarea');
+            formInputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    validateField(this);
+                });
+
+                input.addEventListener('input', function() {
+                    clearError(this.name);
+                });
+            });
         });
+
+        function validateField(field) {
+            const errorId = `${field.name}Error`;
+            const errorDiv = document.getElementById(errorId);
+
+            if (!field.checkValidity()) {
+                if (errorDiv) {
+                    errorDiv.textContent = field.validationMessage;
+                    errorDiv.style.display = 'block';
+                }
+                field.classList.add('is-invalid');
+            } else {
+                if (errorDiv) {
+                    errorDiv.style.display = 'none';
+                }
+                field.classList.remove('is-invalid');
+            }
+        }
+
+        function clearError(fieldName) {
+            const errorDiv = document.getElementById(`${fieldName}Error`);
+            if (errorDiv) {
+                errorDiv.style.display = 'none';
+            }
+            const field = document.querySelector(`[name="${fieldName}"]`);
+            if (field) {
+                field.classList.remove('is-invalid');
+            }
+        }
     </script>
 @endpush

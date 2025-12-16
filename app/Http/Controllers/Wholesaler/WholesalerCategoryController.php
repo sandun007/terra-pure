@@ -178,34 +178,32 @@ class WholesalerCategoryController extends Controller
     public function destroy($id)
     {
         try {
-            $wholesaler = Auth::guard('wholesaler')->user();
-            $category = Category::where('wholesaler_id', $wholesaler->id)
-                ->findOrFail($id);
+            $category = Category::findOrFail($id);
 
             // Check if category has products
-            $productCount = WholesalerProduct::where('wholesaler_id', $wholesaler->id)
-                ->where('category', $category->name)
+            $productCount = WholesalerProduct::where('category_id', $id)
+                ->where('wholesaler_id', Auth::guard('wholesaler')->id())
                 ->count();
 
             if ($productCount > 0) {
-                return redirect()->back()
-                    ->with('error', 'Cannot delete category. It has ' . $productCount . ' product(s) associated.');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete category because it has products assigned to it.'
+                ], 400);
             }
 
-            // Delete image
-            if ($category->image) {
-                Storage::disk('public')->delete($category->image);
-            }
-
-            // Hard delete category
             $category->delete();
 
-            return redirect()->route('wholesaler.categories.index')
-                ->with('success', 'Category deleted successfully!');
+            return response()->json([
+                'success' => true,
+                'message' => 'Category deleted successfully.'
+            ]);
 
         } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Failed to delete category: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting category: ' . $e->getMessage()
+            ], 500);
         }
     }
 }
