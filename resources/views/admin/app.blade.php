@@ -1,6 +1,65 @@
 <!doctype html>
 <html lang="en">
 @include('admin.component.head')
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
+    <meta name="description" content="POS - Bootstrap Admin Template">
+    <meta name="keywords"
+          content="admin, estimates, bootstrap, business, corporate, creative, invoice, html5, responsive, Projects">
+    <meta name="author" content="Dreamguys - Bootstrap Admin Template">
+    <meta name="robots" content="noindex, nofollow">
+    <title>
+        @stack('title')
+    </title>
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('asset/img/dx.png') }}">
+
+
+    <script src="{{ asset('asset/js/theme/theme-script.js')}}" type="text/javascript"></script>
+    <script src="{{ asset('asset/js/theme/theme-9c065fc6.js')}}" type="text/javascript"></script>
+    <script src="{{ asset('asset/js/theme/apexcharts.common-4fae8482.js')}}" type="text/javascript"></script>
+
+    <!-- Favicon -->
+    <!-- Add this in the <head> section -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{{asset('asset/css/theme/bootstrap.min.css')}}">
+
+    <!-- Datetimepicker CSS -->
+    <link rel="stylesheet" href="{{asset('asset/css/theme/bootstrap-datetimepicker.min.css')}}">
+
+    <!-- animation CSS -->
+    <link rel="stylesheet" href="{{asset('asset/css/theme/animate.css')}}">
+
+    <!-- Select2 CSS -->
+    <link rel="stylesheet" href="{{asset('asset/css/theme/select2.min.css')}}select2.min.css">
+
+    <!-- Fontawesome CSS -->
+    <link rel="stylesheet" href="{{asset('asset/css/theme/fontawesome.min.css')}}">
+    <link rel="stylesheet" href="{{asset('asset/css/theme/all.min.css')}}">
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="{{asset('asset/css/theme/style.css')}}">
+    <link rel="stylesheet" href="{{asset('asset/css/theme/theme-ecf0ae99.css')}}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('asset/css/main.css') }}">
+
+
+    <!-- pages CSS -->
+    <link href="{{ asset('asset/css/pages/dashbord.css') }}" rel="stylesheet">
+
+
+    <!-- Header Styles -->
+    <link rel="stylesheet" href="{{ asset('asset/css/component/header.css') }}">
+    <link rel="stylesheet" href="{{ asset('asset/css/component/sliderbar.css') }}">
+
+
+    @stack('css')
+</head>
 <body>
 <div id="global-loader" style="display: none;">
     <div class="whirly-loader"></div>
@@ -303,6 +362,11 @@
         integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ=="
         data-cf-beacon="{&quot;rayId&quot;:&quot;915e573e4f14513a&quot;,&quot;serverTiming&quot;:{&quot;name&quot;:{&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfSpeedBrain&quot;:true,&quot;cfCacheStatus&quot;:true}},&quot;version&quot;:&quot;2025.1.0&quot;,&quot;token&quot;:&quot;3ca157e612a14eccbb30cf6db6691c29&quot;}"
         crossorigin="anonymous"></script>
+
+<!-- comp scripts -->
+<script src="{{ asset('asset/js/component/sidebar-toggle.js') }}"></script>
+<script src="{{ asset('asset/js/component/Dropdown.js') }}"></script>
+
 @stack('script')
 </body>
 </html>

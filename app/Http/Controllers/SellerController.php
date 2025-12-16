@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Referral;
 use App\Models\Saler;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -132,7 +133,7 @@ class SellerController extends Controller
             return $e;
         }
     }
-    
+
     public function edit($id)
     {
          $seller = Saler::query()
@@ -141,10 +142,10 @@ class SellerController extends Controller
 
         return view('seller.seller_update', compact('seller'));
     }
-    
+
      public function update(Request $request)
     {
-      
+
 
         $seller = Saler::query()
             ->where('id',$request->id)
@@ -197,9 +198,10 @@ class SellerController extends Controller
            $user = auth()->user();
         $import='0';
         return view('seller.new_order',compact('import','user','code'));
-        
+
     }
 
+// In SellerController
     public function completeOrder()
     {
         return view('seller.complete_order_list');

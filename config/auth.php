@@ -52,6 +52,10 @@ return [
             'driver' => 'session',
             'provider' => 'employees',
         ],
+        'wholesaler' => [
+            'driver' => 'session',
+            'provider' => 'wholesalers',
+        ],
     ],
 
     /*
@@ -87,6 +91,10 @@ return [
          'employees' => [
             'driver' => 'eloquent',
             'model' => App\Models\Employee::class,
+        ],
+        'wholesalers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Wholesaler::class,
         ],
 
         // 'users' => [

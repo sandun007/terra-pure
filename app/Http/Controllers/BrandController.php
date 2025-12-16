@@ -38,7 +38,8 @@ class BrandController extends Controller
             Brand::query()->create([
                 'code'=>$code,
                 'name'=>$request->name,
-                'img'=>$imagePath
+                'img'=>$imagePath,
+                'seller_code'=>0
             ]);
             return redirect()->back();
         }
