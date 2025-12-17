@@ -598,7 +598,7 @@
                 <div class="dashboard-section">
                     <div class="section-header">
                         <h3 class="section-title">Recent Orders</h3>
-                        <a href="{{ route('wholesaler.orders.index') }}" class="view-all-link">
+                        <a href="{{ route('wholesaler.wholesaler.orders.index') }}" class="view-all-link">
                             View All <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
@@ -664,7 +664,7 @@
                             <i class="fas fa-plus-circle quick-action-icon"></i>
                             <span>Add New Product</span>
                         </a>
-                        <a href="{{ route('wholesaler.orders.index') }}?status=pending" class="quick-action-btn">
+                        <a href="{{ route('wholesaler.wholesaler.orders.index') }}?status=pending" class="quick-action-btn">
                             <i class="fas fa-clock quick-action-icon"></i>
                             <span>Pending Orders</span>
                         </a>
