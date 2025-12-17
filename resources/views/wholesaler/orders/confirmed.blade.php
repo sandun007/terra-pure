@@ -210,7 +210,7 @@
                 <p class="mb-0">Orders ready for processing and shipping</p>
             </div>
             <div>
-                <a href="{{ route('wholesaler.orders.index') }}" class="btn btn-light">
+                <a href="{{ route('wholesaler.wholesaler.orders.index') }}" class="btn btn-light">
                     <i class="fas fa-arrow-left me-2"></i>
                     Back to All Orders
                 </a>
@@ -259,13 +259,13 @@
 
                         <!-- Processing Steps -->
                         <div class="processing-steps">
-                            <div class="step {{ $order->status == 'confirmed' ? 'active' : 'completed' }}">
+                            <div class="step {{ $order->status === 'confirmed' ? 'active' : 'completed' }}">
                                 <div class="step-icon">
                                     <i class="fas fa-check-circle"></i>
                                 </div>
                                 <div class="step-label">Confirmed</div>
                             </div>
-                            <div class="step {{ $order->status == 'processing' ? 'active' : '' }}">
+                            <div class="step {{ $order->status === 'processing' ? 'active' : '' }}">
                                 <div class="step-icon">
                                     <i class="fas fa-cog"></i>
                                 </div>
@@ -287,7 +287,8 @@
 
                         <!-- Order Items Summary -->
                         <div class="mb-4">
-                            <h6 class="fw-bold mb-3"><i class="fas fa-boxes me-2"></i>Order Items ({{ $order->orderItems->count() }})</h6>
+                            <h6 class="fw-bold mb-3"><i class="fas fa-boxes me-2"></i>Order Items
+                                ({{ $order->orderItems->count() }})</h6>
                             <div class="row row-cols-1 row-cols-md-2 g-3">
                                 @foreach($order->orderItems as $item)
                                     <div class="col">
@@ -299,15 +300,17 @@
                                                      width="50"
                                                      height="50">
                                             @else
-                                                <div class="rounded bg-white d-flex align-items-center justify-content-center me-3"
-                                                     style="width: 50px; height: 50px;">
+                                                <div
+                                                    class="rounded bg-white d-flex align-items-center justify-content-center me-3"
+                                                    style="width: 50px; height: 50px;">
                                                     <i class="fas fa-box text-muted"></i>
                                                 </div>
                                             @endif
                                             <div class="flex-grow-1">
                                                 <div class="fw-bold mb-1">{{ $item->product_name }}</div>
                                                 <div class="text-muted small">
-                                                    Qty: {{ $item->quantity }} × Rs. {{ number_format($item->unit_price) }}
+                                                    Qty: {{ $item->quantity }} ×
+                                                    Rs. {{ number_format($item->unit_price) }}
                                                 </div>
                                             </div>
                                             <div class="fw-bold text-primary">
@@ -323,7 +326,8 @@
                         <div class="d-flex justify-content-between align-items-center mt-4 pt-4 border-top">
                             <div>
                                 <span class="text-muted me-3">Payment Status:</span>
-                                <span class="badge {{ $order->payment_status == 'paid' ? 'bg-success' : 'bg-warning' }}">
+                                <span
+                                    class="badge {{ $order->payment_status === 'paid' ? 'bg-success' : 'bg-warning' }}">
                                     {{ ucfirst($order->payment_status) }}
                                 </span>
                             </div>
@@ -332,7 +336,8 @@
                                     <i class="fas fa-cog me-2"></i>
                                     Start Processing
                                 </button>
-                                <a href="{{ route('wholesaler.orders.show', $order->id) }}" class="btn btn-outline-primary">
+                                <a href="{{ route('wholesaler.wholesaler.orders.show', $order->id) }}"
+                                   class="btn btn-outline-primary">
                                     <i class="fas fa-eye me-2"></i>
                                     View Details
                                 </a>
@@ -356,7 +361,7 @@
             </div>
             <h4 class="fw-bold mb-3">No Confirmed Orders</h4>
             <p class="text-muted mb-4">All confirmed orders have been processed</p>
-            <a href="{{ route('wholesaler.orders.pending') }}" class="btn btn-primary">
+            <a href="{{ route('wholesaler.wholesaler.orders.pending') }}" class="btn btn-primary">
                 <i class="fas fa-clock me-2"></i>
                 View Pending Orders
             </a>
@@ -372,14 +377,14 @@
             }
 
             $.ajax({
-                url: `{{ route('wholesaler.orders.updateStatus', '') }}/${orderId}`,
+                url: `{{ route('wholesaler.wholesaler.orders.updateStatus', '') }}/${orderId}`,
                 method: 'POST',
                 data: {
                     _token: '{{ csrf_token() }}',
                     status: status,
                     notes: 'Order processing started'
                 },
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         showNotification('success', 'Order moved to processing!');
                         setTimeout(() => {
@@ -387,7 +392,7 @@
                         }, 1500);
                     }
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     showNotification('error', xhr.responseJSON?.message || 'An error occurred');
                 }
             });

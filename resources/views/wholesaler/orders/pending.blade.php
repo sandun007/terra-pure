@@ -219,7 +219,7 @@
                 <p class="mb-0">Orders awaiting your confirmation</p>
             </div>
             <div>
-                <a href="{{ route('wholesaler.orders.index') }}" class="btn btn-light">
+                <a href="{{ route('wholesaler.wholesaler.orders.index') }}" class="btn btn-light">
                     <i class="fas fa-arrow-left me-2"></i>
                     Back to All Orders
                 </a>
@@ -360,7 +360,7 @@
                                 <i class="fas fa-times-circle me-2"></i>
                                 Cancel Order
                             </button>
-                            <a href="{{ route('wholesaler.orders.show', $order->id) }}" class="btn btn-outline-primary">
+                            <a href="{{ route('wholesaler.wholesaler.orders.show', $order->id) }}" class="btn btn-outline-primary">
                                 <i class="fas fa-eye me-2"></i>
                                 View Details
                             </a>
@@ -383,7 +383,7 @@
             </div>
             <h4 class="fw-bold mb-3">No Pending Orders</h4>
             <p class="text-muted mb-4">All orders have been processed</p>
-            <a href="{{ route('wholesaler.orders.index') }}" class="btn btn-primary">
+            <a href="{{ route('wholesaler.wholesaler.orders.index') }}" class="btn btn-primary">
                 <i class="fas fa-arrow-left me-2"></i>
                 View All Orders
             </a>

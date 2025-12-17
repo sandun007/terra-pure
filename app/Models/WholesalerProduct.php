@@ -25,6 +25,7 @@ class WholesalerProduct extends Model
         'discount',
         'packaging_cost',
         'qty',
+        'total_sold',
         'min_stock_level',
         'features',
         'barcode',

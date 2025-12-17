@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class WholesalerOrderItem extends Model
 {
-    protected $table = 'order_items';
+    protected $table = 'wholesaler_order_items';
 
     protected $fillable = [
         'order_id',
@@ -30,6 +30,6 @@ class WholesalerOrderItem extends Model
 
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class); // Adjust based on your product model
+        return $this->belongsTo(WholesalerProduct::class, 'product_id');
     }
 }

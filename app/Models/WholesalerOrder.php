@@ -8,12 +8,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class WholesalerOrder extends Model
 {
-    protected $table = 'orders'; // Make sure table name matches
+    protected $table = 'wholesaler_orders';
 
     protected $fillable = [
         'wholesaler_id',
-        'order_no', // This is what the error shows
-        'order_number', // You might have both fields
+        'order_number',
         'subtotal',
         'tax',
         'shipping',
@@ -41,7 +40,6 @@ class WholesalerOrder extends Model
         'shipping' => 'decimal:2',
         'total_amount' => 'decimal:2'
     ];
-
     public function wholesaler(): BelongsTo
     {
         return $this->belongsTo(Wholesaler::class);
@@ -49,7 +47,7 @@ class WholesalerOrder extends Model
 
     public function orderItems(): HasMany
     {
-        return $this->hasMany(OrderItem::class);
+        return $this->hasMany(WholesalerOrderItem::class, 'order_id');
     }
 
     public function getFormattedStatusAttribute()
@@ -65,5 +63,11 @@ class WholesalerOrder extends Model
     public function getFormattedTotalAttribute()
     {
         return 'Rs. ' . number_format($this->total_amount, 2);
+    }
+
+    // Accessor for backward compatibility - returns order_number
+    public function getOrderNoAttribute()
+    {
+        return $this->order_number;
     }
 }

@@ -7,6 +7,7 @@ use App\Models\WholesalerShop;
 use App\Models\WholesalerProduct;
 use App\Models\ProductReview;
 use App\Models\Category;
+use App\Http\Controllers\Wholesaler\Log;
 use App\Models\Brand;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -162,7 +163,7 @@ class WholesalerShopController extends Controller
             $cart = Session::get($cartKey, []);
 
             if (empty($cart)) {
-                return redirect()->route('wholesaler.shop.cart')->with('error', 'Your cart is empty!');
+                return redirect()->route('wholesaler.wholesaler.shop.cart')->with('error', 'Your cart is empty!');
             }
 
             $cartItems = [];
@@ -193,7 +194,7 @@ class WholesalerShopController extends Controller
 
             // Calculate shipping and tax
             $shipping = $this->calculateShipping($subtotal);
-            $taxRate = $shop->tax_rate ?? 5; // Default 5% tax
+            $taxRate = $shop->tax_rate ?? 5;
             $tax = $subtotal * ($taxRate / 100);
             $total = $subtotal + $shipping + $tax;
 
@@ -218,12 +219,10 @@ class WholesalerShopController extends Controller
      */
     private function calculateShipping($subtotal)
     {
-        // Free shipping for orders over 5000
         if ($subtotal > 5000) {
             return 0;
         }
 
-        // Calculate shipping based on subtotal
         if ($subtotal <= 1000) {
             return 200;
         } elseif ($subtotal <= 3000) {
@@ -731,19 +730,17 @@ class WholesalerShopController extends Controller
             ]);
         }
     }
-    private function generateOrderNumber()
-    {
-        $prefix = 'ORD';
-        $date = date('Ymd');
-        $random = strtoupper(Str::random(6));
 
-        return $prefix . '-' . $date . '-' . $random;
-    }
+    /**
+     * Process checkout and create order
+     */
     /**
      * Process checkout and create order
      */
     public function processCheckout(Request $request)
     {
+        DB::beginTransaction();
+
         try {
             $wholesaler = Auth::guard('wholesaler')->user();
 
@@ -751,10 +748,12 @@ class WholesalerShopController extends Controller
             $validator = \Validator::make($request->all(), [
                 'customer_name' => 'required|string|max:255',
                 'customer_email' => 'required|email|max:255',
-                'customer_phone' => 'required|string|max:20',
+                'customer_phone' => 'required|string|max:20|regex:/^[\+]?[0-9\s\-\(\)]{10,15}$/',
                 'shipping_address' => 'required|string|max:500',
                 'payment_method' => 'required|in:cash_on_delivery,credit_card,bank_transfer',
                 'notes' => 'nullable|string|max:1000',
+            ], [
+                'customer_phone.regex' => 'Please enter a valid phone number (10-15 digits)',
             ]);
 
             if ($validator->fails()) {
@@ -775,125 +774,154 @@ class WholesalerShopController extends Controller
                 ], 400);
             }
 
-            DB::beginTransaction();
+            // Calculate order total
+            $subtotal = 0;
+            $orderItems = [];
 
-            try {
-                // Calculate order total
-                $subtotal = 0;
-                $orderItems = [];
+            // Validate stock and calculate totals
+            foreach ($cart as $productId => $item) {
+                $product = WholesalerProduct::where('wholesaler_id', $wholesaler->id)
+                    ->where('id', $productId)
+                    ->lockForUpdate()
+                    ->first();
 
-                // Validate stock and calculate totals
-                foreach ($cart as $productId => $item) {
-                    $product = WholesalerProduct::where('wholesaler_id', $wholesaler->id)
-                        ->where('id', $productId)
-                        ->lockForUpdate()
-                        ->first();
-
-                    if (!$product) {
-                        throw new \Exception("Product not found: {$productId}");
-                    }
-
-                    $quantity = $item['quantity'] ?? 1;
-
-                    if ($product->qty < $quantity) {
-                        throw new \Exception("Insufficient stock for {$product->name}. Available: {$product->qty}, Requested: {$quantity}");
-                    }
-
-                    $itemTotal = $product->display_price * $quantity;
-                    $subtotal += $itemTotal;
-
-                    $orderItems[] = [
-                        'product_id' => $product->id,
-                        'product_name' => $product->name,
-                        'quantity' => $quantity,
-                        'unit_price' => $product->display_price,
-                        'total_price' => $itemTotal,
-                        'created_at' => now(),
-                        'updated_at' => now()
-                    ];
-
-                    // Update product stock
-                    $product->decrement('qty', $quantity);
+                if (!$product) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Product not found: {$productId}"
+                    ], 404);
                 }
 
-                // Get shop for tax calculation
-                $shop = WholesalerShop::where('wholesaler_id', $wholesaler->id)->first();
+                $quantity = $item['quantity'] ?? 1;
 
-                // Calculate taxes and shipping
-                $taxRate = $shop->tax_rate ?? 5;
-                $tax = $subtotal * ($taxRate / 100);
-                $shipping = $this->calculateShipping($subtotal);
-                $total = $subtotal + $tax + $shipping;
+                if ($product->qty < $quantity) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Insufficient stock for {$product->name}. Available: {$product->qty}, Requested: {$quantity}"
+                    ], 400);
+                }
 
-                // Generate unique order number
+                $itemTotal = $product->display_price * $quantity;
+                $subtotal += $itemTotal;
+
+                $orderItems[] = [
+                    'product_id' => $product->id,
+                    'product_name' => $product->name,
+                    'quantity' => $quantity,
+                    'unit_price' => $product->display_price,
+                    'total_price' => $itemTotal,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ];
+
+                // Update product stock
+                $product->decrement('qty', $quantity);
+            }
+
+            // Get shop for tax calculation
+            $shop = WholesalerShop::where('wholesaler_id', $wholesaler->id)->first();
+
+            // Calculate taxes and shipping
+            $taxRate = $shop->tax_rate ?? 5;
+            $tax = $subtotal * ($taxRate / 100);
+            $shipping = $this->calculateShipping($subtotal);
+            $total = $subtotal + $tax + $shipping;
+
+            // Generate unique order number
+            $orderNumber = $this->generateOrderNumber();
+
+            // Check if order number already exists
+            while (Order::where('order_number', $orderNumber)->exists()) {
                 $orderNumber = $this->generateOrderNumber();
+            }
 
-                // Check if order number already exists
-                while (Order::where('order_no', $orderNumber)->exists()) {
-                    $orderNumber = $this->generateOrderNumber();
-                }
+            // Create order - FIXED: Only using order_number
+            $order = Order::create([
+                'wholesaler_id' => $wholesaler->id,
+                'order_number' => $orderNumber,
+                'date' => now(), // Add this line
+                'subtotal' => $subtotal,
+                'tax' => $tax,
+                'shipping' => $shipping,
+                'total_amount' => $total,
+                'payment_method' => $request->payment_method,
+                'payment_status' => $request->payment_method == 'cash_on_delivery' ? 'pending' : 'paid',
+                'status' => 'pending',
+                'shipping_address' => $request->shipping_address,
+                'customer_name' => $request->customer_name,
+                'customer_email' => $request->customer_email,
+                'customer_phone' => $request->customer_phone,
+                'notes' => $request->notes,
+                'order_date' => now(),
+                'status_updated_at' => now(),
+            ]);
 
-                // Create order with all required fields
-                $order = Order::create([
-                    'wholesaler_id' => $wholesaler->id,
-                    'order_no' => $orderNumber,
-                    'order_number' => $orderNumber, // Also set order_number if needed
-                    'subtotal' => $subtotal,
-                    'tax' => $tax,
-                    'shipping' => $shipping,
-                    'total_amount' => $total,
-                    'payment_method' => $request->payment_method,
-                    'payment_status' => $request->payment_method == 'cash_on_delivery' ? 'pending' : 'paid',
-                    'status' => 'pending',
-                    'shipping_address' => $request->shipping_address,
-                    'customer_name' => $request->customer_name,
-                    'customer_email' => $request->customer_email,
-                    'customer_phone' => $request->customer_phone,
-                    'notes' => $request->notes,
-                    'order_date' => now(),
-                ]);
-
-                // Create order items
-                foreach ($orderItems as $item) {
-                    OrderItem::create([
+            // Create order items
+            foreach ($orderItems as $item) {
+                // Check if we should use wholesaler_order_items or order_items table
+                if (Schema::hasTable('wholesaler_order_items')) {
+                    DB::table('wholesaler_order_items')->insert([
                         'order_id' => $order->id,
                         'product_id' => $item['product_id'],
                         'product_name' => $item['product_name'],
                         'quantity' => $item['quantity'],
                         'unit_price' => $item['unit_price'],
                         'total_price' => $item['total_price'],
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                } else {
+                    // Fallback to order_items table
+                    DB::table('order_items')->insert([
+                        'order_id' => $order->id,
+                        'product_id' => $item['product_id'],
+                        'product_name' => $item['product_name'],
+                        'quantity' => $item['quantity'],
+                        'unit_price' => $item['unit_price'],
+                        'total_price' => $item['total_price'],
+                        'created_at' => now(),
+                        'updated_at' => now()
                     ]);
                 }
-
-                // Clear cart
-                Session::forget($cartKey);
-
-                DB::commit();
-
-                // Send notification
-                $this->sendOrderNotification($order, $wholesaler);
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Order placed successfully!',
-                    'order_id' => $order->id,
-                    'order_number' => $order->order_no,
-                    'redirect' => route('wholesaler.orders.show', $order->id)
-                ]);
-
-            } catch (\Exception $e) {
-                DB::rollBack();
-                \Log::error('Checkout Transaction Error: ' . $e->getMessage());
-                throw $e;
             }
 
+            // Clear cart
+            Session::forget($cartKey);
+
+            // Send notification
+            $this->sendOrderNotification($order, $wholesaler);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order placed successfully!',
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'redirect_url' => route('wholesaler.orders.show', $order->id)
+            ]);
+
         } catch (\Exception $e) {
-            \Log::error('Process checkout error: ' . $e->getMessage());
+            DB::rollBack();
+            \Log::error('Checkout Process Error: ' . $e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error processing checkout: ' . $e->getMessage()
             ], 500);
         }
+    }
+    /**
+     * Generate unique order number
+     */
+    private function generateOrderNumber()
+    {
+        $prefix = 'ORD';
+        $date = date('Ymd');
+        $random = strtoupper(Str::random(4));
+        $time = date('His');
+
+        return $prefix . '-' . $date . '-' . $time . '-' . $random;
     }
 
     /**
@@ -932,7 +960,7 @@ class WholesalerShopController extends Controller
 
             return response()->json([
                 'success' => true,
-                'redirect' => route('wholesaler.shop.checkout')
+                'redirect' => route('wholesaler.wholesaler.shop.checkout')
             ]);
 
         } catch (\Exception $e) {
@@ -954,7 +982,15 @@ class WholesalerShopController extends Controller
 
             // Send email notification
             if (class_exists('App\Mail\OrderPlaced')) {
-                Mail::to($wholesaler->email)->send(new OrderPlaced($order));
+                Mail::to($wholesaler->email)->queue(new OrderPlaced($order));
+            }
+
+            // Log order creation
+            if (class_exists('Spatie\Activitylog\Models\Activity')) {
+                activity()
+                    ->causedBy($wholesaler)
+                    ->performedOn($order)
+                    ->log('created order ' . $order->order_number);
             }
 
         } catch (\Exception $e) {

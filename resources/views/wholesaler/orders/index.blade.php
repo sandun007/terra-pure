@@ -101,12 +101,35 @@
             letter-spacing: 0.5px;
         }
 
-        .status-pending { background: #fef3c7; color: #92400e; }
-        .status-confirmed { background: #dbeafe; color: #1e40af; }
-        .status-processing { background: #e0e7ff; color: #3730a3; }
-        .status-shipped { background: #f0f9ff; color: #075985; }
-        .status-completed { background: #d1fae5; color: #065f46; }
-        .status-cancelled { background: #fee2e2; color: #991b1b; }
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-confirmed {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-processing {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .status-shipped {
+            background: #f0f9ff;
+            color: #075985;
+        }
+
+        .status-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
 
         .payment-status-badge {
             padding: 6px 12px;
@@ -115,9 +138,20 @@
             font-weight: 600;
         }
 
-        .payment-paid { background: #d1fae5; color: #065f46; }
-        .payment-pending { background: #fef3c7; color: #92400e; }
-        .payment-failed { background: #fee2e2; color: #991b1b; }
+        .payment-paid {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .payment-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .payment-failed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
 
         .action-buttons {
             display: flex;
@@ -135,11 +169,25 @@
             transition: all 0.3s ease;
         }
 
-        .btn-view { background: #dbeafe; color: #1e40af; }
-        .btn-view:hover { background: #1e40af; color: white; }
+        .btn-view {
+            background: #dbeafe;
+            color: #1e40af;
+        }
 
-        .btn-edit { background: #fef3c7; color: #92400e; }
-        .btn-edit:hover { background: #f59e0b; color: white; }
+        .btn-view:hover {
+            background: #1e40af;
+            color: white;
+        }
+
+        .btn-edit {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .btn-edit:hover {
+            background: #f59e0b;
+            color: white;
+        }
 
         .filter-tabs {
             display: flex;
@@ -267,33 +315,33 @@
 
     <!-- Filter Tabs -->
     <div class="filter-tabs">
-        <a href="{{ route('wholesaler.orders.index') }}"
-           class="filter-tab {{ !request()->has('status') || request('status') == 'all' ? 'active' : '' }}">
+        <a href="{{ route('wholesaler.wholesaler.orders.index') }}"
+           class="filter-tab {{ !request()->has('status') || request('status') === 'all' ? 'active' : '' }}">
             <i class="fas fa-list me-2"></i>
             All Orders
         </a>
-        <a href="{{ route('wholesaler.orders.index', ['status' => 'pending']) }}"
-           class="filter-tab {{ request('status') == 'pending' ? 'active' : '' }}">
+        <a href="{{ route('wholesaler.wholesaler.orders.index', ['status' => 'pending']) }}"
+           class="filter-tab {{ request('status') === 'pending' ? 'active' : '' }}">
             <i class="fas fa-clock me-2"></i>
             Pending
         </a>
-        <a href="{{ route('wholesaler.orders.index', ['status' => 'confirmed']) }}"
-           class="filter-tab {{ request('status') == 'confirmed' ? 'active' : '' }}">
+        <a href="{{ route('wholesaler.wholesaler.orders.index', ['status' => 'confirmed']) }}"
+           class="filter-tab {{ request('status') === 'confirmed' ? 'active' : '' }}">
             <i class="fas fa-check-circle me-2"></i>
             Confirmed
         </a>
-        <a href="{{ route('wholesaler.orders.index', ['status' => 'processing']) }}"
+        <a href="{{ route('wholesaler.wholesaler.orders.index', ['status' => 'processing']) }}"
            class="filter-tab {{ request('status') == 'processing' ? 'active' : '' }}">
             <i class="fas fa-cog me-2"></i>
             Processing
         </a>
-        <a href="{{ route('wholesaler.orders.index', ['status' => 'completed']) }}"
-           class="filter-tab {{ request('status') == 'completed' ? 'active' : '' }}">
+        <a href="{{ route('wholesaler.wholesaler.orders.index', ['status' => 'completed']) }}"
+           class="filter-tab {{ request('status') === 'completed' ? 'active' : '' }}">
             <i class="fas fa-check-double me-2"></i>
             Completed
         </a>
-        <a href="{{ route('wholesaler.orders.index', ['status' => 'cancelled']) }}"
-           class="filter-tab {{ request('status') == 'cancelled' ? 'active' : '' }}">
+        <a href="{{ route('wholesaler.wholesaler.orders.index', ['status' => 'cancelled']) }}"
+           class="filter-tab {{ request('status') === 'cancelled' ? 'active' : '' }}">
             <i class="fas fa-times-circle me-2"></i>
             Cancelled
         </a>
@@ -325,8 +373,9 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     <div class="me-3">
-                                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
-                                             style="width: 40px; height: 40px;">
+                                        <div
+                                            class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
+                                            style="width: 40px; height: 40px;">
                                             <i class="fas fa-user"></i>
                                         </div>
                                     </div>
@@ -343,7 +392,8 @@
                                             <img src="{{ asset('storage/' . $order->orderItems[0]->product->image) }}"
                                                  alt="Product" class="product-thumb me-2">
                                         @else
-                                            <div class="product-thumb bg-light d-flex align-items-center justify-content-center me-2">
+                                            <div
+                                                class="product-thumb bg-light d-flex align-items-center justify-content-center me-2">
                                                 <i class="fas fa-box text-muted"></i>
                                             </div>
                                         @endif
@@ -372,7 +422,7 @@
                             </td>
                             <td>
                                 <div class="action-buttons">
-                                    <a href="{{ route('wholesaler.orders.show', $order->id) }}"
+                                    <a href="{{ route('wholesaler.wholesaler.orders.show', $order->id) }}"
                                        class="btn-action btn-view" title="View Details">
                                         <i class="fas fa-eye"></i>
                                     </a>
@@ -383,8 +433,8 @@
                                             <i class="fas fa-edit"></i>
                                         </button>
                                     @endif
-                                    @if($order->status == 'completed')
-                                        <a href="{{ route('wholesaler.orders.invoice.download', $order->id) }}"
+                                    @if($order->status === 'completed')
+                                        <a href="{{ route('wholesaler.wholesaler.orders.invoice.download', $order->id) }}"
                                            class="btn-action btn-view" title="Download Invoice">
                                             <i class="fas fa-download"></i>
                                         </a>
@@ -410,7 +460,7 @@
                 </div>
                 <h4 class="fw-bold mb-3">No Orders Found</h4>
                 <p class="empty-state-text mb-4">You haven't received any orders yet</p>
-                <a href="{{ route('wholesaler.shop.index') }}" class="btn btn-primary">
+                <a href="{{ route('wholesaler.wholesaler.shop.index') }}" class="btn btn-primary">
                     <i class="fas fa-store me-2"></i>
                     View Shop
                 </a>
@@ -463,7 +513,7 @@
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
     <script>
         // Initialize DataTable
-        $(document).ready(function() {
+        $(document).ready(function () {
             $('#ordersTable').DataTable({
                 responsive: true,
                 order: [[0, 'desc']],
@@ -484,17 +534,17 @@
         }
 
         // Update Status Form Submission
-        $('#updateStatusForm').submit(function(e) {
+        $('#updateStatusForm').submit(function (e) {
             e.preventDefault();
 
             const formData = $(this).serialize();
             const orderId = $('#orderId').val();
 
             $.ajax({
-                url: `{{ route('wholesaler.orders.updateStatus', '') }}/${orderId}`,
+                url: `{{ route('wholesaler.wholesaler.orders.updateStatus', '') }}/${orderId}`,
                 method: 'POST',
                 data: formData,
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         showNotification('success', response.message);
                         $('#updateStatusModal').modal('hide');
@@ -503,7 +553,7 @@
                         }, 1500);
                     }
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     showNotification('error', xhr.responseJSON?.message || 'An error occurred');
                 }
             });
