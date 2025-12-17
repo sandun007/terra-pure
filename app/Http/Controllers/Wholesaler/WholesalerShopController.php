@@ -7,7 +7,6 @@ use App\Models\WholesalerShop;
 use App\Models\WholesalerProduct;
 use App\Models\ProductReview;
 use App\Models\Category;
-use App\Http\Controllers\Wholesaler\Log;
 use App\Models\Brand;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -163,7 +162,7 @@ class WholesalerShopController extends Controller
             $cart = Session::get($cartKey, []);
 
             if (empty($cart)) {
-                return redirect()->route('wholesaler.wholesaler.shop.cart')->with('error', 'Your cart is empty!');
+                return redirect()->route('wholesaler.shop.cart')->with('error', 'Your cart is empty!');
             }
 
             $cartItems = [];
@@ -194,7 +193,7 @@ class WholesalerShopController extends Controller
 
             // Calculate shipping and tax
             $shipping = $this->calculateShipping($subtotal);
-            $taxRate = $shop->tax_rate ?? 5;
+            $taxRate = $shop->tax_rate ?? 5; // Default 5% tax
             $tax = $subtotal * ($taxRate / 100);
             $total = $subtotal + $shipping + $tax;
 
@@ -219,10 +218,12 @@ class WholesalerShopController extends Controller
      */
     private function calculateShipping($subtotal)
     {
+        // Free shipping for orders over 5000
         if ($subtotal > 5000) {
             return 0;
         }
 
+        // Calculate shipping based on subtotal
         if ($subtotal <= 1000) {
             return 200;
         } elseif ($subtotal <= 3000) {
@@ -733,9 +734,7 @@ class WholesalerShopController extends Controller
 
     /**
      * Process checkout and create order
-     */
-    /**
-     * Process checkout and create order
+     * @throws \Throwable
      */
     public function processCheckout(Request $request)
     {
@@ -748,12 +747,10 @@ class WholesalerShopController extends Controller
             $validator = \Validator::make($request->all(), [
                 'customer_name' => 'required|string|max:255',
                 'customer_email' => 'required|email|max:255',
-                'customer_phone' => 'required|string|max:20|regex:/^[\+]?[0-9\s\-\(\)]{10,15}$/',
+                'customer_phone' => 'required|string|max:20',
                 'shipping_address' => 'required|string|max:500',
                 'payment_method' => 'required|in:cash_on_delivery,credit_card,bank_transfer',
                 'notes' => 'nullable|string|max:1000',
-            ], [
-                'customer_phone.regex' => 'Please enter a valid phone number (10-15 digits)',
             ]);
 
             if ($validator->fails()) {
@@ -786,19 +783,13 @@ class WholesalerShopController extends Controller
                     ->first();
 
                 if (!$product) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => "Product not found: {$productId}"
-                    ], 404);
+                    throw new \Exception("Product not found: {$productId}");
                 }
 
                 $quantity = $item['quantity'] ?? 1;
 
                 if ($product->qty < $quantity) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => "Insufficient stock for {$product->name}. Available: {$product->qty}, Requested: {$quantity}"
-                    ], 400);
+                    throw new \Exception("Insufficient stock for {$product->name}. Available: {$product->qty}, Requested: {$quantity}");
                 }
 
                 $itemTotal = $product->display_price * $quantity;
@@ -831,15 +822,15 @@ class WholesalerShopController extends Controller
             $orderNumber = $this->generateOrderNumber();
 
             // Check if order number already exists
-            while (Order::where('order_number', $orderNumber)->exists()) {
+            while (Order::where('order_no', $orderNumber)->exists()) {
                 $orderNumber = $this->generateOrderNumber();
             }
 
-            // Create order - FIXED: Only using order_number
+            // Create order
             $order = Order::create([
                 'wholesaler_id' => $wholesaler->id,
-                'order_number' => $orderNumber,
-                'date' => now(), // Add this line
+                'order_no' => $orderNumber,
+                'order_number' => $orderNumber, // Add both fields if needed
                 'subtotal' => $subtotal,
                 'tax' => $tax,
                 'shipping' => $shipping,
@@ -853,43 +844,22 @@ class WholesalerShopController extends Controller
                 'customer_phone' => $request->customer_phone,
                 'notes' => $request->notes,
                 'order_date' => now(),
-                'status_updated_at' => now(),
             ]);
 
             // Create order items
             foreach ($orderItems as $item) {
-                // Check if we should use wholesaler_order_items or order_items table
-                if (Schema::hasTable('wholesaler_order_items')) {
-                    DB::table('wholesaler_order_items')->insert([
-                        'order_id' => $order->id,
-                        'product_id' => $item['product_id'],
-                        'product_name' => $item['product_name'],
-                        'quantity' => $item['quantity'],
-                        'unit_price' => $item['unit_price'],
-                        'total_price' => $item['total_price'],
-                        'created_at' => now(),
-                        'updated_at' => now()
-                    ]);
-                } else {
-                    // Fallback to order_items table
-                    DB::table('order_items')->insert([
-                        'order_id' => $order->id,
-                        'product_id' => $item['product_id'],
-                        'product_name' => $item['product_name'],
-                        'quantity' => $item['quantity'],
-                        'unit_price' => $item['unit_price'],
-                        'total_price' => $item['total_price'],
-                        'created_at' => now(),
-                        'updated_at' => now()
-                    ]);
-                }
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item['product_id'],
+                    'product_name' => $item['product_name'],
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
+                    'total_price' => $item['total_price'],
+                ]);
             }
 
             // Clear cart
             Session::forget($cartKey);
-
-            // Send notification
-            $this->sendOrderNotification($order, $wholesaler);
 
             DB::commit();
 
@@ -897,8 +867,8 @@ class WholesalerShopController extends Controller
                 'success' => true,
                 'message' => 'Order placed successfully!',
                 'order_id' => $order->id,
-                'order_number' => $order->order_number,
-                'redirect_url' => route('wholesaler.orders.show', $order->id)
+                'order_number' => $order->order_no,
+                'redirect' => route('wholesaler.orders.show', $order->id)
             ]);
 
         } catch (\Exception $e) {
@@ -911,6 +881,8 @@ class WholesalerShopController extends Controller
             ], 500);
         }
     }
+
+
     /**
      * Generate unique order number
      */
@@ -918,11 +890,14 @@ class WholesalerShopController extends Controller
     {
         $prefix = 'ORD';
         $date = date('Ymd');
-        $random = strtoupper(Str::random(4));
-        $time = date('His');
+        $random = strtoupper(Str::random(6));
 
-        return $prefix . '-' . $date . '-' . $time . '-' . $random;
+        return $prefix . '-' . $date . '-' . $random;
     }
+
+    /**
+     * Calculate shipping cost
+     */
 
     /**
      * Buy now direct checkout
@@ -960,7 +935,7 @@ class WholesalerShopController extends Controller
 
             return response()->json([
                 'success' => true,
-                'redirect' => route('wholesaler.wholesaler.shop.checkout')
+                'redirect' => route('wholesaler.shop.checkout')
             ]);
 
         } catch (\Exception $e) {
@@ -982,15 +957,7 @@ class WholesalerShopController extends Controller
 
             // Send email notification
             if (class_exists('App\Mail\OrderPlaced')) {
-                Mail::to($wholesaler->email)->queue(new OrderPlaced($order));
-            }
-
-            // Log order creation
-            if (class_exists('Spatie\Activitylog\Models\Activity')) {
-                activity()
-                    ->causedBy($wholesaler)
-                    ->performedOn($order)
-                    ->log('created order ' . $order->order_number);
+                Mail::to($wholesaler->email)->send(new OrderPlaced($order));
             }
 
         } catch (\Exception $e) {

@@ -21,12 +21,51 @@ class WholesalerOrderController extends Controller
         try {
             $wholesaler = Auth::guard('wholesaler')->user();
 
-            // Determine which table to use for order items
             $query = Order::where('wholesaler_id', $wholesaler->id)
                 ->with(['orderItems.product'])
                 ->orderBy('created_at', 'desc');
 
-            // ... rest of the method remains the same
+            // Filter by status
+            if ($request->has('status') && $request->status != 'all') {
+                $query->where('status', $request->status);
+            }
+
+            // Filter by payment status
+            if ($request->has('payment_status') && $request->payment_status != 'all') {
+                $query->where('payment_status', $request->payment_status);
+            }
+
+            // Filter by date range
+            if ($request->has('date_from') && $request->date_from) {
+                $query->whereDate('created_at', '>=', $request->date_from);
+            }
+
+            if ($request->has('date_to') && $request->date_to) {
+                $query->whereDate('created_at', '<=', $request->date_to);
+            }
+
+            $orders = $query->paginate(10);
+
+            // Statistics
+            $totalOrders = Order::where('wholesaler_id', $wholesaler->id)->count();
+            $pendingOrders = Order::where('wholesaler_id', $wholesaler->id)
+                ->where('status', 'pending')
+                ->count();
+            $completedOrders = Order::where('wholesaler_id', $wholesaler->id)
+                ->where('status', 'completed')
+                ->count();
+            $totalRevenue = Order::where('wholesaler_id', $wholesaler->id)
+                ->where('status', 'completed')
+                ->sum('total_amount');
+
+            return view('wholesaler.orders.index', compact(
+                'orders',
+                'totalOrders',
+                'pendingOrders',
+                'completedOrders',
+                'totalRevenue'
+            ));
+
         } catch (\Exception $e) {
             \Log::error('Order index error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Error loading orders: ' . $e->getMessage());
@@ -183,62 +222,61 @@ class WholesalerOrderController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Order details error: ' . $e->getMessage());
-            return redirect()->route('wholesaler.wholesaler.orders.index')->with('error', 'Order not found');
+            return redirect()->back()->with('error', 'Order not found: ' . $e->getMessage());
         }
     }
 
     /**
      * Update order status
      */
+    public function updateStatus(Request $request, $id)
+    {
+        try {
+            $request->validate([
+                'status' => 'required|in:pending,confirmed,processing,shipped,completed,cancelled',
+                'notes' => 'nullable|string|max:500',
+            ]);
 
-public function updateStatus(Request $request, $id)
-{
-    try {
-        $request->validate([
-            'status' => 'required|in:pending,confirmed,processing,shipped,completed,cancelled',
-            'notes' => 'nullable|string|max:500',
-        ]);
+            $wholesaler = Auth::guard('wholesaler')->user();
 
-        $wholesaler = Auth::guard('wholesaler')->user();
+            $order = Order::where('wholesaler_id', $wholesaler->id)
+                ->findOrFail($id);
 
-        $order = Order::where('wholesaler_id', $wholesaler->id)
-            ->findOrFail($id);
+            $oldStatus = $order->status;
+            $order->update([
+                'status' => $request->status,
+                'status_notes' => $request->notes,
+                'status_updated_at' => now(),
+            ]);
 
-        $oldStatus = $order->status;
-        $order->update([
-            'status' => $request->status,
-            'status_notes' => $request->notes,
-            'status_updated_at' => now(),
-        ]);
-
-        // If order is cancelled, restore stock
-        if ($request->status == 'cancelled' && $oldStatus != 'cancelled') {
-            foreach ($order->orderItems as $item) {
-                if ($item->product) {
-                    $item->product->increment('qty', $item->quantity);
+            // If order is cancelled, restore stock
+            if ($request->status == 'cancelled' && $oldStatus != 'cancelled') {
+                foreach ($order->orderItems as $item) {
+                    if ($item->product) {
+                        $item->product->increment('qty', $item->quantity);
+                    }
                 }
             }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order status updated successfully!',
+                'status' => $order->status
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Update order status error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating order status: ' . $e->getMessage()
+            ], 500);
         }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Order status updated successfully!',
-            'status' => $order->status
-        ]);
-
-    } catch (\Exception $e) {
-        \Log::error('Update order status error: ' . $e->getMessage());
-        return response()->json([
-            'success' => false,
-            'message' => 'Error updating order status: ' . $e->getMessage()
-        ], 500);
     }
-}
+
     /**
      * Download invoice
      */
-    public
-    function downloadInvoice($id)
+    public function downloadInvoice($id)
     {
         try {
             $wholesaler = Auth::guard('wholesaler')->user();
@@ -262,8 +300,7 @@ public function updateStatus(Request $request, $id)
     /**
      * View invoice
      */
-    public
-    function viewInvoice($id)
+    public function viewInvoice($id)
     {
         try {
             $wholesaler = Auth::guard('wholesaler')->user();
@@ -281,8 +318,6 @@ public function updateStatus(Request $request, $id)
             return redirect()->back()->with('error', 'Error loading invoice: ' . $e->getMessage());
         }
     }
-
-
 
     /**
      * Export orders to CSV
