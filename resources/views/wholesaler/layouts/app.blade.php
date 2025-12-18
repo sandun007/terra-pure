@@ -634,25 +634,7 @@
         });
 
         // Update cart count
-        function updateCartCount() {
-            $.ajax({
-                url: '{{ route("wholesaler.shop.cart.count") }}',
-                method: 'GET',
-                success: function(response) {
-                    const count = response.count || 0;
-                    $('.cart-count-badge').text(count);
 
-                    if (count > 0) {
-                        $('.cart-count-badge').addClass('visible');
-                    } else {
-                        $('.cart-count-badge').removeClass('visible');
-                    }
-                },
-                error: function() {
-                    $('.cart-count-badge').text('0');
-                }
-            });
-        }
 
         // Initial cart count update
         updateCartCount();

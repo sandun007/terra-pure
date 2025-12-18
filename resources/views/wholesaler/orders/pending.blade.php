@@ -1,393 +1,198 @@
 @extends('wholesaler.layouts.app')
+
 @push('title')
-    Pending Orders
+    Pending Orders | Wholesaler Dashboard
 @endpush
 
 @push('css')
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
     <style>
-        :root {
-            --primary: #6366f1;
-            --warning: #f59e0b;
-        }
-
         .page-header {
-            background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 30px;
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .page-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -20%;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-            border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5, #3b82f6);
+            color: #fff;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
         }
 
         .order-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            border-left: 4px solid var(--warning);
-            transition: all 0.3s ease;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: none;
         }
 
-        .order-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
-        }
-
-        .order-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .order-info h4 {
-            margin-bottom: 5px;
-            color: #1f2937;
-        }
-
-        .order-date {
+        .table th {
+            font-size: 0.85rem;
+            text-transform: uppercase;
             color: #6b7280;
-            font-size: 0.875rem;
         }
 
-        .order-status {
+        .status-pill {
+            padding: 0.35rem 0.7rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-paid {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-pending {
             background: #fef3c7;
             color: #92400e;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.875rem;
         }
 
-        .order-items {
-            margin-bottom: 20px;
-        }
-
-        .order-item {
-            display: flex;
+        .action-btn {
+            width: 34px;
+            height: 34px;
+            display: inline-flex;
             align-items: center;
-            padding: 15px;
-            background: #f9fafb;
-            border-radius: 10px;
-            margin-bottom: 10px;
+            justify-content: center;
+            border-radius: 50%;
         }
 
-        .item-image {
-            width: 60px;
-            height: 60px;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-right: 15px;
-            flex-shrink: 0;
-        }
-
-        .item-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .item-details {
-            flex-grow: 1;
-        }
-
-        .item-name {
-            font-weight: 600;
-            margin-bottom: 5px;
-            color: #1f2937;
-        }
-
-        .item-price {
-            color: var(--warning);
-            font-weight: 600;
-        }
-
-        .order-summary {
-            background: #f9fafb;
-            border-radius: 10px;
-            padding: 20px;
-        }
-
-        .summary-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .summary-row:last-child {
-            border-bottom: none;
-            font-weight: 700;
-            font-size: 1.125rem;
-            color: var(--warning);
-        }
-
-        .order-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .btn-confirm {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 10px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .btn-confirm:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-        }
-
-        .btn-cancel {
-            background: #fee2e2;
-            color: #dc2626;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 10px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .btn-cancel:hover {
-            background: #dc2626;
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        .customer-info {
-            background: #f0f9ff;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-
-        .customer-info h6 {
-            margin-bottom: 15px;
-            color: #0369a1;
-        }
-
-        .info-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .info-item i {
-            width: 20px;
-            margin-right: 10px;
-            color: #0369a1;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 50px 20px;
-        }
-
-        .empty-state-icon {
+        .empty-state i {
             font-size: 4rem;
-            color: #d1d5db;
-            margin-bottom: 20px;
+            color: #22c55e;
         }
     </style>
 @endpush
 
 @section('content')
-    <div class="page-header">
-        <div class="d-flex justify-content-between align-items-center">
+    <div class="container py-4">
+
+        {{-- Header --}}
+        <div class="page-header d-flex justify-content-between align-items-center flex-wrap">
             <div>
-                <h1 class="h2 fw-bold mb-2">Pending Orders</h1>
-                <p class="mb-0">Orders awaiting your confirmation</p>
+                <h2 class="mb-1">Pending Orders</h2>
+                <small>Manage and confirm customer orders</small>
             </div>
-            <div>
-                <a href="{{ route('wholesaler.wholesaler.orders.index') }}" class="btn btn-light">
-                    <i class="fas fa-arrow-left me-2"></i>
-                    Back to All Orders
+            <div class="d-flex gap-2 mt-2 mt-md-0">
+            <span class="badge bg-danger fs-6 px-3 py-2">
+                {{ $orders->total() }} Pending
+            </span>
+                <a href="{{ route('wholesaler.orders.index') }}" class="btn btn-light">
+                    <i class="material-icons-outlined me-1">arrow_back</i> All Orders
                 </a>
             </div>
         </div>
-    </div>
 
-    @if($orders->count() > 0)
-        <div class="row">
-            @foreach($orders as $order)
-                <div class="col-12 mb-4">
-                    <div class="order-card">
-                        <div class="order-header">
-                            <div class="order-info">
-                                <h4>Order #{{ $order->order_number }}</h4>
-                                <div class="order-date">
-                                    <i class="far fa-calendar-alt me-2"></i>
-                                    {{ $order->created_at->format('M d, Y - h:i A') }}
-                                </div>
-                            </div>
-                            <div class="order-status">
-                                <i class="fas fa-clock me-2"></i>
-                                {{ ucfirst($order->status) }}
-                            </div>
-                        </div>
+        {{-- Orders --}}
+        @if($orders->count())
+            <div class="card order-card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table align-middle table-hover">
+                            <thead>
+                            <tr>
+                                <th>Order</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Total</th>
+                                <th>Payment</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach($orders as $order)
+                                <tr>
+                                    <td class="fw-semibold">
+                                        <a href="{{ route('wholesaler.orders.show', $order->id) }}"
+                                           class="text-decoration-none text-primary">
+                                            #{{ $order->order_number }}
+                                        </a>
+                                    </td>
 
-                        <!-- Customer Information -->
-                        <div class="customer-info">
-                            <h6><i class="fas fa-user me-2"></i>Customer Information</h6>
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="info-item">
-                                        <i class="fas fa-user"></i>
-                                        <span>{{ $order->customer_name }}</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="info-item">
-                                        <i class="fas fa-envelope"></i>
-                                        <span>{{ $order->customer_email }}</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="info-item">
-                                        <i class="fas fa-phone"></i>
-                                        <span>{{ $order->customer_phone }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="info-item">
-                                <i class="fas fa-map-marker-alt"></i>
-                                <span>{{ $order->shipping_address }}</span>
-                            </div>
-                        </div>
+                                    <td>
+                                        <div class="fw-semibold">{{ $order->customer_name }}</div>
+                                        <small class="text-muted">{{ $order->customer_email }}</small>
+                                    </td>
 
-                        <!-- Order Items -->
-                        <div class="order-items">
-                            <h6 class="mb-3"><i class="fas fa-boxes me-2"></i>Order Items</h6>
-                            @foreach($order->orderItems as $item)
-                                <div class="order-item">
-                                    <div class="item-image">
-                                        @if($item->product && $item->product->image)
-                                            <img src="{{ asset('storage/' . $item->product->image) }}" alt="{{ $item->product_name }}">
-                                        @else
-                                            <div class="w-100 h-100 bg-light d-flex align-items-center justify-content-center">
-                                                <i class="fas fa-box text-muted"></i>
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <div class="item-details">
-                                        <div class="item-name">{{ $item->product_name }}</div>
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <span class="text-muted">Qty: {{ $item->quantity }}</span>
-                                                <span class="mx-2">•</span>
-                                                <span class="text-muted">Unit Price: Rs. {{ number_format($item->unit_price) }}</span>
-                                            </div>
-                                            <div class="item-price">
-                                                Rs. {{ number_format($item->total_price) }}
-                                            </div>
+                                    <td>{{ $order->created_at->format('d M Y') }}</td>
+
+                                    <td class="fw-bold">
+                                        Rs. {{ number_format($order->total_amount, 2) }}
+                                    </td>
+
+                                    <td>
+                                    <span class="status-pill {{ $order->payment_status === 'paid' ? 'status-paid' : 'status-pending' }}">
+                                        <i class="material-icons-outlined" style="font-size:16px">
+                                            {{ $order->payment_status === 'paid' ? 'check_circle' : 'schedule' }}
+                                        </i>
+                                        {{ ucfirst($order->payment_status) }}
+                                    </span>
+                                    </td>
+
+                                    <td class="text-end">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <a href="{{ route('wholesaler.orders.show', $order->id) }}"
+                                               class="btn btn-outline-primary action-btn"
+                                               title="View Order">
+                                                <i class="material-icons-outlined">visibility</i>
+                                            </a>
+
+                                            <button onclick="confirmOrder({{ $order->id }})"
+                                                    class="btn btn-success action-btn"
+                                                    title="Confirm Order">
+                                                <i class="material-icons-outlined">check</i>
+                                            </button>
                                         </div>
-                                    </div>
-                                </div>
+                                    </td>
+                                </tr>
                             @endforeach
-                        </div>
-
-                        <!-- Order Summary -->
-                        <div class="order-summary">
-                            <h6 class="mb-3"><i class="fas fa-receipt me-2"></i>Order Summary</h6>
-                            <div class="summary-row">
-                                <span>Subtotal:</span>
-                                <span>Rs. {{ number_format($order->subtotal) }}</span>
-                            </div>
-                            <div class="summary-row">
-                                <span>Shipping:</span>
-                                <span>Rs. {{ number_format($order->shipping) }}</span>
-                            </div>
-                            <div class="summary-row">
-                                <span>Tax:</span>
-                                <span>Rs. {{ number_format($order->tax) }}</span>
-                            </div>
-                            <div class="summary-row">
-                                <span>Total Amount:</span>
-                                <span class="fw-bold">Rs. {{ number_format($order->total_amount) }}</span>
-                            </div>
-                        </div>
-
-                        <!-- Payment Information -->
-                        <div class="order-summary mt-3">
-                            <h6 class="mb-3"><i class="fas fa-credit-card me-2"></i>Payment Information</h6>
-                            <div class="summary-row">
-                                <span>Payment Method:</span>
-                                <span>{{ ucfirst(str_replace('_', ' ', $order->payment_method)) }}</span>
-                            </div>
-                            <div class="summary-row">
-                                <span>Payment Status:</span>
-                                <span class="{{ $order->payment_status == 'paid' ? 'text-success' : 'text-warning' }}">
-                                    {{ ucfirst($order->payment_status) }}
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Order Notes -->
-                        @if($order->notes)
-                            <div class="order-summary mt-3">
-                                <h6 class="mb-3"><i class="fas fa-sticky-note me-2"></i>Order Notes</h6>
-                                <p class="mb-0">{{ $order->notes }}</p>
-                            </div>
-                        @endif
-
-                        <!-- Action Buttons -->
-                        <div class="order-actions">
-                            <button class="btn-confirm" onclick="updateOrderStatus({{ $order->id }}, 'confirmed')">
-                                <i class="fas fa-check-circle me-2"></i>
-                                Confirm Order
-                            </button>
-                            <button class="btn-cancel" onclick="updateOrderStatus({{ $order->id }}, 'cancelled')">
-                                <i class="fas fa-times-circle me-2"></i>
-                                Cancel Order
-                            </button>
-                            <a href="{{ route('wholesaler.wholesaler.orders.show', $order->id) }}" class="btn btn-outline-primary">
-                                <i class="fas fa-eye me-2"></i>
-                                View Details
-                            </a>
-                        </div>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            @endforeach
-        </div>
+            </div>
 
-        <!-- Pagination -->
-        @if($orders->hasPages())
-            <div class="d-flex justify-content-center mt-4">
+            <div class="mt-4">
                 {{ $orders->links() }}
             </div>
-        @endif
-    @else
-        <div class="empty-state">
-            <div class="empty-state-icon">
-                <i class="fas fa-clock"></i>
+
+        @else
+            {{-- Empty State --}}
+            <div class="card order-card">
+                <div class="card-body text-center py-5 empty-state">
+                    <i class="material-icons-outlined mb-3">check_circle</i>
+                    <h4>No Pending Orders</h4>
+                    <p class="text-muted mb-0">You're all caught up 🎉</p>
+                </div>
             </div>
-            <h4 class="fw-bold mb-3">No Pending Orders</h4>
-            <p class="text-muted mb-4">All orders have been processed</p>
-            <a href="{{ route('wholesaler.wholesaler.orders.index') }}" class="btn btn-primary">
-                <i class="fas fa-arrow-left me-2"></i>
-                View All Orders
-            </a>
-        </div>
-    @endif
+        @endif
+
+    </div>
 @endsection
 
+@push('script')
+    <script>
+        function confirmOrder(orderId) {
+            if (!confirm('Are you sure you want to confirm this order?')) return;
+
+            fetch(`/wholesaler/orders/${orderId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    status: 'confirmed',
+                    notes: 'Order confirmed from pending page'
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Something went wrong!');
+                    }
+                });
+        }
+    </script>
+@endpush
