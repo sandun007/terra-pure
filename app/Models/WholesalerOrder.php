@@ -3,12 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class WholesalerOrder extends Model
 {
-    protected $table = 'wholesaler_orders';
+    // SoftDeletes removed since deleted_at column doesn't exist in database
 
     protected $fillable = [
         'wholesaler_id',
@@ -17,47 +15,56 @@ class WholesalerOrder extends Model
         'tax',
         'shipping',
         'total_amount',
-        'payment_method',
-        'payment_status',
-        'status',
-        'shipping_address',
         'customer_name',
         'customer_email',
         'customer_phone',
-        'notes',
-        'order_date',
-        'status_updated_at',
-        'status_notes',
-        'cancelled_at'
+        'shipping_address',
+        'payment_method',
+        'payment_status',
+        'status',
+        'notes'
     ];
 
     protected $casts = [
-        'order_date' => 'datetime',
-        'status_updated_at' => 'datetime',
-        'cancelled_at' => 'datetime',
         'subtotal' => 'decimal:2',
         'tax' => 'decimal:2',
         'shipping' => 'decimal:2',
-        'total_amount' => 'decimal:2'
+        'total_amount' => 'decimal:2',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
-    public function wholesaler(): BelongsTo
+
+    // Relationships
+    public function wholesaler()
     {
         return $this->belongsTo(Wholesaler::class);
     }
 
-    public function orderItems(): HasMany
+    public function items()
     {
         return $this->hasMany(WholesalerOrderItem::class, 'order_id');
     }
 
-    public function getFormattedStatusAttribute()
+    // Accessors
+    public function getStatusColorAttribute()
     {
-        return ucfirst(str_replace('_', ' ', $this->status));
+        $colors = [
+            'pending' => 'warning',
+            'confirmed' => 'info',
+            'processing' => 'primary',
+            'shipped' => 'success',
+            'delivered' => 'success',
+            'completed' => 'success',
+            'cancelled' => 'danger',
+            'refunded' => 'secondary'
+        ];
+
+        return $colors[$this->status] ?? 'secondary';
     }
 
-    public function getFormattedPaymentStatusAttribute()
+    public function getPaymentMethodTextAttribute()
     {
-        return ucfirst(str_replace('_', ' ', $this->payment_status));
+        return ucwords(str_replace('_', ' ', $this->payment_method));
     }
 
     public function getFormattedTotalAttribute()
@@ -65,9 +72,34 @@ class WholesalerOrder extends Model
         return 'Rs. ' . number_format($this->total_amount, 2);
     }
 
-    // Accessor for backward compatibility - returns order_number
-    public function getOrderNoAttribute()
+    // Scopes
+    public function scopePending($query)
     {
-        return $this->order_number;
+        return $query->where('status', 'pending');
+    }
+
+    public function scopeConfirmed($query)
+    {
+        return $query->where('status', 'confirmed');
+    }
+
+    public function scopeProcessing($query)
+    {
+        return $query->where('status', 'processing');
+    }
+
+    public function scopeShipped($query)
+    {
+        return $query->where('status', 'shipped');
+    }
+
+    public function scopeCompleted($query)
+    {
+        return $query->where('status', 'completed');
+    }
+
+    public function scopeCancelled($query)
+    {
+        return $query->where('status', 'cancelled');
     }
 }

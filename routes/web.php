@@ -232,37 +232,41 @@ Route::middleware(['auth:wholesaler'])->group(function () {
         Route::get('/profile', [WholesalerController::class, 'profile'])->name('profile');
         Route::post('/profile/update', [WholesalerController::class, 'updateProfile'])->name('profile.update');
 
-        // ========== SHOP ROUTES (Public Facing) ==========
-        Route::prefix('shop')->name('shop.')->group(function () {
+// ========== SHOP ROUTES (Public Facing) ==========
+        Route::middleware(['auth:wholesaler'])->prefix('shop')->name('shop.')->group(function () {
             // Shop main page
             Route::get('/', [WholesalerShopController::class, 'index'])->name('index');
 
             // Product details
             Route::get('/product/{id}', [WholesalerShopController::class, 'showProduct'])->name('product.show');
 
-            // Add review
-            Route::post('/product/{id}/review', [WholesalerShopController::class, 'addReview'])->name('product.review');
+            // Order Now (Direct order creation)
+            Route::post('/order-now', [WholesalerShopController::class, 'orderNow'])->name('order.now');
 
             // Search products
             Route::get('/search', [WholesalerShopController::class, 'search'])->name('search');
+        });
 
-            // Cart Routes
-            Route::get('/cart', [WholesalerShopController::class, 'viewCart'])->name('cart');
-            Route::post('/cart/add', [WholesalerShopController::class, 'addToCart'])->name('cart.add');
-            Route::post('/cart/update', [WholesalerShopController::class, 'updateCart'])->name('cart.update');
-            Route::delete('/cart/remove/{id}', [WholesalerShopController::class, 'removeFromCart'])->name('cart.remove');
-            Route::post('/cart/clear', [WholesalerShopController::class, 'clearCart'])->name('cart.clear');
-            Route::get('/cart/count', [WholesalerShopController::class, 'getCartCount'])->name('cart.count');
-            Route::get('/cart/summary', [WholesalerShopController::class, 'getCartSummary'])->name('cart.summary');
+        // ========== ORDER MANAGEMENT ==========
+        Route::middleware(['auth:wholesaler'])->prefix('orders')->name('orders.')->group(function () {
+            Route::get('/', [WholesalerOrderController::class, 'index'])->name('index');
+            Route::get('/view/{id}', [WholesalerOrderController::class, 'show'])->name('show');
+            Route::put('/{id}/status', [WholesalerOrderController::class, 'updateStatus'])->name('updateStatus');
 
-            // Checkout Routes
-            Route::get('/checkout', [WholesalerShopController::class, 'checkout'])->name('checkout');
-            Route::post('/checkout/process', [WholesalerShopController::class, 'processCheckout'])->name('checkout.process');
-            Route::post('/buy-now', [WholesalerShopController::class, 'buyNow'])->name('buy.now');
+            // Status-based routes
+            Route::get('/status/pending', [WholesalerOrderController::class, 'pending'])->name('pending');
+            Route::get('/status/confirmed', [WholesalerOrderController::class, 'confirmed'])->name('confirmed');
+            Route::get('/status/processing', [WholesalerOrderController::class, 'processing'])->name('processing');
+            Route::get('/status/shipped', [WholesalerOrderController::class, 'shipped'])->name('shipped');
+            Route::get('/status/completed', [WholesalerOrderController::class, 'completed'])->name('completed');
+            Route::get('/status/cancelled', [WholesalerOrderController::class, 'cancelled'])->name('cancelled');
 
-            // Coupon Routes (Added from first block)
-            Route::post('/coupon/apply', [WholesalerShopController::class, 'applyCoupon'])->name('coupon.apply');
-            Route::post('/coupon/remove', [WholesalerShopController::class, 'removeCoupon'])->name('coupon.remove');
+            // Invoice routes
+            Route::get('/{id}/invoice/download', [WholesalerOrderController::class, 'downloadInvoice'])->name('invoice.download');
+            Route::get('/{id}/invoice/view', [WholesalerOrderController::class, 'viewInvoice'])->name('invoice.view');
+
+            // Export
+            Route::get('/export/csv', [WholesalerOrderController::class, 'export'])->name('export');
         });
 
         // ========== PRODUCT MANAGEMENT (Backend) ==========
@@ -298,32 +302,7 @@ Route::middleware(['auth:wholesaler'])->group(function () {
             Route::delete('/{id}', [WholesalerCategoryController::class, 'destroy'])->name('destroy');
         });
 
-        // ========== ORDER MANAGEMENT ==========
-        Route::prefix('orders')->name('orders.')->group(function () {
-            // Order details - FIXED: This should come before the status update route
-            Route::get('/{id}', [WholesalerOrderController::class, 'show'])->name('show');
 
-            // Status update - FIXED: Changed to PUT method
-            Route::put('/{id}/status', [WholesalerOrderController::class, 'updateStatus'])->name('updateStatus');
-
-            // Invoice actions
-            Route::get('/{id}/invoice/download', [WholesalerOrderController::class, 'downloadInvoice'])->name('invoice.download');
-            Route::get('/{id}/invoice/view', [WholesalerOrderController::class, 'viewInvoice'])->name('invoice.view');
-
-            // Status-based order pages
-            Route::get('/pending', [WholesalerOrderController::class, 'pending'])->name('pending');
-            Route::get('/confirmed', [WholesalerOrderController::class, 'confirmed'])->name('confirmed');
-            Route::get('/processing', [WholesalerOrderController::class, 'processing'])->name('processing');
-            Route::get('/shipped', [WholesalerOrderController::class, 'shipped'])->name('shipped');
-            Route::get('/completed', [WholesalerOrderController::class, 'completed'])->name('completed');
-            Route::get('/cancelled', [WholesalerOrderController::class, 'cancelled'])->name('cancelled');
-
-            // Export orders
-            Route::get('/export', [WholesalerOrderController::class, 'export'])->name('export');
-
-            // Main orders index (MUST BE LAST)
-            Route::get('/', [WholesalerOrderController::class, 'index'])->name('index');
-        });
 
         // ========== PAYMENT MANAGEMENT ==========
         Route::prefix('payments')->name('payments.')->group(function () {

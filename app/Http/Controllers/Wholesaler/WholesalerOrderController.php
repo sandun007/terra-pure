@@ -3,13 +3,11 @@
 namespace App\Http\Controllers\Wholesaler;
 
 use App\Http\Controllers\Controller;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\WholesalerShop;
+use App\Models\WholesalerOrder;
+use App\Models\WholesalerOrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Barryryh\Pdf\Facades\Pdf;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class WholesalerOrderController extends Controller
 {
@@ -21,186 +19,56 @@ class WholesalerOrderController extends Controller
         try {
             $wholesaler = Auth::guard('wholesaler')->user();
 
-            $query = Order::where('wholesaler_id', $wholesaler->id)
-                ->with(['orderItems.product'])
-                ->orderBy('created_at', 'desc');
+            $query = WholesalerOrder::where('wholesaler_id', $wholesaler->id)
+                ->with(['items'])
+                ->latest();
 
             // Filter by status
             if ($request->has('status') && $request->status != 'all') {
                 $query->where('status', $request->status);
             }
 
-            // Filter by payment status
-            if ($request->has('payment_status') && $request->payment_status != 'all') {
-                $query->where('payment_status', $request->payment_status);
-            }
-
-            // Filter by date range
-            if ($request->has('date_from') && $request->date_from) {
+            // Filter by date
+            if ($request->has('date_from')) {
                 $query->whereDate('created_at', '>=', $request->date_from);
             }
-
-            if ($request->has('date_to') && $request->date_to) {
+            if ($request->has('date_to')) {
                 $query->whereDate('created_at', '<=', $request->date_to);
             }
 
-            $orders = $query->paginate(10);
+            // Search
+            if ($request->has('search') && $request->search) {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->where('order_number', 'like', "%{$search}%")
+                        ->orWhere('customer_name', 'like', "%{$search}%")
+                        ->orWhere('customer_email', 'like', "%{$search}%");
+                });
+            }
 
-            // Statistics
-            $totalOrders = Order::where('wholesaler_id', $wholesaler->id)->count();
-            $pendingOrders = Order::where('wholesaler_id', $wholesaler->id)
-                ->where('status', 'pending')
-                ->count();
-            $completedOrders = Order::where('wholesaler_id', $wholesaler->id)
-                ->where('status', 'completed')
-                ->count();
-            $totalRevenue = Order::where('wholesaler_id', $wholesaler->id)
+            $orders = $query->paginate(20)->withQueryString();
+
+            // Get counts for status badges
+            $statusCounts = [
+                'all' => WholesalerOrder::where('wholesaler_id', $wholesaler->id)->count(),
+                'pending' => WholesalerOrder::where('wholesaler_id', $wholesaler->id)->where('status', 'pending')->count(),
+                'confirmed' => WholesalerOrder::where('wholesaler_id', $wholesaler->id)->where('status', 'confirmed')->count(),
+                'processing' => WholesalerOrder::where('wholesaler_id', $wholesaler->id)->where('status', 'processing')->count(),
+                'shipped' => WholesalerOrder::where('wholesaler_id', $wholesaler->id)->where('status', 'shipped')->count(),
+                'completed' => WholesalerOrder::where('wholesaler_id', $wholesaler->id)->where('status', 'completed')->count(),
+                'cancelled' => WholesalerOrder::where('wholesaler_id', $wholesaler->id)->where('status', 'cancelled')->count(),
+            ];
+
+            // Calculate total revenue
+            $totalRevenue = WholesalerOrder::where('wholesaler_id', $wholesaler->id)
                 ->where('status', 'completed')
                 ->sum('total_amount');
 
-            return view('wholesaler.orders.index', compact(
-                'orders',
-                'totalOrders',
-                'pendingOrders',
-                'completedOrders',
-                'totalRevenue'
-            ));
+            return view('wholesaler.orders.index', compact('orders', 'statusCounts', 'totalRevenue'));
 
         } catch (\Exception $e) {
-            \Log::error('Order index error: ' . $e->getMessage());
+            \Log::error('Orders index error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Error loading orders: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Display pending orders
-     */
-    public function pending()
-    {
-        try {
-            $wholesaler = Auth::guard('wholesaler')->user();
-
-            $orders = Order::where('wholesaler_id', $wholesaler->id)
-                ->where('status', 'pending')
-                ->with(['orderItems.product'])
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
-
-            return view('wholesaler.orders.pending', compact('orders'));
-
-        } catch (\Exception $e) {
-            \Log::error('Pending orders error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error loading pending orders: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Display confirmed orders
-     */
-    public function confirmed()
-    {
-        try {
-            $wholesaler = Auth::guard('wholesaler')->user();
-
-            $orders = Order::where('wholesaler_id', $wholesaler->id)
-                ->where('status', 'confirmed')
-                ->with(['orderItems.product'])
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
-
-            return view('wholesaler.orders.confirmed', compact('orders'));
-
-        } catch (\Exception $e) {
-            \Log::error('Confirmed orders error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error loading confirmed orders: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Display completed orders
-     */
-    public function completed()
-    {
-        try {
-            $wholesaler = Auth::guard('wholesaler')->user();
-
-            $orders = Order::where('wholesaler_id', $wholesaler->id)
-                ->where('status', 'completed')
-                ->with(['orderItems.product'])
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
-
-            return view('wholesaler.orders.completed', compact('orders'));
-
-        } catch (\Exception $e) {
-            \Log::error('Completed orders error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error loading completed orders: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Display processing orders
-     */
-    public function processing()
-    {
-        try {
-            $wholesaler = Auth::guard('wholesaler')->user();
-
-            $orders = Order::where('wholesaler_id', $wholesaler->id)
-                ->where('status', 'processing')
-                ->with(['orderItems.product'])
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
-
-            return view('wholesaler.orders.processing', compact('orders'));
-
-        } catch (\Exception $e) {
-            \Log::error('Processing orders error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error loading processing orders: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Display shipped orders
-     */
-    public function shipped()
-    {
-        try {
-            $wholesaler = Auth::guard('wholesaler')->user();
-
-            $orders = Order::where('wholesaler_id', $wholesaler->id)
-                ->where('status', 'shipped')
-                ->with(['orderItems.product'])
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
-
-            return view('wholesaler.orders.shipped', compact('orders'));
-
-        } catch (\Exception $e) {
-            \Log::error('Shipped orders error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error loading shipped orders: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Display cancelled orders
-     */
-    public function cancelled()
-    {
-        try {
-            $wholesaler = Auth::guard('wholesaler')->user();
-
-            $orders = Order::where('wholesaler_id', $wholesaler->id)
-                ->where('status', 'cancelled')
-                ->with(['orderItems.product'])
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
-
-            return view('wholesaler.orders.cancelled', compact('orders'));
-
-        } catch (\Exception $e) {
-            \Log::error('Cancelled orders error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error loading cancelled orders: ' . $e->getMessage());
         }
     }
 
@@ -212,17 +80,15 @@ class WholesalerOrderController extends Controller
         try {
             $wholesaler = Auth::guard('wholesaler')->user();
 
-            $order = Order::where('wholesaler_id', $wholesaler->id)
-                ->with(['orderItems.product'])
+            $order = WholesalerOrder::where('wholesaler_id', $wholesaler->id)
+                ->with(['items.product'])
                 ->findOrFail($id);
 
-            $shop = WholesalerShop::where('wholesaler_id', $wholesaler->id)->first();
-
-            return view('wholesaler.orders.show', compact('order', 'shop'));
+            return view('wholesaler.orders.show', compact('order'));
 
         } catch (\Exception $e) {
-            \Log::error('Order details error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Order not found: ' . $e->getMessage());
+            \Log::error('Show order error: ' . $e->getMessage());
+            return redirect()->route('wholesaler.orders.index')->with('error', 'Order not found');
         }
     }
 
@@ -232,44 +98,176 @@ class WholesalerOrderController extends Controller
     public function updateStatus(Request $request, $id)
     {
         try {
-            $request->validate([
-                'status' => 'required|in:pending,confirmed,processing,shipped,completed,cancelled',
-                'notes' => 'nullable|string|max:500',
-            ]);
-
             $wholesaler = Auth::guard('wholesaler')->user();
 
-            $order = Order::where('wholesaler_id', $wholesaler->id)
+            $request->validate([
+                'status' => 'required|in:pending,confirmed,processing,shipped,delivered,completed,cancelled,refunded',
+                'notes' => 'nullable|string|max:500'
+            ]);
+
+            $order = WholesalerOrder::where('wholesaler_id', $wholesaler->id)
                 ->findOrFail($id);
 
             $oldStatus = $order->status;
-            $order->update([
-                'status' => $request->status,
-                'status_notes' => $request->notes,
-                'status_updated_at' => now(),
-            ]);
+            $order->status = $request->status;
 
-            // If order is cancelled, restore stock
-            if ($request->status == 'cancelled' && $oldStatus != 'cancelled') {
-                foreach ($order->orderItems as $item) {
-                    if ($item->product) {
-                        $item->product->increment('qty', $item->quantity);
-                    }
-                }
+            if ($request->has('notes') && $request->notes) {
+                $order->notes = $request->notes;
             }
+
+            $order->save();
+
+            \Log::info("Order #{$order->order_number} status changed from {$oldStatus} to {$request->status}");
 
             return response()->json([
                 'success' => true,
-                'message' => 'Order status updated successfully!',
-                'status' => $order->status
+                'message' => 'Order status updated successfully',
+                'status' => $order->status,
+                'status_text' => ucfirst($order->status)
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Update order status error: ' . $e->getMessage());
+            \Log::error('Update status error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Error updating order status: ' . $e->getMessage()
+                'message' => 'Error updating status: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Display pending orders
+     */
+    public function pending()
+    {
+        try {
+            $wholesaler = Auth::guard('wholesaler')->user();
+
+            $orders = WholesalerOrder::where('wholesaler_id', $wholesaler->id)
+                ->where('status', 'pending')
+                ->with(['items'])
+                ->latest()
+                ->paginate(20);
+
+            return view('wholesaler.orders.pending', compact('orders'));
+
+        } catch (\Exception $e) {
+            \Log::error('Pending orders error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error loading pending orders');
+        }
+    }
+
+    /**
+     * Display confirmed orders
+     */
+    public function confirmed()
+    {
+        try {
+            $wholesaler = Auth::guard('wholesaler')->user();
+
+            $orders = WholesalerOrder::where('wholesaler_id', $wholesaler->id)
+                ->where('status', 'confirmed')
+                ->with(['items'])
+                ->latest()
+                ->paginate(20);
+
+            return view('wholesaler.orders.confirmed', compact('orders'));
+
+        } catch (\Exception $e) {
+            \Log::error('Confirmed orders error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error loading confirmed orders');
+        }
+    }
+
+    /**
+     * Display processing orders
+     */
+    public function processing()
+    {
+        try {
+            $wholesaler = Auth::guard('wholesaler')->user();
+
+            $orders = WholesalerOrder::where('wholesaler_id', $wholesaler->id)
+                ->where('status', 'processing')
+                ->with(['items'])
+                ->latest()
+                ->paginate(20);
+
+            return view('wholesaler.orders.processing', compact('orders'));
+
+        } catch (\Exception $e) {
+            \Log::error('Processing orders error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error loading processing orders');
+        }
+    }
+
+    /**
+     * Display shipped orders
+     */
+    public function shipped()
+    {
+        try {
+            $wholesaler = Auth::guard('wholesaler')->user();
+
+            $orders = WholesalerOrder::where('wholesaler_id', $wholesaler->id)
+                ->where('status', 'shipped')
+                ->with(['items'])
+                ->latest()
+                ->paginate(20);
+
+            return view('wholesaler.orders.shipped', compact('orders'));
+
+        } catch (\Exception $e) {
+            \Log::error('Shipped orders error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error loading shipped orders');
+        }
+    }
+
+    /**
+     * Display completed orders
+     */
+    public function completed()
+    {
+        try {
+            $wholesaler = Auth::guard('wholesaler')->user();
+
+            $orders = WholesalerOrder::where('wholesaler_id', $wholesaler->id)
+                ->where('status', 'completed')
+                ->with(['items'])
+                ->latest()
+                ->paginate(20);
+
+            $totalRevenue = WholesalerOrder::where('wholesaler_id', $wholesaler->id)
+                ->where('status', 'completed')
+                ->sum('total_amount');
+
+            return view('wholesaler.orders.completed', compact('orders', 'totalRevenue'));
+
+        } catch (\Exception $e) {
+            \Log::error('Completed orders error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error loading completed orders');
+        }
+    }
+
+    /**
+     * Display cancelled orders
+     */
+    public function cancelled()
+    {
+        try {
+            $wholesaler = Auth::guard('wholesaler')->user();
+
+            $orders = WholesalerOrder::where('wholesaler_id', $wholesaler->id)
+                ->where('status', 'cancelled')
+                ->with(['items'])
+                ->latest()
+                ->paginate(20);
+
+            return view('wholesaler.orders.cancelled', compact('orders'));
+
+        } catch (\Exception $e) {
+            \Log::error('Cancelled orders error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error loading cancelled orders');
         }
     }
 
@@ -281,19 +279,15 @@ class WholesalerOrderController extends Controller
         try {
             $wholesaler = Auth::guard('wholesaler')->user();
 
-            $order = Order::where('wholesaler_id', $wholesaler->id)
-                ->with(['orderItems.product'])
+            $order = WholesalerOrder::where('wholesaler_id', $wholesaler->id)
+                ->with(['items.product'])
                 ->findOrFail($id);
 
-            $shop = WholesalerShop::where('wholesaler_id', $wholesaler->id)->first();
-
-            $pdf = Pdf::loadView('wholesaler.orders.invoice', compact('order', 'shop'));
-
-            return $pdf->download("invoice-{$order->order_no}.pdf");
+            return Pdf::loadView('wholesaler.orders.invoice', compact('order'))->download("invoice-{$order->order_number}.pdf");
 
         } catch (\Exception $e) {
             \Log::error('Download invoice error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error generating invoice: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error generating invoice');
         }
     }
 
@@ -305,17 +299,15 @@ class WholesalerOrderController extends Controller
         try {
             $wholesaler = Auth::guard('wholesaler')->user();
 
-            $order = Order::where('wholesaler_id', $wholesaler->id)
-                ->with(['orderItems.product'])
+            $order = WholesalerOrder::where('wholesaler_id', $wholesaler->id)
+                ->with(['items.product'])
                 ->findOrFail($id);
 
-            $shop = WholesalerShop::where('wholesaler_id', $wholesaler->id)->first();
-
-            return view('wholesaler.orders.invoice', compact('order', 'shop'));
+            return view('wholesaler.orders.invoice-view', compact('order'));
 
         } catch (\Exception $e) {
             \Log::error('View invoice error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error loading invoice: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error loading invoice');
         }
     }
 
@@ -327,41 +319,46 @@ class WholesalerOrderController extends Controller
         try {
             $wholesaler = Auth::guard('wholesaler')->user();
 
-            $orders = Order::where('wholesaler_id', $wholesaler->id)
-                ->with(['orderItems.product'])
-                ->orderBy('created_at', 'desc')
+            $orders = WholesalerOrder::where('wholesaler_id', $wholesaler->id)
+                ->with(['items'])
+                ->latest()
                 ->get();
 
-            $fileName = 'orders_' . date('Y-m-d_H-i-s') . '.csv';
-
+            $fileName = 'orders-' . date('Y-m-d') . '.csv';
             $headers = [
-                'Content-Type' => 'text/csv',
-                'Content-Disposition' => "attachment; filename=$fileName",
+                "Content-type" => "text/csv",
+                "Content-Disposition" => "attachment; filename=$fileName",
+                "Pragma" => "no-cache",
+                "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+                "Expires" => "0"
             ];
 
-            $callback = function () use ($orders) {
+            $callback = function() use ($orders) {
                 $file = fopen('php://output', 'w');
 
-                // Add CSV headers
                 fputcsv($file, [
                     'Order Number',
-                    'Customer',
+                    'Date',
+                    'Customer Name',
+                    'Customer Email',
+                    'Customer Phone',
                     'Total Amount',
                     'Status',
-                    'Payment Status',
-                    'Order Date',
-                    'Items Count'
+                    'Payment Method',
+                    'Payment Status'
                 ]);
 
                 foreach ($orders as $order) {
                     fputcsv($file, [
-                        $order->order_no,
-                        $order->customer_name,
-                        $order->total_amount,
-                        $order->status,
-                        $order->payment_status,
+                        $order->order_number,
                         $order->created_at->format('Y-m-d H:i:s'),
-                        $order->orderItems->count()
+                        $order->customer_name,
+                        $order->customer_email,
+                        $order->customer_phone,
+                        $order->total_amount,
+                        ucfirst($order->status),
+                        ucwords(str_replace('_', ' ', $order->payment_method)),
+                        ucfirst($order->payment_status)
                     ]);
                 }
 
@@ -372,7 +369,7 @@ class WholesalerOrderController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Export orders error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error exporting orders: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error exporting orders');
         }
     }
 }

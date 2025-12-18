@@ -3,12 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class WholesalerOrderItem extends Model
 {
-    protected $table = 'wholesaler_order_items';
-
     protected $fillable = [
         'order_id',
         'product_id',
@@ -23,13 +20,13 @@ class WholesalerOrderItem extends Model
         'total_price' => 'decimal:2'
     ];
 
-    public function order(): BelongsTo
+    public function order()
     {
-        return $this->belongsTo(Order::class);
+        return $this->belongsTo(WholesalerOrder::class);
     }
 
-    public function product(): BelongsTo
+    public function product()
     {
-        return $this->belongsTo(WholesalerProduct::class, 'product_id');
+        return $this->belongsTo(WholesalerProduct::class);
     }
 }
