@@ -102,4 +102,10 @@ class WholesalerOrder extends Model
     {
         return $query->where('status', 'cancelled');
     }
+    // In WholesalerOrder model
+
+    public function statusLogs()
+    {
+        return $this->hasMany(OrderStatusLog::class, 'order_id');
+    }
 }

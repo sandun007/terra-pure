@@ -27,6 +27,7 @@ class WholesalerOrderItem extends Model
 
     public function product()
     {
-        return $this->belongsTo(WholesalerProduct::class);
+        return $this->belongsTo(WholesalerProduct::class, 'product_id');
     }
+
 }
