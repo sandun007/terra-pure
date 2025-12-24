@@ -209,16 +209,47 @@ Route::middleware('auth:admin')->group(function(){
 
 Route::prefix('employee')->group(function(){
     Route::middleware('auth:employee')->group(function(){
-    Route::get('/',[EmployeeController::class,'dashboard'])->name('employee.dashboard');
-     Route::get('/print/{id}',[EmployeeController::class,'delivery_label_print'])->name('employee.print-out');
-        Route::get('/{id}', [EmployeeController::class, 'view_order'])->name('employee.order_view');
-    });
+        Route::get('/',[EmployeeController::class,'dashboard'])->name('employee.dashboard');
+        Route::post('/logout', [LoginController::class, 'logout'])->name('employee.logout');
 
+        // Wholesaler Management
+        Route::prefix('wholesaler')->name('employee.wholesaler.')->group(function() {
+            // Products
+            Route::get('/products', [EmployeeController::class, 'wholesalerProducts'])->name('products');
+            Route::post('/products/price/update', [EmployeeController::class, 'updateProductPrice'])->name('price-product-update');
+            Route::post('/products/bulk/update', [EmployeeController::class, 'bulkPriceUpdate'])->name('bulk-price-update');
+            Route::get('/products/view/{id}', [EmployeeController::class, 'viewProduct'])->name('product-view');
+            // Orders
+            Route::get('/orders', [EmployeeController::class, 'wholesalerOrders'])->name('orders');
+            Route::get('/orders/view/{id}', [EmployeeController::class, 'viewWholesalerOrder'])->name('order-view');
+        });
+
+        // Seller Management
+        Route::prefix('seller')->name('employee.seller.')->group(function() {
+            // Orders
+            Route::get('/orders', [EmployeeController::class, 'sellerOrders'])->name('orders');
+            Route::post('/orders/status/update/{id}', [EmployeeController::class, 'updateOrderStatus'])->name('orders.status-update');
+            Route::get('/orders/view/{id}', [EmployeeController::class, 'viewOrder'])->name('order-view');
+        });
+
+        // Analytics
+        Route::get('/analytics', [EmployeeController::class, 'analytics'])->name('employee.analytics');
+
+        // Profile
+        Route::get('/profile', [EmployeeController::class, 'profile'])->name('employee.profile');
+        Route::post('/profile/update', [EmployeeController::class, 'updateProfile'])->name('employee.profile-update');
+
+        // Reports
+        Route::get('/export/report', [EmployeeController::class, 'exportReport'])->name('employee.export.report');
+
+        // Print
+        Route::get('/print/{id}', [EmployeeController::class, 'delivery_label_print'])->name('print.out');
+    });
 });
 
 
 // ========== AUTHENTICATED WHOLESALER ROUTES ==========
-Route::middleware(['auth:wholesaler'])->group(function () {
+Route::middleware('auth:wholesaler')->group(function () {
     Route::prefix('wholesaler')->name('wholesaler.')->group(function () {
 
         // ========== MAIN DASHBOARD & AUTH ==========
@@ -233,7 +264,7 @@ Route::middleware(['auth:wholesaler'])->group(function () {
         Route::post('/profile/update', [WholesalerController::class, 'updateProfile'])->name('profile.update');
 
 // ========== SHOP ROUTES (Public Facing) ==========
-        Route::middleware(['auth:wholesaler'])->prefix('shop')->name('shop.')->group(function () {
+        Route::middleware('auth:wholesaler')->prefix('shop')->name('shop.')->group(function () {
             // Shop main page
             Route::get('/', [WholesalerShopController::class, 'index'])->name('index');
 
@@ -248,7 +279,7 @@ Route::middleware(['auth:wholesaler'])->group(function () {
         });
 
         // ========== ORDER MANAGEMENT ==========
-        Route::middleware(['auth:wholesaler'])->prefix('orders')->name('orders.')->group(function () {
+        Route::middleware('auth:wholesaler')->prefix('orders')->name('orders.')->group(function () {
             Route::get('/', [WholesalerOrderController::class, 'index'])->name('index');
             Route::get('/view/{id}', [WholesalerOrderController::class, 'show'])->name('show');
             Route::put('/{id}/status', [WholesalerOrderController::class, 'updateStatus'])->name('updateStatus');
