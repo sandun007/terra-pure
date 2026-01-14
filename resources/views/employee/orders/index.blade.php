@@ -1,4 +1,4 @@
-@extends('employee.layouts.app')
+@extends('employee.layout.app')
 
 @push('title')
     Wholesaler Orders

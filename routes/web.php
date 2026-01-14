@@ -23,33 +23,26 @@ use App\Http\Controllers\Wholesaler\WholesalerPaymentController;
 use App\Http\Controllers\Wholesaler\WholesalerProductController;
 use App\Http\Controllers\Wholesaler\WholesalerShopController;
 use App\Http\Controllers\WholesalerController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\Employee\EmployeeWholesalerOrderController;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\EmployeeController;
-
-
 
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
 */
 
 Route::get('/', [PageController::class, 'login'])->name('login');
 Route::post('/',[LoginController::class,'loginCheck'])->name('login.check');
 
+// ========== ADMIN ROUTES ==========
 Route::middleware('auth:admin')->group(function(){
     Route::prefix('admin')->group(function () {
-
         Route::post('/logout', [LoginController::class, 'logout'])->name('admin.logout');
-
-        Route::get('/admin/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('admin.dashboard');
-        Route::get('/admin/dashboard/chart-data', [App\Http\Controllers\Admin\DashboardController::class, 'getChartData'])->name('admin.dashboard.chart-data');
+        Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('admin.dashboard');
+        Route::get('/dashboard/chart-data', [App\Http\Controllers\Admin\DashboardController::class, 'getChartData'])->name('admin.dashboard.chart-data');
         Route::get('/', [PageController::class, 'dashboard'])->name('admin.dashboard');
         Route::get('/create',[AdminController::class,'create'])->name('admin.create');
         Route::post('/',[AdminController::class,'store'])->name('admin.store');
@@ -60,7 +53,7 @@ Route::middleware('auth:admin')->group(function(){
             Route::post('/create', [ProductController::class, 'store'])->name('product.store');
             Route::get('/edit/{id}', [ProductController::class, 'edit'])->name('product.edit');
             Route::post('/update/{id}', [ProductController::class, 'update'])->name('product.update');
-            Route::get('/view/{id}', [ProductController::class, 'product_view'])->name('product.view'); // Added this line
+            Route::get('/view/{id}', [ProductController::class, 'product_view'])->name('product.view');
             Route::get('/delete/{id}', [ProductController::class, 'delete'])->name('product.delete');
         });
 
@@ -85,9 +78,8 @@ Route::middleware('auth:admin')->group(function(){
             Route::get('/delete/{id}', [SellerController::class, 'delete'])->name('seller.delete');
             Route::get('/{id}',[SellerController::class,'edit'])->name('admin.seller.edit');
             Route::post('/update',[SellerController::class,'update'])->name('admin.seller.update');
-
-
         });
+
         Route::prefix('order')->group(function () {
             Route::get('new-order', [SellerController::class, 'new_order'])->name('admin.new-order');
             Route::get('/complete-order', [OrderController::class, 'completeOrder'])->name('complete-order');
@@ -99,38 +91,34 @@ Route::middleware('auth:admin')->group(function(){
         Route::prefix('stock')->group(function () {
             Route::get('/low-stock', [StockController::class, 'low_stock'])->name('low-stock');
         });
+
         Route::prefix('shop')->group(function () {
             Route::get('/',[ShopController::class,'index'])->name('shop.index');
             Route::get('product/{id}', [ProductController::class, 'product_view'])->name('product.product_view');
-
         });
 
-          Route::prefix('employee')->group(function () {
+        Route::prefix('employee')->group(function () {
             Route::get('/',[EmployeeController::class,'index'])->name('employee.list');
             Route::get('/create',[EmployeeController::class,'create'])->name('employee.create');
             Route::post('/',[EmployeeController::class,'store'])->name('employee.store');
         });
-
-
     });
-
 });
 
-    Route::middleware('auth:seller')->group(function(){
+// ========== SELLER ROUTES ==========
+Route::middleware('auth:seller')->group(function(){
     Route::prefix('seller')->group(function () {
         Route::post('/logout', [LoginController::class, 'logout'])->name('seller.logout');
         Route::get('/', [SellerController::class, 'dashboard'])->name('seller.dashboard');
 
-
         Route::prefix('shop')->group(function () {
-           Route::get('/',[SellerController::class,'shop'])->name('seller.shop');
+            Route::get('/',[SellerController::class,'shop'])->name('seller.shop');
             Route::get('product/{id}', [ProductController::class, 'product_view'])->name('seller.product.product_view');
-
         });
 
         Route::prefix('order')->group(function () {
             Route::get('new-order', [SellerController::class, 'new_order'])->name('seller.new-order');
-             Route::post('/', [OrderController::class, 'store'])->name('seller.order.store');
+            Route::post('/', [OrderController::class, 'store'])->name('seller.order.store');
             Route::get('/complete-order', [SellerController::class, 'completeOrder'])->name('seller.complete-order');
             Route::get('/return-order', [SellerController::class, 'returnOrder'])->name('seller.return-order');
             Route::get('/rescheduling-order', [SellerController::class, 'reschedulingOrder'])->name('seller.rescheduling-order');
@@ -146,43 +134,34 @@ Route::middleware('auth:admin')->group(function(){
             Route::get('/withdraw',[SellerPaymentController::class,'withdraw'])->name('seller.withdraw');
             Route::get('/history',[SellerPaymentController::class,'payment_history'])->name('seller.payment_history');
         });
-         Route::prefix('call')->group(function (){
+
+        Route::prefix('call')->group(function (){
             Route::get('/',[CallController::class,'index'])->name('call.index');
             Route::get('/view/{id}',[CallController::class,'call_conform_form'])->name('call.view');
             Route::post('/',[CallController::class,'store'])->name('call.store');
             Route::get('/conform_call_list',[CallController::class,'conform_call_list'])->name('call.conform');
-             Route::get('/reject_call_list',[CallController::class,'reject_call_list'])->name('call.reject');
-             Route::get('/not_answer_call_list',[CallController::class,'not_answer_call_list'])->name('call.not_answer_call_list');
-                Route::get('/other_call_list',[CallController::class,'other_call_list'])->name('call.other_call_list');
+            Route::get('/reject_call_list',[CallController::class,'reject_call_list'])->name('call.reject');
+            Route::get('/not_answer_call_list',[CallController::class,'not_answer_call_list'])->name('call.not_answer_call_list');
+            Route::get('/other_call_list',[CallController::class,'other_call_list'])->name('call.other_call_list');
+            Route::get('/export-orders', function () {
+                $seller = Auth::user();
+                $orders = Order::where('seller_no', $seller->code)
+                    ->where('status', 'Conform')
+                    ->where('download_status', 0)
+                    ->get();
 
+                if ($orders->isEmpty()) {
+                    return back()->with('error', 'No orders to export.');
+                }
 
-
-
-             Route::get('/export-orders', function () {
-                 $seller = Auth::user();
-
-                 // 1. Get the orders where download_status = 0
-                 $orders = Order::where('seller_no', $seller->code)
-                     ->where('status', 'Conform')
-                     ->where('download_status', 0)
-                     ->get();
-
-                 if ($orders->isEmpty()) {
-                     return back()->with('error', 'No orders to export.');
-                 }
-
-                 // 2. Update download_status to 1
-                 $orderIds = $orders->pluck('id');
-                 Order::whereIn('id', $orderIds)->update(['download_status' => 1]);
-
-                 // 3. Export the orders
-                 $date = Carbon::now()->format('Y-m-d');
-                 $fileName = 'conform_orders_' . $date . '.xlsx';
-
-                 return Excel::download(new OrdersExport($orders), $fileName);
-             })->name('orders.export');
-
+                $orderIds = $orders->pluck('id');
+                Order::whereIn('id', $orderIds)->update(['download_status' => 1]);
+                $date = Carbon::now()->format('Y-m-d');
+                $fileName = 'conform_orders_' . $date . '.xlsx';
+                return Excel::download(new OrdersExport($orders), $fileName);
+            })->name('orders.export');
         });
+
         Route::prefix('product')->group(function (){
             Route::get('/list', [SellerProductController::class, 'index'])->name('seller.product.index');
             Route::get('/', [SellerProductController::class, 'create'])->name('seller.product.create');
@@ -207,52 +186,87 @@ Route::middleware('auth:admin')->group(function(){
     });
 });
 
-Route::prefix('employee')->group(function(){
-    Route::middleware('auth:employee')->group(function(){
-        Route::get('/',[EmployeeController::class,'dashboard'])->name('employee.dashboard');
-        Route::post('/logout', [LoginController::class, 'logout'])->name('employee.logout');
 
-        // Wholesaler Management
-        Route::prefix('wholesaler')->name('employee.wholesaler.')->group(function() {
-            // Products
-            Route::get('/products', [EmployeeController::class, 'wholesalerProducts'])->name('products');
-            Route::post('/products/price/update', [EmployeeController::class, 'updateProductPrice'])->name('price-product-update');
-            Route::post('/products/bulk/update', [EmployeeController::class, 'bulkPriceUpdate'])->name('bulk-price-update');
-            Route::get('/products/view/{id}', [EmployeeController::class, 'viewProduct'])->name('product-view');
-            // Orders
-            Route::get('/orders', [EmployeeController::class, 'wholesalerOrders'])->name('orders');
-            Route::get('/orders/view/{id}', [EmployeeController::class, 'viewWholesalerOrder'])->name('order-view');
-        });
+// ========== EMPLOYEE ROUTES ==========
+Route::prefix('employee')->middleware('auth:employee')->group(function(){
+    // Dashboard
+    Route::get('/', [EmployeeController::class, 'dashboard'])->name('employee.dashboard');
+    Route::post('/logout', [LoginController::class, 'logout'])->name('employee.logout');
 
-        // Seller Management
-        Route::prefix('seller')->name('employee.seller.')->group(function() {
-            // Orders
-            Route::get('/orders', [EmployeeController::class, 'sellerOrders'])->name('orders');
-            Route::post('/orders/status/update/{id}', [EmployeeController::class, 'updateOrderStatus'])->name('orders.status-update');
-            Route::get('/orders/view/{id}', [EmployeeController::class, 'viewOrder'])->name('order-view');
-        });
+    // Profile Routes
+    Route::get('/profile', [EmployeeController::class, 'profile'])->name('profile');
+    Route::post('/profile/update', [EmployeeController::class, 'updateProfile'])->name('profile.update');
+    Route::get('/profile/data', [EmployeeController::class, 'getProfileData'])->name('profile.data');
+    Route::post('/profile/image/upload', [EmployeeController::class, 'uploadProfileImage'])->name('profile.image.upload');
+    Route::delete('/profile/image/delete', [EmployeeController::class, 'deleteProfileImage'])->name('profile.image.delete');
 
-        // Analytics
-        Route::get('/analytics', [EmployeeController::class, 'analytics'])->name('employee.analytics');
+    // Wholesaler Management - PRICE UPDATE ROUTES
+    Route::prefix('wholesaler')->name('employee.wholesaler.')->group(function() {
+        // Products - List and View
+        Route::get('/products', [EmployeeController::class, 'wholesalerProducts'])->name('products');
+        Route::get('/product/{id}', [EmployeeController::class, 'viewProduct'])->name('product-view');
+        Route::get('/price-update/{id}', [EmployeeController::class, 'showPriceUpdateForm'])->name('price-update-form');
+        Route::post('/price-update', [EmployeeController::class, 'updateProductPrice'])->name('price-update');
+        Route::post('/bulk-price-update', [EmployeeController::class, 'bulkPriceUpdate'])->name('bulk-price-update');
 
-        // Profile
-        Route::get('/profile', [EmployeeController::class, 'profile'])->name('employee.profile');
-        Route::post('/profile/update', [EmployeeController::class, 'updateProfile'])->name('employee.profile-update');
-
-        // Reports
-        Route::get('/export/report', [EmployeeController::class, 'exportReport'])->name('employee.export.report');
-
-        // Print
-        Route::get('/print/{id}', [EmployeeController::class, 'delivery_label_print'])->name('print.out');
+        // Print route
+        Route::get('/print/{id}', [EmployeeWholesalerOrderController::class, 'printDeliveryLabel'])->name('print.out');
     });
+
+    // Wholesaler Orders Management
+    Route::prefix('wholesaler-orders')->name('employee.wholesaler_orders.')->group(function() {
+        Route::get('/', [EmployeeWholesalerOrderController::class, 'index'])->name('index');
+        Route::get('/view/{id}', [EmployeeWholesalerOrderController::class, 'show'])->name('show');
+        Route::put('/{id}/status', [EmployeeWholesalerOrderController::class, 'updateStatus'])->name('updateStatus');
+        Route::put('/bulk/status', [EmployeeWholesalerOrderController::class, 'bulkUpdateStatus'])->name('bulkUpdateStatus');
+        Route::post('/{id}/refund', [EmployeeWholesalerOrderController::class, 'processRefund'])->name('refund');
+
+        // Save selected orders
+        Route::post('/save-selected', [EmployeeWholesalerOrderController::class, 'saveSelectedOrders'])->name('saveSelected');
+
+        // Print Routes
+        Route::get('/print/selection', [EmployeeWholesalerOrderController::class, 'printSelection'])->name('print.selection');
+        Route::post('/print/selected', [EmployeeWholesalerOrderController::class, 'printSelectedOrders'])->name('print.selected');
+        Route::post('/print/clear', [EmployeeWholesalerOrderController::class, 'clearSelectedOrders'])->name('print.clear');
+
+        // Invoice routes
+        Route::get('/{id}/invoice/download', [EmployeeWholesalerOrderController::class, 'downloadInvoice'])->name('invoice.download');
+        Route::get('/{id}/invoice/view', [EmployeeWholesalerOrderController::class, 'viewInvoice'])->name('invoice.view');
+
+        // Print routes
+        Route::get('/{id}/print-label', [EmployeeWholesalerOrderController::class, 'printDeliveryLabel'])->name('print.label');
+
+        // Time-based order routes
+        Route::get('/today', [EmployeeWholesalerOrderController::class, 'todayOrders'])->name('today');
+        Route::get('/weekly', [EmployeeWholesalerOrderController::class, 'weeklyOrders'])->name('weekly');
+
+        // Export
+        Route::get('/export/csv', [EmployeeWholesalerOrderController::class, 'export'])->name('export');
+    });
+
+    // Seller Management (Existing)
+    Route::prefix('seller')->name('seller.')->group(function() {
+        Route::get('/orders', [EmployeeController::class, 'sellerOrders'])->name('employee.seller.orders');
+        Route::post('/orders/status/update/{id}', [EmployeeController::class, 'updateOrderStatus'])->name('orders.status-update');
+        Route::get('/orders/view/{id}', [EmployeeController::class, 'viewOrder'])->name('order-view');
+    });
+
+    // Reports & Analytics
+    Route::get('/analytics', [EmployeeController::class, 'analytics'])->name('employee.analytics');
+    Route::get('/price-changes/history', [EmployeeController::class, 'priceChangeHistory'])->name('price-changes.history');
+    Route::get('/price-changes/export', [EmployeeController::class, 'exportPriceChanges'])->name('price-changes.export');
+
+    // Reports Export - FIXED ROUTE
+    Route::get('/export/report', [EmployeeController::class, 'exportReport'])->name('employee.export.report');
+
+    // General Print route
+    Route::get('/print/{id}', [EmployeeWholesalerOrderController::class, 'printDeliveryLabel'])->name('print.out');
 });
 
-
-// ========== AUTHENTICATED WHOLESALER ROUTES ==========
+// ========== WHOLESALER ROUTES ==========
 Route::middleware('auth:wholesaler')->group(function () {
     Route::prefix('wholesaler')->name('wholesaler.')->group(function () {
-
-        // ========== MAIN DASHBOARD & AUTH ==========
+        // Dashboard & Auth
         Route::get('/', [WholesalerController::class, 'dashboard'])->name('dashboard');
         Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
@@ -263,23 +277,16 @@ Route::middleware('auth:wholesaler')->group(function () {
         Route::get('/profile', [WholesalerController::class, 'profile'])->name('profile');
         Route::post('/profile/update', [WholesalerController::class, 'updateProfile'])->name('profile.update');
 
-// ========== SHOP ROUTES (Public Facing) ==========
-        Route::middleware('auth:wholesaler')->prefix('shop')->name('shop.')->group(function () {
-            // Shop main page
+        // Shop Routes (Public Facing)
+        Route::prefix('shop')->name('shop.')->group(function () {
             Route::get('/', [WholesalerShopController::class, 'index'])->name('index');
-
-            // Product details
             Route::get('/product/{id}', [WholesalerShopController::class, 'showProduct'])->name('product.show');
-
-            // Order Now (Direct order creation)
             Route::post('/order-now', [WholesalerShopController::class, 'orderNow'])->name('order.now');
-
-            // Search products
             Route::get('/search', [WholesalerShopController::class, 'search'])->name('search');
         });
 
-        // ========== ORDER MANAGEMENT ==========
-        Route::middleware('auth:wholesaler')->prefix('orders')->name('orders.')->group(function () {
+        // Order Management
+        Route::prefix('orders')->name('orders.')->group(function () {
             Route::get('/', [WholesalerOrderController::class, 'index'])->name('index');
             Route::get('/view/{id}', [WholesalerOrderController::class, 'show'])->name('show');
             Route::put('/{id}/status', [WholesalerOrderController::class, 'updateStatus'])->name('updateStatus');
@@ -300,7 +307,7 @@ Route::middleware('auth:wholesaler')->group(function () {
             Route::get('/export/csv', [WholesalerOrderController::class, 'export'])->name('export');
         });
 
-        // ========== PRODUCT MANAGEMENT (Backend) ==========
+        // Product Management (Backend)
         Route::prefix('products')->name('products.')->group(function () {
             Route::get('/', [WholesalerProductController::class, 'index'])->name('index');
             Route::get('/create', [WholesalerProductController::class, 'create'])->name('create');
@@ -312,7 +319,7 @@ Route::middleware('auth:wholesaler')->group(function () {
             Route::post('/{id}/status', [WholesalerProductController::class, 'updateStatus'])->name('updateStatus');
         });
 
-        // ========== BRAND MANAGEMENT ==========
+        // Brand Management
         Route::prefix('brands')->name('brands.')->group(function () {
             Route::get('/', [WholesalerBrandController::class, 'index'])->name('index');
             Route::get('/create', [WholesalerBrandController::class, 'create'])->name('create');
@@ -322,7 +329,7 @@ Route::middleware('auth:wholesaler')->group(function () {
             Route::delete('/{brand}', [WholesalerBrandController::class, 'destroy'])->name('destroy');
         });
 
-        // ========== CATEGORY MANAGEMENT ==========
+        // Category Management
         Route::prefix('categories')->name('categories.')->group(function () {
             Route::get('/', [WholesalerCategoryController::class, 'index'])->name('index');
             Route::get('/create', [WholesalerCategoryController::class, 'create'])->name('create');
@@ -333,9 +340,7 @@ Route::middleware('auth:wholesaler')->group(function () {
             Route::delete('/{id}', [WholesalerCategoryController::class, 'destroy'])->name('destroy');
         });
 
-
-
-        // ========== PAYMENT MANAGEMENT ==========
+        // Payment Management
         Route::prefix('payments')->name('payments.')->group(function () {
             Route::get('/', [WholesalerPaymentController::class, 'index'])->name('index');
             Route::get('/history', [WholesalerPaymentController::class, 'paymentHistory'])->name('history');
@@ -374,4 +379,3 @@ Route::prefix('webhook')->name('webhook.')->group(function () {
     Route::post('/paypal', [WholesalerPaymentController::class, 'webhookHandler'])->name('paypal');
     Route::post('/jazzcash', [WholesalerPaymentController::class, 'webhookHandler'])->name('jazzcash');
 });
-

@@ -101,8 +101,12 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         /* Main Wrapper */
@@ -617,7 +621,8 @@
                 <span class="logo-text">Employee Panel</span>
             </a>
             <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle sidebar" title="Toggle Sidebar">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="15 18 9 12 15 6"></polyline>
                 </svg>
             </button>
@@ -663,13 +668,13 @@
 
 <script>
     // Wait for DOM to be fully loaded
-    $(document).ready(function() {
+    $(document).ready(function () {
         initializeApp();
     });
 
     function initializeApp() {
         // Hide loader with delay
-        setTimeout(function() {
+        setTimeout(function () {
             $('#global-loader').fadeOut(500);
         }, 300);
 
@@ -694,7 +699,7 @@
         }
 
         // Desktop sidebar toggle
-        sidebarToggle.on('click', function(e) {
+        sidebarToggle.on('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
             if (!isMobile) {
@@ -703,7 +708,7 @@
         });
 
         // Mobile menu toggle
-        mobileMenuToggle.on('click', function(e) {
+        mobileMenuToggle.on('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
             if (isMobile) {
@@ -712,7 +717,7 @@
         });
 
         // Close sidebar when clicking overlay on mobile
-        sidebarOverlay.on('click', function(e) {
+        sidebarOverlay.on('click', function (e) {
             e.preventDefault();
             if (isMobile) {
                 closeMobileMenu();
@@ -721,7 +726,7 @@
 
         // Close mobile menu when clicking a link
         if (isMobile) {
-            $(document).on('click', '.sidebar-menu a', function(e) {
+            $(document).on('click', '.sidebar-menu a', function (e) {
                 e.stopPropagation();
                 closeMobileMenu();
             });
@@ -729,13 +734,13 @@
 
         // Handle window resize
         let resizeTimer;
-        $(window).on('resize', function() {
+        $(window).on('resize', function () {
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(handleResize, 250);
         });
 
         // Add tooltips to sidebar links
-        $('.sidebar-menu a').each(function() {
+        $('.sidebar-menu a').each(function () {
             const text = $(this).find('span').text();
             $(this).attr('data-title', text);
         });
@@ -744,14 +749,14 @@
         highlightActiveMenuItem();
 
         // Update active menu on navigation
-        $(document).on('click', '.sidebar-menu a', function(e) {
+        $(document).on('click', '.sidebar-menu a', function (e) {
             if (!$(this).hasClass('logout-link')) {
                 setTimeout(highlightActiveMenuItem, 100);
             }
         });
 
         // Prevent dropdown from closing when clicking inside
-        $(document).on('click', '.dropdown-menu', function(e) {
+        $(document).on('click', '.dropdown-menu', function (e) {
             e.stopPropagation();
         });
 
@@ -762,7 +767,7 @@
         initTheme();
 
         // Header scroll effect
-        $(window).on('scroll', function() {
+        $(window).on('scroll', function () {
             const header = $('.app-header');
             if ($(this).scrollTop() > 50) {
                 header.addClass('scrolled');
@@ -782,7 +787,7 @@
             if (!silent) {
                 // Dispatch custom event
                 const event = new CustomEvent('sidebarToggle', {
-                    detail: { collapsed: isCollapsed }
+                    detail: {collapsed: isCollapsed}
                 });
                 window.dispatchEvent(event);
             }
@@ -838,7 +843,7 @@
 
             $('.sidebar-menu a').removeClass('active');
 
-            $('.sidebar-menu a').each(function() {
+            $('.sidebar-menu a').each(function () {
                 const href = $(this).attr('href');
                 if (href) {
                     // Exact match
@@ -889,27 +894,27 @@
 
             // Dispatch theme change event
             const event = new CustomEvent('themeChange', {
-                detail: { theme: savedTheme }
+                detail: {theme: savedTheme}
             });
             window.dispatchEvent(event);
         }
 
         // Error handling
-        window.addEventListener('error', function(e) {
+        window.addEventListener('error', function (e) {
             console.error('Application error:', e.error);
         });
 
         // Unhandled promise rejection
-        window.addEventListener('unhandledrejection', function(e) {
+        window.addEventListener('unhandledrejection', function (e) {
             console.error('Unhandled promise rejection:', e.reason);
         });
 
         // Offline/Online detection
-        window.addEventListener('online', function() {
+        window.addEventListener('online', function () {
             showNotification('You are back online', 'success');
         });
 
-        window.addEventListener('offline', function() {
+        window.addEventListener('offline', function () {
             showNotification('You are offline', 'warning');
         });
     }
@@ -978,7 +983,7 @@
     }
 
     // Back to top button
-    $(window).scroll(function() {
+    $(window).scroll(function () {
         if ($(this).scrollTop() > 300) {
             $('.back-to-top').fadeIn();
         } else {
@@ -990,7 +995,7 @@
     if (!$('.back-to-top').length) {
         $('body').append('<button class="back-to-top" aria-label="Back to top" title="Back to Top">↑</button>');
 
-        $('.back-to-top').click(function() {
+        $('.back-to-top').click(function () {
             $('html, body').animate({scrollTop: 0}, 300);
             return false;
         });
@@ -1026,16 +1031,16 @@
     // Expose functions to window for debugging
     window.app = {
         showNotification: showNotification,
-        toggleSidebar: function() {
+        toggleSidebar: function () {
             const sidebar = $('#sidebar');
             const pageWrapper = $('#pageWrapper');
             sidebar.toggleClass('collapsed');
             pageWrapper.toggleClass('collapsed');
         },
-        highlightActiveMenuItem: function() {
+        highlightActiveMenuItem: function () {
             const currentPath = window.location.pathname;
             $('.sidebar-menu a').removeClass('active');
-            $('.sidebar-menu a').each(function() {
+            $('.sidebar-menu a').each(function () {
                 const href = $(this).attr('href');
                 if (href && currentPath.startsWith(href)) {
                     $(this).addClass('active');

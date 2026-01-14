@@ -3,9 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class Employee extends Authenticatable
 {
@@ -16,11 +17,12 @@ class Employee extends Authenticatable
     protected $fillable = [
         'code',
         'name',
+        'email',
+        'phone',
+        'address',
         'nic_no',
         'mobile_no',
         'whatsapp_no',
-        'email',
-        'address',
         'post_code',
         'username',
         'password',
@@ -28,37 +30,136 @@ class Employee extends Authenticatable
         'district',
         'nic_front',
         'nic_back',
+        'img',
+        'role',
+        'status',
+        'last_login_at',
+        'last_login_ip'
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'view_password'
     ];
+
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'last_login_at' => 'datetime',
+    ];
+
+    protected $appends = [
+        'profile_image_url',
+        'nic_front_url',
+        'nic_back_url',
+        'full_address'
+    ];
+
+    // Automatically hash password when it's set
+    public function setPasswordAttribute($value)
+    {
+        if (!empty($value)) {
+            $this->attributes['password'] = Hash::make($value);
+        }
+    }
+
+    // Accessor for profile image URL - FIXED
+    public function getProfileImageUrlAttribute()
+    {
+        if ($this->img) {
+            // Check if it's already a full URL or relative path
+            if (filter_var($this->img, FILTER_VALIDATE_URL)) {
+                return $this->img;
+            }
+
+            if (Storage::disk('public')->exists($this->img)) {
+                return asset('storage/' . $this->img);
+            }
+        }
+        return asset('asset/img/default-avatar.png');
+    }
+
+    // Accessor for NIC front image URL - FIXED
+    public function getNicFrontUrlAttribute()
+    {
+        if ($this->nic_front) {
+            if (Storage::disk('public')->exists($this->nic_front)) {
+                return asset('storage/' . $this->nic_front);
+            }
+        }
+        return null;
+    }
+
+    // Accessor for NIC back image URL - FIXED
+    public function getNicBackUrlAttribute()
+    {
+        if ($this->nic_back) {
+            if (Storage::disk('public')->exists($this->nic_back)) {
+                return asset('storage/' . $this->nic_back);
+            }
+        }
+        return null;
+    }
+
+    // Accessor for full address
+    public function getFullAddressAttribute()
+    {
+        $address = [];
+        if ($this->address) $address[] = $this->address;
+        if ($this->district) $address[] = $this->district;
+        if ($this->post_code) $address[] = $this->post_code;
+
+        return implode(', ', $address);
+    }
 
     // Relationships
     public function priceChanges()
     {
-        return $this->hasMany(PriceChangeLog::class);
+        return $this->hasMany(EmployeePriceChange::class);
     }
 
-    public function orderStatusChanges()
+    // Method to check if employee is admin
+    public function isAdmin()
     {
-        return $this->hasMany(OrderStatusLog::class);
+        return $this->role === 'admin';
     }
 
-    // Helper methods
-    public function getFullNameAttribute()
+    // Method to check if employee is manager
+    public function isManager()
     {
-        return $this->name;
+        return $this->role === 'manager';
     }
 
-    public function getInitialsAttribute()
+    // Method to check if employee is staff
+    public function isStaff()
     {
-        $words = explode(' ', $this->name);
-        $initials = '';
-        foreach ($words as $word) {
-            $initials .= strtoupper(substr($word, 0, 1));
-        }
-        return $initials;
+        return $this->role === 'staff';
+    }
+
+    // Method to get role badge color
+    public function getRoleBadgeColor()
+    {
+        return match($this->role) {
+            'admin' => 'danger',
+            'manager' => 'warning',
+            'staff' => 'success',
+            default => 'secondary'
+        };
+    }
+
+    // Method to get status badge color
+    public function getStatusBadgeColor()
+    {
+        return $this->status === 'active' ? 'success' : 'danger';
+    }
+
+    // Update last login
+    public function updateLastLogin($ip = null)
+    {
+        $this->update([
+            'last_login_at' => now(),
+            'last_login_ip' => $ip ?? request()->ip()
+        ]);
     }
 }

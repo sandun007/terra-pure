@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
 class WholesalerProduct extends Model
@@ -22,7 +23,10 @@ class WholesalerProduct extends Model
         'description',
         'cost_price',
         'selling_price',
+        'display_price',
+        'previous_selling_price',
         'discount',
+        'profit_margin',
         'packaging_cost',
         'qty',
         'total_sold',
@@ -33,144 +37,199 @@ class WholesalerProduct extends Model
         'status',
         'average_rating',
         'total_reviews',
-        'total_ratings'
+        'total_ratings',
+        'last_price_updated_by',
+        'last_price_updated_at',
+        'price_changes_count'
     ];
 
     protected $casts = [
         'cost_price' => 'decimal:2',
         'selling_price' => 'decimal:2',
+        'display_price' => 'decimal:2',
+        'previous_selling_price' => 'decimal:2',
         'discount' => 'decimal:2',
+        'profit_margin' => 'decimal:2',
         'packaging_cost' => 'decimal:2',
         'features' => 'array',
+        'last_price_updated_at' => 'datetime',
     ];
 
+    protected $appends = ['display_price', 'final_price'];
+
     /**
-     * Get the wholesaler that owns the product.
+     * Relationships
      */
     public function wholesaler(): BelongsTo
     {
         return $this->belongsTo(Wholesaler::class);
     }
 
-    /**
-     * Get the category that owns the product.
-     */
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
     }
 
-    /**
-     * Get the brand that owns the product.
-     */
     public function brand(): BelongsTo
     {
         return $this->belongsTo(Brand::class);
     }
 
     /**
-     * Scope a query to only include active products.
+     * Get price changes for this product
+     */
+    public function priceChanges()
+    {
+        return $this->hasMany(EmployeePriceChange::class, 'product_id');
+    }
+
+    /**
+     * Get latest price change
+     */
+    public function latestPriceChange()
+    {
+        return $this->hasOne(EmployeePriceChange::class, 'product_id')->latest();
+    }
+
+    /**
+     * Get the employee who last updated the price
+     */
+    public function lastPriceUpdatedBy()
+    {
+        return $this->belongsTo(Employee::class, 'last_price_updated_by');
+    }
+
+    public function priceHistories(): HasMany
+    {
+        return $this->hasMany(WholesalerProductPriceChange::class, 'product_id');
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(ProductReview::class, 'product_id')
+            ->where('status', 'active')
+            ->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Scopes
      */
     public function scopeActive($query)
     {
         return $query->where('status', 'active');
     }
 
-    /**
-     * Scope a query to only include products for a specific wholesaler.
-     */
     public function scopeForWholesaler($query, $wholesalerId)
     {
         return $query->where('wholesaler_id', $wholesalerId);
     }
 
     /**
-     * Check if product is low in stock.
+     * Accessors - Price Calculations
+     */
+
+    // Get display price (what wholesaler sees) - always from display_price column
+    public function getDisplayPriceAttribute(): float
+    {
+        return $this->display_price ?? $this->selling_price;
+    }
+
+    // Final price after discount
+    public function getFinalPriceAttribute(): float
+    {
+        $price = $this->display_price ?? $this->selling_price;
+        if ($this->discount > 0) {
+            $price = $price - ($price * ($this->discount / 100));
+        }
+        return round($price, 2);
+    }
+
+    // Total cost including packaging
+    public function getTotalCostAttribute(): float
+    {
+        return round($this->cost_price + $this->packaging_cost, 2);
+    }
+
+    // Profit margin percentage
+    public function getProfitMarginPercentageAttribute(): float
+    {
+        if ($this->total_cost > 0) {
+            return round((($this->final_price - $this->total_cost) / $this->total_cost) * 100, 2);
+        }
+        return 0;
+    }
+
+    // Profit amount
+    public function getProfitAmountAttribute(): float
+    {
+        return round($this->final_price - $this->total_cost, 2);
+    }
+
+    /**
+     * Stock Management
      */
     public function isLowStock(): bool
     {
         return $this->qty <= $this->min_stock_level;
     }
 
-    /**
-     * Calculate final selling price after discount.
-     */
-    public function getFinalPriceAttribute(): float
+    public function isOutOfStock(): bool
     {
-        if ($this->discount > 0) {
-            return $this->selling_price - ($this->selling_price * ($this->discount / 100));
-        }
-        return $this->selling_price;
+        return $this->qty === 0;
     }
 
     /**
-     * Calculate total cost including packaging.
+     * Update prices with automatic display price calculation
      */
-    public function getTotalCostAttribute(): float
+    public function updatePricesWithMargin(array $prices, $employeeId, $notes = null)
     {
-        return $this->cost_price + $this->packaging_cost;
-    }
+        // Store old prices
+        $oldPrices = [
+            'selling_price' => $this->selling_price,
+            'display_price' => $this->display_price ?? $this->selling_price,
+            'discount' => $this->discount,
+            'final_price' => $this->final_price,
+        ];
 
-    /**
-     * Calculate profit margin.
-     */
-    public function getProfitMarginAttribute(): float
-    {
-        $totalCost = $this->total_cost;
-        $sellingPrice = $this->final_price;
-
-        if ($totalCost > 0) {
-            return (($sellingPrice - $totalCost) / $totalCost) * 100;
+        // Update selling price
+        if (isset($prices['selling_price'])) {
+            $this->selling_price = $prices['selling_price'];
+            $this->display_price = $prices['selling_price']; // Also update display price
         }
 
-        return 0;
-    }
+        // Update discount if provided
+        if (isset($prices['discount'])) {
+            $this->discount = $prices['discount'];
+        }
 
-    /**
-     * Calculate profit amount.
-     */
-    public function getProfitAmountAttribute(): float
-    {
-        return $this->final_price - $this->total_cost;
-    }
+        // Update profit margin if provided
+        if (isset($prices['profit_margin'])) {
+            $this->profit_margin = $prices['profit_margin'];
+        }
 
-    // Add these methods to WholesalerProduct model
+        $this->save();
 
-    // In WholesalerProduct model, update the reviews method:
-    public function reviews()
-    {
-        return $this->hasMany(ProductReview::class, 'product_id')->where('status', 'active')->orderBy('created_at', 'desc');
-    }
+        // Store new prices
+        $newPrices = [
+            'selling_price' => $this->selling_price,
+            'display_price' => $this->display_price,
+            'discount' => $this->discount,
+            'final_price' => $this->final_price,
+        ];
 
-    public function activeReviews()
-    {
-        return $this->reviews()->where('status', 'active')->orderBy('created_at', 'desc');
-    }
-
-    public function calculateAverageRating()
-    {
-        $totalRatings = $this->reviews()->sum('rating');
-        $totalReviews = $this->reviews()->count();
-
-        $averageRating = $totalReviews > 0 ? $totalRatings / $totalReviews : 0;
-
-        $this->update([
-            'average_rating' => round($averageRating, 2),
-            'total_reviews' => $totalReviews,
-            'total_ratings' => $totalRatings
+        // Log price change
+        $this->priceHistories()->create([
+            'employee_id' => $employeeId,
+            'old_prices' => $oldPrices,
+            'new_prices' => $newPrices,
+            'notes' => $notes,
         ]);
+
+        return $this->fresh();
     }
 
     /**
-     * Get the display price for customers.
-     */
-    public function getDisplayPriceAttribute()
-    {
-        return $this->final_price;
-    }
-
-    /**
-     * Get the image URL.
+     * Get image URL
      */
     public function getImageUrlAttribute(): ?string
     {
@@ -181,45 +240,5 @@ class WholesalerProduct extends Model
         return Storage::disk('public')->exists($this->image)
             ? asset('storage/' . $this->image)
             : asset('images/default-product.png');
-    }
-    /**
-     * Check if product is out of stock.
-     */
-    public function isOutOfStock(): bool
-    {
-        return $this->qty === 0;
-    }
-
-    /**
-     * Check if product needs restocking.
-     */
-    public function needsRestocking(): bool
-    {
-        return $this->qty <= $this->min_stock_level;
-    }
-
-    /**
-     * Update stock quantity.
-     */
-    public function updateStock($quantity, $type = 'add')
-    {
-        if ($type === 'add') {
-            $this->increment('qty', $quantity);
-        } elseif ($type === 'subtract') {
-            $this->decrement('qty', $quantity);
-        } elseif ($type === 'set') {
-            $this->update(['qty' => $quantity]);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Calculate recommended reorder quantity.
-     */
-    public function getReorderQuantity(): int
-    {
-        // Calculate based on min_stock_level and average monthly sales
-        return max($this->min_stock_level * 3, 100);
     }
 }

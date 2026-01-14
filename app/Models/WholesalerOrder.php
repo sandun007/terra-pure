@@ -34,6 +34,8 @@ class WholesalerOrder extends Model
         'updated_at' => 'datetime',
     ];
 
+
+
     // Relationships
     public function wholesaler()
     {

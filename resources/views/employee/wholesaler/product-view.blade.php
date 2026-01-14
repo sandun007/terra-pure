@@ -1,269 +1,601 @@
 @extends('employee.layout.app')
 
 @section('title', 'Product Details')
+@section('subtitle', $product->name)
+
+@push('css')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .page-header-enhanced {
+            background: var(--primary-gradient);
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            color: white;
+            box-shadow: var(--card-shadow);
+        }
+
+        .back-button-enhanced {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+        }
+
+        .back-button-enhanced:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            color: white;
+            transform: translateX(-5px);
+        }
+
+        .card-enhanced {
+            border: none;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .card-enhanced:hover {
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .product-image-enhanced {
+            width: 100%;
+            height: 400px;
+            object-fit: contain;
+            border-radius: 12px;
+            background: white;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+        }
+
+        .info-group-enhanced {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .info-label-enhanced {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-value-enhanced {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .pricing-card-enhanced {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 2px solid #bae6fd;
+            margin-top: 1rem;
+        }
+
+        .price-item-enhanced {
+            text-align: center;
+            padding: 1rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .price-label-enhanced {
+            font-size: 0.9rem;
+            color: #64748b;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .price-value-enhanced {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0c4a6e;
+        }
+
+        .final-price-enhanced {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #10b981;
+            text-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+        }
+
+        .status-badge-enhanced {
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-active-enhanced {
+            background: var(--success-gradient);
+            color: white;
+        }
+
+        .status-inactive-enhanced {
+            background: var(--danger-gradient);
+            color: white;
+        }
+
+        .timeline-enhanced {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline-enhanced::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .timeline-item-enhanced {
+            position: relative;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            background: white;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item-enhanced:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.15);
+            transform: translateX(5px);
+        }
+
+        .timeline-dot-enhanced {
+            position: absolute;
+            left: -2.4rem;
+            top: 1.5rem;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border: 4px solid #667eea;
+            border-radius: 50%;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            z-index: 1;
+        }
+
+        .timeline-time-enhanced {
+            font-size: 0.85rem;
+            color: #64748b;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-employee-enhanced {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .price-change-box-enhanced {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 0.75rem;
+            border-left: 4px solid #667eea;
+        }
+
+        .price-arrow-enhanced {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 600;
+        }
+
+        .old-price-enhanced {
+            color: #94a3b8;
+            text-decoration: line-through;
+        }
+
+        .new-price-enhanced {
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+
+        .price-diff-badge-enhanced {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .price-increase-enhanced {
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .price-decrease-enhanced {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .notes-text-enhanced {
+            font-size: 0.9rem;
+            color: #475569;
+            font-style: italic;
+            padding: 0.75rem;
+            background: white;
+            border-radius: 8px;
+            border-left: 3px solid #94a3b8;
+        }
+
+        .empty-state-enhanced {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #94a3b8;
+        }
+
+        .empty-state-enhanced i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .timeline-container-enhanced {
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 1rem;
+        }
+
+        .timeline-container-enhanced::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .timeline-container-enhanced::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+
+        .timeline-container-enhanced::-webkit-scrollbar-thumb {
+            background: var(--primary-gradient);
+            border-radius: 10px;
+        }
+
+        .badge-enhanced {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .section-title-enhanced {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 3px solid #e2e8f0;
+        }
+
+        .section-title-enhanced i {
+            color: var(--primary-color);
+        }
+
+        @media (max-width: 768px) {
+            .product-image-enhanced {
+                height: 300px;
+            }
+
+            .pricing-card-enhanced {
+                padding: 1rem;
+            }
+
+            .price-value-enhanced {
+                font-size: 1.25rem;
+            }
+
+            .final-price-enhanced {
+                font-size: 1.5rem;
+            }
+
+            .timeline-enhanced {
+                padding-left: 1.5rem;
+            }
+
+            .timeline-dot-enhanced {
+                left: -2rem;
+            }
+        }
+    </style>
+@endpush
 
 @section('content')
-    <div class="container-fluid py-4 px-lg-5">
-        <!-- Header Section -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <a href="{{ route('wholesaler.employee.wholesaler-products') }}"
-                   class="btn btn-light border-0 shadow-sm mb-3 hover-lift">
-                    <i class="fas fa-arrow-left me-2"></i> Back to Products
-                </a>
-                <h2 class="mb-1 fw-bold">{{ $product->name }}</h2>
-                <p class="text-muted mb-0">
-                    <i class="fas fa-barcode me-2"></i>{{ $product->code }}
-                    @if($product->barcode)
-                        <span class="ms-3"><i class="fas fa-qrcode me-2"></i>{{ $product->barcode }}</span>
-                    @endif
-                </p>
-            </div>
-            <div>
-                <span class="badge rounded-pill px-4 py-2 fs-6 bg-{{ $product->status === 'active' ? 'success' : 'danger' }}">
-                    <i class="fas fa-circle me-2" style="font-size: 8px;"></i>
-                    {{ ucfirst($product->status) }}
-                </span>
+    <div class="container-fluid py-4">
+        {{-- Page Header --}}
+        <div class="page-header-enhanced">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h1 class="mb-2">
+                        <i class="fas fa-box-open me-3"></i>
+                        Product Details
+                    </h1>
+                    <p class="mb-0 opacity-90">
+                        <i class="fas fa-barcode me-2"></i>
+                        {{ $product->code }} @if($product->barcode)
+                            | {{ $product->barcode }}
+                        @endif
+                    </p>
+                </div>
+                <div>
+                    <a href="{{ route('employee.wholesaler.products') }}" class="back-button-enhanced">
+                        <i class="fas fa-arrow-left"></i>
+                        Back to Products
+                    </a>
+                </div>
             </div>
         </div>
 
-        <div class="row g-4">
-            <!-- Main Product Information -->
+        <div class="row">
+            {{-- Left Column - Product Info --}}
             <div class="col-lg-8">
-                <!-- Product Overview Card -->
-                <div class="card border-0 shadow-sm mb-4 hover-card">
+                {{-- Product Image & Basic Info --}}
+                <div class="card-enhanced mb-4">
                     <div class="card-body p-4">
-                        <div class="row g-4">
-                            <!-- Product Image -->
+                        <div class="row">
                             <div class="col-md-5">
-                                <div class="product-image-container bg-light rounded-3 p-4 position-relative"
-                                     style="min-height: 320px;">
-                                    @if($product->image)
-                                        <img src="{{ asset('storage/' . $product->image) }}"
-                                             alt="{{ $product->name }}"
-                                             class="img-fluid rounded-3"
-                                             style="width: 100%; height: 320px; object-fit: contain;">
-                                    @else
-                                        <div class="d-flex align-items-center justify-content-center h-100">
-                                            <div class="text-center">
-                                                <i class="fas fa-box fa-4x text-muted mb-3"></i>
-                                                <p class="text-muted mb-0">No image available</p>
+                                @if($product->image)
+                                    <img src="{{ asset('storage/' . $product->image) }}"
+                                         alt="{{ $product->name }}"
+                                         class="product-image-enhanced">
+                                @else
+                                    <div
+                                        class="product-image-enhanced d-flex align-items-center justify-content-center bg-light">
+                                        <i class="fas fa-image fa-5x text-muted"></i>
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="col-md-7">
+                                <h3 class="fw-bold mb-3">{{ $product->name }}</h3>
+
+                                <div class="info-group-enhanced">
+                                    <div class="info-label-enhanced">
+                                        <i class="fas fa-store me-1"></i> Wholesaler
+                                    </div>
+                                    <div class="info-value-enhanced">
+                                        {{ $product->wholesaler->business_name ?? 'N/A' }}
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="info-group-enhanced">
+                                            <div class="info-label-enhanced">
+                                                <i class="fas fa-tag me-1"></i> Category
+                                            </div>
+                                            <div class="info-value-enhanced">
+                                                {{ $product->category->name ?? 'N/A' }}
                                             </div>
                                         </div>
-                                    @endif
-                                </div>
-                            </div>
-
-                            <!-- Product Details -->
-                            <div class="col-md-7">
-                                <h5 class="fw-bold mb-4 text-primary">
-                                    <i class="fas fa-info-circle me-2"></i>Product Information
-                                </h5>
-
-                                <div class="product-details">
-                                    <div class="detail-row">
-                                        <span class="detail-label">
-                                            <i class="fas fa-building text-primary me-2"></i>Wholesaler
-                                        </span>
-                                        <span class="detail-value fw-semibold">
-                                            {{ $product->wholesaler->name ?? 'N/A' }}
-                                        </span>
                                     </div>
-
-                                    <div class="detail-row">
-                                        <span class="detail-label">
-                                            <i class="fas fa-tag text-primary me-2"></i>Category
-                                        </span>
-                                        <span class="detail-value">
-                                            <span class="badge bg-light text-dark border">
-                                                {{ $product->category->name ?? 'N/A' }}
-                                            </span>
-                                        </span>
-                                    </div>
-
-                                    <div class="detail-row">
-                                        <span class="detail-label">
-                                            <i class="fas fa-certificate text-primary me-2"></i>Brand
-                                        </span>
-                                        <span class="detail-value">
-                                            <span class="badge bg-light text-dark border">
+                                    <div class="col-md-6">
+                                        <div class="info-group-enhanced">
+                                            <div class="info-label-enhanced">
+                                                <i class="fas fa-copyright me-1"></i> Brand
+                                            </div>
+                                            <div class="info-value-enhanced">
                                                 {{ $product->brand->name ?? 'N/A' }}
-                                            </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="info-group-enhanced">
+                                    <div class="info-label-enhanced">
+                                        <i class="fas fa-toggle-on me-1"></i> Status
+                                    </div>
+                                    <div class="mt-2">
+                                        <span
+                                            class="status-badge-enhanced {{ $product->status == 'active' ? 'status-active-enhanced' : 'status-inactive-enhanced' }}">
+                                            <i class="fas {{ $product->status == 'active' ? 'fa-check-circle' : 'fa-times-circle' }}"></i>
+                                            {{ ucfirst($product->status) }}
                                         </span>
                                     </div>
+                                </div>
 
-                                    @if($product->description)
-                                        <div class="detail-row align-items-start">
-                                        <span class="detail-label">
-                                            <i class="fas fa-align-left text-primary me-2"></i>Description
-                                        </span>
-                                            <span class="detail-value text-muted">
+                                @if($product->description)
+                                    <div class="info-group-enhanced">
+                                        <div class="info-label-enhanced">
+                                            <i class="fas fa-align-left me-1"></i> Description
+                                        </div>
+                                        <div class="info-value-enhanced" style="font-size: 0.95rem;">
                                             {{ $product->description }}
-                                        </span>
                                         </div>
-                                    @endif
-                                </div>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Pricing Cards -->
-                <div class="row g-4 mb-4">
-                    <div class="col-md-4">
-                        <div class="card border-0 shadow-sm h-100 hover-card price-card">
-                            <div class="card-body p-4 text-center">
-                                <div class="price-icon bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
-                                     style="width: 60px; height: 60px;">
-                                    <i class="fas fa-shopping-bag fa-lg text-primary"></i>
-                                </div>
-                                <h6 class="text-uppercase text-muted mb-2 fw-semibold" style="font-size: 0.85rem; letter-spacing: 0.5px;">
-                                    Selling Price
-                                </h6>
-                                <h2 class="fw-bold mb-0 text-primary">৳{{ number_format($product->selling_price, 2) }}</h2>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card border-0 shadow-sm h-100 hover-card price-card">
-                            <div class="card-body p-4 text-center">
-                                <div class="price-icon bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
-                                     style="width: 60px; height: 60px;">
-                                    <i class="fas fa-warehouse fa-lg text-success"></i>
-                                </div>
-                                <h6 class="text-uppercase text-muted mb-2 fw-semibold" style="font-size: 0.85rem; letter-spacing: 0.5px;">
-                                    Wholesale Price
-                                </h6>
-                                <h2 class="fw-bold mb-0 text-success">৳{{ number_format($product->wholesale_price, 2) }}</h2>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card border-0 shadow-sm h-100 hover-card price-card">
-                            <div class="card-body p-4 text-center">
-                                <div class="price-icon bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
-                                     style="width: 60px; height: 60px;">
-                                    <i class="fas fa-eye fa-lg text-warning"></i>
-                                </div>
-                                <h6 class="text-uppercase text-muted mb-2 fw-semibold" style="font-size: 0.85rem; letter-spacing: 0.5px;">
-                                    Display Price
-                                </h6>
-                                <h2 class="fw-bold mb-0 text-warning">৳{{ number_format($product->display_price, 2) }}</h2>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Sales Statistics -->
-                <div class="card border-0 shadow-sm hover-card">
+                {{-- Pricing Information --}}
+                <div class="card-enhanced">
                     <div class="card-body p-4">
-                        <h5 class="fw-bold mb-4 text-primary">
-                            <i class="fas fa-chart-bar me-2"></i>Sales Performance
-                        </h5>
-                        <div class="row g-4">
-                            <div class="col-md-6">
-                                <div class="stat-card bg-primary bg-opacity-10 rounded-3 p-4">
-                                    <div class="d-flex align-items-center">
-                                        <div class="stat-icon bg-primary text-white rounded-3 p-3 me-3">
-                                            <i class="fas fa-shopping-cart fa-2x"></i>
+                        <h4 class="section-title-enhanced">
+                            <i class="fas fa-dollar-sign"></i>
+                            Pricing Information
+                        </h4>
+
+                        <div class="pricing-card-enhanced">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="price-item-enhanced">
+                                        <div class="price-label-enhanced">
+                                            <i class="fas fa-money-bill-wave me-1"></i>
+                                            Cost Price
                                         </div>
-                                        <div>
-                                            <p class="text-muted mb-1 fw-semibold">Total Orders</p>
-                                            <h2 class="mb-0 fw-bold">{{ number_format($product->total_orders) }}</h2>
+                                        <div class="price-value-enhanced">
+                                            Rs. {{ number_format($product->cost_price, 2) }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="price-item-enhanced">
+                                        <div class="price-label-enhanced">
+                                            <i class="fas fa-tags me-1"></i>
+                                            Selling Price
+                                        </div>
+                                        <div class="price-value-enhanced">
+                                            Rs. {{ number_format($product->selling_price, 2) }}
+                                        </div>
+                                        @if($product->discount > 0)
+                                            <div class="badge-enhanced mt-2"
+                                                 style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #92400e; border: 1px solid #fbbf24;">
+                                                <i class="fas fa-percent"></i>
+                                                {{ $product->discount }}% OFF
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="price-item-enhanced" style="background: #ecfdf5;">
+                                        <div class="price-label-enhanced" style="color: #059669;">
+                                            <i class="fas fa-hand-holding-usd me-1"></i>
+                                            Final Price
+                                        </div>
+                                        <div class="final-price-enhanced">
+                                            Rs. {{ number_format($product->final_price, 2) }}
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="stat-card bg-success bg-opacity-10 rounded-3 p-4">
-                                    <div class="d-flex align-items-center">
-                                        <div class="stat-icon bg-success text-white rounded-3 p-3 me-3">
-                                            <i class="fas fa-chart-line fa-2x"></i>
-                                        </div>
-                                        <div>
-                                            <p class="text-muted mb-1 fw-semibold">Total Revenue</p>
-                                            <h2 class="mb-0 fw-bold">৳{{ number_format($product->total_sales ?? 0, 2) }}</h2>
-                                        </div>
+
+                            @if($product->packaging_cost > 0)
+                                <div class="mt-3 text-center">
+                                    <div class="badge-enhanced"
+                                         style="background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); color: #4338ca; border: 1px solid #a5b4fc;">
+                                        <i class="fas fa-box me-1"></i>
+                                        Packaging Cost: Rs. {{ number_format($product->packaging_cost, 2) }}
                                     </div>
                                 </div>
-                            </div>
+                            @endif
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Price History Sidebar -->
+            {{-- Right Column - Price History --}}
             <div class="col-lg-4">
-                <div class="card border-0 shadow-sm sticky-top hover-card" style="top: 20px;">
-                    <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0">
-                        <h5 class="fw-bold mb-0 text-primary">
-                            <i class="fas fa-history me-2"></i>Price Change History
-                        </h5>
-                    </div>
-                    <div class="card-body px-4 pb-4" style="max-height: 600px; overflow-y: auto;">
-                        @if($priceHistory->isEmpty())
-                            <div class="text-center py-5">
-                                <div class="empty-state-icon bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
-                                     style="width: 80px; height: 80px;">
-                                    <i class="fas fa-history fa-2x text-muted"></i>
+                <div class="card-enhanced">
+                    <div class="card-body p-4">
+                        <h4 class="section-title-enhanced">
+                            <i class="fas fa-history"></i>
+                            Price Change History
+                        </h4>
+
+                        <div class="timeline-container-enhanced">
+                            @if($priceHistory->isEmpty())
+                                <div class="empty-state-enhanced">
+                                    <i class="fas fa-clock"></i>
+                                    <h5 class="mt-3 mb-2">No Price Changes Yet</h5>
+                                    <p class="text-muted small mb-0">Price history will appear here when changes are
+                                        made</p>
                                 </div>
-                                <p class="text-muted mb-0">No price changes recorded yet</p>
-                            </div>
-                        @else
-                            <div class="timeline mt-4">
-                                @foreach($priceHistory as $index => $history)
-                                    <div class="timeline-item {{ !$loop->last ? 'mb-4' : '' }}">
-                                        <div class="timeline-content">
-                                            <div class="timeline-header d-flex justify-content-between align-items-start mb-2">
-                                                <div>
-                                                    <h6 class="mb-1 fw-semibold">Price Update</h6>
-                                                    <small class="text-muted">
-                                                        <i class="fas fa-user me-1"></i>Employee #{{ $history->employee_id }}
-                                                    </small>
+                            @else
+                                <div class="timeline-enhanced">
+                                    @foreach($priceHistory as $change)
+                                        <div class="timeline-item-enhanced">
+                                            <div class="timeline-dot-enhanced"></div>
+
+                                            <div class="timeline-time-enhanced">
+                                                <i class="fas fa-clock me-1"></i>
+                                                {{ $change->created_at->diffForHumans() }}
+                                                <span
+                                                    class="text-muted small">({{ $change->created_at->format('M d, Y H:i') }}
+                                                    )</span>
+                                            </div>
+
+                                            <div class="timeline-employee-enhanced">
+                                                <i class="fas fa-user-circle"></i>
+                                                {{ $change->employee->name ?? 'Unknown' }}
+                                            </div>
+
+                                            <div class="price-change-box-enhanced">
+                                                <div class="price-arrow-enhanced">
+                                                    <span class="old-price-enhanced">
+                                                        Rs. {{ number_format($change->old_selling_price, 2) }}
+                                                    </span>
+                                                    <i class="fas fa-arrow-right"></i>
+                                                    <span class="new-price-enhanced">
+                                                        Rs. {{ number_format($change->new_selling_price, 2) }}
+                                                    </span>
                                                 </div>
-                                                <small class="badge bg-light text-dark">
-                                                    <i class="far fa-clock me-1"></i>
-                                                    {{ \Carbon\Carbon::parse($history->created_at)->diffForHumans() }}
-                                                </small>
+
+                                                <div class="mt-2">
+                                                    <span
+                                                        class="price-diff-badge-enhanced {{ $change->price_difference >= 0 ? 'price-increase-enhanced' : 'price-decrease-enhanced' }}">
+                                                        <i class="fas {{ $change->price_difference >= 0 ? 'fa-arrow-up' : 'fa-arrow-down' }}"></i>
+                                                        Rs. {{ number_format(abs($change->price_difference), 2) }}
+                                                        ({{ $change->price_difference >= 0 ? '+' : '' }}{{ number_format($change->percentage_change, 2) }}
+                                                        %)
+                                                    </span>
+                                                </div>
                                             </div>
 
-                                            @php
-                                                $oldPrices = json_decode($history->old_prices, true);
-                                                $newPrices = json_decode($history->new_prices, true);
-                                            @endphp
-
-                                            <div class="price-changes bg-light rounded-3 p-3 mt-2">
-                                                @foreach(['selling_price', 'wholesale_price', 'display_price'] as $priceType)
-                                                    @if(isset($oldPrices[$priceType]) && isset($newPrices[$priceType]))
-                                                        <div class="price-change-item {{ !$loop->last ? 'mb-2 pb-2 border-bottom' : '' }}">
-                                                            <div class="small text-muted mb-1 text-uppercase" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px;">
-                                                                {{ str_replace('_', ' ', $priceType) }}
-                                                            </div>
-                                                            <div class="d-flex justify-content-between align-items-center">
-                                                                <span class="text-danger fw-semibold">
-                                                                    <del>৳{{ number_format($oldPrices[$priceType], 2) }}</del>
-                                                                </span>
-                                                                <i class="fas fa-arrow-right text-muted mx-2"></i>
-                                                                <span class="text-success fw-bold">
-                                                                    ৳{{ number_format($newPrices[$priceType], 2) }}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    @endif
-                                                @endforeach
-                                            </div>
-
-                                            @if($history->notes)
-                                                <div class="alert alert-info border-0 mt-2 mb-0 py-2 px-3" style="background-color: #e3f2fd;">
-                                                    <small class="d-flex align-items-start">
-                                                        <i class="fas fa-sticky-note me-2 mt-1" style="font-size: 0.85rem;"></i>
-                                                        <span>{{ $history->notes }}</span>
-                                                    </small>
+                                            @if($change->notes)
+                                                <div class="notes-text-enhanced">
+                                                    <i class="fas fa-sticky-note me-2"></i>
+                                                    {{ $change->notes }}
                                                 </div>
                                             @endif
                                         </div>
-                                    </div>
-                                @endforeach
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+
+                        @if($priceHistory->hasPages())
+                            <div class="mt-3">
+                                {{ $priceHistory->links() }}
                             </div>
                         @endif
                     </div>
@@ -271,158 +603,13 @@
             </div>
         </div>
     </div>
-
-    <style>
-        /* Modern Card Styles */
-        .hover-card {
-            transition: all 0.3s ease;
-        }
-
-        .hover-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.12) !important;
-        }
-
-        .hover-lift {
-            transition: all 0.2s ease;
-        }
-
-        .hover-lift:hover {
-            transform: translateY(-2px);
-        }
-
-        /* Product Details Styling */
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .detail-row:last-child {
-            border-bottom: none;
-        }
-
-        .detail-label {
-            color: #6c757d;
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-
-        .detail-value {
-            text-align: right;
-            color: #212529;
-        }
-
-        /* Price Cards Enhancement */
-        .price-card {
-            transition: all 0.3s ease;
-            border-left: 4px solid transparent !important;
-        }
-
-        .price-card:hover {
-            border-left-color: var(--bs-primary) !important;
-        }
-
-        /* Timeline Styling */
-        .timeline {
-            position: relative;
-            padding-left: 30px;
-        }
-
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 11px;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: linear-gradient(to bottom, #0d6efd, #e9ecef);
-        }
-
-        .timeline-item {
-            position: relative;
-        }
-
-        .timeline-item::before {
-            content: '';
-            position: absolute;
-            left: -23px;
-            top: 8px;
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: #0d6efd;
-            border: 3px solid #fff;
-            box-shadow: 0 0 0 2px #0d6efd;
-            z-index: 1;
-        }
-
-        .timeline-content {
-            background: #fff;
-            border-radius: 8px;
-            padding: 16px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
-        }
-
-        .timeline-content:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Stat Cards */
-        .stat-card {
-            transition: all 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: scale(1.02);
-        }
-
-        .stat-icon {
-            transition: all 0.3s ease;
-        }
-
-        .stat-card:hover .stat-icon {
-            transform: scale(1.1);
-        }
-
-        /* Scrollbar Styling */
-        .card-body::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .card-body::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-
-        .card-body::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 10px;
-        }
-
-        .card-body::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .sticky-top {
-                position: relative !important;
-                top: 0 !important;
-            }
-
-            .detail-row {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .detail-value {
-                text-align: left;
-                margin-top: 4px;
-            }
-        }
-    </style>
 @endsection
+
+@push('scripts')
+    <script>
+        // Any additional JavaScript for this page
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('Product details page loaded');
+        });
+    </script>
+@endpush
