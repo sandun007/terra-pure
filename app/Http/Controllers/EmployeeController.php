@@ -17,7 +17,8 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Employee;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Schema; // ADD THIS IMPORT
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Hash;
 
 class EmployeeController extends Controller
 {
@@ -26,6 +27,77 @@ class EmployeeController extends Controller
     public function __construct()
     {
         $this->middleware('auth:employee');
+    }
+
+    /**
+     * Get the correct image column name from database
+     */
+    private function getImageColumnName()
+    {
+        $columns = Schema::getColumnListing('employees');
+
+        // Check for possible column names in order of preference
+        $possibleColumns = ['profile_image', 'image', 'img', 'photo', 'avatar', 'picture'];
+
+        foreach ($possibleColumns as $column) {
+            if (in_array($column, $columns)) {
+                return $column;
+            }
+        }
+
+        // Default to 'img' if none found (will be created later)
+        return 'img';
+    }
+
+    /**
+     * Get profile image URL
+     */
+    private function getProfileImageUrl($employee)
+    {
+        $imageColumn = $this->getImageColumnName();
+
+        if (isset($employee->$imageColumn) && $employee->$imageColumn) {
+            // Check if it's a full URL
+            if (filter_var($employee->$imageColumn, FILTER_VALIDATE_URL)) {
+                return $employee->$imageColumn;
+            }
+
+            // Check if file exists in storage
+            if (Storage::disk('public')->exists($employee->$imageColumn)) {
+                return asset('storage/' . $employee->$imageColumn);
+            }
+
+            // Check if it's a direct public path
+            if (file_exists(public_path($employee->$imageColumn))) {
+                return asset($employee->$imageColumn);
+            }
+        }
+
+        // Return default avatar
+        return asset('asset/img/default-avatar.png');
+    }
+
+    /**
+     * Delete old profile image
+     */
+    private function deleteOldImage($employee)
+    {
+        $imageColumn = $this->getImageColumnName();
+
+        if (isset($employee->$imageColumn) && $employee->$imageColumn) {
+            // Try to delete from storage
+            if (Storage::disk('public')->exists($employee->$imageColumn)) {
+                Storage::disk('public')->delete($employee->$imageColumn);
+                Log::info('Deleted old image from storage', ['path' => $employee->$imageColumn]);
+            }
+
+            // Try to delete from public directory
+            $publicPath = public_path($employee->$imageColumn);
+            if (file_exists($publicPath) && is_file($publicPath)) {
+                @unlink($publicPath);
+                Log::info('Deleted old image from public', ['path' => $publicPath]);
+            }
+        }
     }
 
     /**
@@ -152,7 +224,7 @@ class EmployeeController extends Controller
             $product = WholesalerProduct::with(['wholesaler', 'category'])->find($id);
 
             if (!$product) {
-                return redirect()->route('employee.wholesaler.wholesaler.products')
+                return redirect()->route('employee.wholesaler.products')
                     ->with('error', 'Product not found.');
             }
 
@@ -170,7 +242,7 @@ class EmployeeController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error loading price update form: ' . $e->getMessage());
-            return redirect()->route('employee.wholesaler.wholesaler.products')
+            return redirect()->route('employee.wholesaler.products')
                 ->with('error', 'Error loading price update form.');
         }
     }
@@ -302,7 +374,7 @@ class EmployeeController extends Controller
             }
 
             return redirect()
-                ->route('employee.wholesaler.wholesaler.products')
+                ->route('employee.wholesaler.products')
                 ->with('success', 'Selling price updated successfully');
 
         } catch (\Throwable $e) {
@@ -564,7 +636,7 @@ class EmployeeController extends Controller
             $order = WholesalerOrder::with(['wholesaler', 'orderItems.product'])
                 ->findOrFail($id);
 
-            return view('employee.wholesaler.order-view', compact('order'));
+            return view('employee.wholesaler.orders.show', compact('order'));
 
         } catch (\Exception $e) {
             Log::error('View wholesaler order error: ' . $e->getMessage());
@@ -712,7 +784,7 @@ class EmployeeController extends Controller
                 ->limit(10)
                 ->get();
 
-            return view('employee.analytics', compact('salesData', 'topProducts', 'wholesalerPerformance'));
+            return view('employee.analytics.index', compact('salesData', 'topProducts', 'wholesalerPerformance'));
 
         } catch (\Exception $e) {
             Log::error('Analytics error: ' . $e->getMessage());
@@ -720,10 +792,18 @@ class EmployeeController extends Controller
         }
     }
 
+    /**
+     * Display employee profile
+     */
     public function profile()
     {
         try {
             $employee = Auth::guard('employee')->user();
+
+            // Add profile_image_url attribute
+            if (!isset($employee->profile_image_url)) {
+                $employee->profile_image_url = $this->getProfileImageUrl($employee);
+            }
 
             // Get employee statistics
             $stats = [
@@ -737,7 +817,7 @@ class EmployeeController extends Controller
                 'total_orders_processed' => \App\Models\Order::count() + \App\Models\WholesalerOrder::count(),
             ];
 
-            return view('employee.profile', compact('employee', 'stats'));
+            return view('employee.profile.profile', compact('employee', 'stats'));
 
         } catch (\Exception $e) {
             Log::error('Profile error: ' . $e->getMessage());
@@ -746,7 +826,7 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Update employee profile (FIXED VERSION)
+     * Update employee profile (FIXED WITH PROPER IMAGE COLUMN HANDLING)
      */
     public function updateProfile(Request $request)
     {
@@ -758,7 +838,7 @@ class EmployeeController extends Controller
 
             Log::info('Updating employee profile', [
                 'employee_id' => $employeeId,
-                'request_data' => $request->except(['password', 'password_confirmation', 'img', 'nic_front', 'nic_back'])
+                'request_data' => $request->except(['password', 'password_confirmation', 'img'])
             ]);
 
             // Define validation rules
@@ -766,17 +846,9 @@ class EmployeeController extends Controller
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:employees,email,' . $employeeId,
                 'phone' => 'required|string|max:20',
-                'mobile_no' => 'required|string|max:20',
-                'whatsapp_no' => 'nullable|string|max:20',
                 'address' => 'required|string|max:500',
                 'district' => 'required|string|max:100',
                 'post_code' => 'required|string|max:20',
-                'nic_no' => 'required|string|max:20|unique:employees,nic_no,' . $employeeId,
-
-                // File validations
-                'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-                'nic_front' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-                'nic_back' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             ];
 
             // Add password rules conditionally
@@ -786,11 +858,7 @@ class EmployeeController extends Controller
             }
 
             $validator = Validator::make($request->all(), $rules, [
-                'nic_no.unique' => 'This NIC number is already registered.',
                 'email.unique' => 'This email is already registered.',
-                'img.max' => 'Profile image must be less than 2MB.',
-                'nic_front.max' => 'NIC front image must be less than 2MB.',
-                'nic_back.max' => 'NIC back image must be less than 2MB.',
                 'current_password.required' => 'Current password is required to change password.',
             ]);
 
@@ -829,84 +897,16 @@ class EmployeeController extends Controller
                 }
 
                 $validated['password'] = Hash::make($request->password);
-                $validated['view_password'] = $request->password;
+
+                // Add view_password if column exists
+                if (Schema::hasColumn('employees', 'view_password')) {
+                    $validated['view_password'] = $request->password;
+                }
             } else {
                 // Remove password fields if not changing password
                 unset($validated['password']);
                 unset($validated['password_confirmation']);
                 unset($validated['current_password']);
-            }
-
-            // Handle profile image upload
-            if ($request->hasFile('img')) {
-                Log::info('Processing profile image upload', [
-                    'employee_id' => $employeeId,
-                    'file_size' => $request->file('img')->getSize()
-                ]);
-
-                // Delete old image if exists
-                if ($employee->img && Storage::disk('public')->exists($employee->img)) {
-                    Storage::disk('public')->delete($employee->img);
-                    Log::info('Deleted old profile image', [
-                        'old_path' => $employee->img
-                    ]);
-                }
-
-                // Upload new image
-                $path = 'employee/profiles';
-                $filename = 'profile_' . $employeeId . '_' . time() . '.' . $request->file('img')->getClientOriginalExtension();
-                $imagePath = $request->file('img')->storeAs($path, $filename, 'public');
-
-                if (!$imagePath) {
-                    throw new \Exception('Failed to upload profile image.');
-                }
-
-                $validated['img'] = $imagePath;
-                Log::info('Profile image uploaded successfully', [
-                    'new_path' => $imagePath
-                ]);
-            }
-
-            // Handle NIC front image upload
-            if ($request->hasFile('nic_front')) {
-                Log::info('Processing NIC front image upload');
-
-                // Delete old image if exists
-                if ($employee->nic_front && Storage::disk('public')->exists($employee->nic_front)) {
-                    Storage::disk('public')->delete($employee->nic_front);
-                }
-
-                // Upload new image
-                $path = 'employee/documents/nic';
-                $filename = 'nic_front_' . $employeeId . '_' . time() . '.' . $request->file('nic_front')->getClientOriginalExtension();
-                $imagePath = $request->file('nic_front')->storeAs($path, $filename, 'public');
-
-                if (!$imagePath) {
-                    throw new \Exception('Failed to upload NIC front image.');
-                }
-
-                $validated['nic_front'] = $imagePath;
-            }
-
-            // Handle NIC back image upload
-            if ($request->hasFile('nic_back')) {
-                Log::info('Processing NIC back image upload');
-
-                // Delete old image if exists
-                if ($employee->nic_back && Storage::disk('public')->exists($employee->nic_back)) {
-                    Storage::disk('public')->delete($employee->nic_back);
-                }
-
-                // Upload new image
-                $path = 'employee/documents/nic';
-                $filename = 'nic_back_' . $employeeId . '_' . time() . '.' . $request->file('nic_back')->getClientOriginalExtension();
-                $imagePath = $request->file('nic_back')->storeAs($path, $filename, 'public');
-
-                if (!$imagePath) {
-                    throw new \Exception('Failed to upload NIC back image.');
-                }
-
-                $validated['nic_back'] = $imagePath;
             }
 
             // Update employee data
@@ -931,18 +931,13 @@ class EmployeeController extends Controller
                     'name' => $employee->name,
                     'email' => $employee->email,
                     'phone' => $employee->phone,
-                    'profile_image_url' => $employee->profile_image_url,
-                    'nic_front_url' => $employee->nic_front_url,
-                    'nic_back_url' => $employee->nic_back_url,
+                    'profile_image_url' => $this->getProfileImageUrl($employee),
                     'role' => $employee->role,
                     'status' => $employee->status,
                     'code' => $employee->code,
-                    'mobile_no' => $employee->mobile_no,
-                    'whatsapp_no' => $employee->whatsapp_no,
                     'address' => $employee->address,
                     'district' => $employee->district,
                     'post_code' => $employee->post_code,
-                    'nic_no' => $employee->nic_no,
                 ]
             ];
 
@@ -977,7 +972,7 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Get employee profile data (for AJAX requests) - FIXED
+     * Get employee profile data (for AJAX requests)
      */
     public function getProfileData(Request $request)
     {
@@ -1002,19 +997,14 @@ class EmployeeController extends Controller
                     'name' => $employee->name,
                     'email' => $employee->email,
                     'phone' => $employee->phone,
-                    'mobile_no' => $employee->mobile_no,
-                    'whatsapp_no' => $employee->whatsapp_no,
                     'address' => $employee->address,
                     'district' => $employee->district,
                     'post_code' => $employee->post_code,
-                    'nic_no' => $employee->nic_no,
                     'username' => $employee->username,
                     'role' => $employee->role,
                     'status' => $employee->status,
-                    'profile_image_url' => $employee->profile_image_url,
-                    'nic_front_url' => $employee->nic_front_url,
-                    'nic_back_url' => $employee->nic_back_url,
-                    'created_at' => $employee->created_at->format('Y-m-d H:i:s'),
+                    'profile_image_url' => $this->getProfileImageUrl($employee),
+                    'created_at' => $employee->created_at ? $employee->created_at->format('Y-m-d H:i:s') : null,
                     'last_login_at' => $employee->last_login_at ? $employee->last_login_at->format('Y-m-d H:i:s') : null,
                     'stats' => [
                         'total_price_changes' => $totalPriceChanges,
@@ -1035,12 +1025,17 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Upload profile image only (separate endpoint) - FIXED
+     * Upload profile image only (FIXED WITH PROPER COLUMN DETECTION)
      */
     public function uploadProfileImage(Request $request)
     {
         try {
             $employee = Auth::guard('employee')->user();
+
+            Log::info('Profile image upload request', [
+                'employee_id' => $employee->id,
+                'has_file' => $request->hasFile('img')
+            ]);
 
             $validator = Validator::make($request->all(), [
                 'img' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
@@ -1055,9 +1050,7 @@ class EmployeeController extends Controller
             }
 
             // Delete old image if exists
-            if ($employee->img && Storage::disk('public')->exists($employee->img)) {
-                Storage::disk('public')->delete($employee->img);
-            }
+            $this->deleteOldImage($employee);
 
             // Upload new image
             $path = 'employee/profiles';
@@ -1068,16 +1061,35 @@ class EmployeeController extends Controller
                 throw new \Exception('Failed to upload image.');
             }
 
-            $employee->update(['img' => $imagePath]);
+            Log::info('Image uploaded successfully', [
+                'path' => $imagePath,
+                'employee_id' => $employee->id
+            ]);
+
+            // Get the correct image column name
+            $imageColumn = $this->getImageColumnName();
+
+            // Update employee record
+            $employee->$imageColumn = $imagePath;
+            $employee->save();
+
+            Log::info('Employee record updated', [
+                'column' => $imageColumn,
+                'path' => $imagePath
+            ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Profile image updated successfully!',
-                'image_url' => asset('storage/' . $imagePath)
+                'image_url' => asset('storage/' . $imagePath),
+                'image_path' => $imagePath
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Profile image upload failed: ' . $e->getMessage());
+            Log::error('Profile image upload failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
 
             return response()->json([
                 'success' => false,
@@ -1085,33 +1097,44 @@ class EmployeeController extends Controller
             ], 500);
         }
     }
+
     /**
-     * Delete profile image - FIXED
+     * Delete profile image (FIXED WITH PROPER COLUMN DETECTION)
      */
     public function deleteProfileImage(Request $request)
     {
         try {
             $employee = Auth::guard('employee')->user();
 
-            if ($employee->img && Storage::disk('public')->exists($employee->img)) {
-                Storage::disk('public')->delete($employee->img);
+            Log::info('Delete profile image request', [
+                'employee_id' => $employee->id
+            ]);
 
-                $employee->update(['img' => null]);
+            // Delete the image file
+            $this->deleteOldImage($employee);
 
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Profile image removed successfully!',
-                    'default_image' => asset('asset/img/default-avatar.png')
-                ]);
-            }
+            // Get the correct image column name
+            $imageColumn = $this->getImageColumnName();
+
+            // Update employee record
+            $employee->$imageColumn = null;
+            $employee->save();
+
+            Log::info('Profile image deleted successfully', [
+                'employee_id' => $employee->id
+            ]);
 
             return response()->json([
-                'success' => false,
-                'message' => 'No profile image found to delete.'
-            ], 404);
+                'success' => true,
+                'message' => 'Profile image removed successfully!',
+                'default_image' => asset('asset/img/default-avatar.png')
+            ]);
 
         } catch (\Exception $e) {
-            Log::error('Delete profile image failed: ' . $e->getMessage());
+            Log::error('Delete profile image failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
 
             return response()->json([
                 'success' => false,
@@ -1119,7 +1142,6 @@ class EmployeeController extends Controller
             ], 500);
         }
     }
-
 
     /**
      * Display seller orders

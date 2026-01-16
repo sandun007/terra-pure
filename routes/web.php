@@ -194,12 +194,11 @@ Route::prefix('employee')->middleware('auth:employee')->group(function(){
     Route::post('/logout', [LoginController::class, 'logout'])->name('employee.logout');
 
     // Profile Routes
-    Route::get('/profile', [EmployeeController::class, 'profile'])->name('profile');
-    Route::post('/profile/update', [EmployeeController::class, 'updateProfile'])->name('profile.update');
-    Route::get('/profile/data', [EmployeeController::class, 'getProfileData'])->name('profile.data');
-    Route::post('/profile/image/upload', [EmployeeController::class, 'uploadProfileImage'])->name('profile.image.upload');
-    Route::delete('/profile/image/delete', [EmployeeController::class, 'deleteProfileImage'])->name('profile.image.delete');
-
+    Route::get('/profile', [EmployeeController::class, 'profile'])->name('employee.profile');
+    Route::post('/employee/profile/update', [EmployeeController::class, 'updateProfile'])->name('employee.profile.update');
+    Route::get('/employee/profile/data', [EmployeeController::class, 'getProfileData'])->name('employee.profile.data');
+    Route::post('/employee/profile/image/upload', [EmployeeController::class, 'uploadProfileImage'])->name('employee.profile.image.upload');
+    Route::delete('/employee/profile/image/delete', [EmployeeController::class, 'deleteProfileImage'])->name('employee.profile.image.delete');
     // Wholesaler Management - PRICE UPDATE ROUTES
     Route::prefix('wholesaler')->name('employee.wholesaler.')->group(function() {
         // Products - List and View

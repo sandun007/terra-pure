@@ -14,6 +14,7 @@ class Employee extends Authenticatable
 
     protected $guard = 'employee';
 
+    // SIMPLIFIED - REMOVED MOBILE AND DOCUMENT FIELDS
     protected $fillable = [
         'code',
         'name',
@@ -21,15 +22,11 @@ class Employee extends Authenticatable
         'phone',
         'address',
         'nic_no',
-        'mobile_no',
-        'whatsapp_no',
         'post_code',
         'username',
         'password',
         'view_password',
         'district',
-        'nic_front',
-        'nic_back',
         'img',
         'role',
         'status',
@@ -51,8 +48,6 @@ class Employee extends Authenticatable
 
     protected $appends = [
         'profile_image_url',
-        'nic_front_url',
-        'nic_back_url',
         'full_address'
     ];
 
@@ -64,7 +59,7 @@ class Employee extends Authenticatable
         }
     }
 
-    // Accessor for profile image URL - FIXED
+    // Accessor for profile image URL
     public function getProfileImageUrlAttribute()
     {
         if ($this->img) {
@@ -78,28 +73,6 @@ class Employee extends Authenticatable
             }
         }
         return asset('asset/img/default-avatar.png');
-    }
-
-    // Accessor for NIC front image URL - FIXED
-    public function getNicFrontUrlAttribute()
-    {
-        if ($this->nic_front) {
-            if (Storage::disk('public')->exists($this->nic_front)) {
-                return asset('storage/' . $this->nic_front);
-            }
-        }
-        return null;
-    }
-
-    // Accessor for NIC back image URL - FIXED
-    public function getNicBackUrlAttribute()
-    {
-        if ($this->nic_back) {
-            if (Storage::disk('public')->exists($this->nic_back)) {
-                return asset('storage/' . $this->nic_back);
-            }
-        }
-        return null;
     }
 
     // Accessor for full address

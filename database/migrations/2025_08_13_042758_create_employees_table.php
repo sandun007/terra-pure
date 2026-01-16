@@ -16,15 +16,11 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->text('address')->nullable();
             $table->string('nic_no')->unique();
-            $table->string('mobile_no');
-            $table->string('whatsapp_no');
             $table->string('post_code')->nullable();
             $table->string('username')->unique();
             $table->string('password');
             $table->string('view_password');
             $table->string('district')->nullable();
-            $table->string('nic_front')->nullable();
-            $table->string('nic_back')->nullable();
             $table->string('img')->nullable();
             $table->enum('role', ['admin', 'manager', 'staff'])->default('staff');
             $table->enum('status', ['active', 'inactive'])->default('active');

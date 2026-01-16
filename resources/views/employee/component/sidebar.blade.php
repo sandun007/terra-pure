@@ -125,7 +125,7 @@
         <h6 class="submenu-hdr">Account</h6>
         <ul>
             <li>
-                <a href="{{ route('profile') }}"
+                <a href="{{ route('employee.profile') }}"
                    class="{{ request()->routeIs('employee.profile') ? 'active' : '' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

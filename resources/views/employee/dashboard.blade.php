@@ -617,7 +617,7 @@
                             <i class="fas fa-clipboard-list quick-action-icon"></i>
                             <span>Wholesaler Orders</span>
                         </a>
-                        <a href="{{ route('profile') }}" class="quick-action-btn">
+                        <a href="{{ route('employee.profile') }}" class="quick-action-btn">
                             <i class="fas fa-user-cog quick-action-icon"></i>
                             <span>Update Profile</span>
                         </a>
