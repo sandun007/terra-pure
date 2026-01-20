@@ -50,7 +50,7 @@ class WholesalerShopController extends Controller
                 });
             }
 
-            // Sort options
+            // Sort options - use display_price for sorting
             $sortOptions = [
                 'newest' => ['created_at', 'desc'],
                 'oldest' => ['created_at', 'asc'],
@@ -112,7 +112,7 @@ class WholesalerShopController extends Controller
     }
 
     /**
-     * Process Order Now - Direct order creation
+     * Process Order Now - Use display_price for calculations
      */
     public function orderNow(Request $request)
     {
@@ -157,8 +157,9 @@ class WholesalerShopController extends Controller
             // Get shop for tax calculation
             $shop = WholesalerShop::where('wholesaler_id', $wholesaler->id)->first();
 
-            // Calculate order total
-            $subtotal = $product->display_price * $request->quantity;
+            // Calculate order total using display_price
+            $unitPrice = $product->display_price ?? $product->selling_price;
+            $subtotal = $unitPrice * $request->quantity;
             $taxRate = $shop->tax_rate ?? 5;
             $tax = $subtotal * ($taxRate / 100);
             $shipping = $this->calculateShipping($subtotal);
@@ -188,13 +189,13 @@ class WholesalerShopController extends Controller
                 'notes' => $request->notes,
             ]);
 
-            // Create order item
+            // Create order item - use display_price
             WholesalerOrderItem::create([
                 'order_id' => $order->id,
                 'product_id' => $product->id,
                 'product_name' => $product->name,
                 'quantity' => $request->quantity,
-                'unit_price' => $product->display_price,
+                'unit_price' => $unitPrice,
                 'total_price' => $subtotal,
             ]);
 

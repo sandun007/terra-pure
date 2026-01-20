@@ -571,8 +571,16 @@
                         <div class="card-content">
                             <h3 class="card-title">{{ Str::limit($product->name, 60) }}</h3>
 
+                            {{-- Updated price display section --}}
                             <div class="product-pricing">
                                 <div class="price-display">Rs. {{ number_format($product->display_price, 2) }}</div>
+                                @if($product->discount > 0)
+                                    <div class="wholesale-price small">
+                                        <i class="fas fa-store me-1"></i>
+                                        After Discount: Rs. {{ number_format($product->final_price, 2) }}
+                                        <span class="badge bg-success ms-1">-{{ $product->discount }}%</span>
+                                    </div>
+                                @endif
                             </div>
 
                             <div class="stock-info">

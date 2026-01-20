@@ -13,7 +13,6 @@
             --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
             --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
             --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            --info-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
 
@@ -32,11 +31,6 @@
             margin-bottom: 0.5rem;
         }
 
-        .page-header-enhanced p {
-            opacity: 0.9;
-            margin-bottom: 0;
-        }
-
         .card-enhanced {
             border: none;
             border-radius: 15px;
@@ -47,12 +41,6 @@
 
         .card-enhanced:hover {
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-        }
-
-        .card-header-enhanced {
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            border-bottom: 2px solid #e2e8f0;
-            padding: 1.25rem 1.5rem;
         }
 
         .product-img-enhanced {
@@ -404,12 +392,15 @@
             .page-header-enhanced {
                 padding: 1.5rem;
             }
+
             .dataTables_filter input {
                 width: 100% !important;
             }
+
             .action-buttons-enhanced {
                 flex-wrap: wrap;
             }
+
             .btn-enhanced-primary,
             .btn-enhanced-success,
             .btn-enhanced-secondary {
@@ -422,6 +413,9 @@
 
 @section('content')
     <div class="container-fluid py-4">
+        {{-- CSRF Token for AJAX --}}
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+
         {{-- Enhanced Page Header --}}
         <div class="page-header-enhanced">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
@@ -436,9 +430,6 @@
                     </p>
                 </div>
                 <div class="d-flex gap-2 flex-wrap">
-                    <button class="btn btn-enhanced-success" id="exportToGoogleSheets">
-                        <i class="fab fa-google me-2"></i>Export to Sheets
-                    </button>
                     <button class="btn btn-enhanced-primary" data-bs-toggle="modal" data-bs-target="#bulkPriceModal">
                         <i class="fas fa-edit me-2"></i>Bulk Update
                     </button>
@@ -448,7 +439,7 @@
 
         {{-- Enhanced Filter Card --}}
         <div class="card-enhanced mb-4">
-            <div class="card-header-enhanced">
+            <div class="card-header-enhanced" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-bottom: 2px solid #e2e8f0; padding: 1.25rem 1.5rem;">
                 <h5 class="mb-0 fw-bold">
                     <i class="fas fa-filter me-2 text-primary"></i>Filter Products
                 </h5>
@@ -467,9 +458,9 @@
                         <div class="col-lg-2 col-md-6">
                             <label class="form-label fw-semibold small">Status</label>
                             <select class="form-select form-select-enhanced" name="status">
-                                <option value="all" {{ request('status', 'all') == 'all' ? 'selected' : '' }}>All Status</option>
-                                <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
-                                <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                                <option value="all" {{ request('status', 'all') === 'all' ? 'selected' : '' }}>All Status</option>
+                                <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
+                                <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactive</option>
                             </select>
                         </div>
                         <div class="col-lg-3 col-md-6">
@@ -506,14 +497,14 @@
             </div>
         @else
             <div class="card-enhanced">
-                <div class="card-header-enhanced">
+                <div class="card-header-enhanced" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-bottom: 2px solid #e2e8f0; padding: 1.25rem 1.5rem;">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0 fw-bold">
                             <i class="fas fa-list me-2 text-primary"></i>Products List
                         </h5>
                         <span class="badge-enhanced badge-count-enhanced">
-                        {{ $products->total() }} Products
-                    </span>
+                            {{ $products->total() }} Products
+                        </span>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -529,15 +520,13 @@
                                 <th>Wholesaler</th>
                                 <th>Category</th>
                                 <th class="text-end">Selling Price</th>
-                                <th class="text-end">Wholesale Price</th>
-                                <th class="text-end">Display Price</th>
                                 <th class="text-center">Status</th>
                                 <th class="text-center" width="120">Actions</th>
                             </tr>
                             </thead>
                             <tbody>
                             @foreach($products as $product)
-                                <tr>
+                                <tr class="product-row" data-product-id="{{ $product->id }}">
                                     <td class="ps-4">
                                         <input type="checkbox" class="form-check-input form-check-input-enhanced product-checkbox" value="{{ $product->id }}">
                                     </td>
@@ -565,44 +554,27 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="fw-semibold text-dark">{{ $product->wholesaler->name ?? 'N/A' }}</span>
+                                        <span class="fw-semibold text-dark">{{ $product->wholesaler->business_name ?? 'N/A' }}</span>
                                     </td>
                                     <td>
-                                    <span class="badge-enhanced badge-category-enhanced">
-                                        <i class="fas fa-tag me-1"></i>
-                                        {{ $product->category->name ?? 'N/A' }}
-                                    </span>
+                                        <span class="badge-enhanced badge-category-enhanced">
+                                            <i class="fas fa-tag me-1"></i>
+                                            {{ $product->category->name ?? 'N/A' }}
+                                        </span>
                                     </td>
                                     <td class="text-end">
-                                        <div class="selling-price-enhanced"
-                                             data-field="selling_price"
-                                             data-id="{{ $product->id }}">
+                                        <div class="selling-price-enhanced">
                                             <i class="fas fa-dollar-sign me-1"></i>
                                             Rs. {{ number_format($product->selling_price, 2) }}
                                         </div>
                                     </td>
-                                    <td class="text-end">
-                                        <div class="wholesale-price-enhanced"
-                                             data-field="wholesale_price"
-                                             data-id="{{ $product->id }}">
-                                            <i class="fas fa-store me-1"></i>
-                                            Rs. {{ number_format($product->wholesale_price, 2) }}
-                                        </div>
-                                    </td>
-                                    <td class="text-end">
-                                        <div class="price-display-enhanced"
-                                             data-field="display_price"
-                                             data-id="{{ $product->id }}">
-                                            <i class="fas fa-tag me-1"></i>
-                                            Rs. {{ number_format($product->display_price, 2) }}
-                                        </div>
-                                    </td>
                                     <td class="text-center">
-                                    <span class="status-badge-enhanced {{ $product->status == 'active' ? 'status-active-enhanced' : 'status-inactive-enhanced' }}">
-                                        <i class="fas {{ $product->status == 'active' ? 'fa-check-circle' : 'fa-times-circle' }}"></i>
-                                        {{ ucfirst($product->status) }}
-                                    </span>
+                                        <span class="status-badge-enhanced {{ $product->status == 'active' ? 'status-active-enhanced' : 'status-inactive-enhanced' }}">
+                                            <i class="fas {{ $product->status == 'active' ? 'fa-check-circle' : 'fa-times-circle' }}"></i>
+                                            {{ ucfirst($product->status) }}
+                                        </span>
                                     </td>
+                                    <!-- In the actions column of your products table -->
                                     <td class="text-center">
                                         <div class="action-buttons-enhanced">
                                             <a href="{{ route('employee.wholesaler.product-view', $product->id) }}"
@@ -611,16 +583,12 @@
                                                title="View Details">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <button class="btn-action-enhanced btn-edit-enhanced edit-price-btn"
-                                                    data-id="{{ $product->id }}"
-                                                    data-name="{{ $product->name }}"
-                                                    data-selling="{{ $product->selling_price }}"
-                                                    data-wholesale="{{ $product->wholesale_price }}"
-                                                    data-display="{{ $product->display_price }}"
-                                                    data-bs-toggle="tooltip"
-                                                    title="Edit Prices">
+                                            <a href="{{ route('employee.wholesaler.price-update-form', $product->id) }}"
+                                               class="btn-action-enhanced btn-edit-enhanced"
+                                               data-bs-toggle="tooltip"
+                                               title="Edit Price">
                                                 <i class="fas fa-edit"></i>
-                                            </button>
+                                            </a>
                                         </div>
                                     </td>
                                 </tr>
@@ -649,168 +617,66 @@
         @endif
     </div>
 
-    {{-- Enhanced Edit Price Modal --}}
-    <div class="modal fade" id="editPriceModal" tabindex="-1" aria-hidden="true">
+    {{-- Enhanced Bulk Price Update Modal --}}
+    <div class="modal fade" id="bulkPriceModal" tabindex="-1" aria-labelledby="bulkPriceModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content modal-content-enhanced">
                 <div class="modal-header modal-header-enhanced">
-                    <h5 class="modal-title fw-bold">
-                        <i class="fas fa-edit me-2"></i>Edit Product Prices
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="priceUpdateForm">
-                    @csrf
-                    <input type="hidden" id="productId" name="product_id">
-
-                    <div class="modal-body modal-body-enhanced">
-                        <div class="alert-enhanced alert-info-enhanced mb-4">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-info-circle fa-2x me-3"></i>
-                                <div>
-                                    <strong id="productName"></strong>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="fas fa-dollar-sign me-1 text-warning"></i>
-                                Selling Price <span class="text-danger">*</span>
-                            </label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light">Rs.</span>
-                                <input type="number" step="0.01" class="form-control form-control-enhanced"
-                                       id="sellingPrice" name="selling_price" placeholder="0.00" required>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="fas fa-store me-1 text-success"></i>
-                                Wholesale Price <span class="text-danger">*</span>
-                            </label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light">Rs.</span>
-                                <input type="number" step="0.01" class="form-control form-control-enhanced"
-                                       id="wholesalePrice" name="wholesale_price" placeholder="0.00" required>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="fas fa-tag me-1 text-primary"></i>
-                                Display Price <span class="text-danger">*</span>
-                            </label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light">Rs.</span>
-                                <input type="number" step="0.01" class="form-control form-control-enhanced"
-                                       id="displayPrice" name="display_price" placeholder="0.00" required>
-                            </div>
-                        </div>
-
-                        <div class="mb-0">
-                            <label class="form-label fw-bold">
-                                <i class="fas fa-comment me-1"></i>
-                                Notes (Optional)
-                            </label>
-                            <textarea class="form-control form-control-enhanced" name="notes" rows="3"
-                                      placeholder="Enter reason for price change..."></textarea>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer modal-footer-enhanced">
-                        <button type="button" class="btn btn-enhanced-secondary" data-bs-dismiss="modal">
-                            <i class="fas fa-times me-1"></i>Cancel
-                        </button>
-                        <button type="submit" class="btn btn-enhanced-primary">
-                            <i class="fas fa-save me-1"></i>Update Prices
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    {{-- Enhanced Bulk Price Modal --}}
-    <div class="modal fade" id="bulkPriceModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content modal-content-enhanced">
-                <div class="modal-header modal-header-enhanced">
-                    <h5 class="modal-title fw-bold">
+                    <h5 class="modal-title fw-bold" id="bulkPriceModalLabel">
                         <i class="fas fa-edit me-2"></i>Bulk Price Update
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form id="bulkPriceForm">
+                <form id="bulkPriceForm" method="POST" action="{{ route('employee.wholesaler.bulk-price-update') }}">
                     @csrf
+                    <input type="hidden" id="selectedProducts" name="products">
+
                     <div class="modal-body modal-body-enhanced">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="fas fa-list me-1"></i>
-                                Price Type <span class="text-danger">*</span>
-                            </label>
-                            <select class="form-select form-select-enhanced" name="price_type" required>
-                                <option value="">Select price type...</option>
-                                <option value="selling_price">Selling Price</option>
-                                <option value="wholesale_price">Wholesale Price</option>
-                                <option value="display_price">Display Price</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="fas fa-cog me-1"></i>
-                                Update Type <span class="text-danger">*</span>
-                            </label>
-                            <div class="btn-group w-100" role="group">
-                                <input type="radio" class="btn-check" name="update_type" value="fixed" id="fixedType" checked>
-                                <label class="btn btn-outline-primary" for="fixedType">
-                                    <i class="fas fa-dollar-sign me-1"></i>Fixed Amount
-                                </label>
-
-                                <input type="radio" class="btn-check" name="update_type" value="percentage" id="percentageType">
-                                <label class="btn btn-outline-primary" for="percentageType">
-                                    <i class="fas fa-percent me-1"></i>Percentage
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold" id="valueLabel">
-                                Amount <span class="text-danger">*</span>
-                            </label>
-                            <div class="input-group">
-                                <input type="number"
-                                       step="0.01"
-                                       class="form-control form-control-enhanced"
-                                       name="value"
-                                       placeholder="0.00"
-                                       required>
-                                <span class="input-group-text bg-light" id="valueSuffix">Rs.</span>
-                            </div>
-                            <small class="text-muted" id="valueHelp">Enter the new price amount</small>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="fas fa-comment me-1"></i>
-                                Notes (Optional)
-                            </label>
-                            <textarea class="form-control form-control-enhanced"
-                                      name="notes"
-                                      rows="3"
-                                      placeholder="Enter reason for bulk update..."></textarea>
-                        </div>
-
-                        <div class="alert-enhanced alert-warning-enhanced mb-0">
+                        <div class="alert-enhanced alert-warning-enhanced mb-4">
                             <div class="d-flex align-items-center">
                                 <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
                                 <div>
-                                    <strong>Selected Products: <span id="selectedCount" class="text-dark">0</span></strong>
-                                    <p class="mb-0 small">This action will update prices for all selected products</p>
+                                    <strong><span id="selectedCount">0</span> products selected</strong>
+                                    <p class="mb-0 small mt-1">Select products from the table to update prices in bulk</p>
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-sliders-h me-1 text-info"></i>
+                                Update Type <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select form-select-enhanced" id="updateType" name="update_type" required>
+                                <option value="fixed">Fixed Price</option>
+                                <option value="percentage">Percentage Change</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold" id="valueLabel">
+                                <i class="fas fa-dollar-sign me-1 text-success"></i>
+                                Value <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light" id="valuePrefix">Rs.</span>
+                                <input type="number" step="0.01" class="form-control form-control-enhanced" id="value"
+                                       name="value" placeholder="0.00" required>
+                                <span class="input-group-text bg-light d-none" id="valueSuffix">%</span>
+                            </div>
+                            <small class="text-muted mt-1 d-block" id="updateTypeHint">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Set fixed price value for all selected products
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-comment-dots me-1 text-info"></i>
+                                Notes (Optional)
+                            </label>
+                            <textarea class="form-control form-control-enhanced" id="bulkNotes" name="notes" rows="2"
+                                      placeholder="Reason for bulk price update..."></textarea>
                         </div>
                     </div>
 
@@ -818,8 +684,8 @@
                         <button type="button" class="btn btn-enhanced-secondary" data-bs-dismiss="modal">
                             <i class="fas fa-times me-1"></i>Cancel
                         </button>
-                        <button type="submit" class="btn btn-enhanced-primary">
-                            <i class="fas fa-save me-1"></i>Update Selected Products
+                        <button type="submit" class="btn btn-enhanced-success" id="bulkUpdateBtn" disabled>
+                            <i class="fas fa-check-double me-1"></i>Update Selected
                         </button>
                     </div>
                 </form>
@@ -828,246 +694,215 @@
     </div>
 @endsection
 
-@push('script')
+@push('scripts')
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
+            console.log('Page loaded - initializing...');
+
+            // Set CSRF token for all AJAX requests
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
             // Initialize DataTable
-            $('#productsTable').DataTable({
-                responsive: true,
+            const table = $('#productsTable').DataTable({
+                pageLength: 20,
+                order: [[2, 'asc']],
+                columnDefs: [
+                    {orderable: false, targets: [0, 1, 7]},
+                    {searchable: false, targets: [0, 1, 7]}
+                ],
                 language: {
                     search: "",
                     searchPlaceholder: "Search products...",
-                    lengthMenu: "Show _MENU_ entries",
-                    info: "Showing _START_ to _END_ of _TOTAL_ products",
-                    infoEmpty: "No products available",
-                    zeroRecords: "No matching products found",
                     paginate: {
                         first: '<i class="fas fa-angle-double-left"></i>',
                         previous: '<i class="fas fa-angle-left"></i>',
                         next: '<i class="fas fa-angle-right"></i>',
                         last: '<i class="fas fa-angle-double-right"></i>'
                     }
-                },
-                columnDefs: [
-                    { orderable: false, targets: [0, 1, 9] },
-                    { className: "align-middle", targets: "_all" }
-                ],
-                order: [[2, 'asc']],
-                pageLength: 10,
-                lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
-                dom: '<"row"<"col-md-6"l><"col-md-6"f>>rt<"row"<"col-md-6"i><"col-md-6"p>>',
-                initComplete: function() {
-                    $('.dataTables_filter input').addClass('form-control');
-                    $('.dataTables_length select').addClass('form-select');
                 }
             });
 
             // Initialize tooltips
             const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            tooltipTriggerList.map(el => new bootstrap.Tooltip(el));
-
-            // Edit Price Modal Handler
-            $('.edit-price-btn').on('click', function() {
-                const data = {
-                    id: $(this).data('id'),
-                    name: $(this).data('name'),
-                    selling: $(this).data('selling'),
-                    wholesale: $(this).data('wholesale'),
-                    display: $(this).data('display')
-                };
-
-                $('#productId').val(data.id);
-                $('#productName').text(data.name);
-                $('#sellingPrice').val(data.selling);
-                $('#wholesalePrice').val(data.wholesale);
-                $('#displayPrice').val(data.display);
-
-                new bootstrap.Modal('#editPriceModal').show();
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
             });
 
-            // Update Price Form Submission
-            $('#priceUpdateForm').on('submit', function(e) {
-                e.preventDefault();
-                const $form = $(this);
-                const $submitBtn = $form.find('button[type="submit"]');
-                const originalBtnText = $submitBtn.html();
-
-                $submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Updating...');
-
-                $.ajax({
-                    url: "{{ route('employee.wholesaler.price-product-update') }}",
-                    type: "POST",
-                    data: $form.serialize(),
-                    success: function(response) {
-                        if (response.success) {
-                            const productId = $('#productId').val();
-                            updatePriceFields(productId, response.product);
-                            bootstrap.Modal.getInstance('#editPriceModal').hide();
-                            showAlert('success', response.message);
-                            $form[0].reset();
-                        }
-                    },
-                    error: function(xhr) {
-                        showAlert('error', xhr.responseJSON?.message || 'Error updating price');
-                    },
-                    complete: function() {
-                        $submitBtn.prop('disabled', false).html(originalBtnText);
-                    }
-                });
-            });
-
-            // Update price fields in table
-            function updatePriceFields(productId, product) {
-                $(`[data-id="${productId}"][data-field="selling_price"]`)
-                    .html('<i class="fas fa-dollar-sign me-1"></i>Rs. ' + parseFloat(product.selling_price).toFixed(2));
-                $(`[data-id="${productId}"][data-field="wholesale_price"]`)
-                    .html('<i class="fas fa-store me-1"></i>Rs. ' + parseFloat(product.wholesale_price).toFixed(2));
-                $(`[data-id="${productId}"][data-field="display_price"]`)
-                    .html('<i class="fas fa-tag me-1"></i>Rs. ' + parseFloat(product.display_price).toFixed(2));
-            }
-
-            // Select All Checkbox
-            $('#selectAll').on('change', function() {
+            // Select all checkbox
+            $('#selectAll').on('change', function () {
                 $('.product-checkbox').prop('checked', this.checked);
                 updateSelectedCount();
             });
 
-            // Individual Checkbox
-            $('.product-checkbox').on('change', function() {
-                const totalCheckboxes = $('.product-checkbox').length;
-                const checkedCheckboxes = $('.product-checkbox:checked').length;
-                $('#selectAll').prop('checked', totalCheckboxes === checkedCheckboxes);
+            // Individual checkbox
+            $(document).on('change', '.product-checkbox', function () {
                 updateSelectedCount();
+                $('#selectAll').prop('checked', $('.product-checkbox:checked').length === $('.product-checkbox').length);
             });
 
-            // Update Selected Count
+            // Update selected count
             function updateSelectedCount() {
                 const count = $('.product-checkbox:checked').length;
                 $('#selectedCount').text(count);
+
+                if (count > 0) {
+                    $('#bulkUpdateBtn').prop('disabled', false);
+                } else {
+                    $('#bulkUpdateBtn').prop('disabled', true);
+                }
             }
 
-            // Bulk Price Update Type Change
-            $('input[name="update_type"]').on('change', function() {
-                const type = $(this).val();
-                const isFixed = type === 'fixed';
-
-                $('#valueLabel').html((isFixed ? 'Amount' : 'Percentage') + ' <span class="text-danger">*</span>');
-                $('#valueSuffix').text(isFixed ? 'Rs.' : '%');
-                $('#valueHelp').text(isFixed
-                    ? 'Enter the new price amount'
-                    : 'Enter percentage (e.g., 10 for 10% increase, -10 for 10% decrease)');
-            });
-
-            // Bulk Price Update Form Submission
-            $('#bulkPriceForm').on('submit', function(e) {
+            // Bulk update form submit
+            $('#bulkPriceForm').on('submit', function (e) {
                 e.preventDefault();
+                e.stopPropagation();
 
-                const selectedProducts = $('.product-checkbox:checked').map(function() {
+                const selectedIds = $('.product-checkbox:checked').map(function () {
                     return $(this).val();
                 }).get();
 
-                if (selectedProducts.length === 0) {
-                    showAlert('warning', 'Please select at least one product');
-                    return;
+                if (selectedIds.length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'No Products Selected',
+                        text: 'Please select at least one product to update',
+                        confirmButtonColor: '#f59e0b'
+                    });
+                    return false;
                 }
 
-                const $form = $(this);
-                const $submitBtn = $form.find('button[type="submit"]');
-                const originalBtnText = $submitBtn.html();
-
-                $submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Updating...');
-
-                const formData = $form.serializeArray();
-                formData.push({ name: 'products', value: JSON.stringify(selectedProducts) });
-
-                $.ajax({
-                    url: "{{ route('employee.wholesaler.bulk-price-update') }}",
-                    type: "POST",
-                    data: $.param(formData),
-                    success: function(response) {
-                        if (response.success) {
-                            bootstrap.Modal.getInstance('#bulkPriceModal').hide();
-                            showAlert('success', response.message);
-                            setTimeout(() => location.reload(), 1500);
-                        }
-                    },
-                    error: function(xhr) {
-                        showAlert('error', xhr.responseJSON?.message || 'Error updating prices');
-                        $submitBtn.prop('disabled', false).html(originalBtnText);
-                    }
-                });
-            });
-
-            // Alert Function using SweetAlert2
-            function showAlert(type, message) {
-                const icons = {
-                    success: 'success',
-                    error: 'error',
-                    warning: 'warning',
-                    info: 'info'
-                };
+                $('#selectedProducts').val(JSON.stringify(selectedIds));
 
                 Swal.fire({
-                    icon: icons[type] || 'info',
-                    title: type.charAt(0).toUpperCase() + type.slice(1) + '!',
-                    text: message,
-                    toast: true,
-                    position: 'top-end',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true
-                });
-            }
+                    title: 'Confirm Bulk Update',
+                    html: `You are about to update <strong>${selectedIds.length}</strong> products.<br>This action cannot be undone.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10b981',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Yes, update all!',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Disable bulk update button
+                        const bulkBtn = $('#bulkUpdateBtn');
+                        const originalBulkText = bulkBtn.html();
+                        bulkBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Updating...');
 
-            // Export to Google Sheets
-            $('#exportToGoogleSheets').on('click', function() {
-                const $btn = $(this);
-                const originalHtml = $btn.html();
+                        // Show loading
+                        Swal.fire({
+                            title: 'Updating...',
+                            html: 'Please wait while we update the prices',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
 
-                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Exporting...');
+                        // Prepare FormData for bulk update
+                        const formData = new FormData();
+                        formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+                        formData.append('products', JSON.stringify(selectedIds));
+                        formData.append('update_type', $('#updateType').val());
+                        formData.append('value', $('#value').val());
+                        formData.append('notes', $('#bulkNotes').val() || '');
 
-                const tableData = [];
-                const headers = ['Product Name', 'Code', 'Barcode', 'Wholesaler', 'Category', 'Selling Price', 'Wholesale Price', 'Display Price', 'Status'];
-                tableData.push(headers);
+                        console.log('Bulk update FormData contents:');
+                        for (let [key, value] of formData.entries()) {
+                            console.log(key + ': ' + value);
+                        }
 
-                $('#productsTable tbody tr').each(function() {
-                    if ($(this).find('td').length > 1) {
-                        const row = [];
-                        row.push($(this).find('td:eq(2) .fw-bold').text().trim());
-                        row.push($(this).find('td:eq(2) .badge-enhanced').first().text().trim());
-                        row.push($(this).find('td:eq(2) .badge-enhanced').eq(1).text().trim() || 'N/A');
-                        row.push($(this).find('td:eq(3)').text().trim());
-                        row.push($(this).find('td:eq(4)').text().trim());
-                        row.push($(this).find('td:eq(5)').text().trim().replace('Rs. ', ''));
-                        row.push($(this).find('td:eq(6)').text().trim().replace('Rs. ', ''));
-                        row.push($(this).find('td:eq(7)').text().trim().replace('Rs. ', ''));
-                        row.push($(this).find('td:eq(8)').text().trim());
-                        tableData.push(row);
+                        // Send AJAX request
+                        $.ajax({
+                            url: '{{ route("employee.wholesaler.bulk-price-update") }}',
+                            type: 'POST',
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                            dataType: 'json',
+                            success: function (response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Success!',
+                                        html: `<strong>${response.updated_count}</strong> products updated successfully!`,
+                                        showConfirmButton: false,
+                                        timer: 2500,
+                                        timerProgressBar: true
+                                    }).then(() => {
+                                        // Hide modal
+                                        const modalElement = document.getElementById('bulkPriceModal');
+                                        const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                                        if (modalInstance) {
+                                            modalInstance.hide();
+                                        }
+
+                                        // Reload page
+                                        location.reload();
+                                    });
+                                } else {
+                                    // Re-enable bulk update button
+                                    bulkBtn.prop('disabled', false).html(originalBulkText);
+
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error!',
+                                        text: response.message || 'Failed to update prices',
+                                        confirmButtonColor: '#ef4444'
+                                    });
+                                }
+                            },
+                            error: function (xhr) {
+                                // Re-enable bulk update button
+                                bulkBtn.prop('disabled', false).html(originalBulkText);
+
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error!',
+                                    text: xhr.responseJSON?.message || 'Failed to update prices',
+                                    confirmButtonColor: '#ef4444'
+                                });
+                            }
+                        });
                     }
                 });
 
-                const csvContent = tableData.map(row => row.join(',')).join('\n');
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement('a');
-                const url = URL.createObjectURL(blob);
-
-                link.setAttribute('href', url);
-                link.setAttribute('download', `wholesaler_products_${new Date().getTime()}.csv`);
-                link.style.visibility = 'hidden';
-
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-
-                setTimeout(() => {
-                    $btn.prop('disabled', false).html(originalHtml);
-                    showAlert('success', 'Products exported successfully! You can now import this CSV into Google Sheets.');
-                }, 1000);
+                return false;
             });
+
+            // Update type change handler
+            $('#updateType').on('change', function () {
+                const type = $(this).val();
+
+                if (type === 'percentage') {
+                    $('#valueLabel').html('<i class="fas fa-percent me-1 text-success"></i> Percentage Change <span class="text-danger">*</span>');
+                    $('#valuePrefix').addClass('d-none');
+                    $('#valueSuffix').removeClass('d-none');
+                    $('#updateTypeHint').html('<i class="fas fa-info-circle me-1"></i> Use positive values to increase (e.g., 10 for +10%) or negative to decrease (e.g., -10 for -10%)');
+                } else {
+                    $('#valueLabel').html('<i class="fas fa-dollar-sign me-1 text-success"></i> Fixed Price <span class="text-danger">*</span>');
+                    $('#valuePrefix').removeClass('d-none');
+                    $('#valueSuffix').addClass('d-none');
+                    $('#updateTypeHint').html('<i class="fas fa-info-circle me-1"></i> Set fixed price value for all selected products');
+                }
+            });
+
+            // Reset bulk form when modal opens
+            $('#bulkPriceModal').on('show.bs.modal', function () {
+                $('#bulkPriceForm')[0].reset();
+                updateSelectedCount();
+            });
+
+            console.log('All event handlers initialized successfully');
         });
     </script>
 @endpush

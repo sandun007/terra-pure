@@ -281,6 +281,7 @@
                     <span class="material-icons-outlined me-2">payments</span>
                     Pricing Information
                 </h5>
+                {{-- Updated pricing information --}}
                 <div class="price-card">
                     <div class="row">
                         <div class="col-md-6">
@@ -293,24 +294,19 @@
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <div class="text-muted mb-1">Wholesale Price</div>
+                                <div class="text-muted mb-1">Final Price</div>
                                 <div class="price-display" style="color: #10b981;">
-                                    Rs. {{ number_format($product->wholesale_price, 2) }}
+                                    Rs. {{ number_format($product->final_price, 2) }}
                                 </div>
                             </div>
                         </div>
                     </div>
-                    @php
-                        $priceDifference = $product->display_price - $product->wholesale_price;
-                        $marginPercentage = $product->wholesale_price > 0 ? ($priceDifference / $product->wholesale_price) * 100 : 0;
-                    @endphp
-                    <div class="text-center text-muted">
-                        <span class="material-icons-outlined me-1" style="vertical-align: middle;">trending_up</span>
-                        Margin: Rs. {{ number_format($priceDifference, 2) }} ({{ number_format($marginPercentage, 2) }}%)
-                    </div>
+                    @if($product->discount > 0)
+                        <div class="text-center">
+                            <span class="badge bg-success">Discount: {{ $product->discount }}%</span>
+                        </div>
+                    @endif
                 </div>
-            </div>
-
             <!-- Inventory Information -->
             <div class="info-card">
                 <h5 class="mb-3 d-flex align-items-center">

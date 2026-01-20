@@ -547,7 +547,7 @@
                 <div class="dashboard-section">
                     <div class="section-header">
                         <h3 class="section-title">Recent Orders</h3>
-                        <a href="{{ route('employee.seller.orders') }}" class="view-all-link">
+                        <a href="{{ route('seller.employee.seller.orders') }}" class="view-all-link">
                             View All <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
@@ -602,7 +602,7 @@
             </div>
 
             <div class="col-lg-4">
-                <!-- Quick Actions Section -->
+                {{-- Quick Actions Section --}}
                 <div class="dashboard-section">
                     <div class="section-header">
                         <h3 class="section-title">Quick Actions</h3>
@@ -613,9 +613,9 @@
                             <i class="fas fa-box-open quick-action-icon"></i>
                             <span>Manage Products</span>
                         </a>
-                        <a href="{{ route('employee.wholesaler.orders') }}" class="quick-action-btn">
+                        <a href="{{ route('employee.wholesaler_orders.index') }}" class="quick-action-btn">
                             <i class="fas fa-clipboard-list quick-action-icon"></i>
-                            <span>Process Orders</span>
+                            <span>Wholesaler Orders</span>
                         </a>
                         <a href="{{ route('employee.profile') }}" class="quick-action-btn">
                             <i class="fas fa-user-cog quick-action-icon"></i>
@@ -652,7 +652,7 @@
                             <i class="fas fa-chart-line quick-action-icon"></i>
                             <span>Analytics</span>
                         </a>
-                        <a href="{{ route('employee.export.report') }}" class="quick-action-btn">
+                        <a href="{{ route('employee.wholesaler_orders.export') }}" class="quick-action-btn">
                             <i class="fas fa-file-export quick-action-icon"></i>
                             <span>Export Report</span>
                         </a>
