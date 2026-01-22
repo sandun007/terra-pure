@@ -1,6 +1,6 @@
-@extends('seller.app')
+@extends('seller.layout.app')
 @push('title')
-    Complete Order
+    Rescheduling Order
 @endpush
 @push('css')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
@@ -38,7 +38,7 @@
     <div class="page-header">
         <div class="add-item d-flex">
             <div class="page-title">
-                <h4 class="fw-bold">Complete Order</h4>
+                <h4 class="fw-bold">Rescheduling Order</h4>
                 <h6>14500</h6>
             </div>
         </div>
@@ -53,13 +53,13 @@
             </li>
         </ul>
         <div class="page-btn mt-0">
-            <a href="{{route('seller.pending-order')}}" class="btn btn-secondary">Pending Order</a>
+            <a href="{{route('seller.complete-order')}}" class="btn btn-secondary">Complete Order</a>
         </div>
         <div class="page-btn mt-0">
             <a href="{{route('seller.return-order')}}" class="btn btn-secondary">Return Order</a>
         </div>
         <div class="page-btn mt-0">
-            <a href="{{route('seller.rescheduling-order')}}" class="btn btn-secondary">Rescheduling Order</a>
+            <a href="{{route('seller.pending-order')}}" class="btn btn-secondary">Pending Order</a>
         </div>
     </div>
     <div class="row">
@@ -73,9 +73,11 @@
                             <th>Invoice No</th>
                             <th>Invoice Date</th>
                             <th>Delivery Date</th>
+                            <th>Rescheduling Date</th>
                             <th>Seller</th>
                             <th>Customer</th>
                             <th>District</th>
+                            <th>Remark</th>
                             <th>Total</th>
                             <th>Action</th>
                         </tr>
@@ -86,74 +88,59 @@
                             <td>INV/00001</td>
                             <td>2025.05.22</td>
                             <td>2025.05.30</td>
+                            <td>2025.05.30</td>
                             <td>Suranga</td>
                             <td>Mallika</td>
                             <td>Hambantota</td>
+                            <td>Damage</td>
                             <td>Rs.2560.00</td>
                             <td>
                                 <button class="btn btn-primary btn-sm">view</button>
 
                             </td>
-                        </tr><tr>
+                        </tr>
+                        <tr>
                             <td>ORD/00001</td>
                             <td>INV/00001</td>
                             <td>2025.05.22</td>
                             <td>2025.05.30</td>
+                            <td>2025.05.30</td>
                             <td>Suranga</td>
                             <td>Mallika</td>
                             <td>Hambantota</td>
+                            <td>Damage</td>
                             <td>Rs.2560.00</td>
                             <td>
                                 <button class="btn btn-primary btn-sm">view</button>
 
                             </td>
-                        </tr><tr>
+                        </tr>
+                        <tr>
                             <td>ORD/00001</td>
                             <td>INV/00001</td>
                             <td>2025.05.22</td>
                             <td>2025.05.30</td>
+                            <td>2025.05.30</td>
                             <td>Suranga</td>
                             <td>Mallika</td>
                             <td>Hambantota</td>
+                            <td>Damage</td>
                             <td>Rs.2560.00</td>
                             <td>
                                 <button class="btn btn-primary btn-sm">view</button>
 
                             </td>
-                        </tr><tr>
+                        </tr>
+                        <tr>
                             <td>ORD/00001</td>
                             <td>INV/00001</td>
                             <td>2025.05.22</td>
                             <td>2025.05.30</td>
-                            <td>Suranga</td>
-                            <td>Mallika</td>
-                            <td>Hambantota</td>
-                            <td>Rs.2560.00</td>
-                            <td>
-                                <button class="btn btn-primary btn-sm">view</button>
-
-                            </td>
-                        </tr><tr>
-                            <td>ORD/00001</td>
-                            <td>INV/00001</td>
-                            <td>2025.05.22</td>
                             <td>2025.05.30</td>
                             <td>Suranga</td>
                             <td>Mallika</td>
                             <td>Hambantota</td>
-                            <td>Rs.2560.00</td>
-                            <td>
-                                <button class="btn btn-primary btn-sm">view</button>
-
-                            </td>
-                        </tr><tr>
-                            <td>ORD/00001</td>
-                            <td>INV/00001</td>
-                            <td>2025.05.22</td>
-                            <td>2025.05.30</td>
-                            <td>Suranga</td>
-                            <td>Mallika</td>
-                            <td>Hambantota</td>
+                            <td>Damage</td>
                             <td>Rs.2560.00</td>
                             <td>
                                 <button class="btn btn-primary btn-sm">view</button>

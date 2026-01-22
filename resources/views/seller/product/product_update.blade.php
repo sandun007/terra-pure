@@ -1,6 +1,6 @@
-@extends('seller.app')
+@extends('seller.layout.app')
 @push('title')
- Product Create
+    Product Create
 @endpush
 @push('css')
     <style>
@@ -26,7 +26,8 @@
             border-radius: 50%;
             padding: 2px;
         }
-        .bg-green{
+
+        .bg-green {
             background-color: var(--main-theme-color) !important;
         }
     </style>
@@ -60,7 +61,8 @@
             <div class="accordions-items-seperate" id="accordionSpacingExample">
                 <div class="accordion-item border mb-4">
                     <h2 class="accordion-header " id="headingSpacingOne">
-                        <div style="background-color: var(--main-theme-color) !important;" class=" accordion-button bg-white" data-bs-toggle="collapse"
+                        <div style="background-color: var(--main-theme-color) !important;"
+                             class=" accordion-button bg-white" data-bs-toggle="collapse"
                              data-bs-target="#SpacingOne" aria-expanded="true" aria-controls="SpacingOne">
                             <div class="d-flex align-items-center justify-content-between flex-fill">
                                 <h5 class="d-flex align-items-center">
@@ -81,21 +83,24 @@
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Product Code<span
-                                                class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="code" class="form-control" required disabled value="{{$product->code}}">
+                                                    class="text-danger ms-1">*</span></label>
+                                        <input type="text" name="code" class="form-control" required disabled
+                                               value="{{$product->code}}">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Product Name<span
-                                                class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="name" class="form-control" required placeholder="Product Name" value="{{$product->name}}">
+                                                    class="text-danger ms-1">*</span></label>
+                                        <input type="text" name="name" class="form-control" required
+                                               placeholder="Product Name" value="{{$product->name}}">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Barcode<span class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="barcode" class="form-control" placeholder="Bar Code" value="{{$product->barcode}}">
+                                        <input type="text" name="barcode" class="form-control" placeholder="Bar Code"
+                                               value="{{$product->barcode}}">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
@@ -118,7 +123,7 @@
                                         <select class="form-control" name="category">
                                             <option data-select2-id="6">Select Category</option>
                                             @foreach($categories as $category)
-                                            <option value="{{$category->name}}" {{ (isset($product) && $product->category == $category->name) ? 'selected' : '' }}>{{$category->name}}</option>
+                                                <option value="{{$category->name}}" {{ (isset($product) && $product->category == $category->name) ? 'selected' : '' }}>{{$category->name}}</option>
                                             @endforeach
 
 
@@ -137,7 +142,8 @@
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Description</label>
-                                        <textarea rows="6" class="form-control" name="description">{{ old('description', $product->description ?? '') }}</textarea>
+                                        <textarea rows="6" class="form-control"
+                                                  name="description">{{ old('description', $product->description ?? '') }}</textarea>
 
                                     </div>
                                 </div>
@@ -188,7 +194,9 @@
                                         <div id="imagePreviewContainer" class="preview-container">
                                             @if(isset($product) && $product->img)
                                                 <div class="preview-image-wrapper">
-                                                    <img src="{{ asset('storage/' . $product->img) }}" alt="Product Image" class="preview-image" style="max-width: 150px; max-height: 150px;">
+                                                    <img src="{{ asset('storage/' . $product->img) }}"
+                                                         alt="Product Image" class="preview-image"
+                                                         style="max-width: 150px; max-height: 150px;">
                                                 </div>
                                             @endif
                                         </div>
@@ -202,7 +210,8 @@
                 </div>
                 <div class="accordion-item border mb-4">
                     <h2 class="accordion-header " id="headingSpacingOne">
-                        <div style="background-color: var(--main-theme-color) !important;" class=" accordion-button bg-white" data-bs-toggle="collapse"
+                        <div style="background-color: var(--main-theme-color) !important;"
+                             class=" accordion-button bg-white" data-bs-toggle="collapse"
                              data-bs-target="#SpacingOne" aria-expanded="true" aria-controls="SpacingOne">
                             <div class="d-flex align-items-center justify-content-between flex-fill">
                                 <h5 class="d-flex align-items-center">
@@ -223,33 +232,39 @@
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Stock Price<span
-                                                class="text-danger ms-1">*</span></label>
-                                        <input type="number" name="stock_price" class="form-control" required placeholder="Stock Price" value="{{$product->stock_price}}">
+                                                    class="text-danger ms-1">*</span></label>
+                                        <input type="number" name="stock_price" class="form-control" required
+                                               placeholder="Stock Price" value="{{$product->stock_price}}">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Display Price<span
-                                                class="text-danger ms-1">*</span></label>
-                                        <input type="number" name="display_price" class="form-control" required placeholder="Display Price" value="{{$product->display_price}}">
+                                                    class="text-danger ms-1">*</span></label>
+                                        <input type="number" name="display_price" class="form-control" required
+                                               placeholder="Display Price" value="{{$product->display_price}}">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
-                                        <label class="form-label">Discount %<span class="text-danger ms-1">*</span></label>
-                                        <input type="number" name="discount" class="form-control" placeholder="Discount" value="{{$product->discount}}">
+                                        <label class="form-label">Discount %<span
+                                                    class="text-danger ms-1">*</span></label>
+                                        <input type="number" name="discount" class="form-control" placeholder="Discount"
+                                               value="{{$product->discount}}">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Qty<span class="text-danger ms-1">*</span></label>
-                                        <input type="number" name="qty" class="form-control" placeholder="Quantity" value="{{$product->qty}}">
+                                        <input type="number" name="qty" class="form-control" placeholder="Quantity"
+                                               value="{{$product->qty}}">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Min Qty<span class="text-danger ms-1">*</span></label>
-                                        <input type="number" name="min_qty" class="form-control" placeholder="Min Quantity" value="{{$product->min_qty}}">
+                                        <input type="number" name="min_qty" class="form-control"
+                                               placeholder="Min Quantity" value="{{$product->min_qty}}">
                                     </div>
                                 </div>
                             </div>

@@ -1,6 +1,6 @@
-@extends('seller.app')
+@extends('seller.layout.app')
 @push('title')
-  Low Stock
+    Low Stock
 @endpush
 @push('css')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
@@ -76,21 +76,24 @@
                             <td>10</td>
                             <td>Mallika</td>
                             <td>07776888888</td>
-                        </tr><tr>
+                        </tr>
+                        <tr>
                             <td>ITM/00001</td>
                             <td>Hand Free</td>
                             <td>Colombo</td>
                             <td>10</td>
                             <td>Mallika</td>
                             <td>07776888888</td>
-                        </tr><tr>
+                        </tr>
+                        <tr>
                             <td>ITM/00001</td>
                             <td>Hand Free</td>
                             <td>Colombo</td>
                             <td>10</td>
                             <td>Mallika</td>
                             <td>07776888888</td>
-                        </tr><tr>
+                        </tr>
+                        <tr>
                             <td>ITM/00001</td>
                             <td>Hand Free</td>
                             <td>Colombo</td>

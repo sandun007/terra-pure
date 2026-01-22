@@ -1,6 +1,6 @@
-@extends('seller.app')
+@extends('seller.layout.app')
 @push('title')
- Product Create
+    Product Create
 @endpush
 @push('css')
     <style>
@@ -26,7 +26,8 @@
             border-radius: 50%;
             padding: 2px;
         }
-        .bg-green{
+
+        .bg-green {
             background-color: var(--main-theme-color) !important;
         }
     </style>
@@ -54,13 +55,15 @@
             <a href="{{route('seller.product.index')}}" class="btn btn-secondary">View Product List</a>
         </div>
     </div>
-    <form action="{{route('seller.product.store')}}" method="post" enctype="multipart/form-data" class="add-product-form">
+    <form action="{{route('seller.product.store')}}" method="post" enctype="multipart/form-data"
+          class="add-product-form">
         @csrf
         <div class="add-product">
             <div class="accordions-items-seperate" id="accordionSpacingExample">
                 <div class="accordion-item border mb-4">
                     <h2 class="accordion-header " id="headingSpacingOne">
-                        <div style="background-color: var(--main-theme-color) !important;" class=" accordion-button bg-white" data-bs-toggle="collapse"
+                        <div style="background-color: var(--main-theme-color) !important;"
+                             class=" accordion-button bg-white" data-bs-toggle="collapse"
                              data-bs-target="#SpacingOne" aria-expanded="true" aria-controls="SpacingOne">
                             <div class="d-flex align-items-center justify-content-between flex-fill">
                                 <h5 class="d-flex align-items-center">
@@ -81,15 +84,17 @@
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Product Code<span
-                                                class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="code" class="form-control" required disabled value="{{$code}}">
+                                                    class="text-danger ms-1">*</span></label>
+                                        <input type="text" name="code" class="form-control" required disabled
+                                               value="{{$code}}">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Product Name<span
-                                                class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="name" class="form-control" required placeholder="Product Name">
+                                                    class="text-danger ms-1">*</span></label>
+                                        <input type="text" name="name" class="form-control" required
+                                               placeholder="Product Name">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
@@ -115,7 +120,7 @@
                                         <select class="form-control" name="category">
                                             <option data-select2-id="6">Select Category</option>
                                             @foreach($categories as $category)
-                                            <option value="{{$category->name}}">{{$category->name}}</option>
+                                                <option value="{{$category->name}}">{{$category->name}}</option>
                                             @endforeach
 
 
@@ -134,7 +139,7 @@
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Description</label>
-                                       <textarea rows="6" class="form-control" name="description">
+                                        <textarea rows="6" class="form-control" name="description">
 
                                        </textarea>
                                     </div>
@@ -195,7 +200,8 @@
                 </div>
                 <div class="accordion-item border mb-4">
                     <h2 class="accordion-header " id="headingSpacingOne">
-                        <div style="background-color: var(--main-theme-color) !important;" class=" accordion-button bg-white" data-bs-toggle="collapse"
+                        <div style="background-color: var(--main-theme-color) !important;"
+                             class=" accordion-button bg-white" data-bs-toggle="collapse"
                              data-bs-target="#SpacingOne" aria-expanded="true" aria-controls="SpacingOne">
                             <div class="d-flex align-items-center justify-content-between flex-fill">
                                 <h5 class="d-flex align-items-center">
@@ -216,21 +222,25 @@
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Stock Price<span
-                                                class="text-danger ms-1">*</span></label>
-                                        <input type="number" name="stock_price" class="form-control" required placeholder="Stock Price">
+                                                    class="text-danger ms-1">*</span></label>
+                                        <input type="number" name="stock_price" class="form-control" required
+                                               placeholder="Stock Price">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Display Price<span
-                                                class="text-danger ms-1">*</span></label>
-                                        <input type="number" name="display_price" class="form-control" required placeholder="Display Price">
+                                                    class="text-danger ms-1">*</span></label>
+                                        <input type="number" name="display_price" class="form-control" required
+                                               placeholder="Display Price">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
-                                        <label class="form-label">Discount %<span class="text-danger ms-1">*</span></label>
-                                        <input type="number" name="discount" class="form-control" placeholder="Discount">
+                                        <label class="form-label">Discount %<span
+                                                    class="text-danger ms-1">*</span></label>
+                                        <input type="number" name="discount" class="form-control"
+                                               placeholder="Discount">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
@@ -242,7 +252,8 @@
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Min Qty<span class="text-danger ms-1">*</span></label>
-                                        <input type="number" name="min_qty" class="form-control" placeholder="Min Quantity">
+                                        <input type="number" name="min_qty" class="form-control"
+                                               placeholder="Min Quantity">
                                     </div>
                                 </div>
                             </div>

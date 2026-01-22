@@ -1,6 +1,6 @@
-@extends('seller.app')
+@extends('seller.layout.app')
 @push('title')
-Category Create
+    Category Create
 @endpush
 @push('css')
     <style>
@@ -26,7 +26,8 @@ Category Create
             border-radius: 50%;
             padding: 2px;
         }
-        .bg-green{
+
+        .bg-green {
             background-color: var(--main-theme-color) !important;
         }
     </style>
@@ -54,13 +55,15 @@ Category Create
             <a href="{{route('seller.category.index')}}" class="btn btn-secondary">View Category List</a>
         </div>
     </div>
-    <form action="{{route('seller.category.store')}}" method="post" enctype="multipart/form-data" class="add-product-form">
+    <form action="{{route('seller.category.store')}}" method="post" enctype="multipart/form-data"
+          class="add-product-form">
         @csrf
         <div class="add-product">
             <div class="accordions-items-seperate" id="accordionSpacingExample">
                 <div class="accordion-item border mb-4">
                     <h2 class="accordion-header " id="headingSpacingOne">
-                        <div style="background-color: var(--main-theme-color) !important;" class=" accordion-button bg-white" data-bs-toggle="collapse"
+                        <div style="background-color: var(--main-theme-color) !important;"
+                             class=" accordion-button bg-white" data-bs-toggle="collapse"
                              data-bs-target="#SpacingOne" aria-expanded="true" aria-controls="SpacingOne">
                             <div class="d-flex align-items-center justify-content-between flex-fill">
                                 <h5 class="d-flex align-items-center">
@@ -81,21 +84,21 @@ Category Create
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Category Code<span
-                                                class="text-danger ms-1">*</span></label>
+                                                    class="text-danger ms-1">*</span></label>
                                         <input type="text" name="code" class="form-control" disabled value="{{$code}}">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Category Name<span
-                                                class="text-danger ms-1">*</span></label>
+                                                    class="text-danger ms-1">*</span></label>
                                         <input type="text" name="name" class="form-control">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Category Image<span
-                                                class="text-danger ms-1">*</span></label>
+                                                    class="text-danger ms-1">*</span></label>
                                         <div class="image-upload image-upload-two">
                                             <input type="file" id="imageInput" name="img" multiple>
                                             <div class="image-uploads">
@@ -125,8 +128,8 @@ Category Create
         <div class="col-12">
             <div class="row">
                 <div class="col-12">
-                <button type="button" class="btn btn-danger " fdprocessedid="2bjap">Cancel</button>
-                <button type="submit" class="btn btn-dark" fdprocessedid="to0jbb">Save</button>
+                    <button type="button" class="btn btn-danger " fdprocessedid="2bjap">Cancel</button>
+                    <button type="submit" class="btn btn-dark" fdprocessedid="to0jbb">Save</button>
                 </div>
             </div>
         </div>

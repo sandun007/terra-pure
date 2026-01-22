@@ -1,11 +1,13 @@
-@extends('seller.app')
+@extends('seller.layout.app')
 
 @push('title')
     Shop
 @endpush
 
 @push('css')
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-papW82Cc9aU+8w0kGfAetPi6F4LoCS9pbxIQJv9EGozv3giINpSsyLMp1UIZTxUHLxtu2x2YxA7qZddIVTn3vA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          integrity="sha512-papW82Cc9aU+8w0kGfAetPi6F4LoCS9pbxIQJv9EGozv3giINpSsyLMp1UIZTxUHLxtu2x2YxA7qZddIVTn3vA=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
 
     <style>
         p {
@@ -94,7 +96,8 @@
                 <h5>Shop</h5>
             </div>
             <div class="col-8 col-sm-8 col-md-4">
-                <input type="text" id="productSearch" class="form-control" placeholder="Search product by name or code...">
+                <input type="text" id="productSearch" class="form-control"
+                       placeholder="Search product by name or code...">
             </div>
         </div>
         <hr>
@@ -107,9 +110,9 @@
                     @foreach($products as $product)
                         <div class="col-6 col-sm-4 col-md-3 col-lg-2 mb-4">
                             <div class="card product-card h-100">
-                        @if($product->discount > 0)
-                            <span class="discount-badge">{{ $product->discount }}%</span>
-                        @endif
+                                @if($product->discount > 0)
+                                    <span class="discount-badge">{{ $product->discount }}%</span>
+                                @endif
 
                                 <!-- Background image inside card-body -->
                                 <div class="card-body p-2 d-flex justify-content-center align-items-center"
@@ -133,13 +136,14 @@
                                         <i class="far fa-star text-warning"></i>
                                         <i class="far fa-star text-warning"></i>
                                     </div>
-                                    
-                                     <p class="product-price">Rs.{{ $product->display_price }}.00</p>
+
+                                    <p class="product-price">Rs.{{ $product->display_price }}.00</p>
                                     <button class="btn btn-dark btn-sm w-100 buy-btn mb-2">
                                         <i class="fas fa-copy me-1"></i> Copy
                                     </button>
 
-                                    <a href="{{route('seller.product.product_view',$product->id)}}" class="btn btn-success btn-sm w-100 buy-btn">
+                                    <a href="{{route('seller.product.product_view',$product->id)}}"
+                                       class="btn btn-success btn-sm w-100 buy-btn">
                                         <i class="fas fa-cart-plus me-1"></i> View
                                     </a>
 

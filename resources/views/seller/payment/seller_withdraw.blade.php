@@ -1,4 +1,4 @@
-@extends('seller.app')
+@extends('seller.layout.app')
 @push('title')
     Withdraw
 @endpush
@@ -23,7 +23,8 @@
                             </div>
                             <div class="col-4">
                                 <label>Withdraw Amount</label>
-                                <input type="number" class="form-control" name="withdraw_amount" placeholder="Withdraw Amount">
+                                <input type="number" class="form-control" name="withdraw_amount"
+                                       placeholder="Withdraw Amount">
                             </div>
                             <div class="col-4">
                                 <label>Withdraw Bank</label>

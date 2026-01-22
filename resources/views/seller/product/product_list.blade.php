@@ -1,4 +1,4 @@
-@extends('seller.app')
+@extends('seller.layout.app')
 @push('title')
     My Product List
 @endpush
@@ -87,8 +87,10 @@
                                 <td>{{$product->status}}</td>
                                 <td>
                                     <button class="btn btn-dark btn-sm">view</button>
-                                    <a href="{{route('seller.product.edit',$product->id)}}" class="btn btn-warning btn-sm">Update</a>
-                                    <a href="{{route('seller.product.delete',$product->id)}}" class="btn btn-danger btn-sm">Delete</a>
+                                    <a href="{{route('seller.product.edit',$product->id)}}"
+                                       class="btn btn-warning btn-sm">Update</a>
+                                    <a href="{{route('seller.product.delete',$product->id)}}"
+                                       class="btn btn-danger btn-sm">Delete</a>
                                 </td>
                             </tr>
                         @endforeach

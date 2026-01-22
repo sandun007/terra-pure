@@ -1,6 +1,6 @@
-@extends('seller.app')
+@extends('seller.layout.app')
 @push('title')
- My Category List
+    My Brand List
 @endpush
 @push('css')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
@@ -27,7 +27,8 @@
             border-radius: 50%;
             padding: 2px;
         }
-        .bg-green{
+
+        .bg-green {
             background-color: var(--main-theme-color) !important;
         }
     </style>
@@ -37,8 +38,8 @@
     <div class="page-header">
         <div class="add-item d-flex">
             <div class="page-title">
-                <h4 class="fw-bold">My Category List</h4>
-                <h6>{{$count}}</h6>
+                <h4 class="fw-bold"> My Brand List</h4>
+                <h6>{{$brandCount}}</h6>
             </div>
         </div>
         <ul class="table-top-head">
@@ -52,7 +53,7 @@
             </li>
         </ul>
         <div class="page-btn mt-0">
-            <a href="{{route('seller.category.create')}}" class="btn btn-secondary">Create New Category</a>
+            <a href="{{route('seller.brand.create')}}" class="btn btn-secondary">Create New Brand</a>
         </div>
     </div>
     <div class="row">
@@ -62,16 +63,21 @@
                     <table id="product-table" class="display table table-striped" style="width:100%">
                         <thead>
                         <tr>
-                            <th>Category Code</th>
-                            <th>Category Name</th>
+                            <th>Brand Code</th>
+                            <th>Brand Name</th>
+                            <th>Image</th>
                             <th>Action</th>
                         </tr>
                         </thead>
                         <tbody>
-                        @foreach($categories as $category)
+                        @foreach($brands as $brand)
                             <tr>
-                                <td>{{$category->code}}</td>
-                                <td>{{$category->name}}</td>
+                                <td>{{$brand->code}}</td>
+                                <td>{{$brand->name}}</td>
+                                <td>
+                                    <img src="{{ asset('storage/' . $brand->img) }}" alt="Brand Image" width="50">
+                                </td>
+
                                 <td>
                                     <button class="btn btn-primary btn-sm">
                                         <i class="bi bi-eye"></i> View
@@ -79,7 +85,7 @@
                                     <button class="btn btn-warning btn-sm">
                                         <i class="bi bi-pencil-square"></i> Update
                                     </button>
-                                    <a href="{{route('category.delete',$category->id)}}" class="btn btn-danger btn-sm">
+                                    <a href="{{route('brand.delete',$brand->id)}}" class="btn btn-danger btn-sm">
                                         <i class="bi bi-trash"></i> Delete
                                     </a>
                                 </td>
@@ -93,7 +99,6 @@
             </div>
         </div>
     </div>
-
 
 @endsection
 @push('script')

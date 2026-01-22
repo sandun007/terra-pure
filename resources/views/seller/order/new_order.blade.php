@@ -1,55 +1,55 @@
-@extends('seller.app')
+@extends('seller.layout.app')
 @push('title')
     New Order
 @endpush
 @section('content')
- @if($import == null)
+    @if($import == null)
         <div class="alert alert-warning">
             Not Available deposit
         </div>
     @endif
     <div class="container mt-4">
-    <div class="row g-3">
-        <!-- Card 1: Available Balance -->
-        <div class="col-md-4">
-            <div class="card text-white bg-success shadow rounded-3">
-                <div class="card-body d-flex align-items-center">
-                    <i class="fas fa-wallet fa-2x me-3"></i>
-                    <div>
-                        <h6 class="card-title mb-1 text-white">Available Balance</h6>
-                        <h5 class="card-text text-white">{{ $user->cal_deposit }}</h5>
+        <div class="row g-3">
+            <!-- Card 1: Available Balance -->
+            <div class="col-md-4">
+                <div class="card text-white bg-success shadow rounded-3">
+                    <div class="card-body d-flex align-items-center">
+                        <i class="fas fa-wallet fa-2x me-3"></i>
+                        <div>
+                            <h6 class="card-title mb-1 text-white">Available Balance</h6>
+                            <h5 class="card-text text-white">{{ $user->cal_deposit }}</h5>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Card 2: Last Updated Cost -->
-        <div class="col-md-4">
-            <div class="card text-white bg-primary shadow rounded-3">
-                <div class="card-body d-flex align-items-center">
-                    <i class="fas fa-chart-line fa-2x me-3"></i>
-                    <div>
-                        <h6 class="card-title mb-1 text-white">Last Updated Cost</h6>
-                        <h5 class="card-text text-white">{{ $user->cost }}</h5>
+            <!-- Card 2: Last Updated Cost -->
+            <div class="col-md-4">
+                <div class="card text-white bg-primary shadow rounded-3">
+                    <div class="card-body d-flex align-items-center">
+                        <i class="fas fa-chart-line fa-2x me-3"></i>
+                        <div>
+                            <h6 class="card-title mb-1 text-white">Last Updated Cost</h6>
+                            <h5 class="card-text text-white">{{ $user->cost }}</h5>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Card 3: Last Upload Leads -->
-        <div class="col-md-4">
-            <div class="card text-white bg-warning shadow rounded-3">
-                <div class="card-body d-flex align-items-center">
-                    <i class="fas fa-user-plus fa-2x me-3"></i>
-                    <div>
-                        <h6 class="card-title mb-1 text-white">Last Upload Leads</h6>
-                        <h5 class="card-text text-white">{{ $user->last_row_count ?? 'N/A' }}</h5>
+            <!-- Card 3: Last Upload Leads -->
+            <div class="col-md-4">
+                <div class="card text-white bg-warning shadow rounded-3">
+                    <div class="card-body d-flex align-items-center">
+                        <i class="fas fa-user-plus fa-2x me-3"></i>
+                        <div>
+                            <h6 class="card-title mb-1 text-white">Last Upload Leads</h6>
+                            <h5 class="card-text text-white">{{ $user->last_row_count ?? 'N/A' }}</h5>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
     <form action="{{route('seller.order.store')}}" method="post" enctype="multipart/form-data">
         @csrf
@@ -86,7 +86,7 @@
                     </select>
                 </div>
 
-            {{--        <section class="mt-5" style="border: 2px solid gray; border-radius: 15px;">--}}
+                {{--        <section class="mt-5" style="border: 2px solid gray; border-radius: 15px;">--}}
 
                 <div class="col-12 col-sm-12 col-md-8">
                     <div>
