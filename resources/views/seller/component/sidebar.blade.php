@@ -175,7 +175,7 @@
 
             <!-- BRANDS -->
             <li class="has-submenu">
-                <a href="{{ route('seller.brand.index') }}"
+                <a href="{{ route('seller.brands.index') }}"
                    class="{{ request()->routeIs('seller.brand.index') || request()->routeIs('seller.brand.*') ? 'active' : '' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -188,7 +188,7 @@
                 </a>
                 <ul class="submenu">
                     <li>
-                        <a href="{{ route('seller.brand.create') }}"
+                        <a href="{{ route('seller.brands.create') }}"
                            class="{{ request()->routeIs('seller.brand.create') ? 'active' : '' }}">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                  fill="none"

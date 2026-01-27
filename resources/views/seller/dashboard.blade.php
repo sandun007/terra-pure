@@ -8,7 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-
     <style>
         :root {
             --primary: #3b82f6;
@@ -471,6 +470,12 @@
             border: 2px solid rgba(16, 185, 129, 0.3);
         }
 
+        .badge-cancelled {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.25));
+            color: #991b1b;
+            border: 2px solid rgba(239, 68, 68, 0.3);
+        }
+
         /* Quick Actions */
         .quick-actions-grid {
             display: grid;
@@ -541,6 +546,7 @@
             padding: 20px;
             margin-bottom: 15px;
             transition: all 0.3s ease;
+            cursor: pointer;
         }
 
         .stock-alert:hover {
@@ -549,11 +555,25 @@
             border-color: var(--warning);
         }
 
+        .stock-alert.critical {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.2));
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .stock-alert.critical:hover {
+            border-color: var(--danger);
+            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.2);
+        }
+
         .alert-header {
             display: flex;
             align-items: center;
             gap: 12px;
             margin-bottom: 10px;
+        }
+
+        .stock-alert.critical .alert-header i {
+            color: var(--danger);
         }
 
         .alert-header i {
@@ -566,9 +586,16 @@
             font-size: 1rem;
         }
 
+        .stock-alert.critical .alert-header strong {
+            color: #991b1b;
+        }
+
         .alert-body {
             font-size: 0.875rem;
             color: var(--gray-600);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         /* Insights Grid */
@@ -586,6 +613,7 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            cursor: pointer;
         }
 
         .insight-card::before {
@@ -724,6 +752,9 @@
             border: 2px solid var(--gray-200);
             margin-bottom: 15px;
             transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
         }
 
         .product-item:hover {
@@ -815,6 +846,63 @@
             margin: 0;
         }
 
+        /* Chart Legend */
+        .chart-legend {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        /* Date Filter */
+        .date-filter {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            border-radius: 12px;
+            padding: 8px 16px;
+            border: 2px solid var(--gray-200);
+        }
+
+        .date-filter input {
+            border: none;
+            outline: none;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            background: transparent;
+        }
+
+        .date-filter button {
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .date-filter button:hover {
+            transform: translateY(-2px);
+        }
+
         /* Responsive */
         @media (max-width: 1024px) {
             .main-grid {
@@ -853,22 +941,34 @@
             }
         }
 
-        /* SweetAlert2 Custom */
-        .swal2-popup {
-            border-radius: 24px !important;
-            padding: 2.5rem !important;
-        }
+        @media (max-width: 480px) {
+            .hero-badges {
+                flex-direction: column;
+                width: 100%;
+            }
 
-        .swal2-title {
-            font-size: 2rem !important;
-            font-weight: 900 !important;
-        }
+            .hero-badge {
+                width: 100%;
+                justify-content: center;
+            }
 
-        .swal2-confirm,
-        .swal2-cancel {
-            border-radius: 14px !important;
-            padding: 1rem 2.5rem !important;
-            font-weight: 700 !important;
+            .insights-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .product-item {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .product-image {
+                margin: 0 0 15px 0;
+            }
+
+            .product-stats {
+                text-align: center;
+                margin-top: 10px;
+            }
         }
     </style>
 @endpush
@@ -879,13 +979,13 @@
         <div class="hero-header">
             <div class="hero-content">
                 <div class="hero-text">
-                    <h1>🚀 Welcome Back, {{ auth()->user()->name ?? 'Seller' }}!</h1>
+                    <h1>🚀 Welcome Back, {{ auth()->guard('seller')->user()->name ?? 'Seller' }}!</h1>
                     <p>Manage your store and track performance in real-time</p>
                 </div>
                 <div class="hero-badges">
                     <span class="hero-badge">
                         <i class="fas fa-store"></i>
-                        <span>Seller Store</span>
+                        <span>Seller ID: {{ auth()->guard('seller')->user()->code ?? 'N/A' }}</span>
                     </span>
                     <span class="hero-badge">
                         <i class="fas fa-star"></i>
@@ -907,9 +1007,9 @@
                 <div class="stat-value gradient">
                     RS. {{ number_format($stats['total_revenue'] ?? 0, 2) }}
                 </div>
-                <div class="stat-change positive">
-                    <i class="fas fa-arrow-up"></i>
-                    <span>+{{ $stats['revenue_change'] ?? 0 }}% this month</span>
+                <div class="stat-change {{ ($stats['revenue_change'] ?? 0) >= 0 ? 'positive' : 'negative' }}">
+                    <i class="fas fa-arrow-{{ ($stats['revenue_change'] ?? 0) >= 0 ? 'up' : 'down' }}"></i>
+                    <span>{{ ($stats['revenue_change'] ?? 0) >= 0 ? '+' : '' }}{{ $stats['revenue_change'] ?? 0 }}% this month</span>
                 </div>
             </div>
 
@@ -921,9 +1021,9 @@
                     </div>
                 </div>
                 <div class="stat-value">{{ $stats['total_orders'] ?? 0 }}</div>
-                <div class="stat-change positive">
-                    <i class="fas fa-chart-line"></i>
-                    <span>+{{ $stats['order_change'] ?? 0 }}% this month</span>
+                <div class="stat-change {{ ($stats['order_change'] ?? 0) >= 0 ? 'positive' : 'negative' }}">
+                    <i class="fas fa-arrow-{{ ($stats['order_change'] ?? 0) >= 0 ? 'up' : 'down' }}"></i>
+                    <span>{{ ($stats['order_change'] ?? 0) >= 0 ? '+' : '' }}{{ $stats['order_change'] ?? 0 }}% this month</span>
                 </div>
             </div>
 
@@ -936,7 +1036,7 @@
                 </div>
                 <div class="stat-value">{{ $stats['pending_orders'] ?? 0 }}</div>
                 <div class="stat-change {{ ($stats['pending_orders'] ?? 0) > 0 ? 'negative' : 'positive' }}">
-                    <i class="fas fa-exclamation-circle"></i>
+                    <i class="fas {{ ($stats['pending_orders'] ?? 0) > 0 ? 'fa-exclamation-circle' : 'fa-check-circle' }}"></i>
                     <span>{{ ($stats['pending_orders'] ?? 0) > 0 ? 'Needs attention' : 'All clear' }}</span>
                 </div>
             </div>
@@ -949,7 +1049,7 @@
                     </div>
                 </div>
                 <div class="stat-value">{{ $stats['total_products'] ?? 0 }}</div>
-                <div class="stat-change">
+                <div class="stat-change positive">
                     <i class="fas fa-check-circle"></i>
                     <span>{{ $stats['active_products'] ?? 0 }} active</span>
                 </div>
@@ -970,18 +1070,37 @@
                             <button class="chart-btn" data-period="yearly">Yearly</button>
                         </div>
                     </div>
+                    <div class="date-filter">
+                        <input type="date" id="startDate" value="{{ date('Y-m-01') }}">
+                        <span>to</span>
+                        <input type="date" id="endDate" value="{{ date('Y-m-d') }}">
+                        <button onclick="updateChart()">Apply</button>
+                    </div>
                     <div class="chart-container">
                         <canvas id="salesChart"></canvas>
+                    </div>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #667eea;"></div>
+                            <span>Revenue (RS)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #f59e0b;"></div>
+                            <span>Orders</span>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Pending Orders -->
                 <div class="content-card">
                     <div class="card-header">
-                        <h3 class="card-title">Pending Orders</h3>
+                        <h3 class="card-title">Recent Orders</h3>
+{{--                        <a href="{{ route('seller.orders.index') }}" class="view-all-link">--}}
+{{--                            View All <i class="fas fa-arrow-right"></i>--}}
+{{--                        </a>--}}
                     </div>
 
-                    @if(isset($pendingOrders) && count($pendingOrders) > 0)
+                    @if(isset($recentOrders) && count($recentOrders) > 0)
                         <table class="modern-table">
                             <thead>
                             <tr>
@@ -993,31 +1112,32 @@
                             </tr>
                             </thead>
                             <tbody>
-                            @foreach($pendingOrders as $order)
+                            @foreach($recentOrders as $order)
                                 <tr>
-                                    <td><strong>#{{ $order->id }}</strong></td>
+                                    <td><strong>#{{ $order->order_code ?? $order->id }}</strong></td>
                                     <td>
                                         <i class="fas fa-user-circle" style="color: var(--primary); margin-right: 8px;"></i>
-                                        {{ $order->customer->name ?? 'Customer' }}
+                                        {{ $order->customer_name ?? ($order->customer->name ?? 'Customer') }}
                                     </td>
-                                    <td><strong>RS. {{ number_format($order->total_amount, 2) }}</strong></td>
+                                    <td><strong>RS. {{ number_format($order->total_amount ?? $order->amount ?? 0, 2) }}</strong></td>
                                     <td>
-                                            <span class="badge-modern
-                                                @if($order->status == 'pending') badge-pending
-                                                @elseif($order->status == 'processing') badge-processing
-                                                @else badge-confirmed @endif">
-                                                {{ ucfirst($order->status) }}
-                                            </span>
+                                        <span class="badge-modern
+                                            @if(in_array($order->status, ['pending', 'pending_payment'])) badge-pending
+                                            @elseif(in_array($order->status, ['processing', 'confirmed'])) badge-processing
+                                            @elseif($order->status == 'completed') badge-confirmed
+                                            @else badge-cancelled @endif">
+                                            {{ ucfirst(str_replace('_', ' ', $order->status)) }}
+                                        </span>
                                     </td>
-                                    <td>{{ $order->created_at->format('M d, Y') }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y') }}</td>
                                 </tr>
                             @endforeach
                             </tbody>
                         </table>
                     @else
                         <div class="empty-state">
-                            <i class="fas fa-check-circle"></i>
-                            <p>No pending orders at the moment</p>
+                            <i class="fas fa-shopping-bag"></i>
+                            <p>No orders found</p>
                         </div>
                     @endif
                 </div>
@@ -1033,26 +1153,27 @@
 
                     @if(isset($topProducts) && count($topProducts) > 0)
                         @foreach($topProducts as $product)
-                            <div class="product-item">
+                            <a href="{{ route('seller.product.store', $product->id) }}" class="product-item">
                                 <div class="product-rank">{{ $loop->iteration }}</div>
-                                <img src="{{ $product->image_url ?? 'https://via.placeholder.com/60' }}"
+                                <img src="{{ asset('storage/' . $product->img) ?? 'https://via.placeholder.com/60' }}"
                                      class="product-image"
-                                     alt="{{ $product->name }}">
+                                     alt="{{ $product->name }}"
+                                     onerror="this.src='https://via.placeholder.com/60'">
                                 <div class="product-info">
                                     <div class="product-name">{{ $product->name }}</div>
                                     <div class="product-category">
                                         <i class="fas fa-tag"></i>
-                                        {{ $product->category->name ?? 'Uncategorized' }}
+                                        {{ $product->categoryModel->name ?? ($product->category ?? 'Uncategorized') }}
                                     </div>
                                 </div>
                                 <div class="product-stats">
-                                    <div class="product-price">RS. {{ number_format($product->price, 2) }}</div>
+                                    <div class="product-price">RS. {{ number_format($product->display_price ?? $product->price ?? 0, 2) }}</div>
                                     <div class="product-sales">
                                         <i class="fas fa-chart-line"></i>
-                                        {{ $product->sales_count ?? 0 }} sold
+                                        {{ $product->sales_count ?? $product->qty ?? 0 }} sold
                                     </div>
                                 </div>
-                            </div>
+                            </a>
                         @endforeach
                     @else
                         <div class="empty-state">
@@ -1077,8 +1198,16 @@
                         </a>
                         <a href="{{ route('seller.product.index') }}" class="quick-action-btn">
                             <i class="fas fa-boxes quick-action-icon"></i>
-                            <span>Products</span>
+                            <span>Manage Products</span>
                         </a>
+{{--                        <a href="{{ route('seller.orders.index') }}" class="quick-action-btn">--}}
+{{--                            <i class="fas fa-shopping-cart quick-action-icon"></i>--}}
+{{--                            <span>View Orders</span>--}}
+{{--                        </a>--}}
+{{--                        <a href="{{ route('seller.profile') }}" class="quick-action-btn">--}}
+{{--                            <i class="fas fa-user-cog quick-action-icon"></i>--}}
+{{--                            <span>Profile Settings</span>--}}
+{{--                        </a>--}}
                     </div>
                 </div>
 
@@ -1086,18 +1215,22 @@
                 @if(isset($lowStockProducts) && count($lowStockProducts) > 0)
                     <div class="content-card">
                         <div class="card-header">
-                            <h3 class="card-title">Stock Alerts</h3>
+                            <h3 class="card-title">
+                                <i class="fas fa-exclamation-triangle" style="color: var(--warning);"></i>
+                                Stock Alerts
+                            </h3>
                         </div>
                         @foreach($lowStockProducts as $product)
-                            <div class="stock-alert">
+                            <a href="{{ route('seller.product.edit', $product->id) }}" class="stock-alert {{ ($product->qty <= 0) ? 'critical' : '' }}">
                                 <div class="alert-header">
-                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <i class="fas {{ ($product->qty <= 0) ? 'fa-times-circle' : 'fa-exclamation-triangle' }}"></i>
                                     <strong>{{ $product->name }}</strong>
                                 </div>
                                 <div class="alert-body">
-                                    Only {{ $product->stock_quantity ?? $product->qty }} units left
+                                    <span>{{ ($product->qty <= 0) ? 'Out of Stock' : 'Low Stock' }}</span>
+                                    <span><strong>{{ $product->qty ?? 0 }}</strong> units left</span>
                                 </div>
-                            </div>
+                            </a>
                         @endforeach
                     </div>
                 @endif
@@ -1113,10 +1246,10 @@
                                 <div class="insight-icon">
                                     <i class="fas fa-bolt"></i>
                                 </div>
-                                <div class="insight-title">Fast Movers</div>
+                                <div class="insight-title">Conversion Rate</div>
                             </div>
-                            <div class="insight-value">{{ $stats['fast_moving'] ?? 0 }}</div>
-                            <p class="insight-desc">Hot products</p>
+                            <div class="insight-value">{{ $stats['conversion_rate'] ?? 0 }}%</div>
+                            <p class="insight-desc">Orders/Views</p>
                         </div>
 
                         <div class="insight-card" style="--insight-gradient: var(--gradient-warning); --insight-color: #f59e0b;">
@@ -1126,7 +1259,7 @@
                                 </div>
                                 <div class="insight-title">Growth</div>
                             </div>
-                            <div class="insight-value">+{{ $stats['growth_rate'] ?? 0 }}%</div>
+                            <div class="insight-value">{{ ($stats['growth_rate'] ?? 0) >= 0 ? '+' : '' }}{{ $stats['growth_rate'] ?? 0 }}%</div>
                             <p class="insight-desc">This month</p>
                         </div>
 
@@ -1135,10 +1268,10 @@
                                 <div class="insight-icon">
                                     <i class="fas fa-medal"></i>
                                 </div>
-                                <div class="insight-title">Rank</div>
+                                <div class="insight-title">Avg. Rating</div>
                             </div>
-                            <div class="insight-value">#{{ $stats['store_rank'] ?? 'N/A' }}</div>
-                            <p class="insight-desc">Platform</p>
+                            <div class="insight-value">{{ $stats['avg_rating'] ?? '4.8' }}</div>
+                            <p class="insight-desc">Out of 5.0</p>
                         </div>
                     </div>
                 </div>
@@ -1167,6 +1300,16 @@
                             <div class="progress-fill-modern" style="width: {{ $stats['satisfaction_rate'] ?? 0 }}%"></div>
                         </div>
                     </div>
+
+                    <div class="metric-item">
+                        <div class="metric-header">
+                            <h4 class="metric-title">Stock Health</h4>
+                            <span class="metric-value">{{ $stats['stock_health'] ?? 0 }}%</span>
+                        </div>
+                        <div class="progress-bar-modern">
+                            <div class="progress-fill-modern" style="width: {{ $stats['stock_health'] ?? 0 }}%"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1181,15 +1324,41 @@
     <script>
         // Laravel Session Messages with SweetAlert
         @if(session('success'))
-        Alert.toast('{{ session('success') }}', 'success');
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: '{{ session('success') }}',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
         @endif
 
         @if(session('error'))
-        Alert.toast('{{ session('error') }}', 'error');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: '{{ session('error') }}',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
         @endif
 
-        // Initialize Chart
-        let salesChart;
+        // Chart Initialization
+        let salesChart = null;
 
         function initChart() {
             const ctx = document.getElementById('salesChart');
@@ -1197,18 +1366,22 @@
 
             @if(isset($salesData) && count($salesData) > 0)
             const data = @json($salesData);
-            const labels = data.map(item => item.label);
-            const revenue = data.map(item => item.revenue);
-            const orders = data.map(item => item.orders);
+            const labels = data.map(item => item.label || item.date);
+            const revenue = data.map(item => item.revenue || item.sales || 0);
+            const orders = data.map(item => item.orders || item.count || 0);
             @else
-            const labels = ['No Data'];
-            const revenue = [0];
-            const orders = [0];
+            const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+            const revenue = [0, 0, 0, 0, 0, 0];
+            const orders = [0, 0, 0, 0, 0, 0];
             @endif
 
             const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 400);
             gradient.addColorStop(0, 'rgba(102, 126, 234, 0.3)');
             gradient.addColorStop(1, 'rgba(102, 126, 234, 0.05)');
+
+            if (salesChart) {
+                salesChart.destroy();
+            }
 
             salesChart = new Chart(ctx, {
                 type: 'line',
@@ -1221,7 +1394,12 @@
                         backgroundColor: gradient,
                         borderWidth: 3,
                         fill: true,
-                        tension: 0.4
+                        tension: 0.4,
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
                     }, {
                         label: 'Orders',
                         data: orders,
@@ -1229,42 +1407,189 @@
                         backgroundColor: 'rgba(245, 158, 11, 0.1)',
                         borderWidth: 3,
                         tension: 0.4,
-                        yAxisID: 'y1'
+                        yAxisID: 'y1',
+                        pointBackgroundColor: '#f59e0b',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
                     scales: {
                         y: {
                             position: 'left',
+                            beginAtZero: true,
+                            grid: {
+                                drawBorder: false
+                            },
                             ticks: {
-                                callback: value => 'RS. ' + value.toLocaleString()
+                                callback: value => 'RS. ' + value.toLocaleString(),
+                                font: {
+                                    weight: '600'
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Revenue (RS)',
+                                font: {
+                                    weight: '700',
+                                    size: 12
+                                }
                             }
                         },
                         y1: {
                             position: 'right',
+                            beginAtZero: true,
                             grid: {
                                 drawOnChartArea: false
+                            },
+                            ticks: {
+                                font: {
+                                    weight: '600'
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Orders',
+                                font: {
+                                    weight: '700',
+                                    size: 12
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                drawBorder: false
+                            },
+                            ticks: {
+                                font: {
+                                    weight: '600'
+                                }
                             }
                         }
                     },
                     plugins: {
                         legend: {
-                            position: 'top'
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    weight: '700'
+                                },
+                                padding: 20,
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(30, 41, 59, 0.9)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#ffffff',
+                            borderColor: '#3b82f6',
+                            borderWidth: 1,
+                            padding: 12,
+                            usePointStyle: true,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.datasetIndex === 0) {
+                                        label += 'RS. ' + context.parsed.y.toLocaleString();
+                                    } else {
+                                        label += context.parsed.y + ' orders';
+                                    }
+                                    return label;
+                                }
+                            }
                         }
                     }
                 }
             });
         }
 
+        // Update chart with date filter
+        function updateChart() {
+            const startDate = $('#startDate').val();
+            const endDate = $('#endDate').val();
+
+            if (!startDate || !endDate) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Please select date range',
+                    text: 'Both start and end dates are required',
+                    confirmButtonColor: '#3b82f6'
+                });
+                return;
+            }
+
+            // Show loading
+            const loadingSwal = Swal.fire({
+                title: 'Loading...',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                willOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // AJAX request to get filtered data
+            $.ajax({
+                {{--url: '{{ route("seller.dashboard.chart") }}',--}}
+                type: 'GET',
+                data: {
+                    start_date: startDate,
+                    end_date: endDate,
+                    period: $('.chart-btn.active').data('period')
+                },
+                success: function(response) {
+                    loadingSwal.close();
+
+                    if (response.success) {
+                        // Update chart with new data
+                        if (salesChart) {
+                            salesChart.data.labels = response.data.labels;
+                            salesChart.data.datasets[0].data = response.data.revenue;
+                            salesChart.data.datasets[1].data = response.data.orders;
+                            salesChart.update();
+                        }
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Failed to load chart data',
+                            confirmButtonColor: '#3b82f6'
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    loadingSwal.close();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to load chart data. Please try again.',
+                        confirmButtonColor: '#3b82f6'
+                    });
+                }
+            });
+        }
+
         $(document).ready(function () {
+            // Initialize chart
             initChart();
 
             // Chart Period Switcher
             $('.chart-btn').click(function () {
                 $('.chart-btn').removeClass('active');
                 $(this).addClass('active');
+                updateChart();
             });
 
             // Animate Progress Bars
@@ -1273,6 +1598,33 @@
                 $(this).css('width', '0');
                 setTimeout(() => $(this).css('width', width), 300);
             });
+
+            // Set default dates
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+
+            $('#startDate').val(firstDay.toISOString().split('T')[0]);
+            $('#endDate').val(today.toISOString().split('T')[0]);
+
+            // Auto-refresh data every 5 minutes
+            setInterval(function() {
+                $.ajax({
+                    url: '{{ route("seller.dashboard") }}',
+                    type: 'GET',
+                    success: function(response) {
+                        if (response.success) {
+                            // Update stats
+                            $('.stat-card:nth-child(1) .stat-value.gradient').text('RS. ' + parseFloat(response.stats.total_revenue).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                            $('.stat-card:nth-child(2) .stat-value').text(response.stats.total_orders);
+                            $('.stat-card:nth-child(3) .stat-value').text(response.stats.pending_orders);
+                            $('.stat-card:nth-child(4) .stat-value').text(response.stats.total_products);
+                        }
+                    }
+                });
+            }, 300000); // 5 minutes
+
+            // Initialize tooltips
+            $('[data-bs-toggle="tooltip"]').tooltip();
         });
     </script>
 @endpush
