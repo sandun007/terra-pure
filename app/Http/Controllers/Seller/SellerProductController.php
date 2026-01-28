@@ -29,8 +29,8 @@ class SellerProductController extends Controller
         try {
             $seller = Auth::guard('seller')->user();
 
-            $products = SellerProduct::where('seller_code', $seller->code)
-                ->with(['categoryModel', 'brandModel'])
+            $products = SellerProduct::where('seller_id', $seller->id)
+                ->with(['category', 'brand'])
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -49,19 +49,16 @@ class SellerProductController extends Controller
         try {
             $seller = Auth::guard('seller')->user();
 
-            // Get seller's categories
             $categories = SellerCategory::where('seller_id', $seller->id)
                 ->where('status', 'active')
                 ->orderBy('name', 'asc')
                 ->get();
 
-            // Get seller's brands
             $brands = SellerBrand::where('seller_id', $seller->id)
                 ->where('status', 'active')
                 ->orderBy('name', 'asc')
                 ->get();
 
-            // Generate unique product code
             $code = $this->generateProductCode();
 
             return view('seller.product.create', compact('categories', 'brands', 'code'));
@@ -76,17 +73,12 @@ class SellerProductController extends Controller
      */
     public function store(Request $request)
     {
-        // Start transaction for data consistency
         DB::beginTransaction();
 
         try {
             $seller = Auth::guard('seller')->user();
 
-            Log::info('Starting product creation for seller: ' . $seller->code);
-            Log::info('Request data: ' . json_encode($request->except('img')));
-            Log::info('Has file: ' . ($request->hasFile('img') ? 'YES' : 'NO'));
-
-            // Validation rules
+            // Use 'img' for validation (matching form field name)
             $validator = Validator::make($request->all(), [
                 'code' => 'required|string|unique:seller_products,code',
                 'name' => 'required|string|max:255',
@@ -99,29 +91,19 @@ class SellerProductController extends Controller
                 'min_qty' => 'required|integer|min:1',
                 'category_id' => 'nullable|exists:seller_categories,id',
                 'brand_id' => 'nullable|exists:seller_brands,id',
-                'features' => 'nullable|string',
+                'features' => 'nullable|string|max:2000', // FIXED: Added max length
                 'barcode' => 'nullable|string|max:255|unique:seller_products,barcode',
-                'type' => 'required|in:stock_item,service,digital',
+                'type' => 'required|in:physical,digital',
                 'img' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             ], [
-                'code.required' => 'Product code is required',
-                'code.unique' => 'This product code already exists',
-                'name.required' => 'Product name is required',
-                'stock_price.required' => 'Stock price is required',
-                'stock_price.min' => 'Stock price must be at least 0',
-                'display_price.required' => 'Display price is required',
-                'display_price.min' => 'Display price must be at least 0',
-                'qty.required' => 'Quantity is required',
-                'qty.min' => 'Quantity must be at least 0',
-                'min_qty.required' => 'Minimum quantity is required',
-                'min_qty.min' => 'Minimum quantity must be at least 1',
                 'img.required' => 'Product image is required',
                 'img.image' => 'File must be an image',
                 'img.mimes' => 'Only JPG, PNG, GIF, and WEBP images are allowed',
                 'img.max' => 'Image size must not exceed 2MB',
+                'features.max' => 'Features text is too long (maximum 2000 characters)',
             ]);
 
-            // Additional validation: display price should be >= stock price
+            // Additional validation
             $validator->after(function ($validator) use ($request) {
                 if ($request->display_price < $request->stock_price) {
                     $validator->errors()->add('display_price', 'Display price cannot be lower than stock price.');
@@ -129,58 +111,33 @@ class SellerProductController extends Controller
             });
 
             if ($validator->fails()) {
-                Log::error('Validation failed: ' . json_encode($validator->errors()->all()));
-                return redirect()->back()
-                    ->withErrors($validator)
-                    ->withInput()
-                    ->with('error', 'Please fix the validation errors below.');
+                return response()->json([
+                    'success' => false,
+                    'errors' => $validator->errors(),
+                    'message' => 'Please fix validation errors.'
+                ], 422);
             }
 
             $validatedData = $validator->validated();
 
-            // Handle image upload
+            // Handle image upload using 'img'
             $imagePath = null;
-            if ($request->hasFile('img') && $request->file('img')->isValid()) {
+            if ($request->hasFile('img')) {
                 $image = $request->file('img');
-                $originalName = $image->getClientOriginalName();
-                $extension = $image->getClientOriginalExtension();
-                $fileSize = $image->getSize();
+                $filename = 'product_' . time() . '_' . Str::slug($validatedData['name']) . '.' . $image->getClientOriginalExtension();
 
-                Log::info('Uploading image: ' . $originalName . ', Size: ' . $fileSize . ', Extension: ' . $extension);
-
-                // Create safe filename
-                $safeName = Str::slug($validatedData['name'], '_');
-                $filename = 'product_' . time() . '_' . $safeName . '.' . $extension;
-
-                // Ensure directory exists
+                // Store in public/seller/products directory
                 $directory = 'seller/products';
-                if (!Storage::disk('public')->exists($directory)) {
-                    Storage::disk('public')->makeDirectory($directory);
-                    Log::info('Created directory: ' . $directory);
-                }
-
-                // Store the image
                 $imagePath = $image->storeAs($directory, $filename, 'public');
 
-                if ($imagePath) {
-                    Log::info('Image uploaded successfully: ' . $imagePath);
-
-                    // Verify file exists
-                    if (!Storage::disk('public')->exists($imagePath)) {
-                        Log::error('Image file not found after upload: ' . $imagePath);
-                        throw new \Exception('Failed to upload image. Please try again.');
-                    }
-                } else {
-                    Log::error('Image upload failed - no path returned');
-                    throw new \Exception('Failed to upload image. Please try again.');
+                if (!$imagePath) {
+                    throw new \Exception('Failed to upload image.');
                 }
-            } else {
-                Log::error('No valid image file found in request');
-                throw new \Exception('Product image is required and must be a valid image file.');
             }
 
-            // Create product
+            // Create product - Truncate features if too long
             $productData = [
+                'seller_id' => $seller->id,
                 'seller_code' => $seller->code,
                 'code' => $validatedData['code'],
                 'name' => $validatedData['name'],
@@ -194,74 +151,35 @@ class SellerProductController extends Controller
                 'min_qty' => $validatedData['min_qty'],
                 'category_id' => $validatedData['category_id'] ?? null,
                 'brand_id' => $validatedData['brand_id'] ?? null,
-                'features' => $validatedData['features'] ?? null,
+                'features' => isset($validatedData['features']) ?
+                    substr($validatedData['features'], 0, 2000) : null, // FIXED: Truncate to 2000 chars
                 'barcode' => $validatedData['barcode'] ?? null,
                 'type' => $validatedData['type'],
                 'add_by' => 'seller',
                 'update_by' => 'seller',
                 'status' => 'active',
-                'cancel' => 0,
-                'img' => $imagePath,
+                'cancel' => false,
+                'image' => $imagePath,
             ];
-
-            Log::info('Creating product with data: ' . json_encode($productData));
 
             $product = SellerProduct::create($productData);
 
-            if (!$product) {
-                Log::error('Product creation failed - no product returned');
-                throw new \Exception('Failed to create product in database.');
-            }
-
-            Log::info('Product created successfully with ID: ' . $product->id);
-
-            // Commit transaction
             DB::commit();
 
-            return redirect()->route('seller.product.index')
-                ->with('success', 'Product "' . $validatedData['name'] . '" created successfully!');
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            DB::rollBack();
-            Log::error('Validation exception: ' . $e->getMessage());
-            return redirect()->back()
-                ->withErrors($e->validator)
-                ->withInput()
-                ->with('error', 'Please fix the validation errors.');
+            return response()->json([
+                'success' => true,
+                'message' => 'Product created successfully!',
+                'redirect' => route('seller.product.index')
+            ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Product creation error: ' . $e->getMessage());
 
-            // Clean up uploaded image if product creation failed
-            if (isset($imagePath) && $imagePath && Storage::disk('public')->exists($imagePath)) {
-                Storage::disk('public')->delete($imagePath);
-                Log::info('Cleaned up image file after error: ' . $imagePath);
-            }
-
-            Log::error('Product creation error: ' . $e->getMessage() . PHP_EOL . $e->getTraceAsString());
-
-            return redirect()->back()
-                ->with('error', 'Error creating product: ' . $e->getMessage())
-                ->withInput();
-        }
-    }
-
-    /**
-     * Display the specified product
-     */
-    public function show($id)
-    {
-        try {
-            $seller = Auth::guard('seller')->user();
-
-            $product = SellerProduct::where('seller_code', $seller->code)
-                ->with(['categoryModel', 'brandModel'])
-                ->findOrFail($id);
-
-            return view('seller.product.show', compact('product'));
-        } catch (\Exception $e) {
-            Log::error('Error showing product: ' . $e->getMessage());
-            return redirect()->route('seller.product.index')->with('error', 'Product not found.');
+            return response()->json([
+                'success' => false,
+                'message' => 'Error creating product: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -273,7 +191,7 @@ class SellerProductController extends Controller
         try {
             $seller = Auth::guard('seller')->user();
 
-            $product = SellerProduct::where('seller_code', $seller->code)
+            $product = SellerProduct::where('seller_id', $seller->id)
                 ->findOrFail($id);
 
             $categories = SellerCategory::where('seller_id', $seller->id)
@@ -288,8 +206,7 @@ class SellerProductController extends Controller
 
             return view('seller.product.edit', compact('product', 'categories', 'brands'));
         } catch (\Exception $e) {
-            Log::error('Error loading edit form: ' . $e->getMessage());
-            return redirect()->route('seller.product.index')->with('error', 'Product not found or you don\'t have permission to edit it.');
+            return redirect()->route('seller.product.index')->with('error', 'Product not found.');
         }
     }
 
@@ -303,7 +220,7 @@ class SellerProductController extends Controller
         try {
             $seller = Auth::guard('seller')->user();
 
-            $product = SellerProduct::where('seller_code', $seller->code)
+            $product = SellerProduct::where('seller_id', $seller->id)
                 ->findOrFail($id);
 
             $validator = Validator::make($request->all(), [
@@ -317,44 +234,40 @@ class SellerProductController extends Controller
                 'min_qty' => 'required|integer|min:1',
                 'category_id' => 'nullable|exists:seller_categories,id',
                 'brand_id' => 'nullable|exists:seller_brands,id',
-                'features' => 'nullable|string',
+                'features' => 'nullable|string|max:2000', // FIXED: Added max length
                 'barcode' => 'nullable|string|max:255|unique:seller_products,barcode,' . $id,
-                'type' => 'required|in:stock_item,service,digital',
+                'type' => 'required|in:physical,digital',
                 'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            ], [
-                'name.required' => 'Product name is required',
-                'stock_price.required' => 'Stock price is required',
-                'stock_price.min' => 'Stock price must be at least 0',
-                'display_price.required' => 'Display price is required',
-                'display_price.min' => 'Display price must be at least 0',
-                'qty.required' => 'Quantity is required',
-                'qty.min' => 'Quantity must be at least 0',
-                'min_qty.required' => 'Minimum quantity is required',
-                'min_qty.min' => 'Minimum quantity must be at least 1',
-                'img.image' => 'File must be an image',
-                'img.mimes' => 'Only JPG, PNG, GIF, and WEBP images are allowed',
-                'img.max' => 'Image size must not exceed 2MB',
             ]);
 
-            // Additional validation
-            $validator->after(function ($validator) use ($request) {
-                if ($request->display_price < $request->stock_price) {
-                    $validator->errors()->add('display_price', 'Display price cannot be lower than stock price.');
-                }
-            });
-
             if ($validator->fails()) {
-                return redirect()->back()
-                    ->withErrors($validator)
-                    ->withInput()
-                    ->with('error', 'Please fix the validation errors below.');
+                return response()->json([
+                    'success' => false,
+                    'errors' => $validator->errors()
+                ], 422);
             }
 
             $validatedData = $validator->validated();
 
-            // Update data array
+            // Handle image upload
+            if ($request->hasFile('img')) {
+                // Delete old image
+                if ($product->image && Storage::disk('public')->exists($product->image)) {
+                    Storage::disk('public')->delete($product->image);
+                }
+
+                $image = $request->file('img');
+                $filename = 'product_' . time() . '_' . Str::slug($validatedData['name']) . '.' . $image->getClientOriginalExtension();
+                $directory = 'seller/products';
+                $imagePath = $image->storeAs($directory, $filename, 'public');
+
+                $product->image = $imagePath;
+            }
+
+            // Update product data - Truncate features if too long
             $updateData = [
                 'name' => $validatedData['name'],
+                'slug' => Str::slug($validatedData['name']),
                 'description' => $validatedData['description'] ?? null,
                 'stock_price' => $validatedData['stock_price'],
                 'display_price' => $validatedData['display_price'],
@@ -364,54 +277,31 @@ class SellerProductController extends Controller
                 'min_qty' => $validatedData['min_qty'],
                 'category_id' => $validatedData['category_id'] ?? null,
                 'brand_id' => $validatedData['brand_id'] ?? null,
-                'features' => $validatedData['features'] ?? null,
+                'features' => isset($validatedData['features']) ?
+                    substr($validatedData['features'], 0, 2000) : null, // FIXED: Truncate to 2000 chars
                 'barcode' => $validatedData['barcode'] ?? null,
                 'type' => $validatedData['type'],
                 'update_by' => 'seller',
             ];
 
-            // Handle image upload
-            if ($request->hasFile('img') && $request->file('img')->isValid()) {
-                // Delete old image
-                if ($product->img && Storage::disk('public')->exists($product->img)) {
-                    Storage::disk('public')->delete($product->img);
-                }
-
-                $image = $request->file('img');
-                $safeName = Str::slug($validatedData['name'], '_');
-                $filename = 'product_' . time() . '_' . $safeName . '.' . $image->getClientOriginalExtension();
-
-                // Ensure directory exists
-                $directory = 'seller/products';
-                if (!Storage::disk('public')->exists($directory)) {
-                    Storage::disk('public')->makeDirectory($directory);
-                }
-
-                $imagePath = $image->storeAs($directory, $filename, 'public');
-
-                if ($imagePath) {
-                    $updateData['img'] = $imagePath;
-                }
-            }
-
-            // Update slug if name changed
-            if ($product->name !== $validatedData['name']) {
-                $updateData['slug'] = Str::slug($validatedData['name']);
-            }
-
             $product->update($updateData);
 
             DB::commit();
 
-            return redirect()->route('seller.product.index')
-                ->with('success', 'Product "' . $validatedData['name'] . '" updated successfully!');
+            return response()->json([
+                'success' => true,
+                'message' => 'Product updated successfully!',
+                'redirect' => route('seller.product.index')
+            ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Product update error: ' . $e->getMessage() . PHP_EOL . $e->getTraceAsString());
-            return redirect()->back()
-                ->with('error', 'Error updating product: ' . $e->getMessage())
-                ->withInput();
+            Log::error('Product update error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating product: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -423,25 +313,22 @@ class SellerProductController extends Controller
         try {
             $seller = Auth::guard('seller')->user();
 
-            $product = SellerProduct::where('seller_code', $seller->code)
+            $product = SellerProduct::where('seller_id', $seller->id)
                 ->findOrFail($id);
 
-            $productName = $product->name;
-
-            // Delete image if exists
-            if ($product->img && Storage::disk('public')->exists($product->img)) {
-                Storage::disk('public')->delete($product->img);
+            // Delete image
+            if ($product->image && Storage::disk('public')->exists($product->image)) {
+                Storage::disk('public')->delete($product->image);
             }
 
             $product->delete();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Product "' . $productName . '" deleted successfully!'
+                'message' => 'Product deleted successfully!'
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Product deletion error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error deleting product: ' . $e->getMessage()
@@ -457,12 +344,8 @@ class SellerProductController extends Controller
         try {
             $seller = Auth::guard('seller')->user();
 
-            $product = SellerProduct::where('seller_code', $seller->code)
+            $product = SellerProduct::where('seller_id', $seller->id)
                 ->findOrFail($id);
-
-            $request->validate([
-                'status' => 'required|in:active,inactive',
-            ]);
 
             $product->update(['status' => $request->status]);
 
@@ -472,7 +355,6 @@ class SellerProductController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Status update error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating status: ' . $e->getMessage()

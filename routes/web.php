@@ -162,11 +162,11 @@ Route::middleware('auth:seller')->group(function(){
             })->name('orders.export');
         });
 
-        // Seller Product Routes - CORRECT VERSION
+// Seller Product Routes - UPDATED
         Route::prefix('product')->name('seller.product.')->group(function (){
             Route::get('/', [SellerProductController::class, 'index'])->name('index');
             Route::get('/create', [SellerProductController::class, 'create'])->name('create');
-            Route::post('/store', [SellerProductController::class, 'store'])->name('store');
+            Route::post('/', [SellerProductController::class, 'store'])->name('store'); // Fixed
             Route::get('/{id}', [SellerProductController::class, 'show'])->name('show');
             Route::get('/{id}/edit', [SellerProductController::class, 'edit'])->name('edit');
             Route::put('/{id}', [SellerProductController::class, 'update'])->name('update');
