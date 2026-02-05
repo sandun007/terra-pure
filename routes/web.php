@@ -13,6 +13,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Seller\SellerBrandController;
 use App\Http\Controllers\Seller\SellerCategoryController;
+use App\Http\Controllers\Seller\SellerOrderController;
 use App\Http\Controllers\Seller\SellerPaymentController;
 use App\Http\Controllers\Seller\SellerProductController;
 use App\Http\Controllers\SellerController;
@@ -116,17 +117,23 @@ Route::middleware('auth:seller')->group(function(){
             Route::get('product/{id}', [ProductController::class, 'product_view'])->name('seller.product.product_view');
         });
 
+        // Seller Order Routes
         Route::prefix('order')->group(function () {
-            Route::get('new-order', [SellerController::class, 'new_order'])->name('seller.new-order');
-            Route::post('/', [OrderController::class, 'store'])->name('seller.order.store');
-            Route::get('/complete-order', [SellerController::class, 'completeOrder'])->name('seller.complete-order');
-            Route::get('/return-order', [SellerController::class, 'returnOrder'])->name('seller.return-order');
-            Route::get('/rescheduling-order', [SellerController::class, 'reschedulingOrder'])->name('seller.rescheduling-order');
-            Route::get('/pending-order', [SellerController::class, 'pendingOrder'])->name('seller.pending-order');
+            Route::get('new-order', [SellerOrderController::class, 'index'])->name('seller.new-order');
+            Route::post('store', [SellerOrderController::class, 'store'])->name('seller.order.store');
+            Route::get('complete-order', [SellerOrderController::class, 'completeOrder'])->name('seller.complete-order');
+            Route::get('return-order', [SellerOrderController::class, 'returnOrder'])->name('seller.return-order');
+            Route::get('rescheduling-order', [SellerOrderController::class, 'reschedulingOrder'])->name('seller.rescheduling-order');
+            Route::get('pending-order', [SellerOrderController::class, 'pendingOrder'])->name('seller.pending-order');
+
+            // Additional routes for order management
+            Route::get('show/{id}', [SellerOrderController::class, 'show'])->name('seller.order.show');
+            Route::put('update/{id}', [SellerOrderController::class, 'update'])->name('seller.order.update');
+            Route::delete('destroy/{id}', [SellerOrderController::class, 'destroy'])->name('seller.order.destroy');
         });
 
         Route::prefix('product')->group(function () {
-            Route::get('/',[SellerController::class,'seller_product'])->name('seller.product.index');
+            Route::get('/', [SellerController::class, 'seller_product'])->name('seller.product.index');
         });
 
         Route::prefix('payment')->group(function () {
