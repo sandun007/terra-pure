@@ -16,6 +16,7 @@ use App\Http\Controllers\Seller\SellerCategoryController;
 use App\Http\Controllers\Seller\SellerOrderController;
 use App\Http\Controllers\Seller\SellerPaymentController;
 use App\Http\Controllers\Seller\SellerProductController;
+use App\Http\Controllers\Seller\SellerShopController;
 use App\Http\Controllers\SellerController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\StockController;
@@ -112,9 +113,21 @@ Route::middleware('auth:seller')->group(function(){
         Route::post('/logout', [LoginController::class, 'logout'])->name('seller.logout');
         Route::get('/', [SellerController::class, 'dashboard'])->name('seller.dashboard');
 
+        // Profile Routes
+        Route::get('/profile', [App\Http\Controllers\Seller\SellerProfileController::class, 'index'])->name('profile.index');
+        Route::post('/profile/update', [App\Http\Controllers\Seller\SellerProfileController::class, 'update'])->name('profile.update');
+        Route::post('/profile/password', [App\Http\Controllers\Seller\SellerProfileController::class, 'updatePassword'])->name('profile.password');
+
+        // Shop Routes
         Route::prefix('shop')->group(function () {
-            Route::get('/',[SellerController::class,'shop'])->name('seller.shop');
-            Route::get('product/{id}', [ProductController::class, 'product_view'])->name('seller.product.product_view');
+            Route::get('/', [SellerShopController::class, 'index'])->name('seller.shop');
+            Route::get('/product/{id}', [SellerShopController::class, 'showProduct'])->name('seller.shop.product.show');
+            Route::get('/product/{id}/details', [SellerShopController::class, 'getProductDetails'])->name('seller.shop.product.details');
+            Route::post('/copy-product/{id}', [SellerShopController::class, 'copyProductId'])->name('seller.shop.copy.product');
+            Route::post('/order-now', [SellerShopController::class, 'orderNow'])->name('seller.shop.order.now');
+            Route::post('/quick-order', [SellerShopController::class, 'quickOrder'])->name('seller.shop.quick.order');
+            Route::get('/search', [SellerShopController::class, 'search'])->name('seller.shop.search');
+            Route::get('/redirect-to-order', [SellerShopController::class, 'redirectToNewOrder'])->name('seller.shop.redirect.order');
         });
 
         // Seller Order Routes
@@ -130,6 +143,7 @@ Route::middleware('auth:seller')->group(function(){
             Route::get('show/{id}', [SellerOrderController::class, 'show'])->name('seller.order.show');
             Route::put('update/{id}', [SellerOrderController::class, 'update'])->name('seller.order.update');
             Route::delete('destroy/{id}', [SellerOrderController::class, 'destroy'])->name('seller.order.destroy');
+            Route::get('/seller/shop/product/{id}/order-details', [SellerShopController::class, 'getProductDetailsForOrder'])->name('seller.shop.product.order.details');
         });
 
         Route::prefix('product')->group(function () {
@@ -169,7 +183,7 @@ Route::middleware('auth:seller')->group(function(){
             })->name('orders.export');
         });
 
-// Seller Product Routes - UPDATED
+        // Seller Product Routes - UPDATED
         Route::prefix('product')->name('seller.product.')->group(function (){
             Route::get('/', [SellerProductController::class, 'index'])->name('index');
             Route::get('/create', [SellerProductController::class, 'create'])->name('create');

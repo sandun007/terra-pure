@@ -42,6 +42,26 @@ class SellerProductController extends Controller
     }
 
     /**
+     * Display the specified product.
+     */
+    public function show($id)
+    {
+        try {
+            $seller = Auth::guard('seller')->user();
+
+            $product = SellerProduct::where('seller_id', $seller->id)
+                ->with(['category', 'brand'])
+                ->findOrFail($id);
+
+            return view('seller.product.show', compact('product'));
+
+        } catch (\Exception $e) {
+            return redirect()->route('seller.product.index')
+                ->with('error', 'Product not found: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Show the form for creating a new product
      */
     public function create()
@@ -91,7 +111,7 @@ class SellerProductController extends Controller
                 'min_qty' => 'required|integer|min:1',
                 'category_id' => 'nullable|exists:seller_categories,id',
                 'brand_id' => 'nullable|exists:seller_brands,id',
-                'features' => 'nullable|string|max:2000', // FIXED: Added max length
+                'features' => 'nullable|string|max:2000',
                 'barcode' => 'nullable|string|max:255|unique:seller_products,barcode',
                 'type' => 'required|in:physical,digital',
                 'img' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
@@ -101,6 +121,7 @@ class SellerProductController extends Controller
                 'img.mimes' => 'Only JPG, PNG, GIF, and WEBP images are allowed',
                 'img.max' => 'Image size must not exceed 2MB',
                 'features.max' => 'Features text is too long (maximum 2000 characters)',
+                'code.unique' => 'This product code is already in use',
             ]);
 
             // Additional validation
@@ -135,7 +156,7 @@ class SellerProductController extends Controller
                 }
             }
 
-            // Create product - Truncate features if too long
+            // Create product
             $productData = [
                 'seller_id' => $seller->id,
                 'seller_code' => $seller->code,
@@ -152,7 +173,7 @@ class SellerProductController extends Controller
                 'category_id' => $validatedData['category_id'] ?? null,
                 'brand_id' => $validatedData['brand_id'] ?? null,
                 'features' => isset($validatedData['features']) ?
-                    substr($validatedData['features'], 0, 2000) : null, // FIXED: Truncate to 2000 chars
+                    substr($validatedData['features'], 0, 2000) : null,
                 'barcode' => $validatedData['barcode'] ?? null,
                 'type' => $validatedData['type'],
                 'add_by' => 'seller',
@@ -169,6 +190,11 @@ class SellerProductController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Product created successfully!',
+                'product' => [
+                    'id' => $product->id,
+                    'code' => $product->code,
+                    'name' => $product->name
+                ],
                 'redirect' => route('seller.product.index')
             ]);
 
@@ -234,7 +260,7 @@ class SellerProductController extends Controller
                 'min_qty' => 'required|integer|min:1',
                 'category_id' => 'nullable|exists:seller_categories,id',
                 'brand_id' => 'nullable|exists:seller_brands,id',
-                'features' => 'nullable|string|max:2000', // FIXED: Added max length
+                'features' => 'nullable|string|max:2000',
                 'barcode' => 'nullable|string|max:255|unique:seller_products,barcode,' . $id,
                 'type' => 'required|in:physical,digital',
                 'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
@@ -264,7 +290,7 @@ class SellerProductController extends Controller
                 $product->image = $imagePath;
             }
 
-            // Update product data - Truncate features if too long
+            // Update product data
             $updateData = [
                 'name' => $validatedData['name'],
                 'slug' => Str::slug($validatedData['name']),
@@ -278,7 +304,7 @@ class SellerProductController extends Controller
                 'category_id' => $validatedData['category_id'] ?? null,
                 'brand_id' => $validatedData['brand_id'] ?? null,
                 'features' => isset($validatedData['features']) ?
-                    substr($validatedData['features'], 0, 2000) : null, // FIXED: Truncate to 2000 chars
+                    substr($validatedData['features'], 0, 2000) : null,
                 'barcode' => $validatedData['barcode'] ?? null,
                 'type' => $validatedData['type'],
                 'update_by' => 'seller',
@@ -363,14 +389,55 @@ class SellerProductController extends Controller
     }
 
     /**
-     * Generate unique product code
+     * Generate unique product code in format DX/ITM/0001
      */
     private function generateProductCode()
     {
-        do {
-            $code = 'PRD' . date('Ymd') . strtoupper(Str::random(6));
-        } while (SellerProduct::where('code', $code)->exists());
+        $prefix = 'DX/ITM/';
+
+        // Get the last product code
+        $lastProduct = SellerProduct::where('code', 'LIKE', $prefix . '%')
+            ->orderBy('code', 'desc')
+            ->first();
+
+        if ($lastProduct) {
+            // Extract the number from the last code (e.g., DX/ITM/0001 -> 1)
+            $lastNumber = (int) str_replace($prefix, '', $lastProduct->code);
+            $newNumber = $lastNumber + 1;
+        } else {
+            // First product
+            $newNumber = 1;
+        }
+
+        // Format with leading zeros (4 digits)
+        $code = $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+
+        // Check if code exists (safety check)
+        while (SellerProduct::where('code', $code)->exists()) {
+            $newNumber++;
+            $code = $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+        }
 
         return $code;
+    }
+
+    /**
+     * Get next available product code (API endpoint)
+     */
+    public function getNextProductCode()
+    {
+        try {
+            $code = $this->generateProductCode();
+
+            return response()->json([
+                'success' => true,
+                'code' => $code
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error generating product code: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

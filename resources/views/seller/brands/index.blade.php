@@ -886,6 +886,7 @@
             display: none;
             padding: 1rem;
             gap: 1rem;
+            flex-direction: column;
         }
 
         .brand-card {
@@ -1095,6 +1096,41 @@
             color: var(--primary);
         }
 
+        /* View Toggle */
+        .view-toggle {
+            display: flex;
+            background: var(--gray-100);
+            border-radius: var(--radius-lg);
+            padding: 0.25rem;
+        }
+
+        .view-toggle-btn {
+            padding: 0.5rem 0.75rem;
+            border: none;
+            background: transparent;
+            border-radius: var(--radius);
+            cursor: pointer;
+            color: var(--gray-500);
+            transition: all var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .view-toggle-btn.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .view-toggle-btn:hover:not(.active) {
+            color: var(--gray-700);
+        }
+
+        .view-toggle-btn .material-icons-outlined {
+            font-size: 1.25rem;
+        }
+
         /* Responsive Styles */
         @media (max-width: 992px) {
             .page-header {
@@ -1143,15 +1179,6 @@
                 min-width: 140px;
             }
 
-            .filter-row {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            .sort-dropdown {
-                width: 100%;
-            }
-
             .filter-pills {
                 justify-content: flex-start;
                 overflow-x: auto;
@@ -1178,14 +1205,13 @@
                 padding: 0.5rem 0.75rem;
             }
 
-            /* Hide desktop table, show mobile cards */
+            /* Show mobile cards by default on mobile, hide table */
             .table-responsive {
                 display: none;
             }
 
             .mobile-cards {
                 display: flex;
-                flex-direction: column;
             }
 
             .table-header {
@@ -1196,6 +1222,16 @@
             .table-actions {
                 width: 100%;
                 justify-content: flex-end;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .table-responsive {
+                display: block;
+            }
+
+            .mobile-cards {
+                display: none !important;
             }
         }
 
@@ -1323,19 +1359,6 @@
         .animate-delay-3 { animation-delay: 0.3s; }
         .animate-delay-4 { animation-delay: 0.4s; }
 
-        /* Loading Skeleton */
-        .skeleton {
-            background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
-            background-size: 200% 100%;
-            animation: skeleton-loading 1.5s ease-in-out infinite;
-            border-radius: var(--radius);
-        }
-
-        @keyframes skeleton-loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-
         /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
@@ -1354,41 +1377,6 @@
 
         ::-webkit-scrollbar-thumb:hover {
             background: var(--gray-400);
-        }
-
-        /* View Toggle */
-        .view-toggle {
-            display: flex;
-            background: var(--gray-100);
-            border-radius: var(--radius-lg);
-            padding: 0.25rem;
-        }
-
-        .view-toggle-btn {
-            padding: 0.5rem 0.75rem;
-            border: none;
-            background: transparent;
-            border-radius: var(--radius);
-            cursor: pointer;
-            color: var(--gray-500);
-            transition: all var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .view-toggle-btn.active {
-            background: white;
-            color: var(--primary);
-            box-shadow: var(--shadow-sm);
-        }
-
-        .view-toggle-btn:hover:not(.active) {
-            color: var(--gray-700);
-        }
-
-        .view-toggle-btn .material-icons-outlined {
-            font-size: 1.25rem;
         }
     </style>
 @endpush
@@ -1412,10 +1400,6 @@
                         <span class="material-icons-outlined">add_circle</span>
                         New Brand
                     </a>
-                    <button class="btn-header btn-header-outline" onclick="showImportModal()">
-                        <span class="material-icons-outlined">upload_file</span>
-                        Import
-                    </button>
                 </div>
             </div>
         </div>
@@ -1429,10 +1413,6 @@
             </div>
             <div class="stat-value">{{ $brands->count() ?? 0 }}</div>
             <div class="stat-label">Total Brands</div>
-            <div class="stat-change positive">
-                <span class="material-icons-outlined" style="font-size: 0.875rem;">trending_up</span>
-                All brands in catalog
-            </div>
         </div>
 
         <div class="stat-card success animate-fade-in animate-delay-2">
@@ -1441,10 +1421,6 @@
             </div>
             <div class="stat-value">{{ $activeBrands ?? 0 }}</div>
             <div class="stat-label">Active Brands</div>
-            <div class="stat-change positive">
-                <span class="material-icons-outlined" style="font-size: 0.875rem;">visibility</span>
-                Visible to customers
-            </div>
         </div>
 
         <div class="stat-card warning animate-fade-in animate-delay-3">
@@ -1453,22 +1429,14 @@
             </div>
             <div class="stat-value">{{ $totalProducts ?? 0 }}</div>
             <div class="stat-label">Total Products</div>
-            <div class="stat-change positive">
-                <span class="material-icons-outlined" style="font-size: 0.875rem;">category</span>
-                Across all brands
-            </div>
         </div>
 
         <div class="stat-card info animate-fade-in animate-delay-4">
             <div class="stat-icon info">
                 <span class="material-icons-outlined">trending_up</span>
             </div>
-            <div class="stat-value">{{ $topBrands ?? 5 }}</div>
+            <div class="stat-value">{{ $topBrands ?? 0 }}</div>
             <div class="stat-label">Top Brands</div>
-            <div class="stat-change positive">
-                <span class="material-icons-outlined" style="font-size: 0.875rem;">star</span>
-                By product count
-            </div>
         </div>
     </div>
 
@@ -1539,33 +1507,6 @@
                 Inactive
                 <span class="count">{{ ($brands->count() ?? 0) - ($activeBrands ?? 0) }}</span>
             </div>
-            <div class="filter-pill" data-filter="high" onclick="filterByProducts('high', this)">
-                <span class="material-icons-outlined" style="color: #3b82f6;">trending_up</span>
-                Most Products
-            </div>
-            <div class="filter-pill" data-filter="low" onclick="filterByProducts('low', this)">
-                <span class="material-icons-outlined" style="color: #f59e0b;">trending_down</span>
-                Few Products
-            </div>
-        </div>
-
-        <div class="quick-actions">
-            <button class="quick-btn" onclick="exportBrands('csv')">
-                <span class="material-icons-outlined">download</span>
-                Export CSV
-            </button>
-            <button class="quick-btn" onclick="bulkStatusChange('active')">
-                <span class="material-icons-outlined">toggle_on</span>
-                Activate Selected
-            </button>
-            <button class="quick-btn" onclick="bulkStatusChange('inactive')">
-                <span class="material-icons-outlined">toggle_off</span>
-                Deactivate Selected
-            </button>
-            <button class="quick-btn success" onclick="showAnalytics()">
-                <span class="material-icons-outlined">analytics</span>
-                View Analytics
-            </button>
         </div>
     </div>
 
@@ -1779,10 +1720,6 @@
                     <span class="material-icons-outlined">add_circle</span>
                     Create First Brand
                 </a>
-                <button class="btn-outline-primary" onclick="showImportModal()">
-                    <span class="material-icons-outlined">upload_file</span>
-                    Import Brands
-                </button>
             </div>
         </div>
     @endif
@@ -1875,30 +1812,6 @@
                 elements.forEach(el => {
                     const elStatus = el.getAttribute('data-status');
                     if (status === 'all' || elStatus === status) {
-                        el.style.display = '';
-                    } else {
-                        el.style.display = 'none';
-                    }
-                });
-            };
-
-            filterElements(tableRows);
-            filterElements(cards);
-        }
-
-        // Filter by product count
-        function filterByProducts(type, element) {
-            const tableRows = document.querySelectorAll('#brandsTable tbody tr');
-            const cards = document.querySelectorAll('.brand-card');
-            const filterPills = document.querySelectorAll('.filter-pill');
-
-            filterPills.forEach(pill => pill.classList.remove('active'));
-            element.classList.add('active');
-
-            const filterElements = (elements) => {
-                elements.forEach(el => {
-                    const products = parseInt(el.getAttribute('data-products'));
-                    if ((type === 'high' && products >= 10) || (type === 'low' && products < 10)) {
                         el.style.display = '';
                     } else {
                         el.style.display = 'none';
@@ -2006,139 +1919,34 @@
             });
         }
 
-        // Bulk status change
-        function bulkStatusChange(status) {
-            Swal.fire({
-                icon: 'info',
-                title: 'Select Brands',
-                text: 'Please select brands from the table to update their status.',
-                confirmButtonColor: '#6366f1',
-                customClass: {
-                    popup: 'rounded-3',
-                    confirmButton: 'rounded-2'
-                }
+        // Initialize page animations
+        document.addEventListener('DOMContentLoaded', function() {
+            const animatedElements = document.querySelectorAll('.animate-fade-in');
+            animatedElements.forEach((el, index) => {
+                el.style.opacity = '0';
+                setTimeout(() => {
+                    el.style.opacity = '1';
+                }, index * 100);
             });
-        }
 
-        // Export brands
-        function exportBrands(format) {
-            Swal.fire({
-                title: 'Export Brands',
-                html: `
-                    <div style="text-align: center; padding: 1rem 0;">
-                        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 50%; margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center;">
-                            <span class="material-icons-outlined" style="font-size: 40px; color: #10b981;">download</span>
-                        </div>
-                        <p style="color: #64748b; font-size: 0.9375rem;">Export all brands in ${format.toUpperCase()} format?</p>
-                    </div>
-                `,
-                showCancelButton: true,
-                confirmButtonColor: '#10b981',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: '<span class="material-icons-outlined" style="font-size: 1rem; vertical-align: middle; margin-right: 0.25rem;">download</span> Export',
-                cancelButtonText: 'Cancel',
-                customClass: {
-                    popup: 'rounded-3',
-                    confirmButton: 'rounded-2',
-                    cancelButton: 'rounded-2'
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = `/seller/brands/export?format=${format}`;
-                }
-            });
-        }
+            // Auto-detect screen size and set appropriate view
+            if (window.innerWidth <= 768) {
+                // On mobile, show cards view
+                const toggleBtns = document.querySelectorAll('.view-toggle-btn');
+                const tableView = document.querySelector('.table-responsive');
+                const cardView = document.getElementById('mobileCards');
 
-        // Show import modal
-        function showImportModal() {
-            Swal.fire({
-                title: 'Import Brands',
-                html: `
-                    <div style="text-align: left; padding: 1rem 0;">
-                        <p style="color: #64748b; margin-bottom: 1rem;">Upload a CSV file with brand details:</p>
-                        <div style="margin-bottom: 1rem;">
-                            <input type="file" class="form-control" id="brandFile" accept=".csv" style="padding: 0.75rem; border: 2px dashed #e2e8f0; border-radius: 12px; width: 100%;">
-                        </div>
-                        <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 1rem; border-radius: 12px; border-left: 4px solid #3b82f6;">
-                            <p style="margin: 0; font-size: 0.875rem; color: #1e40af; display: flex; align-items: center; gap: 0.5rem;">
-                                <span class="material-icons-outlined" style="font-size: 1.25rem;">info</span>
-                                File should contain: name, code, description, status
-                            </p>
-                        </div>
-                    </div>
-                `,
-                showCancelButton: true,
-                confirmButtonColor: '#6366f1',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: '<span class="material-icons-outlined" style="font-size: 1rem; vertical-align: middle; margin-right: 0.25rem;">upload_file</span> Upload & Import',
-                cancelButtonText: 'Cancel',
-                customClass: {
-                    popup: 'rounded-3',
-                    confirmButton: 'rounded-2',
-                    cancelButton: 'rounded-2'
-                },
-                preConfirm: () => {
-                    const file = document.getElementById('brandFile').files[0];
-                    if (!file) {
-                        Swal.showValidationMessage('Please select a file');
-                        return false;
-                    }
-                    return file;
+                if (toggleBtns.length > 0) {
+                    toggleBtns.forEach(btn => btn.classList.remove('active'));
+                    document.querySelector('[onclick="setView(\'grid\')"]').classList.add('active');
                 }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        title: 'Importing...',
-                        html: '<p style="color: #64748b;">Please wait while we import your brands</p>',
-                        allowOutsideClick: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
-                }
-            });
-        }
 
-        // Show analytics modal
-        function showAnalytics() {
-            const totalBrands = document.querySelectorAll('#brandsTable tbody tr').length || 0;
-            const activeBrands = document.querySelectorAll('.status-badge.active').length || 0;
-            const totalProducts = Array.from(document.querySelectorAll('.product-badge'))
-                .reduce((sum, el) => {
-                    const count = parseInt(el.textContent.match(/\d+/)?.[0] || 0);
-                    return sum + count;
-                }, 0);
-
-            Swal.fire({
-                title: 'Brand Analytics',
-                html: `
-                    <div style="padding: 1.5rem 0;">
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
-                            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 1.5rem; border-radius: 16px; text-align: center;">
-                                <h2 style="font-size: 2.5rem; font-weight: 800; color: #10b981; margin: 0;">${activeBrands}</h2>
-                                <p style="color: #065f46; margin: 0.25rem 0 0; font-weight: 500;">Active Brands</p>
-                            </div>
-                            <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 1.5rem; border-radius: 16px; text-align: center;">
-                                <h2 style="font-size: 2.5rem; font-weight: 800; color: #3b82f6; margin: 0;">${totalProducts}</h2>
-                                <p style="color: #1e40af; margin: 0.25rem 0 0; font-weight: 500;">Total Products</p>
-                            </div>
-                        </div>
-                        <div style="background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); padding: 1rem; border-radius: 12px;">
-                            <p style="margin: 0; font-size: 0.875rem; color: #6b21a8; display: flex; align-items: center; gap: 0.5rem;">
-                                <span class="material-icons-outlined" style="font-size: 1.25rem;">info</span>
-                                Analytics based on current filter view
-                            </p>
-                        </div>
-                    </div>
-                `,
-                showConfirmButton: false,
-                showCloseButton: true,
-                width: '500px',
-                customClass: {
-                    popup: 'rounded-3'
+                if (tableView && cardView) {
+                    tableView.style.display = 'none';
+                    cardView.style.display = 'flex';
                 }
-            });
-        }
+            }
+        });
 
         // Show success toast
         @if(session('success'))
@@ -2156,16 +1964,5 @@
             }
         });
         @endif
-
-        // Initialize page animations
-        document.addEventListener('DOMContentLoaded', function() {
-            const animatedElements = document.querySelectorAll('.animate-fade-in');
-            animatedElements.forEach((el, index) => {
-                el.style.opacity = '0';
-                setTimeout(() => {
-                    el.style.opacity = '1';
-                }, index * 100);
-            });
-        });
     </script>
 @endpush

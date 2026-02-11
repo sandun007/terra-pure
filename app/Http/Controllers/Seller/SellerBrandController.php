@@ -28,7 +28,12 @@ class SellerBrandController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            return view('seller.brands.index', compact('brands'));
+            // Calculate stats for the view
+            $activeBrands = $brands->where('status', 'active')->count();
+            $totalProducts = $brands->sum('products_count');
+            $topBrands = $brands->where('products_count', '>', 0)->count();
+
+            return view('seller.brands.index', compact('brands', 'activeBrands', 'totalProducts', 'topBrands'));
 
         } catch (\Exception $e) {
             \Log::error('Error loading brands: ' . $e->getMessage());
@@ -70,6 +75,7 @@ class SellerBrandController extends Controller
                         return $query->where('seller_id', $seller->id);
                     })
                 ],
+                'description' => 'nullable|string|max:1000',
                 'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
                 'status' => 'required|in:active,inactive',
             ], [
@@ -103,6 +109,7 @@ class SellerBrandController extends Controller
                 'seller_id' => $seller->id,
                 'code' => $validated['code'],
                 'name' => $validated['name'],
+                'description' => $validated['description'] ?? null,
                 'image' => $imagePath,
                 'status' => $validated['status'],
             ]);
@@ -167,6 +174,7 @@ class SellerBrandController extends Controller
                             ->where('id', '!=', $brand->id);
                     })
                 ],
+                'description' => 'nullable|string|max:1000',
                 'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
                 'status' => 'required|in:active,inactive',
                 'remove_current_image' => 'nullable|in:0,1',
@@ -176,6 +184,7 @@ class SellerBrandController extends Controller
 
             $updateData = [
                 'name' => $validated['name'],
+                'description' => $validated['description'] ?? null,
                 'status' => $validated['status'],
             ];
 
@@ -218,32 +227,39 @@ class SellerBrandController extends Controller
                 ->withInput();
         }
     }
+
     /**
      * Display the specified brand.
      */
-    public function show(SellerBrand $brand)
+    public function show($id)
     {
         try {
             $seller = Auth::guard('seller')->user();
 
-            // Verify the brand belongs to the seller
-            if ($brand->seller_id != $seller->id) {
+            // Find brand by ID with proper authorization
+            $brand = SellerBrand::where('id', $id)
+                ->where('seller_id', $seller->id)
+                ->first();
+
+            if (!$brand) {
                 return redirect()->route('seller.brands.index')
-                    ->with('error', 'You do not have permission to view this brand.');
+                    ->with('error', 'Brand not found or you do not have permission to view it.');
             }
 
             // Load products count
             $brand->loadCount('products');
 
-            // Get recent products under this brand
-            $recentProducts = SellerProduct::where('seller_brand_id', $brand->id)
+            // Get all products under this brand with pagination
+            $allProducts = SellerProduct::where('seller_brand_id', $brand->id)
                 ->where('seller_id', $seller->id)
                 ->with(['category', 'subcategory'])
                 ->orderBy('created_at', 'desc')
-                ->take(5)
-                ->get();
+                ->paginate(10);
 
-            return view('seller.brands.show', compact('brand', 'recentProducts'));
+            // Get recent products for stats
+            $recentProducts = $allProducts->take(5);
+
+            return view('seller.brands.show', compact('brand', 'allProducts', 'recentProducts'));
 
         } catch (\Exception $e) {
             \Log::error('Error loading brand details: ' . $e->getMessage());
@@ -252,15 +268,19 @@ class SellerBrandController extends Controller
         }
     }
 
-    public function destroy(SellerBrand $brand)
+    public function destroy($id)
     {
         try {
             $seller = Auth::guard('seller')->user();
 
-            // Verify the brand belongs to the seller
-            if ($brand->seller_id != $seller->id) {
+            // Find brand by ID with proper authorization
+            $brand = SellerBrand::where('id', $id)
+                ->where('seller_id', $seller->id)
+                ->first();
+
+            if (!$brand) {
                 return redirect()->route('seller.brands.index')
-                    ->with('error', 'You do not have permission to delete this brand.');
+                    ->with('error', 'Brand not found or you do not have permission to delete it.');
             }
 
             // Check if brand is used in products

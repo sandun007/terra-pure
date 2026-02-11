@@ -63,7 +63,10 @@ class SellerShopController extends Controller
             // Get shop if exists, but don't require it
             $shop = SellerShop::where('seller_id', $seller->id)->first();
 
-            return view('seller.shop.shop', compact('shop', 'products'));
+            // Get next available product code
+            $nextProductCode = $this->generateNextProductCode();
+
+            return view('seller.shop.shop', compact('shop', 'products', 'nextProductCode'));
 
         } catch (\Exception $e) {
             \Log::error('Shop index error: ' . $e->getMessage());
@@ -97,6 +100,48 @@ class SellerShopController extends Controller
         } catch (\Exception $e) {
             \Log::error('Show product error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Product not found: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get product details via AJAX
+     */
+    public function getProductDetails($id)
+    {
+        try {
+            $seller = Auth::guard('seller')->user();
+
+            $product = SellerProduct::where('seller_id', $seller->id)
+                ->where('id', $id)
+                ->with(['category', 'brand'])
+                ->firstOrFail();
+
+            return response()->json([
+                'success' => true,
+                'product' => [
+                    'id' => $product->id,
+                    'code' => $product->code,
+                    'name' => $product->name,
+                    'description' => $product->description ?? '',
+                    'display_price' => number_format($product->display_price, 2, '.', ''),
+                    'stock_price' => number_format($product->stock_price, 2, '.', ''),
+                    'discount' => $product->discount ?? 0,
+                    'qty' => $product->qty ?? 0,
+                    'min_qty' => $product->min_qty ?? 1,
+                    'category' => $product->category->name ?? 'Uncategorized',
+                    'brand' => $product->brand->name ?? null,
+                    'image' => $product->image ? asset('storage/' . $product->image) : asset('images/default-product.png'),
+                    'features' => $product->features ?? '',
+                    'stock_status' => $product->qty > 0 ? ($product->qty <= $product->min_qty ? 'low' : 'available') : 'out',
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Get product details error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Product not found: ' . $e->getMessage()
+            ], 404);
         }
     }
 
@@ -261,15 +306,44 @@ class SellerShopController extends Controller
                 ->with(['category', 'brand'])
                 ->where(function ($q) use ($query) {
                     $q->where('name', 'like', "%{$query}%")
-                        ->orWhere('description', 'like', "%{$query}%");
+                        ->orWhere('description', 'like', "%{$query}%")
+                        ->orWhere('code', 'like', "%{$query}%");
                 })
                 ->paginate(12);
 
-            return view('seller.shop.shop', compact('shop', 'products'))->with('searchQuery', $query);
+            // Get next available product code
+            $nextProductCode = $this->generateNextProductCode();
+
+            return view('seller.shop.shop', compact('shop', 'products', 'nextProductCode'))->with('searchQuery', $query);
 
         } catch (\Exception $e) {
             \Log::error('Search error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Search error: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Generate next available product code
+     */
+    private function generateNextProductCode()
+    {
+        $prefix = 'DX/ITM/';
+
+        // Get the last product code
+        $lastProduct = SellerProduct::where('code', 'LIKE', $prefix . '%')
+            ->orderBy('code', 'desc')
+            ->first();
+
+        if ($lastProduct) {
+            // Extract the number from the last code (e.g., DX/ITM/0001 -> 1)
+            $lastNumber = (int) str_replace($prefix, '', $lastProduct->code);
+            $newNumber = $lastNumber + 1;
+        } else {
+            // First product
+            $newNumber = 1;
+        }
+
+        // Format with leading zeros (4 digits)
+        return $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }
 }

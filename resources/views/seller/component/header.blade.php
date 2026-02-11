@@ -572,6 +572,17 @@
 
                 <div class="dropdown-divider"></div>
 
+                <!-- PROFILE LINK ADDED HERE -->
+                <a class="dropdown-item" href="{{ route('profile.index') }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    My Profile
+                </a>
+
+                <div class="dropdown-divider"></div>
+
                 <form action="{{ route('seller.logout') }}" method="POST">
                     @csrf
                     <button type="submit" class="dropdown-item logout-item">
