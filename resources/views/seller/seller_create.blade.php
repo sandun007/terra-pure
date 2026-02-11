@@ -166,7 +166,7 @@
                                         <input type="text" name="ref_code" class="form-control" placeholder="Referral Code" value="0" required>
                                     </div>
                                 </div>
-                                
+
                                 <div class="col-sm-6 col-12">
     <div class="mb-3">
         <label class="form-label">District</label>

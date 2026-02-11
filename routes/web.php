@@ -5,15 +5,18 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CallController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\Employee\EmployeeWholesalerOrderController;
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\SellerBrandController;
-use App\Http\Controllers\SellerCategoryController;
+use App\Http\Controllers\Seller\SellerBrandController;
+use App\Http\Controllers\Seller\SellerCategoryController;
+use App\Http\Controllers\Seller\SellerOrderController;
+use App\Http\Controllers\Seller\SellerPaymentController;
+use App\Http\Controllers\Seller\SellerProductController;
 use App\Http\Controllers\SellerController;
-use App\Http\Controllers\SellerPaymentController;
-use App\Http\Controllers\SellerProductController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\Wholesaler\WholesalerBrandController;
@@ -23,8 +26,6 @@ use App\Http\Controllers\Wholesaler\WholesalerPaymentController;
 use App\Http\Controllers\Wholesaler\WholesalerProductController;
 use App\Http\Controllers\Wholesaler\WholesalerShopController;
 use App\Http\Controllers\WholesalerController;
-use App\Http\Controllers\EmployeeController;
-use App\Http\Controllers\Employee\EmployeeWholesalerOrderController;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 
@@ -116,17 +117,23 @@ Route::middleware('auth:seller')->group(function(){
             Route::get('product/{id}', [ProductController::class, 'product_view'])->name('seller.product.product_view');
         });
 
+        // Seller Order Routes
         Route::prefix('order')->group(function () {
-            Route::get('new-order', [SellerController::class, 'new_order'])->name('seller.new-order');
-            Route::post('/', [OrderController::class, 'store'])->name('seller.order.store');
-            Route::get('/complete-order', [SellerController::class, 'completeOrder'])->name('seller.complete-order');
-            Route::get('/return-order', [SellerController::class, 'returnOrder'])->name('seller.return-order');
-            Route::get('/rescheduling-order', [SellerController::class, 'reschedulingOrder'])->name('seller.rescheduling-order');
-            Route::get('/pending-order', [SellerController::class, 'pendingOrder'])->name('seller.pending-order');
+            Route::get('new-order', [SellerOrderController::class, 'index'])->name('seller.new-order');
+            Route::post('store', [SellerOrderController::class, 'store'])->name('seller.order.store');
+            Route::get('complete-order', [SellerOrderController::class, 'completeOrder'])->name('seller.complete-order');
+            Route::get('return-order', [SellerOrderController::class, 'returnOrder'])->name('seller.return-order');
+            Route::get('rescheduling-order', [SellerOrderController::class, 'reschedulingOrder'])->name('seller.rescheduling-order');
+            Route::get('pending-order', [SellerOrderController::class, 'pendingOrder'])->name('seller.pending-order');
+
+            // Additional routes for order management
+            Route::get('show/{id}', [SellerOrderController::class, 'show'])->name('seller.order.show');
+            Route::put('update/{id}', [SellerOrderController::class, 'update'])->name('seller.order.update');
+            Route::delete('destroy/{id}', [SellerOrderController::class, 'destroy'])->name('seller.order.destroy');
         });
 
         Route::prefix('product')->group(function () {
-            Route::get('/',[SellerController::class,'seller_product'])->name('seller.product.index');
+            Route::get('/', [SellerController::class, 'seller_product'])->name('seller.product.index');
         });
 
         Route::prefix('payment')->group(function () {
@@ -162,27 +169,40 @@ Route::middleware('auth:seller')->group(function(){
             })->name('orders.export');
         });
 
-        Route::prefix('product')->group(function (){
-            Route::get('/list', [SellerProductController::class, 'index'])->name('seller.product.index');
-            Route::get('/', [SellerProductController::class, 'create'])->name('seller.product.create');
-            Route::post('/', [SellerProductController::class, 'store'])->name('seller.product.store');
-            Route::get('/{id}', [SellerProductController::class, 'delete'])->name('seller.product.delete');
-            Route::get('/edit/{id}', [SellerProductController::class, 'edit'])->name('seller.product.edit');
+// Seller Product Routes - UPDATED
+        Route::prefix('product')->name('seller.product.')->group(function (){
+            Route::get('/', [SellerProductController::class, 'index'])->name('index');
+            Route::get('/create', [SellerProductController::class, 'create'])->name('create');
+            Route::post('/', [SellerProductController::class, 'store'])->name('store'); // Fixed
+            Route::get('/{id}', [SellerProductController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [SellerProductController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [SellerProductController::class, 'update'])->name('update');
+            Route::delete('/{id}', [SellerProductController::class, 'destroy'])->name('destroy');
+            Route::post('/{id}/status', [SellerProductController::class, 'updateStatus'])->name('status.update');
         });
 
-        Route::prefix('brand')->group(function (){
-            Route::get('/list', [SellerBrandController::class, 'seller_index'])->name('seller.brand.index');
-            Route::get('/', [SellerBrandController::class, 'seller_create'])->name('seller.brand.create');
-            Route::post('/', [SellerBrandController::class, 'seller_store'])->name('seller.brand.store');
-            Route::get('/{id}', [SellerBrandController::class, 'seller_delete'])->name('seller.brand.delete');
+        // Seller Brand Routes
+        Route::prefix('brands')->name('seller.brands.')->group(function () {
+            Route::get('/', [SellerBrandController::class, 'index'])->name('index');
+            Route::get('/create', [SellerBrandController::class, 'create'])->name('create');
+            Route::post('/', [SellerBrandController::class, 'store'])->name('store');
+            Route::get('/{brand}', [SellerBrandController::class, 'show'])->name('show');
+            Route::get('/{brand}/edit', [SellerBrandController::class, 'edit'])->name('edit');
+            Route::put('/{brand}', [SellerBrandController::class, 'update'])->name('update');
+            Route::delete('/{brand}', [SellerBrandController::class, 'destroy'])->name('destroy');
         });
 
-        Route::prefix('category')->group(function () {
-            Route::get('/list', [SellerCategoryController::class, 'seller_index'])->name('seller.category.index');
-            Route::get('/', [SellerCategoryController::class, 'seller_create'])->name('seller.category.create');
-            Route::post('/', [SellerCategoryController::class, 'seller_store'])->name('seller.category.store');
-            Route::get('/{id}', [SellerCategoryController::class, 'seller_delete'])->name('seller.category.delete');
+        // Category Management Routes
+        Route::prefix('category')->name('seller.category.')->group(function () {
+            Route::get('/', [SellerCategoryController::class, 'index'])->name('index');
+            Route::get('/create', [SellerCategoryController::class, 'create'])->name('create');
+            Route::post('/', [SellerCategoryController::class, 'store'])->name('store');
+            Route::get('/{id}', [SellerCategoryController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [SellerCategoryController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [SellerCategoryController::class, 'update'])->name('update');
+            Route::delete('/{id}', [SellerCategoryController::class, 'destroy'])->name('destroy');
         });
+
     });
 });
 

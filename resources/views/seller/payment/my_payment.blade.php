@@ -1,4 +1,4 @@
-@extends('seller.app')
+@extends('seller.layout.app')
 @push('title')
     My Payment
 @endpush
@@ -77,7 +77,7 @@
                     <tbody>
                     <tr>
                         <td>
-                           TRS/0001
+                            TRS/0001
                         </td>
                         <td>Deposit For Register</td>
                         <td>29 Mar 2023</td>
@@ -88,9 +88,10 @@
                         <td class="action-table-data">
                             <button class="btn btn-primary btn-sm">View</button>
                         </td>
-                    </tr> <tr>
+                    </tr>
+                    <tr>
                         <td>
-                           TRS/0001
+                            TRS/0001
                         </td>
                         <td>Deposit For Register</td>
                         <td>29 Mar 2023</td>
@@ -101,9 +102,10 @@
                         <td class="action-table-data">
                             <button class="btn btn-primary btn-sm">View</button>
                         </td>
-                    </tr> <tr>
+                    </tr>
+                    <tr>
                         <td>
-                           TRS/0001
+                            TRS/0001
                         </td>
                         <td>Deposit For Register</td>
                         <td>29 Mar 2023</td>
@@ -114,9 +116,10 @@
                         <td class="action-table-data">
                             <button class="btn btn-primary btn-sm">View</button>
                         </td>
-                    </tr> <tr>
+                    </tr>
+                    <tr>
                         <td>
-                           TRS/0001
+                            TRS/0001
                         </td>
                         <td>Deposit For Register</td>
                         <td>29 Mar 2023</td>
@@ -127,9 +130,10 @@
                         <td class="action-table-data">
                             <button class="btn btn-primary btn-sm">View</button>
                         </td>
-                    </tr> <tr>
+                    </tr>
+                    <tr>
                         <td>
-                           TRS/0001
+                            TRS/0001
                         </td>
                         <td>Deposit For Register</td>
                         <td>29 Mar 2023</td>
@@ -140,9 +144,10 @@
                         <td class="action-table-data">
                             <button class="btn btn-primary btn-sm">View</button>
                         </td>
-                    </tr> <tr>
+                    </tr>
+                    <tr>
                         <td>
-                           TRS/0001
+                            TRS/0001
                         </td>
                         <td>Deposit For Register</td>
                         <td>29 Mar 2023</td>
