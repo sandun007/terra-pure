@@ -16,6 +16,7 @@ use App\Http\Controllers\Seller\SellerCategoryController;
 use App\Http\Controllers\Seller\SellerOrderController;
 use App\Http\Controllers\Seller\SellerPaymentController;
 use App\Http\Controllers\Seller\SellerProductController;
+use App\Http\Controllers\Seller\SellerShopController;
 use App\Http\Controllers\SellerController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\StockController;
@@ -112,24 +113,42 @@ Route::middleware('auth:seller')->group(function(){
         Route::post('/logout', [LoginController::class, 'logout'])->name('seller.logout');
         Route::get('/', [SellerController::class, 'dashboard'])->name('seller.dashboard');
 
-        Route::prefix('shop')->group(function () {
-            Route::get('/',[SellerController::class,'shop'])->name('seller.shop');
-            Route::get('product/{id}', [ProductController::class, 'product_view'])->name('seller.product.product_view');
+        // Profile Routes
+        Route::get('/profile', [App\Http\Controllers\Seller\Sellerprofilecontroller::class, 'index'])->name('profile.index');
+        Route::post('/profile/update', [App\Http\Controllers\Seller\Sellerprofilecontroller::class, 'update'])->name('profile.update');
+        Route::post('/profile/password', [App\Http\Controllers\Seller\Sellerprofilecontroller::class, 'updatePassword'])->name('profile.password');
+
+        // Shop Routes
+        Route::prefix('shop')->name('seller.shop.')->group(function () {
+            Route::get('/', [SellerShopController::class, 'index'])->name('seller.index'); // Fixed: changed from seller.index to index
+            Route::get('/product/{code}', [SellerShopController::class, 'showProduct'])->name('product.show');
+            Route::get('/product/{code}/details', [SellerShopController::class, 'getProductDetails'])->name('product.details');
+            Route::get('/product/find/{code}', [SellerShopController::class, 'findByCode'])->name('product.find'); // FIXED: This route was missing
+            Route::post('/product/copy/{code}', [SellerShopController::class, 'copyProductCode'])->name('product.copy');
+            Route::post('/order-now', [SellerShopController::class, 'orderNow'])->name('order.now');
+            Route::post('/quick-order', [SellerShopController::class, 'quickOrder'])->name('quick.order');
+            Route::get('/search', [SellerShopController::class, 'search'])->name('search');
+            Route::get('/redirect-to-order', [SellerShopController::class, 'redirectToNewOrder'])->name('redirect.order');
         });
 
         // Seller Order Routes
-        Route::prefix('order')->group(function () {
-            Route::get('new-order', [SellerOrderController::class, 'index'])->name('seller.new-order');
-            Route::post('store', [SellerOrderController::class, 'store'])->name('seller.order.store');
-            Route::get('complete-order', [SellerOrderController::class, 'completeOrder'])->name('seller.complete-order');
-            Route::get('return-order', [SellerOrderController::class, 'returnOrder'])->name('seller.return-order');
-            Route::get('rescheduling-order', [SellerOrderController::class, 'reschedulingOrder'])->name('seller.rescheduling-order');
-            Route::get('pending-order', [SellerOrderController::class, 'pendingOrder'])->name('seller.pending-order');
+        Route::prefix('order')->name('seller.')->group(function () {
+            Route::get('new-order', [SellerOrderController::class, 'index'])->name('new-order');
+            Route::post('store', [SellerOrderController::class, 'store'])->name('order.store');
 
-            // Additional routes for order management
-            Route::get('show/{id}', [SellerOrderController::class, 'show'])->name('seller.order.show');
-            Route::put('update/{id}', [SellerOrderController::class, 'update'])->name('seller.order.update');
-            Route::delete('destroy/{id}', [SellerOrderController::class, 'destroy'])->name('seller.order.destroy');
+            // Order list views
+            Route::get('pending-order', [SellerOrderController::class, 'pendingOrder'])->name('pending-order');
+            Route::get('complete-order', [SellerOrderController::class, 'completeOrder'])->name('complete-order');
+            Route::get('return-order', [SellerOrderController::class, 'returnOrder'])->name('return-order');
+            Route::get('rescheduling-order', [SellerOrderController::class, 'reschedulingOrder'])->name('rescheduling-order');
+
+            // CRUD operations
+            Route::get('show/{id}', [SellerOrderController::class, 'show'])->name('order.show');
+            Route::put('update/{id}', [SellerOrderController::class, 'update'])->name('order.update');
+            Route::delete('destroy/{id}', [SellerOrderController::class, 'destroy'])->name('order.destroy');
+
+            // Product details for order form - Using {code} (FIXED: Match the controller method)
+            Route::get('product/{code}/details', [SellerOrderController::class, 'getProductDetails'])->name('product.details');
         });
 
         Route::prefix('product')->group(function () {
@@ -169,7 +188,7 @@ Route::middleware('auth:seller')->group(function(){
             })->name('orders.export');
         });
 
-// Seller Product Routes - UPDATED
+        // Seller Product Routes - UPDATED
         Route::prefix('product')->name('seller.product.')->group(function (){
             Route::get('/', [SellerProductController::class, 'index'])->name('index');
             Route::get('/create', [SellerProductController::class, 'create'])->name('create');
@@ -201,6 +220,9 @@ Route::middleware('auth:seller')->group(function(){
             Route::get('/{id}/edit', [SellerCategoryController::class, 'edit'])->name('edit');
             Route::put('/{id}', [SellerCategoryController::class, 'update'])->name('update');
             Route::delete('/{id}', [SellerCategoryController::class, 'destroy'])->name('destroy');
+
+            // Add this if you want toggle functionality
+            Route::patch('/{id}/toggle-status', [SellerCategoryController::class, 'toggleStatus'])->name('toggle-status');
         });
 
     });

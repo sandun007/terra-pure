@@ -16,27 +16,42 @@ use Illuminate\Support\Facades\Validator;
 class SellerShopController extends Controller
 {
     /**
-     * Display the shop page with products - SHOP NOT REQUIRED
+     * Display the shop page with products
      */
     public function index(Request $request)
     {
         try {
             $seller = Auth::guard('seller')->user();
 
-            // Get products even if shop doesn't exist
+            // Get products
             $query = SellerProduct::where('seller_id', $seller->id)
                 ->with(['category', 'brand'])
                 ->where('status', 'active');
 
-            // Search functionality
+            // Search by CODE, name, description
             if ($request->has('search') && $request->search != '') {
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%")
-                        ->orWhere('code', 'like', "%{$search}%")
-                        ->orWhere('features', 'like', "%{$search}%");
+                    $q->where('code', 'like', "%{$search}%")
+                        ->orWhere('name', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
                 });
+            }
+
+            // Filter by stock status
+            if ($request->has('filter') && $request->filter != 'all') {
+                switch ($request->filter) {
+                    case 'in_stock':
+                        $query->where('qty', '>', 0);
+                        break;
+                    case 'low_stock':
+                        $query->where('qty', '>', 0)
+                            ->whereRaw('qty <= min_qty');
+                        break;
+                    case 'out_of_stock':
+                        $query->where('qty', '<=', 0);
+                        break;
+                }
             }
 
             // Sort options
@@ -47,6 +62,12 @@ class SellerShopController extends Controller
                     break;
                 case 'price_high':
                     $query->orderBy('display_price', 'desc');
+                    break;
+                case 'code_asc':
+                    $query->orderBy('code', 'asc');
+                    break;
+                case 'code_desc':
+                    $query->orderBy('code', 'desc');
                     break;
                 case 'name_asc':
                     $query->orderBy('name', 'asc');
@@ -59,35 +80,33 @@ class SellerShopController extends Controller
             }
 
             $products = $query->paginate(12)->withQueryString();
-
-            // Get shop if exists, but don't require it
             $shop = SellerShop::where('seller_id', $seller->id)->first();
+            $nextProductCode = $this->generateNextProductCode();
 
-            return view('seller.shop.shop', compact('shop', 'products'));
+            return view('seller.shop.shop', compact('shop', 'products', 'nextProductCode'));
 
         } catch (\Exception $e) {
             \Log::error('Shop index error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error loading products: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error loading products');
         }
     }
 
     /**
-     * Display a single product - SHOP NOT REQUIRED
+     * Display a single product
      */
-    public function showProduct($id)
+    public function showProduct($code)
     {
         try {
             $seller = Auth::guard('seller')->user();
 
             $product = SellerProduct::where('seller_id', $seller->id)
+                ->where('code', $code)
                 ->with(['category', 'brand'])
-                ->findOrFail($id);
+                ->firstOrFail();
 
-            // Get shop if exists, but don't require it
             $shop = SellerShop::where('seller_id', $seller->id)->first();
-
             $relatedProducts = SellerProduct::where('seller_id', $seller->id)
-                ->where('id', '!=', $id)
+                ->where('id', '!=', $product->id)
                 ->where('status', 'active')
                 ->limit(4)
                 ->get();
@@ -96,150 +115,110 @@ class SellerShopController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Show product error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Product not found: ' . $e->getMessage());
+            return redirect()->route('seller.shop.index')->with('error', 'Product not found with code: ' . $code);
         }
     }
 
     /**
-     * Process Order Now - SIMPLIFIED VERSION
+     * Find product by code - AJAX endpoint for order page
      */
-    public function orderNow(Request $request)
+    public function findByCode($code)
     {
-        DB::beginTransaction();
-
         try {
             $seller = Auth::guard('seller')->user();
-
-            // Validate request
-            $validator = Validator::make($request->all(), [
-                'product_id' => 'required|exists:seller_products,id',
-                'quantity' => 'required|integer|min:1',
-                'payment_method' => 'required|in:cash_on_delivery,credit_card,bank_transfer',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
 
             $product = SellerProduct::where('seller_id', $seller->id)
-                ->where('id', $request->product_id)
-                ->firstOrFail();
+                ->where('code', $code)
+                ->where('status', 'active')
+                ->with(['category', 'brand'])
+                ->first();
 
-            // Check stock availability
-            if ($product->qty < $request->quantity) {
+            if (!$product) {
                 return response()->json([
                     'success' => false,
-                    'message' => "Only {$product->qty} items available in stock"
-                ], 400);
+                    'message' => 'Product not found with code: ' . $code
+                ], 404);
             }
 
-            // Calculate order total
-            $unitPrice = $product->display_price;
-            $subtotal = $unitPrice * $request->quantity;
-
-            // Fixed shipping cost (you can modify this)
-            $shipping = 100;
-            $total = $subtotal + $shipping;
-
-            // Generate unique order number
-            $orderNumber = 'ORD-' . date('Ymd') . '-' . strtoupper(Str::random(6));
-            while (SellerOrder::where('order_number', $orderNumber)->exists()) {
-                $orderNumber = 'ORD-' . date('Ymd') . '-' . strtoupper(Str::random(6));
+            // Calculate final price with discount
+            $finalPrice = $product->display_price;
+            if ($product->discount > 0) {
+                $finalPrice = $product->display_price * (1 - $product->discount / 100);
             }
-
-            // Create order - simplified
-            $order = SellerOrder::create([
-                'seller_id' => $seller->id,
-                'order_number' => $orderNumber,
-                'subtotal' => $subtotal,
-                'shipping' => $shipping,
-                'total_amount' => $total,
-                'payment_method' => $request->payment_method,
-                'payment_status' => 'pending',
-                'status' => 'pending',
-                'shipping_address' => 'Address not set',
-                'customer_name' => 'Customer Name',
-                'customer_email' => 'customer@example.com',
-                'customer_phone' => '0000000000',
-            ]);
-
-            // Create order item
-            SellerOrderItem::create([
-                'order_id' => $order->id,
-                'product_id' => $product->id,
-                'product_name' => $product->name,
-                'quantity' => $request->quantity,
-                'unit_price' => $unitPrice,
-                'total_price' => $subtotal,
-            ]);
-
-            // Update product stock
-            $product->decrement('qty', $request->quantity);
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Order placed successfully!',
-                'order_id' => $order->id,
-                'order_number' => $order->order_number,
-                'redirect' => route('seller.orders.show', $order->id)
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            \Log::error('Order Now Error: ' . $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Error processing order: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Quick Order - SIMPLIFIED
-     */
-    public function quickOrder(Request $request)
-    {
-        try {
-            $seller = Auth::guard('seller')->user();
-
-            $validator = Validator::make($request->all(), [
-                'product_id' => 'required|exists:seller_products,id',
-                'quantity' => 'required|integer|min:1',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Please select valid quantity'
-                ], 422);
-            }
-
-            $product = SellerProduct::findOrFail($request->product_id);
 
             return response()->json([
                 'success' => true,
                 'product' => [
                     'id' => $product->id,
+                    'code' => $product->code,
                     'name' => $product->name,
-                    'price' => $product->display_price,
-                    'quantity' => $request->quantity,
-                    'total' => $product->display_price * $request->quantity
+                    'description' => $product->description ?? 'No description available',
+                    'display_price' => (float) $finalPrice,
+                    'original_price' => (float) $product->display_price,
+                    'stock_price' => (float) $product->stock_price,
+                    'discount' => (float) ($product->discount ?? 0),
+                    'qty' => (int) $product->qty,
+                    'min_qty' => (int) ($product->min_qty ?? 1),
+                    'category' => $product->category->name ?? 'Uncategorized',
+                    'brand' => $product->brand->name ?? null,
+                    'image' => $product->image ? asset('storage/' . $product->image) : null,
+                    'stock_status' => $product->qty > 0
+                        ? ($product->qty <= $product->min_qty ? 'low' : 'available')
+                        : 'out'
                 ]
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Quick Order Error: ' . $e->getMessage());
+            \Log::error('Find product by code error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage()
+                'message' => 'Error finding product: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Get product details via AJAX
+     */
+    public function getProductDetails($code)
+    {
+        try {
+            $seller = Auth::guard('seller')->user();
+
+            $product = SellerProduct::where('seller_id', $seller->id)
+                ->where('code', $code)
+                ->with(['category', 'brand'])
+                ->firstOrFail();
+
+            $finalPrice = $product->display_price;
+            if ($product->discount > 0) {
+                $finalPrice = $product->display_price * (1 - $product->discount / 100);
+            }
+
+            return response()->json([
+                'success' => true,
+                'product' => [
+                    'id' => $product->id,
+                    'code' => $product->code,
+                    'name' => $product->name,
+                    'description' => $product->description ?? '',
+                    'display_price' => (float) $finalPrice,
+                    'stock_price' => (float) $product->stock_price,
+                    'discount' => (float) ($product->discount ?? 0),
+                    'qty' => (int) $product->qty,
+                    'min_qty' => (int) ($product->min_qty ?? 1),
+                    'category' => $product->category->name ?? 'Uncategorized',
+                    'brand' => $product->brand->name ?? null,
+                    'image' => $product->image ? asset('storage/' . $product->image) : null,
+                    'stock_status' => $product->qty > 0 ? ($product->qty <= $product->min_qty ? 'low' : 'available') : 'out',
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Product not found with code: ' . $code
+            ], 404);
         }
     }
 
@@ -250,26 +229,44 @@ class SellerShopController extends Controller
     {
         try {
             $seller = Auth::guard('seller')->user();
-
-            // Get shop if exists, but don't require it
-            $shop = SellerShop::where('seller_id', $seller->id)->first();
-
             $query = $request->get('query', '');
 
             $products = SellerProduct::where('seller_id', $seller->id)
                 ->where('status', 'active')
                 ->with(['category', 'brand'])
                 ->where(function ($q) use ($query) {
-                    $q->where('name', 'like', "%{$query}%")
-                        ->orWhere('description', 'like', "%{$query}%");
+                    $q->where('code', 'like', "%{$query}%")
+                        ->orWhere('name', 'like', "%{$query}%");
                 })
                 ->paginate(12);
 
-            return view('seller.shop.shop', compact('shop', 'products'))->with('searchQuery', $query);
+            $shop = SellerShop::where('seller_id', $seller->id)->first();
+            $nextProductCode = $this->generateNextProductCode();
+
+            return view('seller.shop.shop', compact('shop', 'products', 'nextProductCode'));
 
         } catch (\Exception $e) {
-            \Log::error('Search error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Search error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Search error occurred');
         }
+    }
+
+    /**
+     * Generate next available product code
+     */
+    private function generateNextProductCode()
+    {
+        $prefix = 'DX/ITM/';
+        $lastProduct = SellerProduct::where('code', 'LIKE', $prefix . '%')
+            ->orderBy('code', 'desc')
+            ->first();
+
+        if ($lastProduct) {
+            $lastNumber = (int) str_replace($prefix, '', $lastProduct->code);
+            $newNumber = $lastNumber + 1;
+        } else {
+            $newNumber = 1;
+        }
+
+        return $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }
 }

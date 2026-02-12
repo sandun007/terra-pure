@@ -17,213 +17,253 @@ class SellerCategoryController extends Controller
         $this->middleware('auth:seller');
     }
 
-    // Index - List all categories
+    /**
+     * Display a listing of categories for the authenticated seller
+     */
     public function index()
     {
-        try {
-            $seller = Auth::guard('seller')->user();
+        $seller = Auth::guard('seller')->user();
 
-            $categories = SellerCategory::where('seller_id', $seller->id)
-                ->orWhere(function($query) {
-                    $query->whereNull('seller_id')
-                        ->where('seller_code', 1); // Default seller categories
-                })
-                ->orderBy('created_at', 'desc')
-                ->get();
+        // Use the scope from the model for cleaner code
+        $categories = SellerCategory::sellerCategories($seller->id)
+            ->latest()
+            ->get();
 
-            $count = $categories->count();
+        $count = $categories->count();
 
-            return view('seller.category.index', compact('categories', 'count'));
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Failed to load categories: ' . $e->getMessage());
-        }
+        return view('seller.category.index', compact('categories', 'count'));
     }
 
-    // Create - Show create form
+    /**
+     * Show the form for creating a new category
+     */
     public function create()
     {
-        try {
-            // Generate category code
-            $code = 'SCT' . date('Ymd') . strtoupper(Str::random(6));
+        // Generate a unique code
+        do {
+            $code = 'SCT' . now()->format('YmdHis') . rand(10, 99);
+        } while (SellerCategory::where('code', $code)->exists());
 
-            return view('seller.category.create', compact('code'));
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Failed to load form: ' . $e->getMessage());
-        }
+        return view('seller.category.create', compact('code'));
     }
 
-    // Store - Save new category
+    /**
+     * Store a newly created category in storage
+     */
     public function store(Request $request)
     {
-        try {
-            $seller = Auth::guard('seller')->user();
+        $seller = Auth::guard('seller')->user();
 
-            $request->validate([
-                'code' => 'required|string|unique:seller_categories,code',
-                'name' => 'required|string|max:255|unique:seller_categories,name,NULL,id,seller_id,' . $seller->id,
-                'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-                'status' => 'required|in:active,inactive',
-            ]);
+        $request->validate([
+            'code' => 'required|unique:seller_categories,code',
+            'name' => [
+                'required',
+                'max:255',
+                function ($attribute, $value, $fail) use ($seller) {
+                    $exists = SellerCategory::where('seller_id', $seller->id)
+                        ->where('name', $value)
+                        ->exists();
 
-            // Handle image upload
-            $imagePath = null;
-            if ($request->hasFile('image')) {
-                $imagePath = $request->file('image')->store('seller/categories', 'public');
-            }
+                    if ($exists) {
+                        $fail('You already have a category with this name.');
+                    }
+                },
+            ],
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'status' => 'required|in:active,inactive',
+        ]);
 
-            // Create category
-            SellerCategory::create([
-                'seller_id' => $seller->id,
-                'code' => $request->code,
-                'name' => $request->name,
-                'image' => $imagePath,
-                'status' => $request->status,
-                'add_by' => 'seller',
-                'update_by' => 'seller',
-                'cancel' => 0,
-                'seller_code' => 1,
-            ]);
+        $data = [
+            'seller_id' => $seller->id,
+            'code' => $request->code,
+            'name' => $request->name,
+            'status' => $request->status,
+            'add_by' => 'seller',
+            'update_by' => 'seller',
+            'cancel' => 0,
+            'seller_code' => 1,
+        ];
 
-            return redirect()->route('seller.category.index')
-                ->with('success', 'Category created successfully!');
-
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Failed to create category: ' . $e->getMessage())
-                ->withInput();
+        // Store image
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('seller/categories/' . $seller->id, 'public');
+            $data['image'] = $path;
         }
+
+        SellerCategory::create($data);
+
+        return redirect()->route('seller.category.index')
+            ->with('success', 'Category created successfully!');
     }
 
-    // Show - View single category
+    /**
+     * Display the specified category and its products
+     */
     public function show($id)
     {
-        try {
-            $seller = Auth::guard('seller')->user();
+        $seller = Auth::guard('seller')->user();
 
-            $category = SellerCategory::where(function($query) use ($seller) {
-                $query->where('seller_id', $seller->id)
-                    ->orWhere(function($q) {
-                        $q->whereNull('seller_id')
-                            ->where('seller_code', 1);
-                    });
-            })
-                ->findOrFail($id);
+        // Get category that belongs to this seller OR is a global category (seller_code=1, seller_id=null)
+        $category = SellerCategory::where(function($query) use ($seller, $id) {
+            $query->where('id', $id)
+                ->where(function($q) use ($seller) {
+                    $q->where('seller_id', $seller->id)
+                        ->orWhere(function($sub) {
+                            $sub->whereNull('seller_id')
+                                ->where('seller_code', 1);
+                        });
+                });
+        })
+            ->firstOrFail();
 
-            $products = SellerProduct::where('seller_id', $seller->id)
-                ->where('category_id', $category->id)
-                ->with('brand')
-                ->paginate(10);
+        // Get products that belong to this category AND this seller
+        $products = SellerProduct::where('category_id', $id)
+            ->where('seller_id', $seller->id)
+            ->paginate(10);
 
-            return view('seller.category.show', compact('category', 'products'));
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Category not found: ' . $e->getMessage());
-        }
+        return view('seller.category.show', compact('category', 'products'));
     }
 
-    // Edit - Show edit form
+    /**
+     * Show the form for editing the specified category
+     */
     public function edit($id)
     {
-        try {
-            $seller = Auth::guard('seller')->user();
-            $category = SellerCategory::where('seller_id', $seller->id)
-                ->findOrFail($id);
+        $seller = Auth::guard('seller')->user();
 
-            return view('seller.category.edit', compact('category'));
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Category not found: ' . $e->getMessage());
-        }
+        // Only allow editing of seller's own categories (not global ones)
+        $category = SellerCategory::where('seller_id', $seller->id)
+            ->where('id', $id)
+            ->firstOrFail();
+
+        return view('seller.category.edit', compact('category'));
     }
 
-    // Update - Update category
+    /**
+     * Update the specified category in storage
+     */
     public function update(Request $request, $id)
     {
-        try {
-            $seller = Auth::guard('seller')->user();
-            $category = SellerCategory::where('seller_id', $seller->id)
-                ->findOrFail($id);
+        $seller = Auth::guard('seller')->user();
 
-            $request->validate([
-                'name' => 'required|string|max:255|unique:seller_categories,name,' . $id . ',id,seller_id,' . $seller->id,
-                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-                'status' => 'required|in:active,inactive',
-            ]);
+        // Only allow updating of seller's own categories
+        $category = SellerCategory::where('seller_id', $seller->id)
+            ->where('id', $id)
+            ->firstOrFail();
 
-            // Handle image upload
-            $data = [
-                'name' => $request->name,
-                'status' => $request->status,
-                'update_by' => 'seller',
-            ];
+        $request->validate([
+            'name' => [
+                'required',
+                'max:255',
+                function ($attribute, $value, $fail) use ($seller, $category) {
+                    $exists = SellerCategory::where('seller_id', $seller->id)
+                        ->where('name', $value)
+                        ->where('id', '!=', $category->id)
+                        ->exists();
 
-            // Check if user wants to remove current image
-            if ($request->has('remove_current_image') && $request->remove_current_image == '1') {
-                if ($category->image) {
-                    Storage::disk('public')->delete($category->image);
-                }
-                $data['image'] = null;
-            }
+                    if ($exists) {
+                        $fail('You already have a category with this name.');
+                    }
+                },
+            ],
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'status' => 'required|in:active,inactive',
+            'remove_current_image' => 'nullable|in:0,1',
+        ]);
 
-            if ($request->hasFile('image')) {
-                // Delete old image
-                if ($category->image) {
-                    Storage::disk('public')->delete($category->image);
-                }
-                $data['image'] = $request->file('image')->store('seller/categories', 'public');
-            }
+        $data = [
+            'name' => $request->name,
+            'status' => $request->status,
+            'update_by' => 'seller',
+        ];
 
-            // Update category
-            $category->update($data);
-
-            return redirect()->route('seller.category.index')
-                ->with('success', 'Category updated successfully!');
-
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Failed to update category: ' . $e->getMessage())
-                ->withInput();
+        // Handle image removal
+        if ($request->remove_current_image == '1' && $category->image) {
+            Storage::disk('public')->delete($category->image);
+            $data['image'] = null;
         }
-    }
 
-    // Destroy - Delete category
-    public function destroy($id)
-    {
-        try {
-            $seller = Auth::guard('seller')->user();
-            $category = SellerCategory::where('seller_id', $seller->id)->findOrFail($id);
-
-            // Check if category has products
-            $productCount = SellerProduct::where('category_id', $id)
-                ->where('seller_id', $seller->id)
-                ->count();
-
-            if ($productCount > 0) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Cannot delete category because it has ' . $productCount . ' product(s) assigned to it.'
-                ], 400);
-            }
-
-            // Delete image if exists
+        // Handle new image upload
+        if ($request->hasFile('image')) {
+            // Delete old image
             if ($category->image) {
                 Storage::disk('public')->delete($category->image);
             }
 
-            $category->delete();
+            // Store new image in seller-specific folder
+            $path = $request->file('image')->store('seller/categories/' . $seller->id, 'public');
+            $data['image'] = $path;
+        }
 
+        $category->update($data);
+
+        return redirect()->route('seller.category.index')
+            ->with('success', 'Category updated successfully!');
+    }
+
+    /**
+     * Remove the specified category from storage
+     */
+    public function destroy($id)
+    {
+        $seller = Auth::guard('seller')->user();
+
+        // Only allow deletion of seller's own categories
+        $category = SellerCategory::where('seller_id', $seller->id)
+            ->where('id', $id)
+            ->firstOrFail();
+
+        // Check if category has products
+        $productCount = SellerProduct::where('category_id', $id)
+            ->where('seller_id', $seller->id)
+            ->count();
+
+        if ($productCount > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot delete: This category has ' . $productCount . ' product(s) assigned.'
+            ], 400);
+        }
+
+        // Delete image if exists
+        if ($category->image) {
+            Storage::disk('public')->delete($category->image);
+        }
+
+        $category->delete();
+
+        // For AJAX requests
+        if (request()->ajax()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Category deleted successfully.'
             ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error deleting category: ' . $e->getMessage()
-            ], 500);
         }
+
+        // For regular form submissions
+        return redirect()->route('seller.category.index')
+            ->with('success', 'Category deleted successfully.');
+    }
+
+    /**
+     * Toggle category status
+     */
+    public function toggleStatus($id)
+    {
+        $seller = Auth::guard('seller')->user();
+
+        $category = SellerCategory::where('seller_id', $seller->id)
+            ->where('id', $id)
+            ->firstOrFail();
+
+        $category->status = $category->status === 'active' ? 'inactive' : 'active';
+        $category->update_by = 'seller';
+        $category->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Category status updated successfully.',
+            'status' => $category->status
+        ]);
     }
 }

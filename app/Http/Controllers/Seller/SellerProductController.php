@@ -42,6 +42,26 @@ class SellerProductController extends Controller
     }
 
     /**
+     * Display the specified product.
+     */
+    public function show($id)
+    {
+        try {
+            $seller = Auth::guard('seller')->user();
+
+            $product = SellerProduct::where('seller_id', $seller->id)
+                ->with(['category', 'brand'])
+                ->findOrFail($id);
+
+            return view('seller.product.show', compact('product'));
+
+        } catch (\Exception $e) {
+            return redirect()->route('seller.product.index')
+                ->with('error', 'Product not found: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Show the form for creating a new product
      */
     public function create()
@@ -91,7 +111,7 @@ class SellerProductController extends Controller
                 'min_qty' => 'required|integer|min:1',
                 'category_id' => 'nullable|exists:seller_categories,id',
                 'brand_id' => 'nullable|exists:seller_brands,id',
-                'features' => 'nullable|string|max:2000', // FIXED: Added max length
+                'features' => 'nullable|string|max:2000',
                 'barcode' => 'nullable|string|max:255|unique:seller_products,barcode',
                 'type' => 'required|in:physical,digital',
                 'img' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
@@ -101,6 +121,7 @@ class SellerProductController extends Controller
                 'img.mimes' => 'Only JPG, PNG, GIF, and WEBP images are allowed',
                 'img.max' => 'Image size must not exceed 2MB',
                 'features.max' => 'Features text is too long (maximum 2000 characters)',
+                'code.unique' => 'This product code is already in use',
             ]);
 
             // Additional validation
@@ -135,7 +156,7 @@ class SellerProductController extends Controller
                 }
             }
 
-            // Create product - Truncate features if too long
+            // Create product
             $productData = [
                 'seller_id' => $seller->id,
                 'seller_code' => $seller->code,
@@ -152,7 +173,7 @@ class SellerProductController extends Controller
                 'category_id' => $validatedData['category_id'] ?? null,
                 'brand_id' => $validatedData['brand_id'] ?? null,
                 'features' => isset($validatedData['features']) ?
-                    substr($validatedData['features'], 0, 2000) : null, // FIXED: Truncate to 2000 chars
+                    substr($validatedData['features'], 0, 2000) : null,
                 'barcode' => $validatedData['barcode'] ?? null,
                 'type' => $validatedData['type'],
                 'add_by' => 'seller',
@@ -169,11 +190,22 @@ class SellerProductController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Product created successfully!',
+                'product' => [
+                    'id' => $product->id,
+                    'code' => $product->code,
+                    'name' => $product->name
+                ],
                 'redirect' => route('seller.product.index')
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
+
+            // Clean up uploaded image if exists
+            if (isset($imagePath) && $imagePath) {
+                Storage::disk('public')->delete($imagePath);
+            }
+
             Log::error('Product creation error: ' . $e->getMessage());
 
             return response()->json([
@@ -234,7 +266,7 @@ class SellerProductController extends Controller
                 'min_qty' => 'required|integer|min:1',
                 'category_id' => 'nullable|exists:seller_categories,id',
                 'brand_id' => 'nullable|exists:seller_brands,id',
-                'features' => 'nullable|string|max:2000', // FIXED: Added max length
+                'features' => 'nullable|string|max:2000',
                 'barcode' => 'nullable|string|max:255|unique:seller_products,barcode,' . $id,
                 'type' => 'required|in:physical,digital',
                 'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
@@ -264,7 +296,7 @@ class SellerProductController extends Controller
                 $product->image = $imagePath;
             }
 
-            // Update product data - Truncate features if too long
+            // Update product data
             $updateData = [
                 'name' => $validatedData['name'],
                 'slug' => Str::slug($validatedData['name']),
@@ -278,7 +310,7 @@ class SellerProductController extends Controller
                 'category_id' => $validatedData['category_id'] ?? null,
                 'brand_id' => $validatedData['brand_id'] ?? null,
                 'features' => isset($validatedData['features']) ?
-                    substr($validatedData['features'], 0, 2000) : null, // FIXED: Truncate to 2000 chars
+                    substr($validatedData['features'], 0, 2000) : null,
                 'barcode' => $validatedData['barcode'] ?? null,
                 'type' => $validatedData['type'],
                 'update_by' => 'seller',
@@ -306,9 +338,56 @@ class SellerProductController extends Controller
     }
 
     /**
-     * Remove the specified product
+     * Remove the specified product - PERMANENTLY DELETE FROM DATABASE
      */
     public function destroy($id)
+    {
+        DB::beginTransaction();
+
+        try {
+            $seller = Auth::guard('seller')->user();
+
+            // Include soft deleted products in the query
+            $product = SellerProduct::withTrashed()
+                ->where('seller_id', $seller->id)
+                ->findOrFail($id);
+
+            // Store image path before deletion
+            $imagePath = $product->image;
+
+            // PERMANENTLY delete from database (not soft delete)
+            $product->forceDelete();
+
+            // Delete image after successful database deletion
+            if ($imagePath && Storage::disk('public')->exists($imagePath)) {
+                Storage::disk('public')->delete($imagePath);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Product permanently deleted successfully!'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Product deletion error: ' . $e->getMessage(), [
+                'product_id' => $id,
+                'seller_id' => $seller->id ?? null
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting product: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Soft delete product (move to trash)
+     */
+    public function trash($id)
     {
         try {
             $seller = Auth::guard('seller')->user();
@@ -316,23 +395,68 @@ class SellerProductController extends Controller
             $product = SellerProduct::where('seller_id', $seller->id)
                 ->findOrFail($id);
 
-            // Delete image
-            if ($product->image && Storage::disk('public')->exists($product->image)) {
-                Storage::disk('public')->delete($product->image);
-            }
-
+            // Soft delete (keeps in database with deleted_at timestamp)
             $product->delete();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Product deleted successfully!'
+                'message' => 'Product moved to trash successfully!'
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error deleting product: ' . $e->getMessage()
+                'message' => 'Error moving product to trash: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Restore soft deleted product
+     */
+    public function restore($id)
+    {
+        try {
+            $seller = Auth::guard('seller')->user();
+
+            $product = SellerProduct::onlyTrashed()
+                ->where('seller_id', $seller->id)
+                ->findOrFail($id);
+
+            $product->restore();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Product restored successfully!'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error restoring product: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get trashed products
+     */
+    public function trashed()
+    {
+        try {
+            $seller = Auth::guard('seller')->user();
+
+            $products = SellerProduct::onlyTrashed()
+                ->where('seller_id', $seller->id)
+                ->with(['category', 'brand'])
+                ->orderBy('deleted_at', 'desc')
+                ->get();
+
+            return view('seller.product.trashed', compact('products'));
+        } catch (\Exception $e) {
+            Log::error('Error loading trashed products: ' . $e->getMessage());
+            return redirect()->route('seller.product.index')
+                ->with('error', 'Error loading trashed products.');
         }
     }
 
@@ -363,14 +487,55 @@ class SellerProductController extends Controller
     }
 
     /**
-     * Generate unique product code
+     * Generate unique product code in format DX/ITM/0001
      */
     private function generateProductCode()
     {
-        do {
-            $code = 'PRD' . date('Ymd') . strtoupper(Str::random(6));
-        } while (SellerProduct::where('code', $code)->exists());
+        $prefix = 'DX/ITM/';
+
+        // Get the last product code
+        $lastProduct = SellerProduct::where('code', 'LIKE', $prefix . '%')
+            ->orderBy('code', 'desc')
+            ->first();
+
+        if ($lastProduct) {
+            // Extract the number from the last code (e.g., DX/ITM/0001 -> 1)
+            $lastNumber = (int) str_replace($prefix, '', $lastProduct->code);
+            $newNumber = $lastNumber + 1;
+        } else {
+            // First product
+            $newNumber = 1;
+        }
+
+        // Format with leading zeros (4 digits)
+        $code = $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+
+        // Check if code exists (safety check)
+        while (SellerProduct::where('code', $code)->exists()) {
+            $newNumber++;
+            $code = $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+        }
 
         return $code;
+    }
+
+    /**
+     * Get next available product code (API endpoint)
+     */
+    public function getNextProductCode()
+    {
+        try {
+            $code = $this->generateProductCode();
+
+            return response()->json([
+                'success' => true,
+                'code' => $code
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error generating product code: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

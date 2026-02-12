@@ -10,14 +10,14 @@ class CallController extends Controller
 {
     public function index(){
         $seller = auth()->user();
-        
+
         $orders = Order::query()
     ->where('seller_no', $seller->code)
     ->where('status', 'Pending')
     ->orderByDesc('id') // or ->orderBy('id', 'desc')
     ->get();
-    
-        return view('seller.pending_call_list',compact('orders'));
+
+        return view('seller.calls.pending_call_list',compact('orders'));
 
     }
 
@@ -26,9 +26,9 @@ class CallController extends Controller
         $order = Order::query()
             ->where('id',$id)
             ->first();
-        return view('seller.call_conform__form',compact('order','id','cities'));
+        return view('seller.calls.call_conform__form',compact('order','id','cities'));
     }
-    
+
       public function conform_call_list(){
         $seller = auth()->user();
         $orders = Order::query()
@@ -37,30 +37,30 @@ class CallController extends Controller
     ->orderByDesc('id') // Sort by latest order first
     ->get();
 
-        return view('seller.conform_call_list',compact('orders'));
+        return view('seller.calls.conform_call_list',compact('orders'));
 
     }
-    
+
     public function reject_call_list(){
         $seller = auth()->user();
         $orders = Order::query()
             ->where('seller_no',$seller->code)
             ->where('status','Reject')
             ->get();
-        return view('seller.reject_call_list',compact('orders'));
+        return view('seller.calls.reject_call_list',compact('orders'));
 
     }
-    
+
     public function not_answer_call_list(){
         $seller = auth()->user();
         $orders = Order::query()
             ->where('seller_no',$seller->code)
             ->where('status','Not Answer')
             ->get();
-        return view('seller.not_awnser_call_list',compact('orders'));
+        return view('seller.calls.not_awnser_call_list',compact('orders'));
 
     }
-    
+
     public function other_call_list(){
         $seller = auth()->user();
         $orders = Order::query()
@@ -68,7 +68,7 @@ class CallController extends Controller
             ->where('status','Other')
             ->orderBy('id')
             ->get();
-        return view('seller.other_call_list',compact('orders'));
+        return view('seller.calls.other_call_list',compact('orders'));
 
     }
 
