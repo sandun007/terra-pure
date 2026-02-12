@@ -8,25 +8,20 @@ return new class extends Migration
 {
     public function up()
     {
-        // Check if column doesn't exist before adding
-        if (!Schema::hasColumn('seller_brands', 'seller_id')) {
-            Schema::table('seller_brands', function (Blueprint $table) {
-                // First, remove any existing foreign key constraints
-                $table->dropForeign(['seller_id']);
-            });
-
-            Schema::table('seller_brands', function (Blueprint $table) {
-                // Add seller_id column if it doesn't exist
-                $table->foreignId('seller_id')->after('id')->constrained('sellers')->onDelete('cascade');
+        if (Schema::hasColumn('seller_products', 'seller_brand_id') &&
+            !Schema::hasColumn('seller_products', 'brand_id')) {
+            Schema::table('seller_products', function (Blueprint $table) {
+                $table->renameColumn('seller_brand_id', 'brand_id');
             });
         }
     }
 
     public function down()
     {
-        Schema::table('seller_brands', function (Blueprint $table) {
-            $table->dropForeign(['seller_id']);
-            $table->dropColumn('seller_id');
-        });
+        if (Schema::hasColumn('seller_products', 'brand_id')) {
+            Schema::table('seller_products', function (Blueprint $table) {
+                $table->renameColumn('brand_id', 'seller_brand_id');
+            });
+        }
     }
 };

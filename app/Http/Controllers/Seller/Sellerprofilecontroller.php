@@ -3,14 +3,17 @@
 namespace App\Http\Controllers\Seller;
 
 use App\Http\Controllers\Controller;
+use App\Models\Order;
+use App\Models\Product;
 use App\Models\Saler;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
-class SellerProfileController extends Controller
+class Sellerprofilecontroller extends Controller
 {
     /**
      * Display the seller's profile
@@ -19,41 +22,31 @@ class SellerProfileController extends Controller
     {
         $seller = Auth::guard('seller')->user();
 
-        // Get statistics with proper relationship checks
         $stats = [
-            'total_orders' => 0,
-            'pending_orders' => 0,
-            'completed_orders' => 0,
-            'total_products' => 0,
-            'total_sales' => $seller->total_sales ?? 0,
+            'total_orders'    => 0,
+            'pending_orders'  => 0,
+            'completed_orders'=> 0,
+            'total_products'  => 0,
+            'total_sales'     => $seller->total_sales ?? 0,
             'current_deposit' => $seller->deposit ?? 0,
         ];
 
-        // Try to get orders count - check which column exists in your orders table
+        // Load order statistics
         try {
-            // First, try to get count based on seller ID
-            if (method_exists($seller, 'orders')) {
-                // If your orders table has 'saler_id' column
-                $stats['total_orders'] = \App\Models\Order::where('saler_id', $seller->id)->count();
-                $stats['pending_orders'] = \App\Models\Order::where('saler_id', $seller->id)
-                    ->where('status', 'pending')->count();
-                $stats['completed_orders'] = \App\Models\Order::where('saler_id', $seller->id)
-                    ->where('status', 'completed')->count();
-            }
+            $stats['total_orders']    = Order::where('saler_id', $seller->id)->count();
+            $stats['pending_orders']  = Order::where('saler_id', $seller->id)
+                ->where('status', 'pending')->count();
+            $stats['completed_orders']= Order::where('saler_id', $seller->id)
+                ->where('status', 'completed')->count();
         } catch (\Exception $e) {
-            // If relationship doesn't exist or column not found, stats remain 0
-            \Log::info('Orders relationship error: ' . $e->getMessage());
+            Log::info('Orders stats error: ' . $e->getMessage());
         }
 
-        // Try to get products count
+        // Load product statistics
         try {
-            if (method_exists($seller, 'products')) {
-                // If your products table has 'saler_id' column
-                $stats['total_products'] = \App\Models\Product::where('saler_id', $seller->id)->count();
-            }
+            $stats['total_products'] = Product::where('saler_id', $seller->id)->count();
         } catch (\Exception $e) {
-            // If relationship doesn't exist or column not found, stats remain 0
-            \Log::info('Products relationship error: ' . $e->getMessage());
+            Log::info('Products stats error: ' . $e->getMessage());
         }
 
         return view('seller.profile.profile', compact('seller', 'stats'));
@@ -67,19 +60,19 @@ class SellerProfileController extends Controller
         $seller = Auth::guard('seller')->user();
 
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:salers,email,' . $seller->id,
-            'phone' => 'required|string|max:20',
-            'whatsapp' => 'nullable|string|max:20',
-            'address' => 'required|string',
-            'city' => 'required|string|max:100',
-            'district' => 'required|string|max:100',
-            'state' => 'nullable|string|max:100',
-            'country' => 'nullable|string|max:100',
+            'name'        => 'required|string|max:255',
+            'email'       => 'required|email|unique:salers,email,' . $seller->id,
+            'phone'       => 'required|string|max:20',
+            'whatsapp'    => 'nullable|string|max:20',
+            'address'     => 'required|string',
+            'city'        => 'required|string|max:100',
+            'district'    => 'required|string|max:100',
+            'state'       => 'nullable|string|max:100',
+            'country'     => 'nullable|string|max:100',
             'postal_code' => 'required|string|max:20',
-            'type' => 'nullable|string|max:50',
-            'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'NIC_no' => 'nullable|string|max:20',
+            'type'        => 'nullable|string|max:50',
+            'img'         => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'NIC_no'      => 'nullable|string|max:20',
         ]);
 
         if ($validator->fails()) {
@@ -93,41 +86,54 @@ class SellerProfileController extends Controller
         }
 
         try {
-            // Handle profile image upload
-            $imagePath = $seller->img;
+            // ── Profile Image Upload ──────────────────────────────────────────
+            $imagePath = $seller->img; // keep existing path by default
+
             if ($request->hasFile('img')) {
-                // Delete old image if exists
+
+                // Delete old image from public disk if it exists
                 if ($seller->img && Storage::disk('public')->exists($seller->img)) {
                     Storage::disk('public')->delete($seller->img);
                 }
 
-                $image = $request->file('img');
-                $imageName = 'seller_' . $seller->code . '_' . time() . '.' . $image->getClientOriginalExtension();
-                $imagePath = $image->storeAs('sellers/profiles', $imageName, 'public');
+                // Store new image and get its relative path
+                // e.g. sellers/profiles/seller_ABC123_1700000000.jpg
+                $image     = $request->file('img');
+                $imageName = 'seller_' . $seller->code . '_' . time()
+                    . '.' . $image->getClientOriginalExtension();
+
+                $imagePath = Storage::disk('public')
+                    ->putFileAs('sellers/profiles', $image, $imageName);
             }
 
-            // Update seller information
+            // ── Update Seller Record ──────────────────────────────────────────
             $seller->update([
-                'name' => $request->name,
-                'email' => $request->email,
-                'phone' => $request->phone,
-                'whatsapp' => $request->whatsapp,
-                'address' => $request->address,
-                'city' => $request->city,
-                'district' => $request->district,
-                'state' => $request->state,
-                'country' => $request->country ?? 'Sri Lanka',
+                'name'        => $request->name,
+                'email'       => $request->email,
+                'phone'       => $request->phone,
+                'whatsapp'    => $request->whatsapp,
+                'address'     => $request->address,
+                'city'        => $request->city,
+                'district'    => $request->district,
+                'state'       => $request->state,
+                'country'     => $request->country ?? 'Sri Lanka',
                 'postal_code' => $request->postal_code,
-                'type' => $request->type,
-                'img' => $imagePath,
-                'NIC_no' => $request->NIC_no,
+                'type'        => $request->type,
+                'img'         => $imagePath,
+                'NIC_no'      => $request->NIC_no,
             ]);
+
+            // ── Build fresh public URL for the response ───────────────────────
+            // Storage::disk('public')->url() returns: /storage/sellers/profiles/filename.jpg
+            $profileImageUrl = $imagePath
+                ? Storage::disk('public')->url($imagePath)
+                : asset('asset/img/default-avatar.png');
 
             if ($request->ajax()) {
                 return response()->json([
-                    'success' => true,
-                    'message' => 'Profile updated successfully!',
-                    'profile_image_url' => $seller->profile_image_url
+                    'success'           => true,
+                    'message'           => 'Profile updated successfully!',
+                    'profile_image_url' => $profileImageUrl,
                 ]);
             }
 
@@ -157,7 +163,7 @@ class SellerProfileController extends Controller
 
         $validator = Validator::make($request->all(), [
             'current_password' => 'required',
-            'new_password' => 'required|min:6|confirmed',
+            'new_password'     => 'required|min:6|confirmed',
         ]);
 
         if ($validator->fails()) {
@@ -170,7 +176,7 @@ class SellerProfileController extends Controller
             return redirect()->back()->withErrors($validator);
         }
 
-        // Check current password
+        // Verify current password
         if (!Hash::check($request->current_password, $seller->password)) {
             if ($request->ajax()) {
                 return response()->json([
@@ -183,7 +189,7 @@ class SellerProfileController extends Controller
 
         try {
             $seller->update([
-                'password' => Hash::make($request->new_password),
+                'password'      => Hash::make($request->new_password),
                 'view_password' => $request->new_password,
             ]);
 

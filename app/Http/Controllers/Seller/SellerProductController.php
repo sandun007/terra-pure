@@ -200,6 +200,12 @@ class SellerProductController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+
+            // Clean up uploaded image if exists
+            if (isset($imagePath) && $imagePath) {
+                Storage::disk('public')->delete($imagePath);
+            }
+
             Log::error('Product creation error: ' . $e->getMessage());
 
             return response()->json([
@@ -332,9 +338,56 @@ class SellerProductController extends Controller
     }
 
     /**
-     * Remove the specified product
+     * Remove the specified product - PERMANENTLY DELETE FROM DATABASE
      */
     public function destroy($id)
+    {
+        DB::beginTransaction();
+
+        try {
+            $seller = Auth::guard('seller')->user();
+
+            // Include soft deleted products in the query
+            $product = SellerProduct::withTrashed()
+                ->where('seller_id', $seller->id)
+                ->findOrFail($id);
+
+            // Store image path before deletion
+            $imagePath = $product->image;
+
+            // PERMANENTLY delete from database (not soft delete)
+            $product->forceDelete();
+
+            // Delete image after successful database deletion
+            if ($imagePath && Storage::disk('public')->exists($imagePath)) {
+                Storage::disk('public')->delete($imagePath);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Product permanently deleted successfully!'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Product deletion error: ' . $e->getMessage(), [
+                'product_id' => $id,
+                'seller_id' => $seller->id ?? null
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting product: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Soft delete product (move to trash)
+     */
+    public function trash($id)
     {
         try {
             $seller = Auth::guard('seller')->user();
@@ -342,23 +395,68 @@ class SellerProductController extends Controller
             $product = SellerProduct::where('seller_id', $seller->id)
                 ->findOrFail($id);
 
-            // Delete image
-            if ($product->image && Storage::disk('public')->exists($product->image)) {
-                Storage::disk('public')->delete($product->image);
-            }
-
+            // Soft delete (keeps in database with deleted_at timestamp)
             $product->delete();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Product deleted successfully!'
+                'message' => 'Product moved to trash successfully!'
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error deleting product: ' . $e->getMessage()
+                'message' => 'Error moving product to trash: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Restore soft deleted product
+     */
+    public function restore($id)
+    {
+        try {
+            $seller = Auth::guard('seller')->user();
+
+            $product = SellerProduct::onlyTrashed()
+                ->where('seller_id', $seller->id)
+                ->findOrFail($id);
+
+            $product->restore();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Product restored successfully!'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error restoring product: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get trashed products
+     */
+    public function trashed()
+    {
+        try {
+            $seller = Auth::guard('seller')->user();
+
+            $products = SellerProduct::onlyTrashed()
+                ->where('seller_id', $seller->id)
+                ->with(['category', 'brand'])
+                ->orderBy('deleted_at', 'desc')
+                ->get();
+
+            return view('seller.product.trashed', compact('products'));
+        } catch (\Exception $e) {
+            Log::error('Error loading trashed products: ' . $e->getMessage());
+            return redirect()->route('seller.product.index')
+                ->with('error', 'Error loading trashed products.');
         }
     }
 

@@ -311,7 +311,7 @@
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ route('seller.dashboard') }}">Dashboard</a></li>
-            <li class="breadcrumb-item"><a href="{{ route('seller.shop.index') }}">Shop</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('shop.index') }}">Shop</a></li>
             <li class="breadcrumb-item active" aria-current="page">{{ $product->name }}</li>
         </ol>
     </nav>

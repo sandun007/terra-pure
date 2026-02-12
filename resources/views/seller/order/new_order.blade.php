@@ -4,1144 +4,1026 @@
     Create New Order
 @endpush
 
-@push('styles')
-    <!-- SweetAlert2 CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <!-- Google Icons -->
+@push('css')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --success-gradient: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);
-            --info-gradient: linear-gradient(135deg, #17ead9 0%, #6078ea 100%);
-            --warning-gradient: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-light: #eef2ff;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #0f172a;
+            --mid: #64748b;
+            --border: #e2e8f0;
+            --surface: #ffffff;
+            --bg: #f8fafc;
+            --mono: 'DM Mono', monospace;
+            --sans: 'DM Sans', sans-serif;
+            --radius-xl: 16px;
+            --radius-lg: 12px;
+            --radius-md: 8px;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,.07);
+            --shadow-md: 0 6px 20px rgba(0,0,0,.09);
         }
 
-        .border-dashed {
-            border: 2px dashed #dee2e6 !important;
-            border-radius: 12px;
-            transition: all 0.3s ease;
+        body {
+            font-family: var(--sans);
+            background: var(--bg);
         }
 
-        .border-dashed.highlight {
-            border-color: #667eea !important;
-            background-color: rgba(102, 126, 234, 0.05);
-            transform: translateY(-2px);
+        .order-wrapper {
+            padding: 32px;
+            max-width: 1400px;
+            margin: 0 auto;
         }
 
-        .stat-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            overflow: hidden;
-            border: none;
+        @media (max-width: 768px) {
+            .order-wrapper { padding: 16px; }
         }
 
-        .stat-card:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 16px;
         }
 
-        .card-section {
-            border: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transition: all 0.3s ease;
-            overflow: hidden;
-        }
-
-        .card-section:hover {
-            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
-        }
-
-        .card-section .card-header {
-            border-bottom: none;
-            padding: 1.25rem 1.5rem;
-        }
-
-        .icon-wrapper {
-            width: 48px;
-            height: 48px;
+        .page-title {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--dark);
             display: flex;
             align-items: center;
-            justify-content: center;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.2);
+            gap: 10px;
+            margin: 0;
         }
 
-        .file-upload-area {
-            min-height: 200px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        /* Form Container */
+        .form-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: 32px;
+            box-shadow: var(--shadow-sm);
         }
 
-        .file-upload-area:hover {
-            background-color: rgba(102, 126, 234, 0.02);
+        @media (max-width: 768px) {
+            .form-container { padding: 20px; }
         }
 
-        .form-control:focus, .form-select:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+        /* Grid Layout */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
         }
 
-        .btn-success {
-            background: var(--success-gradient);
-            border: none;
-            transition: all 0.3s ease;
-        }
-
-        .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(11, 163, 96, 0.3);
-        }
-
-        .floating-alert {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1050;
-            max-width: 400px;
-            animation: slideInRight 0.3s ease;
-        }
-
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
             }
         }
 
-        .progress-bar {
-            height: 4px;
-            background: var(--primary-gradient);
-            width: 0%;
-            transition: width 0.3s ease;
+        /* Form Group */
+        .form-group {
+            margin-bottom: 0;
         }
 
-        /* Product Details Card Styles */
-        .product-details-card {
-            background: white;
-            border-radius: 12px;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            overflow: hidden;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .product-image-container {
-            width: 100%;
-            height: 200px;
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-bottom: 1px solid #e5e7eb;
-            overflow: hidden;
-        }
-
-        .product-image {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            padding: 20px;
-        }
-
-        .product-details-body {
-            padding: 1.5rem;
-        }
-
-        .product-detail-row {
-            display: flex;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #f3f4f6;
-        }
-
-        .product-detail-row:last-child {
-            border-bottom: none;
-        }
-
-        .product-detail-label {
-            min-width: 140px;
+        .form-label {
+            display: block;
+            font-size: 14px;
             font-weight: 600;
-            color: #4b5563;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+
+        .form-label .required {
+            color: var(--danger);
+            margin-left: 2px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            font-family: var(--sans);
+            font-size: 14px;
+            transition: all .2s;
+            background: var(--surface);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79,70,229,.1);
+        }
+
+        .form-control:disabled {
+            background: #f1f5f9;
+            cursor: not-allowed;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Product Code Search Section */
+        .product-search-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .search-header {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .product-detail-value {
+        .input-with-button {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .input-with-button .form-control {
             flex: 1;
-            color: #1f2937;
-            font-weight: 500;
         }
 
-        .product-detail-value.price {
-            color: #10b981;
-            font-weight: 700;
-            font-size: 1.1rem;
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all .2s;
+            font-family: var(--sans);
+            text-decoration: none;
+            white-space: nowrap;
         }
 
-        .product-detail-value.stock {
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--dark);
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: #1e293b;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Product Info Card */
+        .product-info-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 24px;
+            display: none;
+        }
+
+        .product-info-card.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .product-info-header {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--border);
         }
 
-        .stock-badge {
+        .product-image-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: var(--radius-md);
+            object-fit: cover;
+            border: 2px solid var(--border);
+            background: #f1f5f9;
+        }
+
+        .product-image-placeholder {
+            width: 80px;
+            height: 80px;
+            border-radius: var(--radius-md);
+            border: 2px dashed var(--border);
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--mid);
+        }
+
+        .product-info-text h4 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0 0 4px 0;
+        }
+
+        .product-code-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 999px;
+            font-family: var(--mono);
+            font-size: 12px;
             font-weight: 600;
         }
 
-        .stock-available {
+        .product-details-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .product-details-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .detail-item {
+            padding: 12px;
+            background: var(--bg);
+            border-radius: var(--radius-md);
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: var(--mid);
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .stock-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .stock-available { background: #d1fae5; color: #065f46; }
+        .stock-low { background: #fef3c7; color: #92400e; }
+        .stock-out { background: #fee2e2; color: #991b1b; }
+
+        /* Form Actions */
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            padding-top: 24px;
+            border-top: 2px solid var(--border);
+        }
+
+        @media (max-width: 576px) {
+            .form-actions {
+                flex-direction: column-reverse;
+            }
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Alert */
+        .alert {
+            padding: 14px 18px;
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
             background: #d1fae5;
+            border: 1px solid #10b981;
             color: #065f46;
         }
 
-        .stock-low {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .stock-out {
+        .alert-danger {
             background: #fee2e2;
+            border: 1px solid #ef4444;
             color: #991b1b;
         }
 
-        .product-description {
-            margin-top: 15px;
-            padding: 15px;
-            background: #f9fafb;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-            font-size: 0.95rem;
-            line-height: 1.6;
-            color: #4b5563;
+        .alert-info {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
         }
 
-        .required {
-            color: #dc2626;
-            font-weight: bold;
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.6s linear infinite;
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .floating-alert {
-                left: 20px;
-                right: 20px;
-                max-width: none;
-            }
-
-            .stat-card .card-body {
-                padding: 1rem !important;
-            }
-
-            .product-detail-label {
-                min-width: 120px;
-                font-size: 0.9rem;
-            }
-
-            .product-image-container {
-                height: 150px;
-            }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* Helper Text */
+        .helper-text {
+            font-size: 12px;
+            color: var(--mid);
+            margin-top: 4px;
+        }
+
+        .error-text {
+            font-size: 12px;
+            color: var(--danger);
+            margin-top: 4px;
+            display: none;
+        }
+
+        .error-text.show {
+            display: block;
         }
     </style>
 @endpush
 
 @section('content')
-    <div class="container-fluid px-3 px-md-4 px-lg-5 py-4">
-        <!-- Floating Alert Messages -->
-        <div id="floating-message-container" class="floating-alert"></div>
-
-        <!-- Header Section -->
-        <div class="row mb-5">
-            <div class="col-12">
-                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-                    <div>
-                        <h1 class="h3 mb-2 fw-bold text-dark">Create New Order</h1>
-                        <p class="text-muted mb-0">Add new orders manually or upload bulk orders via Excel</p>
-                    </div>
-                    <div class="d-flex align-items-center gap-3">
-                        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">
-                            <span class="material-icons-round me-2" style="font-size: 1.1rem">person</span>
-                            {{ auth()->user()->name }}
-                        </span>
-                    </div>
-                </div>
-            </div>
+    <div class="order-wrapper">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <span class="material-icons-round" style="color:var(--primary);font-size:30px">add_shopping_cart</span>
+                Create New Order
+            </h1>
+            <a href="{{ route('seller.new-order') }}" class="btn btn-secondary">
+                <span class="material-icons-round" style="font-size:18px">arrow_back</span>
+                Back to Orders
+            </a>
         </div>
 
-        <!-- Stats Dashboard -->
-        <div class="row g-4 mb-5">
-            <!-- Available Balance -->
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="stat-card card border-0 shadow-lg rounded-4" style="background: var(--primary-gradient);">
-                    <div class="card-body p-4 position-relative text-white">
-                        <div class="position-absolute top-0 end-0 mt-3 me-3 opacity-25">
-                            <span class="material-icons-round" style="font-size: 4rem">account_balance_wallet</span>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <div class="icon-wrapper me-3">
-                                <span class="material-icons-round" style="font-size: 1.8rem">account_balance_wallet</span>
-                            </div>
-                            <div>
-                                <p class="mb-1 opacity-85">Available Balance</p>
-                                <h3 class="mb-0 fw-bold">
-                                    Rs. {{ number_format($user->cal_deposit ?? $user->deposit ?? 0, 2) }}
-                                </h3>
-                                <small class="opacity-75">Updated just now</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <!-- Alerts -->
+        @if(session('error'))
+            <div class="alert alert-danger">
+                <span class="material-icons-round">error</span>
+                <div>{{ session('error') }}</div>
             </div>
+        @endif
 
-            <!-- Cost Per Lead -->
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="stat-card card border-0 shadow-lg rounded-4" style="background: var(--info-gradient);">
-                    <div class="card-body p-4 position-relative text-white">
-                        <div class="position-absolute top-0 end-0 mt-3 me-3 opacity-25">
-                            <span class="material-icons-round" style="font-size: 4rem">trending_up</span>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <div class="icon-wrapper me-3">
-                                <span class="material-icons-round" style="font-size: 1.8rem">trending_up</span>
-                            </div>
-                            <div>
-                                <p class="mb-1 opacity-85">Cost Per Lead</p>
-                                <h3 class="mb-0 fw-bold">
-                                    Rs. {{ number_format($user->cost ?? 0, 2) }}
-                                </h3>
-                                <small class="opacity-75">Current rate</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        @if(session('success'))
+            <div class="alert alert-success">
+                <span class="material-icons-round">check_circle</span>
+                <div>{{ session('success') }}</div>
             </div>
-
-            <!-- Last Upload Leads -->
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="stat-card card border-0 shadow-lg rounded-4" style="background: var(--warning-gradient);">
-                    <div class="card-body p-4 position-relative text-white">
-                        <div class="position-absolute top-0 end-0 mt-3 me-3 opacity-25">
-                            <span class="material-icons-round" style="font-size: 4rem">group_add</span>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <div class="icon-wrapper me-3">
-                                <span class="material-icons-round" style="font-size: 1.8rem">group_add</span>
-                            </div>
-                            <div>
-                                <p class="mb-1 opacity-85">Last Upload Leads</p>
-                                <h3 class="mb-0 fw-bold">
-                                    {{ $user->last_row_count ?? '0' }}
-                                </h3>
-                                <small class="opacity-75">Previous batch</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        @endif
 
         <!-- Order Form -->
-        <form action="{{ route('seller.order.store') }}" method="post" enctype="multipart/form-data" id="orderForm" class="needs-validation" novalidate>
+        <form id="orderForm" action="{{ route('seller.order.store') }}" method="POST">
             @csrf
 
-            <!-- Hidden fields for product data -->
-            <input type="hidden" id="productId" name="product_id" value="{{ request()->get('product_id', '') }}">
-            <input type="hidden" id="productNameHidden" name="product_name">
-            <input type="hidden" id="productImageHidden" name="product_image">
-            <input type="hidden" id="productCodeHidden" name="product_code">
-            <input type="hidden" id="productPriceHidden" name="product_price">
-            <input type="hidden" id="productStockHidden" name="product_stock">
-            <input type="hidden" id="productDescriptionHidden" name="product_description">
-
-            <div class="row g-4">
-                <!-- Left Column: Product & Order Details -->
-                <div class="col-lg-8">
-                    <!-- Product Details Card -->
-                    <div class="card card-section mb-4">
-                        <div class="card-header bg-primary bg-opacity-10 border-bottom">
-                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-                                <div class="d-flex align-items-center">
-                                    <div class="icon-wrapper bg-primary bg-opacity-10 text-primary me-3">
-                                        <span class="material-icons-round">inventory_2</span>
-                                    </div>
-                                    <div>
-                                        <h5 class="mb-0 fw-bold">Product Details</h5>
-                                        <small class="text-muted">Search and select product from inventory</small>
-                                    </div>
-                                </div>
-                                <span class="badge bg-primary px-3 py-2">
-                                    <span class="material-icons-round me-1" style="font-size: 1.1rem">tag</span>
-                                    Required (unless using Excel)
-                                </span>
+            <div class="form-container">
+                <!-- Product Code Search Section -->
+                <div class="product-search-section">
+                    <div class="search-header">
+                        <span class="material-icons-round" style="color:var(--primary)">qr_code_scanner</span>
+                        Search Product by Code
+                    </div>
+                    <div class="input-with-button">
+                        <div style="flex: 1;">
+                            <input
+                                type="text"
+                                id="searchProductCode"
+                                class="form-control"
+                                placeholder="Enter product code (e.g., DX/ITM/0001)"
+                                autocomplete="off">
+                            <div class="helper-text">
+                                <i class="fas fa-info-circle"></i> Enter the product code and click Fetch to load product details
                             </div>
                         </div>
-                        <div class="card-body p-4">
-                            <!-- Product Search -->
-                            <div class="row mb-4">
-                                <div class="col-md-12">
-                                    <label class="form-label fw-semibold">
-                                        Product ID / Code
-                                        <span class="required">*</span> (Required for single order)
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light">
-                                            <span class="material-icons-round text-muted">search</span>
-                                        </span>
-                                        <input type="text" id="productIdInput" name="product_id_input"
-                                               class="form-control"
-                                               value="{{ request()->get('product_id') ?? old('product_id') }}"
-                                               placeholder="Enter product ID or code"
-                                               onkeypress="if(event.key === 'Enter') { event.preventDefault(); fetchProductDetails(); }">
-                                        <button type="button" class="btn btn-primary" onclick="fetchProductDetails()">
-                                            <span class="material-icons-round me-2">search</span>
-                                            Fetch Product
-                                        </button>
-                                    </div>
-                                    <small class="text-muted">Enter product ID or code from shop (not required for Excel upload)</small>
-                                </div>
-                            </div>
+                        <button type="button" id="fetchProductBtn" class="btn btn-primary">
+                            <span class="material-icons-round" style="font-size:18px">search</span>
+                            Fetch Product
+                        </button>
+                        <button type="button" id="resetBtn" class="btn btn-danger" style="display: none;">
+                            <span class="material-icons-round" style="font-size:18px">refresh</span>
+                            Reset
+                        </button>
+                    </div>
+                </div>
 
-                            <!-- Product Preview Section -->
-                            <div id="productPreview" class="d-none">
-                                <div class="product-details-card">
-                                    <!-- Product Image -->
-                                    <div class="product-image-container">
-                                        <img id="productImage" src="" alt="Product Image" class="product-image"
-                                             onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%236b7280\'%3E%3Cpath d=\'M21 16.5c0 .38-.21.71-.53.88l-7.9 4.44c-.16.12-.36.18-.57.18s-.41-.06-.57-.18l-7.9-4.44A.991.991 0 013 16.5v-9c0-.38.21-.71.53-.88l7.9-4.44c.16-.12.36-.18.57-.18s.41.06.57.18l7.9 4.44c.32.17.53.5.53.88v9zM12 4.15L6.04 7.5 12 10.85l5.96-3.35L12 4.15zM5 15.91l6 3.38v-6.71L5 9.21v6.7zm14 0v-6.7l-6 3.37v6.71l6-3.38z\'/%3E%3C/svg%3E';">
-                                    </div>
-
-                                    <!-- Product Details -->
-                                    <div class="product-details-body">
-                                        <!-- Product Name -->
-                                        <div class="product-detail-row">
-                                            <div class="product-detail-label">
-                                                <span class="material-icons-round" style="font-size: 1.2rem">inventory_2</span>
-                                                Product Name:
-                                            </div>
-                                            <div class="product-detail-value" id="productName">-</div>
-                                        </div>
-
-                                        <!-- Product Code -->
-                                        <div class="product-detail-row">
-                                            <div class="product-detail-label">
-                                                <span class="material-icons-round" style="font-size: 1.2rem">qr_code</span>
-                                                Product Code:
-                                            </div>
-                                            <div class="product-detail-value" id="productCode">-</div>
-                                        </div>
-
-                                        <!-- Product Price -->
-                                        <div class="product-detail-row">
-                                            <div class="product-detail-label">
-                                                <span class="material-icons-round" style="font-size: 1.2rem">attach_money</span>
-                                                Unit Price:
-                                            </div>
-                                            <div class="product-detail-value price" id="productPrice">Rs. 0.00</div>
-                                        </div>
-
-                                        <!-- Stock Information -->
-                                        <div class="product-detail-row">
-                                            <div class="product-detail-label">
-                                                <span class="material-icons-round" style="font-size: 1.2rem">warehouse</span>
-                                                Stock Status:
-                                            </div>
-                                            <div class="product-detail-value stock" id="productStockContainer">
-                                                <span id="productStock">0</span> units
-                                                <span class="stock-badge" id="stockBadge"></span>
-                                            </div>
-                                        </div>
-
-                                        <!-- Category -->
-                                        <div class="product-detail-row">
-                                            <div class="product-detail-label">
-                                                <span class="material-icons-round" style="font-size: 1.2rem">category</span>
-                                                Category:
-                                            </div>
-                                            <div class="product-detail-value" id="productCategory">-</div>
-                                        </div>
-
-                                        <!-- Description -->
-                                        <div class="mt-4" id="productDescriptionContainer" style="display: none;">
-                                            <div class="product-detail-label mb-2">
-                                                <span class="material-icons-round" style="font-size: 1.2rem">description</span>
-                                                Description:
-                                            </div>
-                                            <div class="product-description" id="productDescription">
-                                                No description available
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                <!-- Product Info Card (Hidden by default) -->
+                <div id="productInfoCard" class="product-info-card">
+                    <div class="product-info-header">
+                        <img id="productImagePreview" src="" alt="Product" class="product-image-preview" style="display: none;">
+                        <div id="productImagePlaceholder" class="product-image-placeholder">
+                            <span class="material-icons-round" style="font-size:32px">inventory_2</span>
+                        </div>
+                        <div class="product-info-text" style="flex: 1;">
+                            <h4 id="displayProductName">-</h4>
+                            <span class="product-code-badge">
+                                <span class="material-icons-round" style="font-size:14px">tag</span>
+                                <span id="displayProductCode">-</span>
+                            </span>
                         </div>
                     </div>
-
-                    <!-- Customer Details Card -->
-                    <div class="card card-section mb-4">
-                        <div class="card-header bg-success bg-opacity-10 border-bottom">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-wrapper bg-success bg-opacity-10 text-success me-3">
-                                    <span class="material-icons-round">person_add</span>
-                                </div>
-                                <div>
-                                    <h5 class="mb-0 fw-bold">Customer Information</h5>
-                                    <small class="text-muted">Enter customer details for delivery (Required for single order)</small>
-                                </div>
+                    <div class="product-details-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Price</div>
+                            <div class="detail-value" style="color: var(--danger);">
+                                Rs. <span id="displayProductPrice">0.00</span>
                             </div>
                         </div>
-                        <div class="card-body p-4">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        Customer Name
-                                        <span class="required">*</span>
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light">
-                                            <span class="material-icons-round text-muted">person</span>
-                                        </span>
-                                        <input type="text" name="customer_name" class="form-control"
-                                               placeholder="Enter full name">
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        Phone Number
-                                        <span class="required">*</span>
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light">
-                                            <span class="material-icons-round text-muted">phone</span>
-                                        </span>
-                                        <input type="text" name="customer_phone" class="form-control"
-                                               placeholder="+94 77 123 4567">
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label fw-semibold">Delivery Address</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light">
-                                            <span class="material-icons-round text-muted">location_on</span>
-                                        </span>
-                                        <textarea name="customer_address" class="form-control"
-                                                  rows="2" placeholder="Full delivery address"></textarea>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">District / City</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light">
-                                            <span class="material-icons-round text-muted">map</span>
-                                        </span>
-                                        <input type="text" name="district" class="form-control"
-                                               placeholder="Enter district">
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Platform</label>
-                                    <select class="form-select" name="platform">
-                                        <option value="">Select Platform</option>
-                                        <option value="Facebook">Facebook</option>
-                                        <option value="TikTok">TikTok</option>
-                                        <option value="Instagram">Instagram</option>
-                                        <option value="WhatsApp">WhatsApp</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Available Stock</div>
+                            <div class="detail-value">
+                                <span id="displayProductStock">0</span> units
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Status</div>
+                            <div class="detail-value">
+                                <span id="stockStatusBadge" class="stock-badge stock-out">Out of Stock</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Right Column: Order Info & File Upload -->
-                <div class="col-lg-4">
-                    <!-- Order Information Card -->
-                    <div class="card card-section mb-4">
-                        <div class="card-header bg-info bg-opacity-10 border-bottom">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-wrapper bg-info bg-opacity-10 text-info me-3">
-                                    <span class="material-icons-round">receipt_long</span>
-                                </div>
-                                <div>
-                                    <h5 class="mb-0 fw-bold">Order Information</h5>
-                                    <small class="text-muted">Order metadata & status</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-body p-4">
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Order Number</label>
-                                <div class="alert alert-secondary py-2 mb-0">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <code class="fw-bold">{{ $code }}</code>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary"
-                                                onclick="copyOrderNumber()">
-                                            <span class="material-icons-round" style="font-size: 1.1rem">content_copy</span>
-                                        </button>
-                                    </div>
-                                </div>
-                                <small class="text-muted">Auto-generated</small>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">
-                                    Order Date
-                                    <span class="required">*</span>
-                                </label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons-round text-muted">calendar_today</span>
-                                    </span>
-                                    <input type="date" name="date" class="form-control"
-                                           value="{{ date('Y-m-d') }}" required>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Call Status</label>
-                                <select name="call_status" class="form-select">
-                                    <option value="">Select Status</option>
-                                    <option value="Conform" selected>Conform</option>
-                                    <option value="Not Answer">Not Answer</option>
-                                    <option value="Reject">Reject</option>
-                                    <option value="Other">Other</option>
-                                    <option value="Pending">Pending</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Remarks</label>
-                                <textarea name="remark" class="form-control" rows="3"
-                                          placeholder="Additional notes about this order..."></textarea>
-                            </div>
-                        </div>
+                <!-- Order Details Form -->
+                <div class="form-grid">
+                    <!-- Product Code (Hidden Input) -->
+                    <input type="hidden" name="product_code" id="product_code" required>
+
+                    <!-- Customer Name -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            Customer Name <span class="required">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            name="customer_name"
+                            id="customer_name"
+                            class="form-control"
+                            placeholder="Enter customer name"
+                            required>
                     </div>
 
-                    <!-- Bulk Upload Card -->
-                    <div class="card card-section">
-                        <div class="card-header bg-warning bg-opacity-10 border-bottom">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-wrapper bg-warning bg-opacity-10 text-warning me-3">
-                                    <span class="material-icons-round">upload_file</span>
-                                </div>
-                                <div>
-                                    <h5 class="mb-0 fw-bold">Bulk Upload (Optional)</h5>
-                                    <small class="text-muted">Upload multiple orders via Excel</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-body p-4">
-                            <div class="alert alert-info border-0 mb-4">
-                                <div class="d-flex">
-                                    <span class="material-icons-round text-info me-3">info</span>
-                                    <div>
-                                        <small>
-                                            <strong>Note:</strong> Upload Excel for bulk orders OR fill the form for single order.
-                                            Excel upload will override form data.
-                                        </small>
-                                    </div>
-                                </div>
-                            </div>
+                    <!-- Customer Phone -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            Customer Phone <span class="required">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            name="customer_phone"
+                            id="customer_phone"
+                            class="form-control"
+                            placeholder="Enter phone number"
+                            required>
+                    </div>
 
-                            <div class="file-upload-area border-dashed rounded-3 p-4 text-center position-relative"
-                                 id="dropZone" onclick="document.getElementById('excelFile').click()">
-                                <input type="file" name="excel" id="excelFile"
-                                       class="form-control form-control-lg d-none"
-                                       accept=".xlsx,.xls,.csv" onchange="handleFileSelect(event)">
+                    <!-- Quantity -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            Quantity <span class="required">*</span>
+                        </label>
+                        <input
+                            type="number"
+                            name="quantity"
+                            id="quantity"
+                            class="form-control"
+                            placeholder="Enter quantity"
+                            min="1"
+                            value="1"
+                            required>
+                        <div class="helper-text">Available: <span id="availableStock">0</span> units</div>
+                    </div>
 
-                                <div id="uploadPlaceholder">
-                                    <div class="mb-4">
-                                        <span class="material-icons-round text-muted" style="font-size: 4rem">
-                                            cloud_upload
-                                        </span>
-                                    </div>
-                                    <h5 class="mb-2">Drag & drop Excel file</h5>
-                                    <p class="text-muted mb-4">or click to browse</p>
-                                    <button type="button" class="btn btn-outline-warning px-4">
-                                        <span class="material-icons-round me-2">folder_open</span>
-                                        Choose File
-                                    </button>
-                                    <p class="text-muted small mt-4 mb-0">
-                                        Supports: .xlsx, .xls, .csv (Max 10MB)
-                                    </p>
-                                </div>
+                    <!-- Discount (Optional) -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            Discount (%)
+                        </label>
+                        <input
+                            type="number"
+                            name="discount"
+                            id="discount"
+                            class="form-control"
+                            placeholder="Enter discount percentage"
+                            min="0"
+                            max="100"
+                            value="0"
+                            step="0.01">
+                    </div>
 
-                                <div id="filePreview" class="d-none">
-                                    <div class="alert alert-success border-0 mb-0">
-                                        <div class="d-flex align-items-center">
-                                            <span class="material-icons-round text-success me-3">check_circle</span>
-                                            <div class="flex-grow-1 text-start">
-                                                <strong id="fileName"></strong>
-                                                <div class="small text-muted" id="fileSize"></div>
-                                            </div>
-                                            <button type="button" class="btn btn-sm btn-outline-danger"
-                                                    onclick="event.stopPropagation(); clearFile();">
-                                                <span class="material-icons-round">close</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="progress mt-2" style="height: 6px;">
-                                        <div class="progress-bar bg-success" id="uploadProgress" role="progressbar" style="width: 0%"></div>
-                                    </div>
-                                </div>
-                            </div>
+                    <!-- Customer Email (Optional) -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            Customer Email
+                        </label>
+                        <input
+                            type="email"
+                            name="customer_email"
+                            id="customer_email"
+                            class="form-control"
+                            placeholder="Enter email (optional)">
+                    </div>
 
-                            <div class="mt-4">
-                                <a href="#" class="text-decoration-none small d-flex align-items-center text-primary">
-                                    <span class="material-icons-round me-2" style="font-size: 1.1rem">download</span>
-                                    Download Excel template
-                                </a>
-                            </div>
-                        </div>
+                    <!-- Payment Method -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            Payment Method <span class="required">*</span>
+                        </label>
+                        <select name="payment_method" id="payment_method" class="form-control" required>
+                            <option value="">Select Payment Method</option>
+                            <option value="cash">Cash</option>
+                            <option value="card">Card</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="online">Online Payment</option>
+                        </select>
                     </div>
                 </div>
-            </div>
 
-            <!-- Form Submission -->
-            <div class="row mt-5">
-                <div class="col-12">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body p-4">
-                            <div class="row align-items-center">
-                                <div class="col-md-6 mb-3 mb-md-0">
-                                    <div class="d-flex align-items-center">
-                                        <div class="icon-wrapper bg-primary bg-opacity-10 text-primary me-3">
-                                            <span class="material-icons-round">info</span>
-                                        </div>
-                                        <div>
-                                            <small class="text-muted">
-                                                Fields marked with <span class="required">*</span> are required for single orders
-                                            </small>
-                                            <div class="small text-muted mt-1">
-                                                Balance available: Rs. {{ number_format($user->cal_deposit ?? $user->deposit ?? 0, 2) }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="d-flex gap-3 justify-content-md-end">
-                                        <button type="button" class="btn btn-outline-secondary px-4 py-3 rounded-pill" onclick="resetForm()">
-                                            <span class="material-icons-round me-2">refresh</span>
-                                            Reset
-                                        </button>
-                                        <button type="submit" id="submitBtn"
-                                                class="btn btn-success px-5 py-3 rounded-pill shadow-sm">
-                                            <span id="btnText">
-                                                <span class="material-icons-round me-2">check_circle</span>
-                                                Create Order
-                                            </span>
-                                            <span id="btnLoader" class="d-none">
-                                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                                                Processing...
-                                            </span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Customer Address (Full Width) -->
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <label class="form-label">
+                        Delivery Address
+                    </label>
+                    <textarea
+                        name="customer_address"
+                        id="customer_address"
+                        class="form-control"
+                        placeholder="Enter delivery address (optional)"></textarea>
+                </div>
+
+                <!-- Order Notes (Full Width) -->
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <label class="form-label">
+                        Order Notes
+                    </label>
+                    <textarea
+                        name="notes"
+                        id="notes"
+                        class="form-control"
+                        placeholder="Add any special instructions or notes (optional)"></textarea>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <a href="{{ route('seller.new-order') }}" class="btn btn-secondary">
+                        <span class="material-icons-round" style="font-size:18px">close</span>
+                        Cancel
+                    </a>
+                    <button type="submit" id="submitBtn" class="btn btn-success" disabled>
+                        <span class="material-icons-round" style="font-size:18px">shopping_cart</span>
+                        Create Order
+                    </button>
                 </div>
             </div>
         </form>
     </div>
 @endsection
 
-@push('scripts')
-    <!-- SweetAlert2 JS -->
+@push('script')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <script>
         // Global variables
-        let isExcelUploaded = false;
+        let currentProductData = null;
 
-        // Initialize on page load
+        // =============================================
+        // AUTO-FILL FROM URL PARAMETERS (FROM SHOP PAGE)
+        // =============================================
         document.addEventListener('DOMContentLoaded', function() {
-            // Auto-fetch product if ID exists in URL
             const urlParams = new URLSearchParams(window.location.search);
-            const productId = urlParams.get('product_id');
-            if (productId) {
-                document.getElementById('productIdInput').value = productId;
-                setTimeout(() => fetchProductDetails(), 100);
+
+            if (urlParams.has('product_code')) {
+                // Fill search input
+                const productCode = urlParams.get('product_code');
+                document.getElementById('searchProductCode').value = productCode;
+
+                // Create product data object from URL params
+                const productData = {
+                    code: urlParams.get('product_code'),
+                    name: urlParams.get('product_name'),
+                    display_price: parseFloat(urlParams.get('product_price')) || 0,
+                    qty: parseInt(urlParams.get('product_stock')) || 0,
+                    image: urlParams.get('product_image'),
+                    description: urlParams.get('product_description')
+                };
+
+                // Display product info
+                displayProductInfo(productData);
+
+                // Set quantity if provided
+                const quantity = urlParams.get('quantity');
+                if (quantity) {
+                    document.getElementById('quantity').value = quantity;
+                }
             }
-
-            // Initialize drag & drop
-            initDragAndDrop();
-
-            // Show session messages as floating alerts
-            showSessionMessages();
         });
 
-        // Show session messages as floating alerts
-        function showSessionMessages() {
-            @if(session('success'))
-            showFloatingAlert('success', '{{ session('success') }}');
-            @endif
-            @if(session('error'))
-            showFloatingAlert('error', '{{ session('error') }}');
-            @endif
-            @if($errors->any())
-            @foreach($errors->all() as $error)
-            showFloatingAlert('error', '{{ $error }}');
-            @endforeach
-            @endif
-        }
+        // =============================================
+        // FETCH PRODUCT BY CODE
+        // =============================================
+        document.getElementById('fetchProductBtn').addEventListener('click', function() {
+            const productCode = document.getElementById('searchProductCode').value.trim();
 
-        // Floating alert system
-        function showFloatingAlert(type, message) {
-            const container = document.getElementById('floating-message-container');
-            const icon = type === 'success' ? 'check_circle' : 'error';
-            const color = type === 'success' ? 'success' : 'danger';
+            if (!productCode) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Missing Product Code',
+                    text: 'Please enter a product code',
+                    confirmButtonColor: '#4f46e5'
+                });
+                return;
+            }
 
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${color} alert-dismissible fade show shadow-lg mb-2`;
-            alertDiv.innerHTML = `
-                <div class="d-flex align-items-center">
-                    <span class="material-icons-round me-3">${icon}</span>
-                    <div class="flex-grow-1">${message}</div>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
+            fetchProductByCode(productCode);
+        });
 
-            container.appendChild(alertDiv);
+        // Allow Enter key to fetch product
+        document.getElementById('searchProductCode').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('fetchProductBtn').click();
+            }
+        });
 
-            // Auto-remove after 5 seconds
-            setTimeout(() => {
-                alertDiv.classList.remove('show');
-                setTimeout(() => alertDiv.remove(), 150);
-            }, 5000);
-        }
-
-        // Reset form function
-        function resetForm() {
-            // Reset the entire form
-            document.getElementById('orderForm').reset();
-
-            // Hide product preview
-            document.getElementById('productPreview').classList.add('d-none');
-            document.getElementById('productIdInput').value = '';
-
-            // Clear product details
-            document.getElementById('productName').textContent = '-';
-            document.getElementById('productCode').textContent = '-';
-            document.getElementById('productPrice').textContent = 'Rs. 0.00';
-            document.getElementById('productStock').textContent = '0';
-            document.getElementById('productCategory').textContent = '-';
-            document.getElementById('productImage').src = '';
-            document.getElementById('stockBadge').textContent = '';
-            document.getElementById('stockBadge').className = 'stock-badge';
-            document.getElementById('productDescriptionContainer').style.display = 'none';
-            document.getElementById('productDescription').textContent = 'No description available';
-
-            // Clear hidden fields
-            document.getElementById('productId').value = '';
-            document.getElementById('productNameHidden').value = '';
-            document.getElementById('productImageHidden').value = '';
-            document.getElementById('productCodeHidden').value = '';
-            document.getElementById('productPriceHidden').value = '';
-            document.getElementById('productStockHidden').value = '';
-            document.getElementById('productDescriptionHidden').value = '';
-
-            // Clear file upload
-            clearFile();
-
-            // Reset Excel upload flag
-            isExcelUploaded = false;
-
-            showFloatingAlert('info', 'Form has been reset');
-        }
-
-
-            // Updated fetchProductDetails function with proper product code handling
-            async function fetchProductDetails() {
-            const productId = document.getElementById('productIdInput').value.trim();
-            const productPreview = document.getElementById('productPreview');
-
-            if (!productId) {
-            showFloatingAlert('error', 'Please enter a product ID');
-            document.getElementById('productIdInput').focus();
-            return;
-        }
+        async function fetchProductByCode(productCode) {
+            const fetchBtn = document.getElementById('fetchProductBtn');
+            const originalHTML = fetchBtn.innerHTML;
 
             // Show loading state
-            const submitBtn = document.getElementById('submitBtn');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = `
-            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-            Fetching Product...
-        `;
+            fetchBtn.disabled = true;
+            fetchBtn.innerHTML = '<span class="spinner"></span> Fetching...';
 
             try {
-            // Fetch product details from shop endpoint
-            const response = await fetch(`/seller/shop/product/${productId}/details`);
+                const response = await fetch(`/seller/shop/product/find/${encodeURIComponent(productCode)}`);
 
-            if (!response.ok) {
-            throw new Error('Product not found');
-        }
-
-            const data = await response.json();
-
-            if (data.success) {
-            // Update UI with product details
-            document.getElementById('productName').textContent = data.product.name;
-            // IMPORTANT: Product code will be in DX/ITM/XXXX format
-            document.getElementById('productCode').textContent = data.product.code;
-            document.getElementById('productPrice').textContent = 'Rs. ' + parseFloat(data.product.display_price).toFixed(2);
-            document.getElementById('productStock').textContent = data.product.qty;
-            document.getElementById('productCategory').textContent = data.product.category || 'Uncategorized';
-
-            // Update product image
-            const productImage = document.getElementById('productImage');
-            if (data.product.image) {
-            productImage.src = data.product.image;
-            productImage.alt = data.product.name;
-        }
-
-            // Update stock badge
-            const stockBadge = document.getElementById('stockBadge');
-            if (data.product.qty === 0) {
-            stockBadge.textContent = 'Out of Stock';
-            stockBadge.className = 'stock-badge stock-out';
-        } else if (data.product.qty <= 5) {
-            stockBadge.textContent = 'Low Stock';
-            stockBadge.className = 'stock-badge stock-low';
-        } else {
-            stockBadge.textContent = 'In Stock';
-            stockBadge.className = 'stock-badge stock-available';
-        }
-
-            // Update description if available
-            if (data.product.description && data.product.description.trim() !== '') {
-            document.getElementById('productDescription').textContent = data.product.description;
-            document.getElementById('productDescriptionContainer').style.display = 'block';
-        } else {
-            document.getElementById('productDescriptionContainer').style.display = 'none';
-        }
-
-            // Set hidden fields
-            document.getElementById('productId').value = productId;
-            document.getElementById('productNameHidden').value = data.product.name;
-            document.getElementById('productImageHidden').value = data.product.image || '';
-            // IMPORTANT: Store the product code in DX/ITM/XXXX format
-            document.getElementById('productCodeHidden').value = data.product.code;
-            document.getElementById('productPriceHidden').value = data.product.display_price;
-            document.getElementById('productStockHidden').value = data.product.qty;
-            document.getElementById('productDescriptionHidden').value = data.product.description || '';
-
-            // Show product preview with animation
-            productPreview.classList.remove('d-none');
-            productPreview.style.animation = 'none';
-            setTimeout(() => {
-            productPreview.style.animation = 'fadeIn 0.5s ease';
-        }, 10);
-
-            // Show success message
-            showFloatingAlert('success', `Product loaded: ${data.product.code} - ${data.product.name}`);
-
-        } else {
-            throw new Error(data.message || 'Product not found');
-        }
-        } catch (error) {
-            console.error('Error fetching product:', error);
-            productPreview.classList.add('d-none');
-            showFloatingAlert('error', 'Product not found. Please check the product ID and try again.');
-        } finally {
-            // Restore button state
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalText;
-        }
-        }
-
-        // Copy order number to clipboard
-        function copyOrderNumber() {
-            const orderNumber = "{{ $code }}";
-            navigator.clipboard.writeText(orderNumber).then(() => {
-                showFloatingAlert('success', 'Order number copied to clipboard!');
-            }).catch(() => {
-                showFloatingAlert('error', 'Failed to copy order number');
-            });
-        }
-
-        // File upload functions
-        function initDragAndDrop() {
-            const dropZone = document.getElementById('dropZone');
-
-            ['dragenter', 'dragover'].forEach(eventName => {
-                dropZone.addEventListener(eventName, (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    dropZone.classList.add('highlight');
-                }, false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    dropZone.classList.remove('highlight');
-                }, false);
-            });
-
-            dropZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                const files = e.dataTransfer.files;
-                if (files.length) {
-                    document.getElementById('excelFile').files = files;
-                    handleFileSelect({ target: { files: files } });
-                }
-            });
-        }
-
-        function handleFileSelect(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            // Validate file type
-            const allowedExtensions = /(\.xlsx|\.xls|\.csv)$/i;
-            if (!allowedExtensions.exec(file.name)) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Invalid File Type',
-                    text: 'Please upload only Excel files (.xlsx, .xls, .csv)',
-                    confirmButtonText: 'OK'
-                });
-                clearFile();
-                return;
-            }
-
-            // Validate file size (10MB max)
-            const maxSize = 10 * 1024 * 1024;
-            if (file.size > maxSize) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'File Too Large',
-                    text: 'Maximum file size is 10MB',
-                    confirmButtonText: 'OK'
-                });
-                clearFile();
-                return;
-            }
-
-            // Show file preview
-            document.getElementById('fileName').textContent = file.name;
-            document.getElementById('fileSize').textContent = formatFileSize(file.size);
-
-            // Show upload progress (simulated)
-            simulateUploadProgress();
-
-            document.getElementById('uploadPlaceholder').classList.add('d-none');
-            document.getElementById('filePreview').classList.remove('d-none');
-
-            // Set Excel uploaded flag
-            isExcelUploaded = true;
-        }
-
-        function simulateUploadProgress() {
-            const progressBar = document.getElementById('uploadProgress');
-            let width = 0;
-            const interval = setInterval(() => {
-                if (width >= 100) {
-                    clearInterval(interval);
-                    progressBar.style.width = '100%';
-                } else {
-                    width += 10;
-                    progressBar.style.width = width + '%';
-                }
-            }, 100);
-        }
-
-        function clearFile() {
-            document.getElementById('excelFile').value = '';
-            document.getElementById('filePreview').classList.add('d-none');
-            document.getElementById('uploadPlaceholder').classList.remove('d-none');
-            document.getElementById('uploadProgress').style.width = '0%';
-            isExcelUploaded = false;
-        }
-
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-
-        // Form submission handling
-        document.getElementById('orderForm').addEventListener('submit', function(e) {
-            const submitBtn = document.getElementById('submitBtn');
-            const btnText = document.getElementById('btnText');
-            const btnLoader = document.getElementById('btnLoader');
-
-            // Check if Excel file is uploaded
-            const excelFile = document.getElementById('excelFile').files.length;
-            const productPreview = document.getElementById('productPreview');
-
-            // If no Excel file, validate single order requirements
-            if (!excelFile) {
-                // Check if product is selected
-                if (productPreview.classList.contains('d-none')) {
-                    e.preventDefault();
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Product Required',
-                        text: 'Please fetch product details before creating order, or upload an Excel file for bulk orders',
-                        confirmButtonText: 'OK'
-                    }).then(() => {
-                        document.getElementById('productIdInput').focus();
-                    });
-                    return;
-                }
-
-                // Validate product is in stock for single orders
-                const productStock = parseInt(document.getElementById('productStockHidden').value) || 0;
-                if (productStock === 0) {
-                    e.preventDefault();
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Out of Stock',
-                        text: 'Selected product is out of stock',
-                        confirmButtonText: 'OK'
-                    });
-                    return;
-                }
-                document.addEventListener('DOMContentLoaded', function() {
-                    // Auto-fetch product if ID exists in URL
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const productId = urlParams.get('product_id');
-
-                    if (productId) {
-                        document.getElementById('productIdInput').value = productId;
-                        setTimeout(() => fetchProductDetails(), 100);
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        throw new Error('Product not found with code: ' + productCode);
                     }
-                });
-                // Validate customer name and phone for single orders
-                const customerName = document.querySelector('input[name="customer_name"]').value.trim();
-                const customerPhone = document.querySelector('input[name="customer_phone"]').value.trim();
-
-                if (!customerName || !customerPhone) {
-                    e.preventDefault();
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Customer Details Required',
-                        text: 'Please fill in customer name and phone number',
-                        confirmButtonText: 'OK'
-                    });
-                    return;
+                    throw new Error('Failed to fetch product data');
                 }
+
+                const data = await response.json();
+
+                if (data.success && data.product) {
+                    displayProductInfo(data.product);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Product Found!',
+                        text: `${data.product.name} loaded successfully`,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    throw new Error('Invalid response from server');
+                }
+
+            } catch (error) {
+                console.error('Fetch error:', error);
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Product Not Found',
+                    text: error.message || 'Could not find product with this code',
+                    confirmButtonColor: '#4f46e5'
+                });
+
+                resetForm();
+
+            } finally {
+                // Restore button state
+                fetchBtn.disabled = false;
+                fetchBtn.innerHTML = originalHTML;
+            }
+        }
+
+        // =============================================
+        // DISPLAY PRODUCT INFO
+        // =============================================
+        function displayProductInfo(product) {
+            currentProductData = product;
+
+            // Show product info card
+            const infoCard = document.getElementById('productInfoCard');
+            infoCard.classList.add('show');
+
+            // Show reset button
+            document.getElementById('resetBtn').style.display = 'inline-flex';
+
+            // Fill hidden product code input
+            document.getElementById('product_code').value = product.code;
+
+            // Display product name
+            document.getElementById('displayProductName').textContent = product.name;
+            document.getElementById('displayProductCode').textContent = product.code;
+
+            // Display product price
+            const price = parseFloat(product.display_price) || parseFloat(product.price) || 0;
+            document.getElementById('displayProductPrice').textContent = price.toFixed(2);
+
+            // Display stock
+            const stock = parseInt(product.qty) || 0;
+            document.getElementById('displayProductStock').textContent = stock;
+            document.getElementById('availableStock').textContent = stock;
+
+            // Update stock status badge
+            const statusBadge = document.getElementById('stockStatusBadge');
+            if (stock <= 0) {
+                statusBadge.className = 'stock-badge stock-out';
+                statusBadge.innerHTML = '<span class="material-icons-round" style="font-size:14px">cancel</span> Out of Stock';
+            } else if (stock <= (product.min_qty || 10)) {
+                statusBadge.className = 'stock-badge stock-low';
+                statusBadge.innerHTML = '<span class="material-icons-round" style="font-size:14px">warning</span> Low Stock';
+            } else {
+                statusBadge.className = 'stock-badge stock-available';
+                statusBadge.innerHTML = '<span class="material-icons-round" style="font-size:14px">check_circle</span> Available';
             }
 
-            // Show loading state
-            submitBtn.disabled = true;
-            btnText.classList.add('d-none');
-            btnLoader.classList.remove('d-none');
+            // Display product image
+            const imagePreview = document.getElementById('productImagePreview');
+            const imagePlaceholder = document.getElementById('productImagePlaceholder');
+
+            if (product.image && product.image.trim() !== '') {
+                imagePreview.src = product.image;
+                imagePreview.style.display = 'block';
+                imagePlaceholder.style.display = 'none';
+
+                // Handle image load error
+                imagePreview.onerror = function() {
+                    this.style.display = 'none';
+                    imagePlaceholder.style.display = 'flex';
+                };
+            } else {
+                imagePreview.style.display = 'none';
+                imagePlaceholder.style.display = 'flex';
+            }
+
+            // Enable/disable quantity input based on stock
+            const quantityInput = document.getElementById('quantity');
+            if (stock > 0) {
+                quantityInput.max = stock;
+                quantityInput.disabled = false;
+                if (quantityInput.value > stock) {
+                    quantityInput.value = stock;
+                }
+            } else {
+                quantityInput.disabled = true;
+                quantityInput.value = 0;
+            }
+
+            // Enable submit button if stock available
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = stock <= 0;
+
+            if (stock <= 0) {
+                submitBtn.innerHTML = '<span class="material-icons-round" style="font-size:18px">block</span> Out of Stock';
+            } else {
+                submitBtn.innerHTML = '<span class="material-icons-round" style="font-size:18px">shopping_cart</span> Create Order';
+            }
+        }
+
+        // =============================================
+        // RESET FORM
+        // =============================================
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            Swal.fire({
+                title: 'Reset Form?',
+                text: 'This will clear all product and order information',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Yes, Reset',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    resetForm();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Form Reset',
+                        text: 'All fields have been cleared',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                }
+            });
+        });
+
+        function resetForm() {
+            // Reset product data
+            currentProductData = null;
+
+            // Hide product info card
+            document.getElementById('productInfoCard').classList.remove('show');
+
+            // Hide reset button
+            document.getElementById('resetBtn').style.display = 'none';
+
+            // Clear search input
+            document.getElementById('searchProductCode').value = '';
+
+            // Clear hidden inputs
+            document.getElementById('product_code').value = '';
+
+            // Reset display fields
+            document.getElementById('displayProductName').textContent = '-';
+            document.getElementById('displayProductCode').textContent = '-';
+            document.getElementById('displayProductPrice').textContent = '0.00';
+            document.getElementById('displayProductStock').textContent = '0';
+            document.getElementById('availableStock').textContent = '0';
+
+            // Reset image
+            document.getElementById('productImagePreview').style.display = 'none';
+            document.getElementById('productImagePlaceholder').style.display = 'flex';
+
+            // Clear form inputs
+            document.getElementById('customer_name').value = '';
+            document.getElementById('customer_phone').value = '';
+            document.getElementById('customer_email').value = '';
+            document.getElementById('customer_address').value = '';
+            document.getElementById('quantity').value = '1';
+            document.getElementById('discount').value = '0';
+            document.getElementById('payment_method').value = '';
+            document.getElementById('notes').value = '';
+
+            // Disable quantity input and submit button
+            document.getElementById('quantity').disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+        }
+
+        // =============================================
+        // FORM VALIDATION
+        // =============================================
+        document.getElementById('quantity').addEventListener('input', function() {
+            if (currentProductData) {
+                const maxStock = parseInt(currentProductData.qty) || 0;
+                const quantity = parseInt(this.value) || 0;
+
+                if (quantity > maxStock) {
+                    this.value = maxStock;
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Quantity Exceeds Stock',
+                        text: `Maximum available quantity is ${maxStock} units`,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }
+            }
+        });
+
+        // =============================================
+        // FORM SUBMISSION
+        // =============================================
+        document.getElementById('orderForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Validate product is selected
+            if (!currentProductData || !document.getElementById('product_code').value) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'No Product Selected',
+                    text: 'Please fetch a product before creating an order',
+                    confirmButtonColor: '#4f46e5'
+                });
+                return;
+            }
+
+            // Validate stock
+            const quantity = parseInt(document.getElementById('quantity').value) || 0;
+            const stock = parseInt(currentProductData.qty) || 0;
+
+            if (quantity > stock) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Insufficient Stock',
+                    text: `Only ${stock} units available`,
+                    confirmButtonColor: '#4f46e5'
+                });
+                return;
+            }
+
+            // Show confirmation
+            Swal.fire({
+                title: 'Create Order?',
+                html: `
+                    <div style="text-align: left; margin-top: 16px;">
+                        <p><strong>Product:</strong> ${currentProductData.name}</p>
+                        <p><strong>Code:</strong> ${currentProductData.code}</p>
+                        <p><strong>Quantity:</strong> ${quantity} units</p>
+                        <p><strong>Customer:</strong> ${document.getElementById('customer_name').value}</p>
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Yes, Create Order',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading
+                    Swal.fire({
+                        title: 'Creating Order...',
+                        html: 'Please wait',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Submit form
+                    this.submit();
+                }
+            });
         });
     </script>
 @endpush

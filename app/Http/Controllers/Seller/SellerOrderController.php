@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Seller;
 
 use App\Http\Controllers\Controller;
 use App\Models\SellerOrder;
+use App\Models\SellerProduct;
 use App\Models\User;
-use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -22,27 +22,48 @@ class SellerOrderController extends Controller
     /**
      * Display the order creation form
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
 
         try {
-            // Check if table exists before generating order ID
             if (Schema::hasTable('seller_orders')) {
                 $code = SellerOrder::generateOrderId();
             } else {
                 $code = 'ORD/00001';
-                Log::warning('seller_orders table does not exist');
             }
         } catch (Exception $e) {
             $code = 'ORD/00001';
             Log::error('Error generating order ID: ' . $e->getMessage());
         }
 
-        // Calculate deposit - using cal_deposit if available, otherwise deposit
         $import = $user->cal_deposit ?? $user->deposit ?? 0;
 
-        return view('seller.order.new_order', compact('user', 'code', 'import'));
+        // Get product data from URL parameters - FIXED: Properly decode and sanitize
+        $productCode = $request->get('product_code');
+        $productName = $request->get('product_name');
+        $productPrice = $request->get('product_price');
+        $productStock = $request->get('product_stock');
+        $quantity = $request->get('quantity', 1);
+        $productImage = $request->get('product_image');
+        $productDescription = $request->get('product_description');
+        $productCategory = $request->get('product_category');
+        $productId = $request->get('product_id');
+
+        return view('seller.order.new_order', compact(
+            'user',
+            'code',
+            'import',
+            'productCode',
+            'productName',
+            'productPrice',
+            'productStock',
+            'quantity',
+            'productImage',
+            'productDescription',
+            'productCategory',
+            'productId'
+        ));
     }
 
     /**
@@ -51,10 +72,14 @@ class SellerOrderController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'excel' => 'nullable|file|mimes:xlsx,xls,csv|max:10240', // 10MB max
+            'excel' => 'nullable|file|mimes:xlsx,xls,csv|max:10240',
             'date' => 'required|date',
             'platform' => 'nullable|string',
             'product_id' => 'required_without:excel',
+            'product_code' => 'required_without:excel',
+            'product_name' => 'required_without:excel',
+            'product_price' => 'required_without:excel|numeric',
+            'quantity' => 'required_without:excel|integer|min:1',
             'customer_name' => 'required_without:excel|string|max:255',
             'customer_phone' => 'required_without:excel|string|max:20',
             'customer_address' => 'nullable|string',
@@ -65,7 +90,6 @@ class SellerOrderController extends Controller
 
         $user = Auth::user();
 
-        // Check if user has sufficient deposit
         $availableDeposit = $user->cal_deposit ?? $user->deposit ?? 0;
         if ($availableDeposit <= 0) {
             return redirect()->route('seller.new-order')
@@ -75,7 +99,6 @@ class SellerOrderController extends Controller
         try {
             DB::beginTransaction();
 
-            // Handle Excel bulk upload
             if ($request->hasFile('excel')) {
                 $result = $this->handleExcelUpload($request, $user);
                 DB::commit();
@@ -83,7 +106,6 @@ class SellerOrderController extends Controller
                     ->with('success', $result['message']);
             }
 
-            // Handle single order creation
             $result = $this->handleSingleOrder($request, $user);
             DB::commit();
 
@@ -92,11 +114,7 @@ class SellerOrderController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error('Error creating order: ' . $e->getMessage(), [
-                'user_id' => $user->id,
-                'trace' => $e->getTraceAsString()
-            ]);
-
+            Log::error('Error creating order: ' . $e->getMessage());
             return redirect()->route('seller.new-order')
                 ->with('error', 'Error creating order: ' . $e->getMessage());
         }
@@ -111,19 +129,14 @@ class SellerOrderController extends Controller
         $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
         $path = $file->storeAs('seller-orders', $filename, 'public');
 
-        // Import Excel file
         $import = new SellerOrdersImport($user->id, $request->date, $request->platform);
         Excel::import($import, $file);
 
         $rowCount = $import->getRowCount();
-
-        // Update last row count
         $user->update(['last_row_count' => $rowCount]);
 
-        // Update user's deposit (deduct cost per lead)
         $totalCost = $rowCount * $user->cost;
 
-        // Use cal_deposit if available, otherwise use deposit
         if ($user->cal_deposit !== null) {
             $user->decrement('cal_deposit', $totalCost);
         } else {
@@ -141,17 +154,20 @@ class SellerOrderController extends Controller
      */
     private function handleSingleOrder(Request $request, User $user)
     {
-        // Verify product exists and has stock
-        $product = Product::findOrFail($request->product_id);
+        $product = SellerProduct::findOrFail($request->product_id);
+        $quantity = $request->quantity ?? 1;
 
-        if ($product->qty <= 0) {
-            throw new Exception('Selected product is out of stock');
+        if ($product->qty < $quantity) {
+            throw new Exception("Selected product has only {$product->qty} items in stock");
         }
 
-        // Create the order
+        $orderId = SellerOrder::generateOrderId();
+        $totalAmount = $request->product_price * $quantity;
+
         $orderData = [
             'seller_id' => $user->id,
-            'order_id' => SellerOrder::generateOrderId(),
+            'order_id' => $orderId,
+            'order_number' => $orderId,
             'product_id' => $request->product_id,
             'product_name' => $request->product_name,
             'product_code' => $request->product_code,
@@ -166,24 +182,21 @@ class SellerOrderController extends Controller
             'remark' => $request->remark,
             'order_date' => $request->date,
             'status' => 'pending',
-            'quantity' => 1, // Default quantity
+            'quantity' => $quantity,
+            'total_amount' => $totalAmount
         ];
 
         $order = SellerOrder::create($orderData);
 
-        // Deduct cost from user deposit
-        $cost = $user->cost;
+        $cost = $user->cost ?? 0;
         if ($user->cal_deposit !== null) {
             $user->decrement('cal_deposit', $cost);
         } else {
             $user->decrement('deposit', $cost);
         }
 
-        // Update last row count
         $user->update(['last_row_count' => 1]);
-
-        // Optionally decrement product stock
-        // $product->decrement('qty', 1);
+        $product->decrement('qty', $quantity);
 
         return [
             'success' => true,
@@ -192,31 +205,51 @@ class SellerOrderController extends Controller
     }
 
     /**
-     * Get product details via AJAX
+     * FIXED: Get product details via AJAX - Proper JSON response
      */
-    public function getProductDetails($id)
+    public function getProductDetails($code)
     {
         try {
-            $product = Product::findOrFail($id);
+            $seller = Auth::user();
+
+            Log::info('Fetching product details for code: ' . $code, ['user_id' => $seller->id]);
+
+            $product = SellerProduct::where('seller_id', $seller->id)
+                ->where('code', $code)
+                ->with('category')
+                ->first();
+
+            if (!$product) {
+                Log::warning('Product not found with code: ' . $code);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product not found with code: ' . $code
+                ]);
+            }
 
             return response()->json([
                 'success' => true,
                 'product' => [
                     'id' => $product->id,
                     'name' => $product->name,
-                    'code' => $product->code ?? $product->id,
-                    'display_price' => $product->price,
-                    'qty' => $product->qty ?? 0,
+                    'code' => $product->code,
+                    'display_price' => (float) $product->display_price,
+                    'stock_price' => (float) $product->stock_price,
+                    'qty' => (int) $product->qty,
+                    'min_qty' => (int) ($product->min_qty ?? 1),
                     'category' => $product->category->name ?? 'Uncategorized',
                     'description' => $product->description ?? '',
-                    'image' => $product->image ? Storage::url($product->image) : asset('images/no-product-image.png'),
+                    'image' => $product->image ? asset('storage/' . $product->image) : null,
+                    'discount' => (float) ($product->discount ?? 0),
                 ]
             ]);
+
         } catch (Exception $e) {
+            Log::error('Get product details error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Product not found'
-            ], 404);
+                'message' => 'Error fetching product details: ' . $e->getMessage()
+            ]);
         }
     }
 
@@ -235,7 +268,6 @@ class SellerOrderController extends Controller
                 ->where('status', 'pending')
                 ->orderBy('created_at', 'desc')
                 ->get();
-
             $count = $orders->count();
         }
 
@@ -257,7 +289,6 @@ class SellerOrderController extends Controller
                 ->where('status', 'complete')
                 ->orderBy('delivery_date', 'desc')
                 ->get();
-
             $count = $orders->count();
         }
 
@@ -279,7 +310,6 @@ class SellerOrderController extends Controller
                 ->where('status', 'return')
                 ->orderBy('return_date', 'desc')
                 ->get();
-
             $count = $orders->count();
         }
 
@@ -301,7 +331,6 @@ class SellerOrderController extends Controller
                 ->where('status', 'rescheduling')
                 ->orderBy('rescheduling_date', 'desc')
                 ->get();
-
             $count = $orders->count();
         }
 
@@ -348,7 +377,6 @@ class SellerOrderController extends Controller
             'remark' => $request->remark
         ];
 
-        // Add date based on status
         switch ($request->status) {
             case 'complete':
                 $data['delivery_date'] = $request->delivery_date ?? now();
@@ -362,7 +390,6 @@ class SellerOrderController extends Controller
         }
 
         $order->update($data);
-
         return redirect()->back()->with('success', 'Order updated successfully!');
     }
 
@@ -379,22 +406,26 @@ class SellerOrderController extends Controller
         $order = SellerOrder::where('seller_id', $user->id)
             ->findOrFail($id);
 
-        // Only allow deletion if order is still pending
         if ($order->status !== 'pending') {
             return redirect()->back()->with('error', 'Only pending orders can be deleted.');
         }
 
-        // Refund the cost back to user
-        $refundAmount = $user->cost;
+        $refundAmount = $user->cost ?? 0;
         if ($user->cal_deposit !== null) {
             $user->increment('cal_deposit', $refundAmount);
         } else {
             $user->increment('deposit', $refundAmount);
         }
 
-        $order->delete();
+        if ($order->product_id) {
+            $product = SellerProduct::find($order->product_id);
+            if ($product) {
+                $product->increment('qty', $order->quantity ?? 1);
+            }
+        }
 
+        $order->delete();
         return redirect()->route('seller.pending-order')
-            ->with('success', 'Order deleted successfully! Amount refunded.');
+            ->with('success', 'Order deleted successfully! Amount refunded and stock restored.');
     }
 }

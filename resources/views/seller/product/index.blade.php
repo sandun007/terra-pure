@@ -869,17 +869,19 @@
             }
         }
 
-        /* ==================== ACTIONS ==================== */
+        /* ==================== ACTIONS (FIXED BUTTON SIZE) ==================== */
         .action-buttons {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.4rem;
             justify-content: center;
+            align-items: center;
+            flex-wrap: nowrap;
         }
 
         .action-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: var(--radius-sm);
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
             border: none;
             color: white;
             cursor: pointer;
@@ -887,24 +889,40 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.875rem;
+            font-size: 0.775rem;
+            flex-shrink: 0;
+            text-decoration: none;
+            line-height: 1;
         }
 
         .action-btn:hover {
             transform: translateY(-2px);
             box-shadow: var(--shadow-md);
+            color: white;
         }
 
         .action-btn.view {
             background: var(--info);
         }
 
+        .action-btn.view:hover {
+            background: #2563eb;
+        }
+
         .action-btn.edit {
             background: var(--warning);
         }
 
+        .action-btn.edit:hover {
+            background: #d97706;
+        }
+
         .action-btn.delete {
             background: var(--danger);
+        }
+
+        .action-btn.delete:hover {
+            background: #dc2626;
         }
 
         /* ==================== CHECKBOX ==================== */
@@ -1088,13 +1106,13 @@
             }
 
             .action-buttons {
-                gap: 0.375rem;
+                gap: 0.3rem;
             }
 
             .action-btn {
-                width: 32px;
-                height: 32px;
-                font-size: 0.8rem;
+                width: 28px;
+                height: 28px;
+                font-size: 0.725rem;
             }
 
             .product-image {
@@ -1144,6 +1162,12 @@
             .dataTables_wrapper {
                 padding: 0.75rem;
             }
+
+            .action-btn {
+                width: 26px;
+                height: 26px;
+                font-size: 0.7rem;
+            }
         }
 
         /* ==================== SCROLLBAR ==================== */
@@ -1178,6 +1202,13 @@
 
         .select2-container--classic .select2-selection--single .select2-selection__rendered {
             padding: 0.625rem 0.875rem;
+        }
+
+        /* ==================== N/A BADGE ==================== */
+        .badge-na {
+            background: var(--gray-100);
+            color: var(--gray-500);
+            font-style: italic;
         }
     </style>
 @endpush
@@ -1310,7 +1341,8 @@
                     </label>
                     <select id="filterCategory" class="filter-select">
                         <option value="">All Categories</option>
-                        @foreach($products->pluck('categoryModel')->unique('id')->filter() as $category)
+                        {{-- FIX: use 'category' relationship (matches eager load in controller) --}}
+                        @foreach($products->pluck('category')->unique('id')->filter() as $category)
                             <option value="{{ $category->name }}">{{ $category->name }}</option>
                         @endforeach
                     </select>
@@ -1322,7 +1354,8 @@
                     </label>
                     <select id="filterBrand" class="filter-select">
                         <option value="">All Brands</option>
-                        @foreach($products->pluck('brandModel')->unique('id')->filter() as $brand)
+                        {{-- FIX: use 'brand' relationship (matches eager load in controller) --}}
+                        @foreach($products->pluck('brand')->unique('id')->filter() as $brand)
                             <option value="{{ $brand->name }}">{{ $brand->name }}</option>
                         @endforeach
                     </select>
@@ -1439,15 +1472,18 @@
                     <tbody>
                     @forelse($products as $product)
                         @php
-                            $stockStatus = $product->qty == 0 ? 'out-stock' : ($product->qty <= $product->min_qty ? 'low-stock' : 'in-stock');
-                            $stockText = $product->qty == 0 ? 'Out' : ($product->qty <= $product->min_qty ? 'Low' : 'In Stock');
-                            $stockIcon = $product->qty == 0 ? 'fa-times-circle' : ($product->qty <= $product->min_qty ? 'fa-exclamation-circle' : 'fa-check-circle');
+                            // FIX: use 'category' and 'brand' (matching the eager-loaded relationship names in the controller)
+                            $categoryName = $product->category->name ?? 'N/A';
+                            $brandName    = $product->brand->name ?? 'N/A';
+                            $stockStatus  = $product->qty == 0 ? 'out-stock' : ($product->qty <= $product->min_qty ? 'low-stock' : 'in-stock');
+                            $stockText    = $product->qty == 0 ? 'Out' : ($product->qty <= $product->min_qty ? 'Low' : 'In Stock');
+                            $stockIcon    = $product->qty == 0 ? 'fa-times-circle' : ($product->qty <= $product->min_qty ? 'fa-exclamation-circle' : 'fa-check-circle');
                         @endphp
                         <tr data-id="{{ $product->id }}"
                             data-status="{{ $product->status }}"
                             data-stock="{{ $stockStatus }}"
-                            data-category="{{ $product->categoryModel->name ?? '' }}"
-                            data-brand="{{ $product->brandModel->name ?? '' }}"
+                            data-category="{{ $categoryName }}"
+                            data-brand="{{ $brandName }}"
                             data-discount="{{ $product->hasDiscount() ? 'yes' : 'no' }}">
                             <td>
                                 <input type="checkbox" class="custom-checkbox row-checkbox" value="{{ $product->id }}">
@@ -1468,17 +1504,31 @@
                             <td>
                                 <span class="badge badge-code">{{ $product->code }}</span>
                             </td>
+                            {{-- FIX: Category column — uses resolved $categoryName --}}
                             <td>
-                                <span class="badge badge-category">
-                                    <i class="fas fa-tag"></i>
-                                    {{ $product->categoryModel->name ?? 'N/A' }}
-                                </span>
+                                @if($categoryName !== 'N/A')
+                                    <span class="badge badge-category">
+                                        <i class="fas fa-tag"></i>
+                                        {{ $categoryName }}
+                                    </span>
+                                @else
+                                    <span class="badge badge-na">
+                                        <i class="fas fa-minus"></i> N/A
+                                    </span>
+                                @endif
                             </td>
+                            {{-- FIX: Brand column — uses resolved $brandName --}}
                             <td>
-                                <span class="badge badge-brand">
-                                    <i class="fas fa-copyright"></i>
-                                    {{ $product->brandModel->name ?? 'N/A' }}
-                                </span>
+                                @if($brandName !== 'N/A')
+                                    <span class="badge badge-brand">
+                                        <i class="fas fa-copyright"></i>
+                                        {{ $brandName }}
+                                    </span>
+                                @else
+                                    <span class="badge badge-na">
+                                        <i class="fas fa-minus"></i> N/A
+                                    </span>
+                                @endif
                             </td>
                             <td>
                                 <div class="price-wrapper">
@@ -1518,20 +1568,17 @@
                                 <div class="action-buttons">
                                     <a href="{{ route('seller.product.show', $product->id) }}"
                                        class="action-btn view"
-                                       title="View"
-                                       data-bs-toggle="tooltip">
+                                       title="View">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                     <a href="{{ route('seller.product.edit', $product->id) }}"
                                        class="action-btn edit"
-                                       title="Edit"
-                                       data-bs-toggle="tooltip">
+                                       title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <button class="action-btn delete"
                                             onclick="deleteProduct({{ $product->id }}, '{{ addslashes($product->name) }}')"
-                                            title="Delete"
-                                            data-bs-toggle="tooltip">
+                                            title="Delete">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </div>
@@ -1608,12 +1655,7 @@
             initializeFilters();
             initializeSelect2();
             initializeBulkActions();
-            initializeTooltips();
         });
-
-        function initializeTooltips() {
-            $('[data-bs-toggle="tooltip"]').tooltip();
-        }
 
         function initializeDataTable() {
             @if($products->count() > 0)
@@ -1665,7 +1707,6 @@
                     {orderable: false, targets: [0, 8]}
                 ],
                 drawCallback: function () {
-                    initializeTooltips();
                     updateBulkActionsVisibility();
                 }
             });
@@ -1726,7 +1767,7 @@
                 // Reset all filters
                 $('#filterCategory, #filterBrand, #filterStatus, #filterStock').val('').trigger('change');
 
-                // Remove any custom filters
+                // Remove any custom filters beyond the base one
                 while ($.fn.dataTable.ext.search.length > 1) {
                     $.fn.dataTable.ext.search.pop();
                 }
@@ -1774,7 +1815,7 @@
             $('.quick-filter-btn').removeClass('active');
             $('.quick-filter-btn[data-filter="all"]').addClass('active');
 
-            // Remove custom filters
+            // Remove custom filters beyond the base one
             while ($.fn.dataTable.ext.search.length > 1) {
                 $.fn.dataTable.ext.search.pop();
             }

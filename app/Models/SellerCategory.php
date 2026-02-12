@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 class SellerCategory extends Model
 {
     use HasFactory, SoftDeletes;
 
-    // Specify the table name
     protected $table = 'seller_categories';
 
     protected $fillable = [
@@ -26,47 +26,94 @@ class SellerCategory extends Model
         'seller_code',
     ];
 
-    // Seller relationship
+    protected $appends = ['image_url'];
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
     public function seller()
     {
         return $this->belongsTo(Seller::class);
     }
 
-    // Wholesaler relationship
     public function wholesaler()
     {
         return $this->belongsTo(Wholesaler::class);
     }
 
-    // Seller products
     public function sellerProducts()
     {
         return $this->hasMany(SellerProduct::class, 'category_id');
     }
 
-    // Wholesaler products
     public function wholesalerProducts()
     {
         return $this->hasMany(WholesalerProduct::class, 'category', 'name');
     }
 
-    // Scope for seller categories
+    /*
+    |--------------------------------------------------------------------------
+    | Scopes
+    |--------------------------------------------------------------------------
+    */
+
     public function scopeSellerCategories($query, $sellerId)
     {
-        return $query->where('seller_id', $sellerId)
-            ->orWhere(function($q) {
-                $q->whereNull('seller_id')
-                    ->where('seller_code', 1);
-            });
+        return $query->where(function($q) use ($sellerId) {
+            $q->where('seller_id', $sellerId)
+                ->orWhere(function($sub) {
+                    $sub->whereNull('seller_id')
+                        ->where('seller_code', 1);
+                });
+        });
     }
 
-    // Scope for wholesaler categories
     public function scopeWholesalerCategories($query, $wholesalerId)
     {
-        return $query->where('wholesaler_id', $wholesalerId)
-            ->orWhere(function($q) {
-                $q->whereNull('wholesaler_id')
-                    ->where('seller_code', 0);
-            });
+        return $query->where(function($q) use ($wholesalerId) {
+            $q->where('wholesaler_id', $wholesalerId)
+                ->orWhere(function($sub) {
+                    $sub->whereNull('wholesaler_id')
+                        ->where('seller_code', 0);
+                });
+        });
+    }
+
+    public function scopeOwnedBySeller($query, $sellerId)
+    {
+        return $query->where('seller_id', $sellerId);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Image Accessor
+    |--------------------------------------------------------------------------
+    */
+
+    public function getImageUrlAttribute()
+    {
+        if (!$this->image) {
+            return $this->defaultImage();
+        }
+
+        if (filter_var($this->image, FILTER_VALIDATE_URL)) {
+            return $this->image;
+        }
+
+        return Storage::disk('public')->url($this->image);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Default Image
+    |--------------------------------------------------------------------------
+    */
+
+    private function defaultImage()
+    {
+        return asset('images/default-category.png');
     }
 }

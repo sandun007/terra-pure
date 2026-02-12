@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
 class Saler extends Authenticatable
@@ -65,67 +66,66 @@ class Saler extends Authenticatable
         }
     }
 
-    // Relationships - FIXED to match your database schema
+    // ─── Relationships ────────────────────────────────────────────────────────
 
-    /**
-     * Get orders for this seller
-     * IMPORTANT: Check your orders table to see which column links to seller
-     * Common options: saler_id, seller_id, seller_code
-     */
     public function orders()
     {
-        // Option 1: If orders table has 'saler_id' column
         return $this->hasMany(Order::class, 'saler_id', 'id');
-
-        // Option 2: If orders table has 'seller_id' column
-        // return $this->hasMany(Order::class, 'seller_id', 'id');
-
-        // Option 3: If orders table has 'seller_code' column linked to seller 'code'
-        // return $this->hasMany(Order::class, 'seller_code', 'code');
     }
 
-    /**
-     * Get products for this seller
-     * IMPORTANT: Check your products table to see which column links to seller
-     */
     public function products()
     {
-        // Option 1: If products table has 'saler_id' column
         return $this->hasMany(Product::class, 'saler_id', 'id');
-
-        // Option 2: If products table has 'seller_id' column
-        // return $this->hasMany(Product::class, 'seller_id', 'id');
-
-        // Option 3: If products table has 'seller_code' column linked to seller 'code'
-        // return $this->hasMany(Product::class, 'seller_code', 'code');
     }
 
-    /**
-     * Get referrals for this seller
-     */
     public function referrals()
     {
         return $this->hasMany(Referral::class, 'level_01_seller_01', 'code');
     }
 
-    // Accessor for profile image URL
-    public function getProfileImageUrlAttribute()
+    // ─── Accessors ────────────────────────────────────────────────────────────
+
+    /**
+     * Profile image URL using Storage::disk('public')->url()
+     * Falls back to default avatar if neither img nor profile_image is set.
+     */
+    public function getProfileImageUrlAttribute(): string
     {
-        // Check for img field first (used in wholesaler)
         if ($this->img) {
-            return asset('storage/' . $this->img);
+            return Storage::disk('public')->url($this->img);
         }
 
-        // Check for profile_image field (used in seller migration)
         if ($this->profile_image) {
-            return asset('storage/' . $this->profile_image);
+            return Storage::disk('public')->url($this->profile_image);
         }
 
         return asset('asset/img/default-avatar.png');
     }
 
-    // Accessor for full location
-    public function getFullLocationAttribute()
+    /**
+     * NIC front image URL using Storage::disk('public')->url()
+     */
+    public function getNicFrontUrlAttribute(): ?string
+    {
+        return $this->NIC_front
+            ? Storage::disk('public')->url($this->NIC_front)
+            : null;
+    }
+
+    /**
+     * NIC back image URL using Storage::disk('public')->url()
+     */
+    public function getNicBackUrlAttribute(): ?string
+    {
+        return $this->NIC_back
+            ? Storage::disk('public')->url($this->NIC_back)
+            : null;
+    }
+
+    /**
+     * Full address string assembled from location fields.
+     */
+    public function getFullLocationAttribute(): string
     {
         $parts = array_filter([
             $this->address,
@@ -133,31 +133,19 @@ class Saler extends Authenticatable
             $this->district,
             $this->state,
             $this->country,
-            $this->postal_code
+            $this->postal_code,
         ]);
 
         return implode(', ', $parts);
     }
 
-    // Accessor for NIC front image URL
-    public function getNicFrontUrlAttribute()
-    {
-        return $this->NIC_front ? asset('storage/' . $this->NIC_front) : null;
-    }
+    // ─── Scopes ───────────────────────────────────────────────────────────────
 
-    // Accessor for NIC back image URL
-    public function getNicBackUrlAttribute()
-    {
-        return $this->NIC_back ? asset('storage/' . $this->NIC_back) : null;
-    }
-
-    // Scope for active sellers
     public function scopeActive($query)
     {
         return $query->where('status', 'active');
     }
 
-    // Scope for pending sellers
     public function scopePending($query)
     {
         return $query->where('status', 'pending');

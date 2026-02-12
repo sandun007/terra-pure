@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage; // Add this import
+use Illuminate\Support\Facades\Storage;
 
 class SellerBrand extends Model
 {
@@ -14,6 +14,7 @@ class SellerBrand extends Model
         'seller_id',
         'code',
         'name',
+        'description',  // Make sure this is in your fillable array
         'image',
         'status',
     ];
@@ -24,77 +25,50 @@ class SellerBrand extends Model
 
     protected $appends = ['image_url'];
 
-    // Relationship with seller
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
     public function seller()
     {
-        return $this->belongsTo(Seller::class, 'seller_id');
+        return $this->belongsTo(Saler::class, 'seller_id');
     }
 
-    // Relationship with products
     public function products()
     {
+        // This uses brand_id as the foreign key in seller_products table
         return $this->hasMany(SellerProduct::class, 'brand_id', 'id');
     }
 
-    // Accessor for image URL
+    /*
+    |--------------------------------------------------------------------------
+    | Accessors
+    |--------------------------------------------------------------------------
+    */
+
     public function getImageUrlAttribute()
     {
         if (!$this->image) {
-            return $this->getDefaultImageUrl();
+            return $this->defaultImage();
         }
 
-        // Check if it's already a full URL
         if (filter_var($this->image, FILTER_VALIDATE_URL)) {
             return $this->image;
         }
 
-        // Check if image exists in storage
-        if (Storage::disk('public')->exists($this->image)) {
-            return Storage::disk('public')->url($this->image);
-        }
-
-        // Try alternative paths
-        return $this->getAlternativeImageUrl();
+        return Storage::disk('public')->url($this->image);
     }
 
-    /**
-     * Get default image URL
-     */
-    private function getDefaultImageUrl()
+    /*
+    |--------------------------------------------------------------------------
+    | Default Image
+    |--------------------------------------------------------------------------
+    */
+
+    private function defaultImage()
     {
-        // Check for default image in multiple locations
-        $defaultPaths = [
-            'images/default-brand.png',
-            'storage/images/default-brand.png',
-            'vendor/images/default-brand.png',
-        ];
-
-        foreach ($defaultPaths as $path) {
-            if (file_exists(public_path($path))) {
-                return asset($path);
-            }
-        }
-
-        // Return a placeholder if no default image found
-        return 'https://via.placeholder.com/150?text=No+Image';
-    }
-
-    /**
-     * Get alternative image URL if main path fails
-     */
-    private function getAlternativeImageUrl()
-    {
-        // Try direct public path
-        if (file_exists(public_path($this->image))) {
-            return asset($this->image);
-        }
-
-        // Try with storage path
-        if (file_exists(storage_path('app/public/' . $this->image))) {
-            return asset('storage/' . $this->image);
-        }
-
-        // Return default if all fails
-        return $this->getDefaultImageUrl();
+        return asset('images/default-brand.png');
     }
 }
