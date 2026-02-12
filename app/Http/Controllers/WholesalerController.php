@@ -1306,4 +1306,45 @@ class WholesalerController extends Controller
             ], 500);
         }
     }
+
+    public function uploadAvatar(Request $request)
+{
+    try {
+        $wholesaler = Auth::guard('wholesaler')->user();
+
+        $request->validate([
+            'img' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ]);
+
+        // delete old image if exists
+        if ($wholesaler->img && Storage::disk('public')->exists($wholesaler->img)) {
+            Storage::disk('public')->delete($wholesaler->img);
+        }
+
+        $path = $this->storageService->getStorageLocations()['profile_images'];
+        $newPath = $request->file('img')->store($path, 'public');
+
+        $wholesaler->update(['img' => $newPath]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile image updated successfully!',
+            'img_path' => $newPath,
+        ]);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => $e->validator->errors()->first(),
+            'errors' => $e->validator->errors(),
+        ], 422);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error uploading image: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
 }
