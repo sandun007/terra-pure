@@ -317,6 +317,8 @@ Route::middleware('auth:wholesaler')->group(function () {
         // Profile Routes
         Route::get('/profile', [WholesalerController::class, 'profile'])->name('profile');
         Route::post('/profile/update', [WholesalerController::class, 'updateProfile'])->name('profile.update');
+        Route::post('/profile/avatar', [WholesalerController::class, 'uploadAvatar'])->name('profile.avatar');
+
 
         // Shop Routes (Public Facing)
         Route::prefix('shop')->name('shop.')->group(function () {
