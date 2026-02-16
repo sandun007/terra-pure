@@ -67,6 +67,12 @@
             margin: 0;
         }
 
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
         /* Form Container */
         .form-container {
             background: var(--surface);
@@ -212,6 +218,16 @@
 
         .btn-success:hover {
             background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: #fff;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
             transform: translateY(-1px);
         }
 
@@ -440,10 +456,16 @@
                 <span class="material-icons-round" style="color:var(--primary);font-size:30px">add_shopping_cart</span>
                 Create New Order
             </h1>
-            <a href="{{ route('seller.new-order') }}" class="btn btn-secondary">
-                <span class="material-icons-round" style="font-size:18px">arrow_back</span>
-                Back to Orders
-            </a>
+            <div class="header-actions">
+                <a href="{{ route('seller.order.csv-upload') }}" class="btn btn-warning">
+                    <span class="material-icons-round" style="font-size:18px">upload_file</span>
+                    Upload CSV Leads
+                </a>
+                <a href="{{ route('seller.pending-order') }}" class="btn btn-secondary">
+                    <span class="material-icons-round" style="font-size:18px">list_alt</span>
+                    View Orders
+                </a>
+            </div>
         </div>
 
         <!-- Alerts -->
@@ -479,7 +501,8 @@
                                 id="searchProductCode"
                                 class="form-control"
                                 placeholder="Enter product code (e.g., DX/ITM/0001)"
-                                autocomplete="off">
+                                autocomplete="off"
+                                value="{{ $productCode ?? '' }}">
                             <div class="helper-text">
                                 <i class="fas fa-info-circle"></i> Enter the product code and click Fetch to load product details
                             </div>
@@ -488,7 +511,7 @@
                             <span class="material-icons-round" style="font-size:18px">search</span>
                             Fetch Product
                         </button>
-                        <button type="button" id="resetBtn" class="btn btn-danger" style="display: none;">
+                        <button type="button" id="resetBtn" class="btn btn-danger" style="display: {{ $productId ? 'inline-flex' : 'none' }};">
                             <span class="material-icons-round" style="font-size:18px">refresh</span>
                             Reset
                         </button>
@@ -496,17 +519,17 @@
                 </div>
 
                 <!-- Product Info Card (Hidden by default) -->
-                <div id="productInfoCard" class="product-info-card">
+                <div id="productInfoCard" class="product-info-card" style="display: {{ $productId ? 'block' : 'none' }};">
                     <div class="product-info-header">
-                        <img id="productImagePreview" src="" alt="Product" class="product-image-preview" style="display: none;">
-                        <div id="productImagePlaceholder" class="product-image-placeholder">
+                        <img id="productImagePreview" src="{{ $productImage ?? '' }}" alt="Product" class="product-image-preview" style="display: {{ $productImage ? 'block' : 'none' }};">
+                        <div id="productImagePlaceholder" class="product-image-placeholder" style="display: {{ $productImage ? 'none' : 'flex' }};">
                             <span class="material-icons-round" style="font-size:32px">inventory_2</span>
                         </div>
                         <div class="product-info-text" style="flex: 1;">
-                            <h4 id="displayProductName">-</h4>
+                            <h4 id="displayProductName">{{ $productName ?? '-' }}</h4>
                             <span class="product-code-badge">
                                 <span class="material-icons-round" style="font-size:14px">tag</span>
-                                <span id="displayProductCode">-</span>
+                                <span id="displayProductCode">{{ $productCode ?? '-' }}</span>
                             </span>
                         </div>
                     </div>
@@ -514,29 +537,46 @@
                         <div class="detail-item">
                             <div class="detail-label">Price</div>
                             <div class="detail-value" style="color: var(--danger);">
-                                Rs. <span id="displayProductPrice">0.00</span>
+                                Rs. <span id="displayProductPrice">{{ $productPrice ?? '0.00' }}</span>
                             </div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Available Stock</div>
                             <div class="detail-value">
-                                <span id="displayProductStock">0</span> units
+                                <span id="displayProductStock">{{ $productStock ?? '0' }}</span> units
                             </div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Status</div>
                             <div class="detail-value">
-                                <span id="stockStatusBadge" class="stock-badge stock-out">Out of Stock</span>
+                                <span id="stockStatusBadge" class="stock-badge
+                                    @if(($productStock ?? 0) <= 0) stock-out
+                                    @elseif(($productStock ?? 0) <= 10) stock-low
+                                    @else stock-available
+                                    @endif">
+                                    @if(($productStock ?? 0) <= 0)
+                                        <span class="material-icons-round" style="font-size:14px">cancel</span> Out of Stock
+                                    @elseif(($productStock ?? 0) <= 10)
+                                        <span class="material-icons-round" style="font-size:14px">warning</span> Low Stock
+                                    @else
+                                        <span class="material-icons-round" style="font-size:14px">check_circle</span> Available
+                                    @endif
+                                </span>
                             </div>
                         </div>
                     </div>
                 </div>
 
+                <!-- Hidden Fields -->
+                <input type="hidden" name="product_code" id="product_code" value="{{ $productCode ?? '' }}" required>
+                <input type="hidden" name="product_id" id="product_id" value="{{ $productId ?? '' }}" required>
+                <input type="hidden" name="product_name" id="product_name" value="{{ $productName ?? '' }}" required>
+                <input type="hidden" name="product_price" id="product_price" value="{{ $productPrice ?? '0' }}" required>
+                <input type="hidden" name="product_image" id="product_image" value="{{ $productImage ?? '' }}">
+                <input type="hidden" name="date" id="order_date" value="{{ date('Y-m-d') }}">
+
                 <!-- Order Details Form -->
                 <div class="form-grid">
-                    <!-- Product Code (Hidden Input) -->
-                    <input type="hidden" name="product_code" id="product_code" required>
-
                     <!-- Customer Name -->
                     <div class="form-group">
                         <label class="form-label">
@@ -548,6 +588,7 @@
                             id="customer_name"
                             class="form-control"
                             placeholder="Enter customer name"
+                            value="{{ old('customer_name') }}"
                             required>
                     </div>
 
@@ -562,6 +603,7 @@
                             id="customer_phone"
                             class="form-control"
                             placeholder="Enter phone number"
+                            value="{{ old('customer_phone') }}"
                             required>
                     </div>
 
@@ -577,39 +619,39 @@
                             class="form-control"
                             placeholder="Enter quantity"
                             min="1"
-                            value="1"
+                            value="{{ $quantity ?? 1 }}"
+                            {{ !$productId ? 'disabled' : '' }}
                             required>
-                        <div class="helper-text">Available: <span id="availableStock">0</span> units</div>
+                        <div class="helper-text">Available: <span id="availableStock">{{ $productStock ?? '0' }}</span> units</div>
                     </div>
 
-                    <!-- Discount (Optional) -->
+                    <!-- District/City -->
                     <div class="form-group">
                         <label class="form-label">
-                            Discount (%)
+                            District/City
                         </label>
                         <input
-                            type="number"
-                            name="discount"
-                            id="discount"
+                            type="text"
+                            name="district"
+                            id="district"
                             class="form-control"
-                            placeholder="Enter discount percentage"
-                            min="0"
-                            max="100"
-                            value="0"
-                            step="0.01">
+                            placeholder="Enter district or city"
+                            value="{{ old('district') }}">
                     </div>
 
-                    <!-- Customer Email (Optional) -->
+                    <!-- Platform -->
                     <div class="form-group">
                         <label class="form-label">
-                            Customer Email
+                            Platform
                         </label>
-                        <input
-                            type="email"
-                            name="customer_email"
-                            id="customer_email"
-                            class="form-control"
-                            placeholder="Enter email (optional)">
+                        <select name="platform" id="platform" class="form-control">
+                            <option value="">Select Platform</option>
+                            <option value="fb" {{ old('platform') == 'fb' ? 'selected' : '' }}>Facebook</option>
+                            <option value="ig" {{ old('platform') == 'ig' ? 'selected' : '' }}>Instagram</option>
+                            <option value="website" {{ old('platform') == 'website' ? 'selected' : '' }}>Website</option>
+                            <option value="phone" {{ old('platform') == 'phone' ? 'selected' : '' }}>Phone</option>
+                            <option value="other" {{ old('platform') == 'other' ? 'selected' : '' }}>Other</option>
+                        </select>
                     </div>
 
                     <!-- Payment Method -->
@@ -619,10 +661,10 @@
                         </label>
                         <select name="payment_method" id="payment_method" class="form-control" required>
                             <option value="">Select Payment Method</option>
-                            <option value="cash">Cash</option>
-                            <option value="card">Card</option>
-                            <option value="bank_transfer">Bank Transfer</option>
-                            <option value="online">Online Payment</option>
+                            <option value="cash" {{ old('payment_method') == 'cash' ? 'selected' : '' }}>Cash on Delivery</option>
+                            <option value="card" {{ old('payment_method') == 'card' ? 'selected' : '' }}>Card Payment</option>
+                            <option value="bank_transfer" {{ old('payment_method') == 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
+                            <option value="online" {{ old('payment_method') == 'online' ? 'selected' : '' }}>Online Payment</option>
                         </select>
                     </div>
                 </div>
@@ -636,28 +678,32 @@
                         name="customer_address"
                         id="customer_address"
                         class="form-control"
-                        placeholder="Enter delivery address (optional)"></textarea>
+                        placeholder="Enter delivery address (optional)">{{ old('customer_address') }}</textarea>
                 </div>
 
                 <!-- Order Notes (Full Width) -->
                 <div class="form-group" style="margin-bottom: 24px;">
                     <label class="form-label">
-                        Order Notes
+                        Order Notes / Remarks
                     </label>
                     <textarea
-                        name="notes"
-                        id="notes"
+                        name="remark"
+                        id="remark"
                         class="form-control"
-                        placeholder="Add any special instructions or notes (optional)"></textarea>
+                        placeholder="Add any special instructions or notes (optional)">{{ old('remark') }}</textarea>
                 </div>
 
                 <!-- Form Actions -->
                 <div class="form-actions">
-                    <a href="{{ route('seller.new-order') }}" class="btn btn-secondary">
-                        <span class="material-icons-round" style="font-size:18px">close</span>
-                        Cancel
+                    <button type="button" id="printBtn" class="btn btn-secondary" {{ !$productId ? 'disabled' : '' }}>
+                        <span class="material-icons-round" style="font-size:18px">print</span>
+                        Print Order
+                    </button>
+                    <a href="{{ route('seller.pending-order') }}" class="btn btn-secondary">
+                        <span class="material-icons-round" style="font-size:18px">list_alt</span>
+                        View Orders
                     </a>
-                    <button type="submit" id="submitBtn" class="btn btn-success" disabled>
+                    <button type="button" id="submitBtn" class="btn btn-success" {{ !$productId ? 'disabled' : '' }}>
                         <span class="material-icons-round" style="font-size:18px">shopping_cart</span>
                         Create Order
                     </button>
@@ -674,39 +720,41 @@
         let currentProductData = null;
 
         // =============================================
-        // AUTO-FILL FROM URL PARAMETERS (FROM SHOP PAGE)
+        // INITIALIZE FROM URL PARAMETERS OR EXISTING DATA
         // =============================================
         document.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
+            // Check if we have product data from URL parameters (passed from controller)
+            @if($productId && $productCode && $productName && $productPrice)
+            const initialProductData = {
+                id: '{{ $productId }}',
+                code: '{{ $productCode }}',
+                name: '{{ $productName }}',
+                display_price: parseFloat('{{ $productPrice }}') || 0,
+                qty: parseInt('{{ $productStock }}') || 0,
+                image: '{{ $productImage }}',
+                description: '{{ $productDescription ?? '' }}'
+            };
+            currentProductData = initialProductData;
 
-            if (urlParams.has('product_code')) {
-                // Fill search input
-                const productCode = urlParams.get('product_code');
-                document.getElementById('searchProductCode').value = productCode;
+            // Enable submit and print buttons
+            document.getElementById('submitBtn').disabled = false;
+            document.getElementById('printBtn').disabled = false;
+            document.getElementById('resetBtn').style.display = 'inline-flex';
+            document.getElementById('quantity').disabled = false;
+            @endif
 
-                // Create product data object from URL params
-                const productData = {
-                    code: urlParams.get('product_code'),
-                    name: urlParams.get('product_name'),
-                    display_price: parseFloat(urlParams.get('product_price')) || 0,
-                    qty: parseInt(urlParams.get('product_stock')) || 0,
-                    image: urlParams.get('product_image'),
-                    description: urlParams.get('product_description')
-                };
-
-                // Display product info
-                displayProductInfo(productData);
-
-                // Set quantity if provided
-                const quantity = urlParams.get('quantity');
-                if (quantity) {
-                    document.getElementById('quantity').value = quantity;
-                }
-            }
+            // Auto-hide alerts
+            setTimeout(() => {
+                document.querySelectorAll('.alert').forEach(alert => {
+                    alert.style.transition = 'opacity 0.5s';
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 500);
+                });
+            }, 5000);
         });
 
         // =============================================
-        // FETCH PRODUCT BY CODE
+        // FETCH PRODUCT BY CODE - FIXED VERSION
         // =============================================
         document.getElementById('fetchProductBtn').addEventListener('click', function() {
             const productCode = document.getElementById('searchProductCode').value.trim();
@@ -724,7 +772,6 @@
             fetchProductByCode(productCode);
         });
 
-        // Allow Enter key to fetch product
         document.getElementById('searchProductCode').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -736,18 +783,26 @@
             const fetchBtn = document.getElementById('fetchProductBtn');
             const originalHTML = fetchBtn.innerHTML;
 
-            // Show loading state
             fetchBtn.disabled = true;
             fetchBtn.innerHTML = '<span class="spinner"></span> Fetching...';
 
             try {
-                const response = await fetch(`/seller/shop/product/find/${encodeURIComponent(productCode)}`);
+                // Properly encode the product code for URL
+                const encodedCode = encodeURIComponent(productCode);
+                const url = `/seller/order/product/${encodedCode}/details`;
+
+                console.log('Fetching product from URL:', url); // Debug log
+
+                const response = await fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
 
                 if (!response.ok) {
-                    if (response.status === 404) {
-                        throw new Error('Product not found with code: ' + productCode);
-                    }
-                    throw new Error('Failed to fetch product data');
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || `HTTP error ${response.status}`);
                 }
 
                 const data = await response.json();
@@ -763,7 +818,7 @@
                         showConfirmButton: false
                     });
                 } else {
-                    throw new Error('Invalid response from server');
+                    throw new Error(data.message || 'Invalid response from server');
                 }
 
             } catch (error) {
@@ -772,14 +827,13 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'Product Not Found',
-                    text: error.message || 'Could not find product with this code',
+                    text: error.message || 'Could not find product with this code. Please check the product code and try again.',
                     confirmButtonColor: '#4f46e5'
                 });
 
                 resetForm();
 
             } finally {
-                // Restore button state
                 fetchBtn.disabled = false;
                 fetchBtn.innerHTML = originalHTML;
             }
@@ -791,25 +845,26 @@
         function displayProductInfo(product) {
             currentProductData = product;
 
-            // Show product info card
             const infoCard = document.getElementById('productInfoCard');
+            infoCard.style.display = 'block';
             infoCard.classList.add('show');
 
-            // Show reset button
             document.getElementById('resetBtn').style.display = 'inline-flex';
 
-            // Fill hidden product code input
+            // Fill hidden fields
             document.getElementById('product_code').value = product.code;
+            document.getElementById('product_id').value = product.id;
+            document.getElementById('product_name').value = product.name;
+            document.getElementById('product_price').value = product.display_price || product.price;
+            document.getElementById('product_image').value = product.image || '';
 
-            // Display product name
+            // Display product info
             document.getElementById('displayProductName').textContent = product.name;
             document.getElementById('displayProductCode').textContent = product.code;
 
-            // Display product price
             const price = parseFloat(product.display_price) || parseFloat(product.price) || 0;
             document.getElementById('displayProductPrice').textContent = price.toFixed(2);
 
-            // Display stock
             const stock = parseInt(product.qty) || 0;
             document.getElementById('displayProductStock').textContent = stock;
             document.getElementById('availableStock').textContent = stock;
@@ -836,7 +891,6 @@
                 imagePreview.style.display = 'block';
                 imagePlaceholder.style.display = 'none';
 
-                // Handle image load error
                 imagePreview.onerror = function() {
                     this.style.display = 'none';
                     imagePlaceholder.style.display = 'flex';
@@ -846,12 +900,12 @@
                 imagePlaceholder.style.display = 'flex';
             }
 
-            // Enable/disable quantity input based on stock
+            // Enable/disable quantity input
             const quantityInput = document.getElementById('quantity');
             if (stock > 0) {
                 quantityInput.max = stock;
                 quantityInput.disabled = false;
-                if (quantityInput.value > stock) {
+                if (parseInt(quantityInput.value) > stock) {
                     quantityInput.value = stock;
                 }
             } else {
@@ -859,15 +913,14 @@
                 quantityInput.value = 0;
             }
 
-            // Enable submit button if stock available
+            // Enable submit and print buttons
             const submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = stock <= 0;
+            const printBtn = document.getElementById('printBtn');
 
-            if (stock <= 0) {
-                submitBtn.innerHTML = '<span class="material-icons-round" style="font-size:18px">block</span> Out of Stock';
-            } else {
-                submitBtn.innerHTML = '<span class="material-icons-round" style="font-size:18px">shopping_cart</span> Create Order';
-            }
+            submitBtn.disabled = false;
+            printBtn.disabled = false;
+
+            submitBtn.innerHTML = '<span class="material-icons-round" style="font-size:18px">shopping_cart</span> Create Order';
         }
 
         // =============================================
@@ -898,49 +951,45 @@
         });
 
         function resetForm() {
-            // Reset product data
             currentProductData = null;
 
-            // Hide product info card
+            document.getElementById('productInfoCard').style.display = 'none';
             document.getElementById('productInfoCard').classList.remove('show');
-
-            // Hide reset button
             document.getElementById('resetBtn').style.display = 'none';
-
-            // Clear search input
             document.getElementById('searchProductCode').value = '';
 
-            // Clear hidden inputs
+            // Clear all form fields
             document.getElementById('product_code').value = '';
+            document.getElementById('product_id').value = '';
+            document.getElementById('product_name').value = '';
+            document.getElementById('product_price').value = '';
+            document.getElementById('product_image').value = '';
+            document.getElementById('customer_name').value = '';
+            document.getElementById('customer_phone').value = '';
+            document.getElementById('customer_address').value = '';
+            document.getElementById('district').value = '';
+            document.getElementById('platform').value = '';
+            document.getElementById('quantity').value = '1';
+            document.getElementById('payment_method').value = '';
+            document.getElementById('remark').value = '';
 
-            // Reset display fields
+            // Reset display
             document.getElementById('displayProductName').textContent = '-';
             document.getElementById('displayProductCode').textContent = '-';
             document.getElementById('displayProductPrice').textContent = '0.00';
             document.getElementById('displayProductStock').textContent = '0';
             document.getElementById('availableStock').textContent = '0';
 
-            // Reset image
             document.getElementById('productImagePreview').style.display = 'none';
             document.getElementById('productImagePlaceholder').style.display = 'flex';
 
-            // Clear form inputs
-            document.getElementById('customer_name').value = '';
-            document.getElementById('customer_phone').value = '';
-            document.getElementById('customer_email').value = '';
-            document.getElementById('customer_address').value = '';
-            document.getElementById('quantity').value = '1';
-            document.getElementById('discount').value = '0';
-            document.getElementById('payment_method').value = '';
-            document.getElementById('notes').value = '';
-
-            // Disable quantity input and submit button
             document.getElementById('quantity').disabled = true;
             document.getElementById('submitBtn').disabled = true;
+            document.getElementById('printBtn').disabled = true;
         }
 
         // =============================================
-        // FORM VALIDATION
+        // QUANTITY VALIDATION
         // =============================================
         document.getElementById('quantity').addEventListener('input', function() {
             if (currentProductData) {
@@ -961,26 +1010,146 @@
         });
 
         // =============================================
+        // PRINT FUNCTIONALITY
+        // =============================================
+        document.getElementById('printBtn').addEventListener('click', function() {
+            if (!currentProductData) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'No Product Selected',
+                    text: 'Please select a product first',
+                    confirmButtonColor: '#4f46e5'
+                });
+                return;
+            }
+
+            const customerName = document.getElementById('customer_name').value;
+            const customerPhone = document.getElementById('customer_phone').value;
+            const customerAddress = document.getElementById('customer_address').value;
+            const quantity = document.getElementById('quantity').value;
+            const district = document.getElementById('district').value;
+
+            if (!customerName || !customerPhone) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Missing Information',
+                    text: 'Please fill in customer name and phone number',
+                    confirmButtonColor: '#4f46e5'
+                });
+                return;
+            }
+
+            // Create print content
+            const printWindow = window.open('', '', 'height=600,width=800');
+            printWindow.document.write('<html><head><title>Order Print</title>');
+            printWindow.document.write('<style>');
+            printWindow.document.write('body { font-family: Arial, sans-serif; padding: 20px; }');
+            printWindow.document.write('h1 { color: #4f46e5; margin-bottom: 20px; }');
+            printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 20px; }');
+            printWindow.document.write('td { padding: 10px; border-bottom: 1px solid #e2e8f0; }');
+            printWindow.document.write('td:first-child { font-weight: bold; width: 40%; }');
+            printWindow.document.write('.header { background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; }');
+            printWindow.document.write('</style>');
+            printWindow.document.write('</head><body>');
+
+            printWindow.document.write('<div class="header">');
+            printWindow.document.write('<h1>Order Details</h1>');
+            printWindow.document.write('<p>Date: ' + new Date().toLocaleDateString() + '</p>');
+            printWindow.document.write('</div>');
+
+            printWindow.document.write('<table>');
+            printWindow.document.write('<tr><td>Product Code:</td><td>' + currentProductData.code + '</td></tr>');
+            printWindow.document.write('<tr><td>Product Name:</td><td>' + currentProductData.name + '</td></tr>');
+            printWindow.document.write('<tr><td>Price:</td><td>Rs. ' + currentProductData.display_price + '</td></tr>');
+            printWindow.document.write('<tr><td>Quantity:</td><td>' + quantity + '</td></tr>');
+            printWindow.document.write('<tr><td>Total Amount:</td><td>Rs. ' + (currentProductData.display_price * quantity).toFixed(2) + '</td></tr>');
+            printWindow.document.write('<tr><td>Customer Name:</td><td>' + customerName + '</td></tr>');
+            printWindow.document.write('<tr><td>Customer Phone:</td><td>' + customerPhone + '</td></tr>');
+            if (customerAddress) {
+                printWindow.document.write('<tr><td>Delivery Address:</td><td>' + customerAddress + '</td></tr>');
+            }
+            if (district) {
+                printWindow.document.write('<tr><td>District:</td><td>' + district + '</td></tr>');
+            }
+            printWindow.document.write('</table>');
+
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.focus();
+
+            setTimeout(function() {
+                printWindow.print();
+                printWindow.close();
+            }, 250);
+        });
+
+        // =============================================
         // FORM SUBMISSION
         // =============================================
-        document.getElementById('orderForm').addEventListener('submit', function(e) {
+        document.getElementById('submitBtn').addEventListener('click', function(e) {
             e.preventDefault();
 
-            // Validate product is selected
-            if (!currentProductData || !document.getElementById('product_code').value) {
+            // Check if product is selected
+            if (!currentProductData || !document.getElementById('product_id').value) {
                 Swal.fire({
                     icon: 'error',
                     title: 'No Product Selected',
                     text: 'Please fetch a product before creating an order',
                     confirmButtonColor: '#4f46e5'
                 });
-                return;
+                return false;
             }
 
-            // Validate stock
-            const quantity = parseInt(document.getElementById('quantity').value) || 0;
-            const stock = parseInt(currentProductData.qty) || 0;
+            // Check customer name and phone
+            const customerName = document.getElementById('customer_name').value.trim();
+            const customerPhone = document.getElementById('customer_phone').value.trim();
 
+            if (!customerName) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Missing Information',
+                    text: 'Please enter customer name',
+                    confirmButtonColor: '#4f46e5'
+                });
+                return false;
+            }
+
+            if (!customerPhone) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Missing Information',
+                    text: 'Please enter customer phone number',
+                    confirmButtonColor: '#4f46e5'
+                });
+                return false;
+            }
+
+            // Check payment method
+            const paymentMethod = document.getElementById('payment_method').value;
+            if (!paymentMethod) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Missing Information',
+                    text: 'Please select a payment method',
+                    confirmButtonColor: '#4f46e5'
+                });
+                return false;
+            }
+
+            // Check quantity
+            const quantity = parseInt(document.getElementById('quantity').value) || 0;
+            if (quantity <= 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Quantity',
+                    text: 'Please enter a valid quantity',
+                    confirmButtonColor: '#4f46e5'
+                });
+                return false;
+            }
+
+            // Check stock
+            const stock = parseInt(currentProductData.qty) || 0;
             if (quantity > stock) {
                 Swal.fire({
                     icon: 'error',
@@ -988,10 +1157,10 @@
                     text: `Only ${stock} units available`,
                     confirmButtonColor: '#4f46e5'
                 });
-                return;
+                return false;
             }
 
-            // Show confirmation
+            // Show confirmation dialog
             Swal.fire({
                 title: 'Create Order?',
                 html: `
@@ -999,7 +1168,9 @@
                         <p><strong>Product:</strong> ${currentProductData.name}</p>
                         <p><strong>Code:</strong> ${currentProductData.code}</p>
                         <p><strong>Quantity:</strong> ${quantity} units</p>
-                        <p><strong>Customer:</strong> ${document.getElementById('customer_name').value}</p>
+                        <p><strong>Customer:</strong> ${customerName}</p>
+                        <p><strong>Phone:</strong> ${customerPhone}</p>
+                        <p><strong>Total:</strong> Rs. ${(currentProductData.display_price * quantity).toFixed(2)}</p>
                     </div>
                 `,
                 icon: 'question',
@@ -1007,23 +1178,77 @@
                 confirmButtonColor: '#10b981',
                 cancelButtonColor: '#64748b',
                 confirmButtonText: 'Yes, Create Order',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-                if (result.isConfirmed) {
+                cancelButtonText: 'Cancel',
+                showLoaderOnConfirm: true,
+                preConfirm: () => {
                     // Show loading
+                    Swal.showLoading();
+
+                    // Submit the form via AJAX
+                    const form = document.getElementById('orderForm');
+                    const formData = new FormData(form);
+
+                    return fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(err => {
+                                    throw new Error(err.message || 'Something went wrong');
+                                });
+                            }
+                            return response.json();
+                        })
+                        .catch(error => {
+                            Swal.showValidationMessage(`Request failed: ${error.message}`);
+                        });
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed && result.value && result.value.success) {
+                    // Success - show success message and redirect
                     Swal.fire({
-                        title: 'Creating Order...',
-                        html: 'Please wait',
-                        allowOutsideClick: false,
-                        didOpen: () => {
-                            Swal.showLoading();
+                        icon: 'success',
+                        title: 'Order Created!',
+                        html: `
+                            <div style="text-align: center;">
+                                <p>${result.value.message}</p>
+                                <div class="alert alert-success mt-3" style="background: #d1fae5; padding: 12px; border-radius: 8px;">
+                                    <span class="material-icons-round" style="vertical-align: middle;">check_circle</span>
+                                    Redirecting to pending orders...
+                                </div>
+                            </div>
+                        `,
+                        timer: 2000,
+                        timerProgressBar: true,
+                        showConfirmButton: false,
+                        willClose: () => {
+                            window.location.href = result.value.redirect_url || '{{ route("seller.pending-order") }}';
                         }
                     });
-
-                    // Submit form
-                    this.submit();
+                } else if (result.value && !result.value.success) {
+                    // Error from server
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: result.value.message || 'Failed to create order',
+                        confirmButtonColor: '#4f46e5'
+                    });
                 }
             });
+        });
+
+        // Regular form submission fallback (if JS fails)
+        document.getElementById('orderForm').addEventListener('submit', function(e) {
+            // Prevent default if submit button was clicked (handled by our custom handler)
+            if (e.submitter && e.submitter.id === 'submitBtn') {
+                e.preventDefault();
+            }
         });
     </script>
 @endpush

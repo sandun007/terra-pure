@@ -3,7 +3,6 @@
 use App\Exports\OrdersExport;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BrandController;
-use App\Http\Controllers\CallController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Employee\EmployeeWholesalerOrderController;
 use App\Http\Controllers\EmployeeController;
@@ -11,7 +10,9 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\Seller\CallController;
 use App\Http\Controllers\Seller\SellerBrandController;
+use App\Http\Controllers\Seller\SellerCallController;
 use App\Http\Controllers\Seller\SellerCategoryController;
 use App\Http\Controllers\Seller\SellerOrderController;
 use App\Http\Controllers\Seller\SellerPaymentController;
@@ -147,8 +148,14 @@ Route::middleware('auth:seller')->group(function(){
             Route::put('update/{id}', [SellerOrderController::class, 'update'])->name('order.update');
             Route::delete('destroy/{id}', [SellerOrderController::class, 'destroy'])->name('order.destroy');
 
-            // Product details for order form - Using {code} (FIXED: Match the controller method)
-            Route::get('product/{code}/details', [SellerOrderController::class, 'getProductDetails'])->name('product.details');
+            // Product details for order form - FIXED: Using where parameter to allow slashes in code
+            Route::get('product/{code}/details', [SellerOrderController::class, 'getProductDetails'])
+                ->name('product.details')
+                ->where('code', '.*'); // This allows slashes in the product code
+
+            // CSV Upload routes
+            Route::get('csv-upload', [SellerOrderController::class, 'csvUploadPage'])->name('order.csv-upload');
+            Route::post('csv-insert', [SellerOrderController::class, 'csvInsert'])->name('order.csv-insert');
         });
 
         Route::prefix('product')->group(function () {
@@ -161,31 +168,16 @@ Route::middleware('auth:seller')->group(function(){
             Route::get('/history',[SellerPaymentController::class,'payment_history'])->name('seller.payment_history');
         });
 
-        Route::prefix('call')->group(function (){
-            Route::get('/',[CallController::class,'index'])->name('call.index');
-            Route::get('/view/{id}',[CallController::class,'call_conform_form'])->name('call.view');
-            Route::post('/',[CallController::class,'store'])->name('call.store');
-            Route::get('/conform_call_list',[CallController::class,'conform_call_list'])->name('call.conform');
-            Route::get('/reject_call_list',[CallController::class,'reject_call_list'])->name('call.reject');
-            Route::get('/not_answer_call_list',[CallController::class,'not_answer_call_list'])->name('call.not_answer_call_list');
-            Route::get('/other_call_list',[CallController::class,'other_call_list'])->name('call.other_call_list');
-            Route::get('/export-orders', function () {
-                $seller = Auth::user();
-                $orders = Order::where('seller_no', $seller->code)
-                    ->where('status', 'Conform')
-                    ->where('download_status', 0)
-                    ->get();
-
-                if ($orders->isEmpty()) {
-                    return back()->with('error', 'No orders to export.');
-                }
-
-                $orderIds = $orders->pluck('id');
-                Order::whereIn('id', $orderIds)->update(['download_status' => 1]);
-                $date = Carbon::now()->format('Y-m-d');
-                $fileName = 'conform_orders_' . $date . '.xlsx';
-                return Excel::download(new OrdersExport($orders), $fileName);
-            })->name('orders.export');
+        // For backward compatibility with old route names
+        Route::prefix('call')->group(function () {
+            Route::get('/', [SellerCallController::class, 'index'])->name('call.index');
+            Route::get('/view/{id}', [SellerCallController::class, 'show'])->name('call.view');
+            Route::post('/', [SellerCallController::class, 'update'])->name('call.store'); // POST maps to update for backward compatibility
+            Route::get('/conform_call_list', [SellerCallController::class, 'conformCallList'])->name('call.conform');
+            Route::get('/reject_call_list', [SellerCallController::class, 'rejectCallList'])->name('call.reject');
+            Route::get('/not_answer_call_list', [SellerCallController::class, 'notAnswerCallList'])->name('call.not_answer_call_list');
+            Route::get('/other_call_list', [SellerCallController::class, 'otherCallList'])->name('call.other_call_list');
+            Route::get('/export-calls', [SellerCallController::class, 'export'])->name('calls.export');
         });
 
         // Seller Product Routes - UPDATED

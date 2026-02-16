@@ -48,6 +48,19 @@
         margin-right: 5px;
     }
 
+    /* CSV upload badge – blue */
+    .menu-badge-blue {
+        background: #dbeafe;
+        color: #1e40af;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 9px;
+        margin-left: auto;
+        margin-right: 5px;
+        letter-spacing: 0.3px;
+    }
+
     /* Product Management Section */
     .product-management-section {
         border-left: 3px solid #ffffff;
@@ -161,8 +174,7 @@
                         <a href="{{ route('seller.product.create') }}"
                            class="{{ request()->routeIs('seller.product.create') ? 'active' : '' }}">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                                 fill="none"
-                                 stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                  stroke-linejoin="round">
                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -191,8 +203,7 @@
                         <a href="{{ route('seller.brands.create') }}"
                            class="{{ request()->routeIs('seller.brand.create') ? 'active' : '' }}">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                                 fill="none"
-                                 stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                  stroke-linejoin="round">
                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -219,8 +230,7 @@
                         <a href="{{ route('seller.category.create') }}"
                            class="{{ request()->routeIs('seller.category.create') ? 'active' : '' }}">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                                 fill="none"
-                                 stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                  stroke-linejoin="round">
                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -238,6 +248,7 @@
     <li class="submenu-open">
         <h6 class="submenu-hdr">Order Management</h6>
         <ul>
+            <!-- New Order -->
             <li>
                 <a href="{{ route('seller.new-order') }}"
                    class="{{ request()->routeIs('seller.new-order') ? 'active' : '' }}">
@@ -248,16 +259,42 @@
                         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
                     </svg>
                     <span>New Orders</span>
-                    @php
-                        // You can add your order count logic here
-                        $newOrdersCount = 0;
-                    @endphp
+                    @php $newOrdersCount = 0; @endphp
                     @if($newOrdersCount > 0)
                         <span class="menu-badge">{{ $newOrdersCount }}</span>
                     @endif
                 </a>
             </li>
 
+            <!-- ★ CSV / Leads Upload ★ -->
+            <li>
+                <a href="{{ route('seller.order.csv-upload') }}"
+                   class="{{ request()->routeIs('seller.order.csv-upload') ? 'active' : '' }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <span>Upload CSV / Leads</span>
+                    <span class="menu-badge-blue">NEW</span>
+                </a>
+            </li>
+
+            <!-- Pending Orders -->
+            <li>
+                <a href="{{ route('seller.pending-order') }}"
+                   class="{{ request()->routeIs('seller.pending-order') ? 'active' : '' }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span>Pending Orders</span>
+                </a>
+            </li>
+
+            <!-- Completed Orders -->
             <li>
                 <a href="{{ route('seller.complete-order') }}"
                    class="{{ request()->routeIs('seller.complete-order') ? 'active' : '' }}">
@@ -269,6 +306,7 @@
                 </a>
             </li>
 
+            <!-- Rescheduled Orders -->
             <li>
                 <a href="{{ route('seller.rescheduling-order') }}"
                    class="{{ request()->routeIs('seller.rescheduling-order') ? 'active' : '' }}">
@@ -283,6 +321,7 @@
                 </a>
             </li>
 
+            <!-- Return Orders -->
             <li>
                 <a href="{{ route('seller.return-order') }}"
                    class="{{ request()->routeIs('seller.return-order') ? 'active' : '' }}">
@@ -293,18 +332,6 @@
                         <line x1="12" y1="13" x2="12" y2="3"></line>
                     </svg>
                     <span>Return Orders</span>
-                </a>
-            </li>
-
-            <li>
-                <a href="{{ route('seller.pending-order') }}"
-                   class="{{ request()->routeIs('seller.pending-order') ? 'active' : '' }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                    <span>Pending Orders</span>
                 </a>
             </li>
         </ul>
@@ -428,8 +455,7 @@
         <h6 class="submenu-hdr">Sales</h6>
         <ul>
             <li>
-                <a href="#"
-                   class="{{ request()->is('seller/sales') ? 'active' : '' }}">
+                <a href="#" class="{{ request()->is('seller/sales') ? 'active' : '' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="9" cy="21" r="1"></circle>
@@ -441,8 +467,7 @@
             </li>
 
             <li>
-                <a href="#"
-                   class="{{ request()->is('seller/invoices') ? 'active' : '' }}">
+                <a href="#" class="{{ request()->is('seller/invoices') ? 'active' : '' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -456,8 +481,7 @@
             </li>
 
             <li>
-                <a href="#"
-                   class="{{ request()->is('seller/sales-return') ? 'active' : '' }}">
+                <a href="#" class="{{ request()->is('seller/sales-return') ? 'active' : '' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -468,8 +492,7 @@
             </li>
 
             <li>
-                <a href="#"
-                   class="{{ request()->is('seller/quotation') ? 'active' : '' }}">
+                <a href="#" class="{{ request()->is('seller/quotation') ? 'active' : '' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
@@ -487,8 +510,7 @@
         <h6 class="submenu-hdr">Reports</h6>
         <ul>
             <li>
-                <a href="#"
-                   class="{{ request()->is('seller/reports/sales') ? 'active' : '' }}">
+                <a href="#" class="{{ request()->is('seller/reports/sales') ? 'active' : '' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="20" x2="18" y2="10"></line>
@@ -500,8 +522,7 @@
             </li>
 
             <li>
-                <a href="#"
-                   class="{{ request()->is('seller/reports/inventory') ? 'active' : '' }}">
+                <a href="#" class="{{ request()->is('seller/reports/inventory') ? 'active' : '' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
@@ -513,8 +534,7 @@
             </li>
 
             <li>
-                <a href="#"
-                   class="{{ request()->is('seller/reports/customers') ? 'active' : '' }}">
+                <a href="#" class="{{ request()->is('seller/reports/customers') ? 'active' : '' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -530,7 +550,6 @@
     <li class="submenu-open">
         <h6 class="submenu-hdr">Account</h6>
         <ul>
-            <!-- MY PROFILE LINK - UPDATED HERE -->
             <li>
                 <a href="{{ route('profile.index') }}"
                    class="{{ request()->routeIs('seller.profile.*') ? 'active' : '' }}">
