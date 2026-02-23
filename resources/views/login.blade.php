@@ -41,15 +41,17 @@
             background-position: center center;
             background-attachment: fixed;
             min-height: 100vh;
-            min-width: 275vh;
+            width: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
             color: var(--text-dark);
             line-height: 1.6;
+            overflow-x: hidden;
         }
 
+        /* Mobile-first approach */
         .login-container {
             width: 100%;
             max-width: 1200px;
@@ -57,25 +59,242 @@
             border-radius: 20px;
             overflow: hidden;
             box-shadow: var(--shadow-large);
-            min-height: 650px;
+            min-height: auto;
+            flex-direction: column;
+            margin: 0 auto;
         }
 
-        /* Left Side - Login Form with Mirrored Glass Effect */
+        /* Tablet and larger */
+        @media (min-width: 768px) {
+            .login-container {
+                min-height: 600px;
+            }
+        }
+
+        /* Desktop */
+        @media (min-width: 992px) {
+            .login-container {
+                flex-direction: row;
+                min-height: 650px;
+            }
+        }
+
+        /* Left Side - Branding with Green Theme (Now first on mobile) */
         .login-left {
+            flex: 1;
+            background: linear-gradient(135deg, rgba(6, 95, 70, 0.9) 0%, rgba(5, 150, 105, 0.85) 100%);
+            color: white;
+            padding: 30px 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            order: 1;
+        }
+
+        @media (min-width: 992px) {
+            .login-left {
+                padding: 50px;
+                order: 1;
+            }
+        }
+
+        .login-left::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .logo-container {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        @media (min-width: 992px) {
+            .logo-container {
+                justify-content: left;
+                margin-bottom: 0;
+            }
+        }
+
+        .logo-wrapper {
+            background-color: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: var(--shadow-medium);
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @media (min-width: 768px) {
+            .logo-wrapper {
+                padding: 20px;
+                border-radius: 15px;
+            }
+        }
+
+        .logo {
+            width: 120px;
+            height: auto;
+            margin-bottom: 0;
+        }
+
+        @media (min-width: 768px) {
+            .logo {
+                width: 150px;
+            }
+        }
+
+        @media (min-width: 992px) {
+            .logo {
+                width: 180px;
+            }
+        }
+
+        .left-content {
+            position: relative;
+            z-index: 1;
+            margin-top: 20px;
+        }
+
+        @media (min-width: 992px) {
+            .left-content {
+                margin-top: 40px;
+            }
+        }
+
+        .left-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            line-height: 1.2;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        @media (min-width: 768px) {
+            .left-title {
+                font-size: 2rem;
+                text-align: left;
+            }
+        }
+
+        @media (min-width: 992px) {
+            .left-title {
+                font-size: 2.5rem;
+            }
+        }
+
+        .left-subtitle {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+            max-width: 100%;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        @media (min-width: 768px) {
+            .left-subtitle {
+                font-size: 1.1rem;
+                text-align: left;
+                max-width: 400px;
+                margin-bottom: 30px;
+            }
+        }
+
+        .features-list {
+            list-style: none;
+            margin-top: 20px;
+            padding: 0;
+        }
+
+        @media (min-width: 992px) {
+            .features-list {
+                margin-top: 30px;
+            }
+        }
+
+        .features-list li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        @media (min-width: 768px) {
+            .features-list li {
+                font-size: 1rem;
+                margin-bottom: 15px;
+            }
+        }
+
+        .features-list i {
+            margin-right: 10px;
+            color: var(--light-green);
+            font-size: 1rem;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+            min-width: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .features-list i {
+                font-size: 1.2rem;
+                margin-right: 12px;
+            }
+        }
+
+        .left-footer {
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            font-size: 0.8rem;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .left-footer {
+                font-size: 0.9rem;
+                text-align: left;
+                margin-top: 0;
+            }
+        }
+
+        /* Right Side - Login Form with Mirrored Glass Effect (Now on right side) */
+        .login-right {
             flex: 1;
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(15px) saturate(180%);
             -webkit-backdrop-filter: blur(15px) saturate(180%);
-            border-right: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 60px 50px;
+            padding: 40px 30px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             position: relative;
             overflow: hidden;
+            order: 2;
         }
 
-        .login-left::before {
+        @media (min-width: 992px) {
+            .login-right {
+                padding: 60px 50px;
+                border-left: 1px solid rgba(255, 255, 255, 0.3);
+                order: 2;
+            }
+        }
+
+        .login-right::before {
             content: '';
             position: absolute;
             top: 0;
@@ -90,7 +309,7 @@
             z-index: -1;
         }
 
-        .login-left::after {
+        .login-right::after {
             content: '';
             position: absolute;
             top: -50%;
@@ -119,30 +338,48 @@
 
         .login-header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
         }
 
         .login-title {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 700;
             color: var(--dark-green);
             margin-bottom: 10px;
         }
 
+        @media (min-width: 768px) {
+            .login-title {
+                font-size: 2rem;
+            }
+        }
+
         .login-subtitle {
             color: var(--text-light);
-            font-size: 1rem;
+            font-size: 0.95rem;
         }
 
         .login-form {
             width: 100%;
-            max-width: 400px;
+            max-width: 100%;
             margin: 0 auto;
         }
 
+        @media (min-width: 576px) {
+            .login-form {
+                max-width: 400px;
+            }
+        }
+
         .form-group {
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             position: relative;
+        }
+
+        @media (min-width: 768px) {
+            .form-group {
+                margin-bottom: 25px;
+            }
         }
 
         .form-label {
@@ -150,7 +387,13 @@
             margin-bottom: 8px;
             font-weight: 600;
             color: var(--text-dark);
-            font-size: 0.95rem;
+            font-size: 0.9rem;
+        }
+
+        @media (min-width: 768px) {
+            .form-label {
+                font-size: 0.95rem;
+            }
         }
 
         .input-group {
@@ -159,14 +402,22 @@
 
         .form-control {
             width: 100%;
-            padding: 15px 15px 15px 50px;
+            padding: 14px 14px 14px 45px;
             border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            font-size: 1rem;
+            border-radius: 10px;
+            font-size: 0.95rem;
             transition: var(--transition);
             background-color: rgba(255, 255, 255, 0.8);
             font-weight: 500;
             backdrop-filter: blur(10px);
+        }
+
+        @media (min-width: 768px) {
+            .form-control {
+                padding: 15px 15px 15px 50px;
+                border-radius: 12px;
+                font-size: 1rem;
+            }
         }
 
         .form-control:focus {
@@ -178,12 +429,19 @@
 
         .input-icon {
             position: absolute;
-            left: 18px;
+            left: 15px;
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-light);
-            font-size: 1.1rem;
+            font-size: 1rem;
             transition: var(--transition);
+        }
+
+        @media (min-width: 768px) {
+            .input-icon {
+                left: 18px;
+                font-size: 1.1rem;
+            }
         }
 
         .form-control:focus + .input-icon {
@@ -198,6 +456,7 @@
             color: var(--text-light);
             cursor: pointer;
             transition: var(--transition);
+            font-size: 0.95rem;
         }
 
         .password-toggle:hover {
@@ -206,10 +465,20 @@
 
         .form-options {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            font-size: 0.9rem;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+        }
+
+        @media (min-width: 576px) {
+            .form-options {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 0.9rem;
+                margin-bottom: 25px;
+            }
         }
 
         .remember-me {
@@ -220,12 +489,15 @@
         .remember-me input {
             margin-right: 8px;
             accent-color: var(--accent-color);
+            width: 16px;
+            height: 16px;
         }
 
         .forgot-password {
             color: var(--accent-color);
             font-weight: 500;
             transition: var(--transition);
+            text-decoration: none;
         }
 
         .forgot-password:hover {
@@ -236,17 +508,26 @@
             background: linear-gradient(135deg, var(--accent-color) 0%, var(--main-theme-color) 100%);
             color: white;
             border: none;
-            padding: 16px;
-            border-radius: 12px;
-            font-size: 1.1rem;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 1rem;
             font-weight: 600;
             width: 100%;
             transition: var(--transition);
             cursor: pointer;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             box-shadow: var(--shadow-soft);
             position: relative;
             overflow: hidden;
+        }
+
+        @media (min-width: 768px) {
+            .btn-login {
+                padding: 16px;
+                border-radius: 12px;
+                font-size: 1.1rem;
+                margin-bottom: 25px;
+            }
         }
 
         .btn-login:hover {
@@ -277,7 +558,7 @@
         .divider {
             display: flex;
             align-items: center;
-            margin: 30px 0;
+            margin: 25px 0;
             color: var(--text-light);
         }
 
@@ -290,20 +571,29 @@
 
         .divider-text {
             padding: 0 15px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+        }
+
+        @media (min-width: 768px) {
+            .divider {
+                margin: 30px 0;
+            }
+            .divider-text {
+                font-size: 0.9rem;
+            }
         }
 
         .social-login {
             display: flex;
             justify-content: center;
-            gap: 15px;
-            margin-bottom: 30px;
+            gap: 12px;
+            margin-bottom: 25px;
         }
 
         .social-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -311,9 +601,18 @@
             border: 1px solid #e5e7eb;
             color: var(--text-light);
             transition: var(--transition);
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             box-shadow: var(--shadow-soft);
             backdrop-filter: blur(10px);
+        }
+
+        @media (min-width: 768px) {
+            .social-btn {
+                width: 50px;
+                height: 50px;
+                border-radius: 12px;
+                font-size: 1.2rem;
+            }
         }
 
         .social-btn:hover {
@@ -325,14 +624,23 @@
 
         .register-link {
             text-align: center;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             color: var(--text-light);
+            margin-bottom: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .register-link {
+                font-size: 0.95rem;
+                margin-bottom: 0;
+            }
         }
 
         .register-link a {
             color: var(--accent-color);
             font-weight: 600;
             transition: var(--transition);
+            text-decoration: none;
         }
 
         .register-link a:hover {
@@ -343,112 +651,28 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-top: 30px;
-            padding: 15px;
+            margin-top: 20px;
+            padding: 12px;
             background: rgba(5, 150, 105, 0.05);
-            border-radius: 10px;
-            font-size: 0.85rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
             color: var(--text-light);
+            text-align: center;
+        }
+
+        @media (min-width: 768px) {
+            .security-notice {
+                margin-top: 30px;
+                padding: 15px;
+                border-radius: 10px;
+                font-size: 0.85rem;
+            }
         }
 
         .security-notice i {
             margin-right: 10px;
             color: var(--accent-color);
-        }
-
-        /* Right Side - Branding with Green Theme */
-        .login-right {
-            flex: 1;
-            background: linear-gradient(135deg, rgba(6, 95, 70, 0.9) 0%, rgba(5, 150, 105, 0.85) 100%);
-            color: white;
-            padding: 50px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .login-right::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-        }
-
-        .logo-container {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            justify-content: left;
-            align-items: center;
-        }
-
-        .logo-wrapper {
-            background-color: white;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: var(--shadow-medium);
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .logo {
-            width: 180px;
-            height: auto;
-            margin-bottom: 0;
-        }
-
-        .right-content {
-            position: relative;
-            z-index: 1;
-            margin-top: 40px;
-        }
-
-        .right-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 15px;
-            line-height: 1.2;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .right-subtitle {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            margin-bottom: 30px;
-            max-width: 400px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-        }
-
-        .features-list {
-            list-style: none;
-            margin-top: 30px;
-        }
-
-        .features-list li {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-            font-size: 1rem;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-        }
-
-        .features-list i {
-            margin-right: 12px;
-            color: var(--light-green);
-            font-size: 1.2rem;
-            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
-        }
-
-        .right-footer {
-            position: relative;
-            z-index: 1;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            font-size: 0.9rem;
         }
 
         /* Animation classes */
@@ -476,57 +700,93 @@
             }
         }
 
-        /* Responsive styles */
-        @media (max-width: 992px) {
-            .login-container {
-                flex-direction: column;
-                max-width: 600px;
+        /* Extra small devices (phones) */
+        @media (max-width: 375px) {
+            body {
+                padding: 10px;
             }
 
-            .login-left {
-                padding: 40px 30px;
-                border-right: none;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-            }
-
-            .login-right {
-                padding: 40px 30px;
-            }
-        }
-
-        @media (max-width: 576px) {
             .login-left, .login-right {
-                padding: 30px 20px;
-            }
-
-            .right-title {
-                font-size: 2rem;
+                padding: 20px 15px;
             }
 
             .login-title {
-                font-size: 1.7rem;
+                font-size: 1.6rem;
             }
 
-            .form-options {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
-            }
-
-            .logo-wrapper {
-                padding: 15px;
+            .left-title {
+                font-size: 1.4rem;
             }
 
             .logo {
-                width: 150px;
+                width: 100px;
+            }
+
+            .btn-login {
+                padding: 12px;
+                font-size: 0.95rem;
+            }
+        }
+
+        /* Landscape orientation fixes */
+        @media (max-height: 600px) and (orientation: landscape) {
+            body {
+                align-items: flex-start;
+                padding-top: 20px;
+                padding-bottom: 20px;
+            }
+
+            .login-container {
+                min-height: auto;
+            }
+
+            .login-left {
+                padding: 20px;
+            }
+
+            .login-right {
+                padding: 20px;
+            }
+
+            .form-group {
+                margin-bottom: 15px;
+            }
+
+            .btn-login {
+                margin-bottom: 15px;
             }
         }
     </style>
 </head>
 <body>
 <div class="login-container">
-    <!-- Left Section - Login Form with Mirrored Glass Effect -->
+    <!-- Left Section - Branding with Green Theme -->
     <div class="login-left">
+        <div class="logo-container">
+            <div class="logo-wrapper animate__animated animate__fadeInRight">
+                <img src="{{ asset('asset/img/dx.png') }}" alt="DX Platform Logo" class="logo">
+            </div>
+        </div>
+
+        <div class="left-content">
+            <h1 class="left-title animate__animated animate__fadeInRight">Secure Access to Your Business Dashboard</h1>
+            <p class="left-subtitle animate__animated animate__fadeInRight animate__delay-1s">Manage your account, track performance, and grow your business with our comprehensive platform.</p>
+
+            <ul class="features-list animate__animated animate__fadeInUp animate__delay-2s">
+                <li><i class="fas fa-shield-alt"></i> Enterprise-grade security</li>
+                <li><i class="fas fa-chart-line"></i> Real-time analytics</li>
+                <li><i class="fas fa-users"></i> Team collaboration tools</li>
+                <li><i class="fas fa-sync"></i> Automated workflows</li>
+            </ul>
+        </div>
+
+        <div class="left-footer animate__animated animate__fadeInUp animate__delay-3s">
+            <p>© 2023 DX Platform. All rights reserved.</p>
+        </div>
+    </div>
+
+    <!-- Right Section - Login Form with Mirrored Glass Effect -->
+    <div class="login-right">
         <div class="login-header">
             <h1 class="login-title">Welcome Back</h1>
             <p class="login-subtitle">Sign in to continue to your account</p>
@@ -576,31 +836,6 @@
             <span>Your login session is secured with 256-bit SSL encryption</span>
         </div>
     </div>
-
-    <!-- Right Section - Branding with Green Theme and Animations -->
-    <div class="login-right">
-        <div class="logo-container">
-            <div class="logo-wrapper animate__animated animate__fadeInRight">
-                <img src="{{ asset('asset/img/dx.png') }}" alt="DX Platform Logo" class="logo">
-            </div>
-        </div>
-
-        <div class="right-content">
-            <h1 class="right-title animate__animated animate__fadeInRight">Secure Access to Your Business Dashboard</h1>
-            <p class="right-subtitle animate__animated animate__fadeInRight animate__delay-1s">Manage your account, track performance, and grow your business with our comprehensive platform.</p>
-
-            <ul class="features-list animate__animated animate__fadeInUp animate__delay-2s">
-                <li><i class="fas fa-shield-alt"></i> Enterprise-grade security</li>
-                <li><i class="fas fa-chart-line"></i> Real-time analytics</li>
-                <li><i class="fas fa-users"></i> Team collaboration tools</li>
-                <li><i class="fas fa-sync"></i> Automated workflows</li>
-            </ul>
-        </div>
-
-        <div class="right-footer animate__animated animate__fadeInUp animate__delay-3s">
-            <p>© 2023 DX Platform. All rights reserved.</p>
-        </div>
-    </div>
 </div>
 
 <script>
@@ -609,11 +844,13 @@
         const togglePassword = document.getElementById('togglePassword');
         const passwordInput = document.getElementById('password');
 
-        togglePassword.addEventListener('click', function() {
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
-        });
+        if (togglePassword && passwordInput) {
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+            });
+        }
 
         // Add focus effects to form inputs
         const inputs = document.querySelectorAll('.form-control');
@@ -628,6 +865,36 @@
                 }
             });
         });
+
+        // Handle form submission
+        const form = document.querySelector('.login-form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const username = document.getElementById('username');
+                const password = document.getElementById('password');
+
+                if (username && username.value.trim() === '') {
+                    e.preventDefault();
+                    alert('Please enter your username or email');
+                    username.focus();
+                    return false;
+                }
+
+                if (password && password.value.trim() === '') {
+                    e.preventDefault();
+                    alert('Please enter your password');
+                    password.focus();
+                    return false;
+                }
+
+                // Show loading state
+                const submitBtn = this.querySelector('.btn-login');
+                if (submitBtn) {
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing In...';
+                    submitBtn.disabled = true;
+                }
+            });
+        }
     });
 </script>
 </body>

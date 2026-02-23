@@ -9,7 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Auth;
 
 class SellerController extends Controller
 {
@@ -22,8 +22,8 @@ class SellerController extends Controller
     public function shop()
     {
         $products = Product::query()
-                ->where('seller_code',0)
-                ->get();
+            ->where('seller_code',0)
+            ->get();
         return view('seller.shop.shop',compact('products'));
     }
 
@@ -103,7 +103,11 @@ class SellerController extends Controller
                 'code' => $code,
                 'name' => $request->name,
                 'address' => $request->address,
+                'city' => $request->city ?? '',
                 'district' => $request->district,
+                'state' => $request->state ?? null,
+                'country' => $request->country ?? 'Sri Lanka',
+                'postal_code' => $request->postal_code ?? '',
                 'phone' => $request->phone,
                 'whatsapp' => $request->whatsapp,
                 'email' => $request->email,
@@ -114,6 +118,7 @@ class SellerController extends Controller
                 'username' => $request->username,
                 'password' => Hash::make($request->password),
                 'view_password' => $request->password,
+                'status' => 'pending',
             ]);
 
             // Create user login
@@ -136,17 +141,15 @@ class SellerController extends Controller
 
     public function edit($id)
     {
-         $seller = Saler::query()
+        $seller = Saler::query()
             ->where('id',$id)
             ->first();
 
         return view('seller.seller_update', compact('seller'));
     }
 
-     public function update(Request $request)
+    public function update(Request $request)
     {
-
-
         $seller = Saler::query()
             ->where('id',$request->id)
             ->first();
@@ -159,8 +162,8 @@ class SellerController extends Controller
             ? ImageUploader::uploadImage($request->file('nic_back'), 'seller/nic_back')
             : $seller->NIC_back;
 
-           $new_deposit = $seller->cal_deposit + $request->deposit;
-           $full_deposit =$seller->deposit + $request->deposit;
+        $new_deposit = $seller->cal_deposit + $request->deposit;
+        $full_deposit =$seller->deposit + $request->deposit;
 
         try {
             Saler::query()
@@ -172,6 +175,8 @@ class SellerController extends Controller
                     'city'=>$request->city,
                     'postal_code'=>$request->postal_code,
                     'district'=>$request->district,
+                    'state'=>$request->state ?? null,
+                    'country'=>$request->country ?? 'Sri Lanka',
                     'phone'=>$request->phone,
                     'whatsapp'=>$request->whatsapp,
                     'email'=>$request->email,
@@ -191,17 +196,18 @@ class SellerController extends Controller
             return $e;
         }
     }
+
     public function new_order()
     {
-         $codeGenerate = new CodeGenerator();
+        $codeGenerate = new CodeGenerator();
         $code = $codeGenerate->newCodeLoad('file');
-           $user = auth()->user();
+        $user = auth()->user();
         $import='0';
         return view('seller.new_order',compact('import','user','code'));
 
     }
 
-// In SellerController
+    // In SellerController
     public function completeOrder()
     {
         return view('seller.complete_order_list');
@@ -225,5 +231,106 @@ class SellerController extends Controller
     public function seller_product()
     {
         return view('seller.seller_product');
+    }
+
+    // PROFILE METHODS - Added for seller profile management
+
+    /**
+     * Display seller profile
+     */
+    public function profile()
+    {
+        $seller = Auth::guard('saler')->user();
+
+        // Get statistics
+        $stats = [
+            'total_orders' => $seller->orders()->count(),
+            'pending_orders' => $seller->orders()->where('status', 'pending')->count(),
+            'completed_orders' => $seller->orders()->where('status', 'completed')->count(),
+            'total_products' => $seller->products()->count(),
+            'total_sales' => $seller->total_sales ?? 0,
+            'current_deposit' => $seller->deposit ?? 0,
+        ];
+
+        return view('seller.profile.profile', compact('seller', 'stats'));
+    }
+
+    /**
+     * Update seller profile
+     */
+    public function updateProfile(Request $request)
+    {
+        $seller = Auth::guard('saler')->user();
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:salers,email,' . $seller->id,
+            'phone' => 'required|string|max:20',
+            'whatsapp' => 'nullable|string|max:20',
+            'address' => 'required|string',
+            'city' => 'required|string|max:100',
+            'district' => 'required|string|max:100',
+            'state' => 'nullable|string|max:100',
+            'country' => 'nullable|string|max:100',
+            'postal_code' => 'required|string|max:20',
+            'type' => 'nullable|string|max:50',
+            'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'NIC_no' => 'nullable|string|max:20',
+        ]);
+
+        try {
+            // Handle profile image upload
+            $imagePath = $seller->img;
+            if ($request->hasFile('img')) {
+                // Delete old image if exists
+                if ($seller->img && \Storage::disk('public')->exists($seller->img)) {
+                    \Storage::disk('public')->delete($seller->img);
+                }
+
+                $image = $request->file('img');
+                $imageName = 'seller_' . $seller->code . '_' . time() . '.' . $image->getClientOriginalExtension();
+                $imagePath = $image->storeAs('sellers/profiles', $imageName, 'public');
+            }
+
+            // Update seller information
+            $seller->update([
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'whatsapp' => $request->whatsapp,
+                'address' => $request->address,
+                'city' => $request->city,
+                'district' => $request->district,
+                'state' => $request->state,
+                'country' => $request->country ?? 'Sri Lanka',
+                'postal_code' => $request->postal_code,
+                'type' => $request->type,
+                'img' => $imagePath,
+                'NIC_no' => $request->NIC_no,
+            ]);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Profile updated successfully!',
+                    'profile_image_url' => $seller->profile_image_url
+                ]);
+            }
+
+            return redirect()->route('seller.profile')
+                ->with('success', 'Profile updated successfully!');
+
+        } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update profile: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()
+                ->with('error', 'Failed to update profile: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 }

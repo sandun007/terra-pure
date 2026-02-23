@@ -76,4 +76,6 @@ class OrderController extends Controller
             return view('admin.pending_order_list');
         }
     }
+
+
 }

@@ -1,212 +1,195 @@
 @extends('wholesaler.layouts.app')
 
-@section('title', 'Payment Methods')
-
-@section('styles')
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .method-card {
-            border: 1px solid #e9ecef;
-            border-radius: 12px;
-            transition: all 0.3s ease;
-            background: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .method-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-        .method-card.default {
-            border-color: #007bff;
-            background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
-        }
-        .method-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .bank-icon {
-            background: linear-gradient(135deg, #007bff, #0056b3);
-            color: white;
-        }
-        .mobile-icon {
-            background: linear-gradient(135deg, #28a745, #1e7e34);
-            color: white;
-        }
-        .card-icon {
-            background: linear-gradient(135deg, #6f42c1, #5a2d9c);
-            color: white;
-        }
-        .action-buttons .btn {
-            border-radius: 20px;
-            padding: 5px 15px;
-            font-size: 0.8rem;
-            transition: all 0.3s ease;
-        }
-        .action-buttons .btn:hover {
-            transform: translateY(-2px);
-        }
-        .empty-state {
-            padding: 3rem 1rem;
-            text-align: center;
-            color: #6c757d;
-        }
-        .page-title-box {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            margin-bottom: 1.5rem;
-        }
-        .card {
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        .btn {
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-    </style>
-@endsection
-
 @section('content')
-    <div class="container-fluid py-4">
+    <div class="container-fluid">
         <!-- Header -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="page-title-box d-flex align-items-center justify-content-between">
-                    <h4 class="mb-0">Payment Methods</h4>
-                    <div class="btn-group">
-                        <a href="{{ route('wholesaler.payments.methods.create') }}" class="btn btn-primary">
-                            <i class="fas fa-plus me-2"></i>Add Payment Method
-                        </a>
-                        <a href="{{ route('wholesaler.payments.index') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left me-2"></i>Back to Payments
-                        </a>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Payment Methods</h1>
+            <div class="d-flex">
+                <button class="button mr-2" style="--clr: #00ad54;" onclick="window.location='{{ route('payments.methods.create') }}'">
+                    <span class="button-decor"></span>
+                    <div class="button-content">
+                        <div class="button__icon">
+                            <i class="fas fa-plus"></i>
+                        </div>
+                        <span class="button__text">Add New</span>
                     </div>
-                </div>
+                </button>
+                <button class="button" style="--clr: #6c757d;" onclick="window.location='{{ route('payments.index') }}'">
+                    <span class="button-decor"></span>
+                    <div class="button-content">
+                        <div class="button__icon">
+                            <i class="fas fa-arrow-left"></i>
+                        </div>
+                        <span class="button__text">Back</span>
+                    </div>
+                </button>
             </div>
         </div>
 
-        <!-- Payment Methods Grid -->
+        <!-- Payment Methods -->
         <div class="row">
-            @if($paymentMethods->count() > 0)
-                @foreach($paymentMethods as $method)
-                    <div class="col-xl-4 col-md-6 mb-4">
-                        <div class="method-card p-4 {{ $method->is_default ? 'default' : '' }}">
+            @forelse($paymentMethods as $method)
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow h-100">
+                        <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start mb-3">
-                                <div class="method-icon {{ $method->method_type == 'bank' ? 'bank-icon' : 'mobile-icon' }}">
-                                    <i class="fas fa-{{ $method->method_type == 'bank' ? 'university' : 'mobile-alt' }}"></i>
-                                </div>
                                 <div>
+                                    <h5 class="card-title mb-1">
+                                        <i class="{{ $method->icon_class }} mr-2"></i>
+                                        {{ ucfirst($method->method_type) }}
+                                    </h5>
                                     @if($method->is_default)
-                                        <span class="badge bg-success">Default</span>
+                                        <span class="badge badge-success">Default</span>
                                     @endif
-                                    <span class="badge bg-{{ $method->status == 'active' ? 'success' : 'secondary' }}">
-                            {{ ucfirst($method->status) }}
-                        </span>
                                 </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <h5 class="mb-1">
-                                    {{ $method->method_type == 'bank' ? $method->bank_name : $method->mobile_provider }}
-                                </h5>
-                                <p class="text-muted mb-1">{{ $method->account_name }}</p>
-                                <code class="text-dark">{{ $method->account_number }}</code>
-
-                                @if($method->method_type == 'bank' && $method->branch)
-                                    <p class="text-muted mb-0 small">Branch: {{ $method->branch }}</p>
-                                @endif
-                            </div>
-
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted">
-                                    Added {{ $method->created_at->diffForHumans() }}
-                                </small>
-                                <div class="action-buttons">
-                                    <div class="btn-group">
-                                        <a href="{{ route('wholesaler.payments.methods.edit', $method->id) }}"
-                                           class="btn btn-outline-primary btn-sm"
-                                           title="Edit">
-                                            <i class="fas fa-edit"></i>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item" href="{{ route('payments.methods.edit', $method->id) }}">
+                                            <i class="fas fa-edit mr-2"></i>Edit
                                         </a>
                                         @if(!$method->is_default)
-                                            <form action="{{ route('wholesaler.payments.methods.destroy', $method->id) }}"
-                                                  method="POST"
-                                                  class="d-inline">
+                                            <form action="{{ route('payments.methods.destroy', $method->id) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit"
-                                                        class="btn btn-outline-danger btn-sm"
-                                                        title="Delete"
-                                                        onclick="return confirm('Are you sure you want to delete this payment method?')">
-                                                    <i class="fas fa-trash"></i>
+                                                <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Are you sure?')">
+                                                    <i class="fas fa-trash mr-2"></i>Delete
                                                 </button>
                                             </form>
                                         @endif
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="mb-3">
+                                <small class="text-muted">Account Name</small>
+                                <p class="mb-1 font-weight-bold">{{ $method->account_name }}</p>
+                            </div>
+
+                            <div class="mb-3">
+                                <small class="text-muted">Account Number</small>
+                                <p class="mb-1 font-weight-bold">{{ $method->formatted_account_number }}</p>
+                            </div>
+
+                            @if($method->bank_name)
+                                <div class="mb-3">
+                                    <small class="text-muted">Bank Name</small>
+                                    <p class="mb-1">{{ $method->bank_name }}</p>
+                                </div>
+                            @endif
+
+                            @if($method->mobile_provider)
+                                <div class="mb-3">
+                                    <small class="text-muted">Mobile Provider</small>
+                                    <p class="mb-1">{{ $method->mobile_provider }}</p>
+                                </div>
+                            @endif
+
+                            @if($method->expiry_date)
+                                <div class="mb-3">
+                                    <small class="text-muted">Expiry Date</small>
+                                    <p class="mb-1">{{ $method->expiry_date->format('m/Y') }}</p>
+                                </div>
+                            @endif
+
+                            <div class="mt-3">
+                        <span class="badge {{ $method->status == 'active' ? 'badge-success' : 'badge-secondary' }}">
+                            {{ ucfirst($method->status) }}
+                        </span>
+                            </div>
                         </div>
                     </div>
-                @endforeach
-            @else
+                </div>
+            @empty
                 <div class="col-12">
-                    <div class="card">
-                        <div class="empty-state">
-                            <div class="mb-4">
-                                <i class="fas fa-credit-card fa-4x text-muted"></i>
-                            </div>
-                            <h4 class="text-muted">No Payment Methods</h4>
-                            <p class="text-muted mb-4">
-                                You haven't added any payment methods yet. Add a payment method to withdraw your earnings.
-                            </p>
-                            <a href="{{ route('wholesaler.payments.methods.create') }}" class="btn btn-primary btn-lg">
-                                <i class="fas fa-plus me-2"></i>Add Your First Payment Method
+                    <div class="card shadow">
+                        <div class="card-body text-center py-5">
+                            <i class="fas fa-credit-card fa-4x text-muted mb-3"></i>
+                            <h5 class="text-muted">No payment methods found</h5>
+                            <p class="text-muted mb-4">Add a payment method to start receiving payments</p>
+                            <a href="{{ route('payments.methods.create') }}" class="btn btn-primary">
+                                <i class="fas fa-plus mr-2"></i>Add Payment Method
                             </a>
                         </div>
                     </div>
                 </div>
-            @endif
+            @endforelse
         </div>
-
-        <!-- Important Notes -->
-        @if($paymentMethods->count() > 0)
-            <div class="row mt-4">
-                <div class="col-12">
-                    <div class="alert alert-info">
-                        <h6><i class="fas fa-info-circle me-2"></i>Important Notes</h6>
-                        <ul class="mb-0">
-                            <li>Your default payment method will be used for all withdrawals</li>
-                            <li>Ensure your account details are accurate to avoid payment delays</li>
-                            <li>You can have multiple payment methods but only one default</li>
-                            <li>Inactive payment methods cannot be used for withdrawals</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        @endif
     </div>
-@endsection
 
-@section('scripts')
-    <script>
-        // Add smooth animations
-        document.addEventListener('DOMContentLoaded', function() {
-            const methodCards = document.querySelectorAll('.method-card');
-            methodCards.forEach((card, index) => {
-                card.style.animationDelay = `${index * 0.1}s`;
-            });
-        });
-    </script>
+    <!-- Styles -->
+    <style>
+        .button {
+            text-decoration: none;
+            line-height: 1;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 10px 10px 20px rgba(0,0,0,.05);
+            background-color: #fff;
+            color: #121212;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .button-decor {
+            position: absolute;
+            inset: 0;
+            background-color: var(--clr);
+            transform: translateX(-100%);
+            transition: transform .3s;
+            z-index: 0;
+        }
+
+        .button-content {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .button__icon {
+            width: 48px;
+            height: 40px;
+            background-color: var(--clr);
+            display: grid;
+            place-items: center;
+        }
+
+        .button__text {
+            display: inline-block;
+            transition: color .2s;
+            padding: 2px 1.5rem 2px;
+            padding-left: .75rem;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            max-width: 150px;
+        }
+
+        .button:hover .button__text {
+            color: #fff;
+        }
+
+        .button:hover .button-decor {
+            transform: translate(0);
+        }
+
+        .card {
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .dropdown-menu {
+            min-width: 150px;
+        }
+    </style>
 @endsection

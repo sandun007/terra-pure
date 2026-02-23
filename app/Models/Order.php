@@ -2,82 +2,97 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Schema;
 
 class Order extends Model
 {
-    use HasFactory;
+    protected $table = 'orders';
 
     protected $fillable = [
-        'order_no',
-        'date',
-        'delivery_date',
-        'seller_no',
-        'item_code',
-        'item_name',
-        'qty',
-        'price',
-        'total',
-        'customer_name',
-        'customer_phone_01',
-        'customer_phone_02',
-        'customer_address',
-        'city',
-        'remark',
-        'status_date',
-        'status',
-        'wholesaler_id', // Added this
-        'customer_id',
+        'wholesaler_id',
+        'order_number',
+        'date', // Add this if column exists
+        'subtotal',
+        'tax',
+        'shipping',
         'total_amount',
+        'payment_method',
         'payment_status',
-        'shipping_address'
+        'status',
+        'shipping_address',
+        'customer_name',
+        'customer_email',
+        'customer_phone',
+        'notes',
+        'order_date',
+        'status_updated_at',
+        'status_notes',
+        'cancelled_at'
     ];
 
-    // Cast attributes
     protected $casts = [
-        'total_amount' => 'decimal:2',
-        'date' => 'date',
-        'delivery_date' => 'date',
-        'status_date' => 'datetime',
+        'order_date' => 'datetime',
+        'date' => 'datetime', // Add this if column exists
+        'status_updated_at' => 'datetime',
+        'cancelled_at' => 'datetime',
+        'subtotal' => 'decimal:2',
+        'tax' => 'decimal:2',
+        'shipping' => 'decimal:2',
+        'total_amount' => 'decimal:2'
     ];
 
-    // Relationship with Wholesaler
-    public function wholesaler()
+    // Boot method to automatically set date if not provided
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($order) {
+            // If date column exists and not set, set it to now
+            if (Schema::hasColumn('orders', 'date') && !$order->date) {
+                $order->date = now();
+            }
+
+            // Ensure order_date is set
+            if (!$order->order_date) {
+                $order->order_date = now();
+            }
+        });
+    }
+
+    public function wholesaler(): BelongsTo
     {
         return $this->belongsTo(Wholesaler::class);
     }
 
-    // Relationship with Customer
-    public function customer()
+    public function orderItems(): HasMany
     {
-        return $this->belongsTo(Customer::class);
+        if (Schema::hasTable('wholesaler_order_items')) {
+            return $this->hasMany(WholesalerOrderItem::class, 'order_id');
+        } else {
+            return $this->hasMany(OrderItem::class);
+        }
     }
 
-    // Relationship with Order Items
-    public function orderItems()
+    public function getFormattedStatusAttribute()
     {
-        return $this->hasMany(OrderItem::class);
+        return ucfirst(str_replace('_', ' ', $this->status));
     }
 
-    // Scope for wholesaler orders
-    public function scopeForWholesaler($query, $wholesalerId)
+    public function getFormattedPaymentStatusAttribute()
     {
-        return $query->where('wholesaler_id', $wholesalerId);
+        return ucfirst(str_replace('_', ' ', $this->payment_status));
     }
 
-    // Get status badge color
-    public function getStatusColorAttribute()
+    public function getFormattedTotalAttribute()
     {
-        $colors = [
-            'pending' => 'warning',
-            'confirmed' => 'primary',
-            'processing' => 'info',
-            'shipped' => 'secondary',
-            'delivered' => 'success',
-            'cancelled' => 'danger'
-        ];
+        return 'Rs. ' . number_format($this->total_amount, 2);
+    }
 
-        return $colors[$this->status] ?? 'secondary';
+    public function getOrderNoAttribute()
+    {
+        return $this->order_number;
     }
 }

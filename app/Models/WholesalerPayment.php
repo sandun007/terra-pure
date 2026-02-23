@@ -1,15 +1,12 @@
 <?php
-// app/Models/WholesalerPayment.php
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class WholesalerPayment extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'wholesaler_id',
         'transaction_id',
@@ -20,41 +17,31 @@ class WholesalerPayment extends Model
         'status',
         'description',
         'notes',
-        'metadata',
-        'processed_at',
-        'completed_at',
+        'metadata'
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
-        'metadata' => 'array',
-        'processed_at' => 'datetime',
-        'completed_at' => 'datetime',
+        'metadata' => 'array'
     ];
 
-    public function wholesaler()
+    public function wholesaler(): BelongsTo
     {
         return $this->belongsTo(Wholesaler::class);
     }
 
-    // Scopes
-    public function scopeCredit($query)
+    public function getFormattedAmountAttribute()
     {
-        return $query->where('type', 'credit');
+        return 'Rs. ' . number_format($this->amount, 2);
     }
 
-    public function scopeDebit($query)
+    public function getFormattedTypeAttribute()
     {
-        return $query->where('type', 'debit');
+        return ucfirst($this->type);
     }
 
-    public function scopeCompleted($query)
+    public function getFormattedStatusAttribute()
     {
-        return $query->where('status', 'completed');
-    }
-
-    public function scopePending($query)
-    {
-        return $query->where('status', 'pending');
+        return ucfirst($this->status);
     }
 }

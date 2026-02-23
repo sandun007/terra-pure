@@ -1,455 +1,280 @@
 @extends('wholesaler.layouts.app')
 @push('title')
-    {{ $product->name }} - {{ $shop->shop_name ?? 'Shop' }}
+    {{ $product->name }} - Product Details
 @endpush
 @push('css')
     <style>
         :root {
-            --primary-color: #3a86ff;
-            --secondary-color: #8338ec;
-            --accent-color: #ff006e;
-            --dark-color: #1a1a2e;
-            --light-color: #f8f9fa;
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
         }
 
-        /* Product Gallery */
-        .product-gallery {
-            position: sticky;
-            top: 20px;
-        }
-
-        .main-image-container {
-            background: white;
+        .product-hero {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
             border-radius: 20px;
             padding: 2rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            border: 1px solid #e2e8f0;
+            margin-bottom: 2rem;
         }
 
-        .main-image {
+        .product-image-main {
             width: 100%;
             height: 400px;
             object-fit: contain;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            border-radius: 15px;
-            padding: 2rem;
-        }
-
-        .thumbnail-gallery {
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            padding: 10px 0;
-        }
-
-        .thumbnail-item {
-            width: 80px;
-            height: 80px;
-            border-radius: 10px;
-            overflow: hidden;
-            cursor: pointer;
-            border: 3px solid transparent;
-            transition: all 0.3s ease;
-            background: #f8f9fa;
-        }
-
-        .thumbnail-item.active {
-            border-color: var(--primary-color);
-            transform: scale(1.05);
-        }
-
-        .thumbnail-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* Product Info */
-        .product-info-card {
             background: white;
-            border-radius: 20px;
-            padding: 2rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            padding: 20px;
             border: 1px solid #e2e8f0;
         }
 
-        .product-category-badge {
-            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            padding: 6px 15px;
-            border-radius: 25px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            display: inline-block;
-            margin-bottom: 1rem;
+        .product-thumbnails {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .product-thumbnail {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 10px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .product-thumbnail:hover,
+        .product-thumbnail.active {
+            border-color: var(--primary);
+        }
+
+        .product-info {
+            padding: 20px;
         }
 
         .product-title {
-            font-size: 2.2rem;
+            font-size: 2rem;
             font-weight: 700;
-            color: var(--dark-color);
+            color: #1e293b;
             margin-bottom: 1rem;
-            line-height: 1.3;
         }
 
-        .product-code {
-            color: #64748b;
-            font-family: 'Courier New', monospace;
-            margin-bottom: 1rem;
+        .product-meta {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 20px;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e2e8f0;
         }
 
         .product-rating {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 5px;
+        }
+
+        .product-price {
             margin-bottom: 1.5rem;
-        }
-
-        .stars {
-            color: #ffd700;
-        }
-
-        .rating-count {
-            color: #64748b;
-        }
-
-        .price-section {
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            border-radius: 15px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            border: 1px solid #bae6fd;
         }
 
         .current-price {
             font-size: 2.5rem;
             font-weight: 800;
-            color: var(--primary-color);
-            line-height: 1;
+            color: var(--primary);
         }
 
         .original-price {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             color: #94a3b8;
             text-decoration: line-through;
             margin-left: 10px;
         }
 
-        .discount-badge {
-            background: var(--accent-color);
-            color: white;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-weight: 600;
-            margin-left: 10px;
+        .wholesale-price {
+            background: rgba(16, 185, 129, 0.1);
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
         }
 
-        .price-breakdown {
-            margin-top: 1rem;
+        /* Quantity Controls */
+        .quantity-section {
+            margin-bottom: 1.5rem;
         }
 
-        .price-row {
+        .quantity-control-detailed {
             display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
         }
 
-        .price-row:last-child {
-            border-bottom: none;
-            font-weight: 600;
-            color: var(--dark-color);
+        .quantity-btn-detailed {
+            width: 48px;
+            height: 48px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            background: white;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+            font-weight: bold;
         }
 
-        /* Stock Info */
+        .quantity-btn-detailed:hover:not(:disabled) {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .quantity-btn-detailed:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .quantity-input-detailed {
+            width: 100px;
+            height: 48px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #1e293b;
+            transition: all 0.3s ease;
+        }
+
+        .quantity-input-detailed:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
         .stock-info {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 10px;
             margin-bottom: 1.5rem;
+            padding: 12px 15px;
+            background: #f8fafc;
+            border-radius: 10px;
         }
 
-        .stock-badge {
-            padding: 8px 20px;
-            border-radius: 25px;
+        .stock-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: {{ $product->qty > 50 ? '#10b981' : ($product->qty > 10 ? '#f59e0b' : '#ef4444') }};
+            animation: pulse 2s infinite;
+        }
+
+        .stock-text {
             font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            color: #475569;
         }
 
-        .stock-high {
-            background: rgba(6, 214, 160, 0.1);
-            color: #06d6a0;
-        }
-
-        .stock-low {
-            background: rgba(239, 71, 111, 0.1);
-            color: #ef476f;
-        }
-
-        .available-stock {
-            color: #64748b;
-        }
-
-        /* Quantity Selector */
-        .quantity-selector {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 1.5rem;
-        }
-
-        .qty-input {
-            display: flex;
-            align-items: center;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            overflow: hidden;
-            width: 140px;
-        }
-
-        .qty-btn {
-            background: #f8f9fa;
-            border: none;
-            width: 40px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            color: var(--dark-color);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .qty-btn:hover {
-            background: var(--primary-color);
-            color: white;
-        }
-
-        .qty-input input {
-            width: 60px;
-            height: 50px;
-            border: none;
-            text-align: center;
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--dark-color);
-        }
-
-        .min-order {
-            color: #64748b;
-            font-size: 0.9rem;
-        }
-
-        /* Action Buttons */
         .action-buttons {
             display: flex;
             gap: 15px;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
         }
 
-        .btn-primary-lg {
+        .btn-action {
             flex: 1;
-            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
-            color: white;
+            padding: 16px 24px;
             border: none;
-            padding: 18px;
-            border-radius: 15px;
+            border-radius: 12px;
+            font-weight: 700;
             font-size: 1.1rem;
-            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
-            transition: all 0.3s ease;
         }
 
-        .btn-primary-lg:hover {
+        .btn-add-to-cart {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-add-to-cart:hover:not(:disabled) {
             transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(58, 134, 255, 0.3);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
         }
 
-        .btn-accent {
-            background: var(--accent-color);
+        .btn-buy-now {
+            background: linear-gradient(135deg, var(--secondary) 0%, #7c3aed 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
         }
 
-        .btn-secondary-lg {
+        .btn-buy-now:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-action:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .product-tabs {
             background: white;
-            color: var(--dark-color);
-            border: 2px solid #e2e8f0;
-            padding: 18px;
             border-radius: 15px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .btn-secondary-lg:hover {
-            border-color: var(--primary-color);
-            color: var(--primary-color);
-            transform: translateY(-3px);
-        }
-
-        /* Product Details */
-        .details-tabs {
+            padding: 2rem;
             margin-top: 2rem;
-        }
-
-        .nav-tabs-custom {
-            border-bottom: 2px solid #e2e8f0;
-        }
-
-        .nav-tabs-custom .nav-link {
-            border: none;
-            color: #64748b;
-            font-weight: 600;
-            padding: 15px 25px;
-            border-radius: 10px 10px 0 0;
-            margin-right: 5px;
-        }
-
-        .nav-tabs-custom .nav-link.active {
-            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
-            color: white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
 
         .tab-content {
-            padding: 2rem;
-            background: white;
-            border-radius: 0 0 20px 20px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            padding: 1.5rem 0;
         }
 
-        .description-content {
-            line-height: 1.8;
-            color: #475569;
-            white-space: pre-line;
+        .review-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
         }
 
-        .specs-table {
-            width: 100%;
-        }
-
-        .spec-row {
+        .review-header {
             display: flex;
-            padding: 15px;
-            border-bottom: 1px solid #f1f5f9;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
         }
 
-        .spec-row:nth-child(even) {
-            background: #f8fafc;
-        }
-
-        .spec-label {
-            width: 200px;
-            font-weight: 600;
-            color: var(--dark-color);
-        }
-
-        .spec-value {
-            flex: 1;
-            color: #475569;
-        }
-
-        /* Related Products */
-        .related-products {
-            margin-top: 4rem;
-        }
-
-        .section-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--dark-color);
-            margin-bottom: 2rem;
-            position: relative;
-            padding-left: 15px;
-        }
-
-        .section-title::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 4px;
-            height: 30px;
-            background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
-            border-radius: 2px;
-        }
-
-        /* Breadcrumb */
-        .breadcrumb-custom {
-            background: transparent;
-            padding: 1rem 0;
-            margin-bottom: 2rem;
-        }
-
-        .breadcrumb-item a {
-            color: var(--primary-color);
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-
-        .breadcrumb-item a:hover {
-            color: var(--secondary-color);
-            text-decoration: underline;
-        }
-
-        /* Share Section */
-        .share-section {
+        .review-user {
             display: flex;
             align-items: center;
-            gap: 15px;
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid #e2e8f0;
-        }
-
-        .share-label {
-            font-weight: 600;
-            color: var(--dark-color);
-        }
-
-        .share-buttons {
-            display: flex;
             gap: 10px;
         }
 
-        .share-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            border: none;
-            transition: all 0.3s ease;
+        .related-products {
+            margin-top: 3rem;
         }
 
-        .share-btn:hover {
-            transform: translateY(-3px) scale(1.1);
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
-        .facebook { background: #3b5998; }
-        .twitter { background: #1da1f2; }
-        .whatsapp { background: #25d366; }
-        .pinterest { background: #e60023; }
-
-        /* Responsive */
         @media (max-width: 768px) {
             .product-title {
-                font-size: 1.8rem;
+                font-size: 1.5rem;
             }
 
             .current-price {
@@ -460,710 +285,701 @@
                 flex-direction: column;
             }
 
-            .btn-primary-lg,
-            .btn-secondary-lg {
-                width: 100%;
+            .product-image-main {
+                height: 300px;
             }
-        }
-
-        /* Animation */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .product-info-card {
-            animation: fadeIn 0.6s ease;
         }
     </style>
 @endpush
 
 @section('content')
     <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb" class="breadcrumb-custom">
+    <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                <a href="{{ route('wholesaler.shop.index') }}">
-                    <i class="fas fa-home me-1"></i>Shop
-                </a>
-            </li>
-            <li class="breadcrumb-item">
-                <a href="{{ route('wholesaler.shop.index') }}?category={{ $product->category_id }}">
-                    {{ $product->category->name ?? 'All Categories' }}
-                </a>
-            </li>
+            <li class="breadcrumb-item"><a href="{{ route('wholesaler.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('wholesaler.shop.index') }}">Shop</a></li>
             <li class="breadcrumb-item active" aria-current="page">{{ $product->name }}</li>
         </ol>
     </nav>
 
-    <div class="container">
+    <!-- Product Details -->
+    <div class="product-hero">
         <div class="row">
-            <!-- Product Gallery -->
+            <!-- Product Images -->
             <div class="col-lg-6 mb-4">
-                <div class="product-gallery">
-                    <div class="main-image-container">
-                        <img src="{{ $product->image ? asset('storage/' . $product->image) : 'https://via.placeholder.com/600x400' }}"
-                             alt="{{ $product->name }}"
-                             class="main-image"
-                             id="mainProductImage">
-                    </div>
-
+                <div class="product-image-container">
                     @if($product->image)
-                        <div class="thumbnail-gallery">
-                            <div class="thumbnail-item active" onclick="changeImage('{{ asset('storage/' . $product->image) }}')">
-                                <img src="{{ asset('storage/' . $product->image) }}" alt="Main">
-                            </div>
-                            <!-- Add more thumbnails if you have multiple images -->
+                        <img src="{{ asset('storage/' . $product->image) }}"
+                             alt="{{ $product->name }}"
+                             class="product-image-main"
+                             id="mainImage">
+                    @else
+                        <div class="product-image-main d-flex align-items-center justify-content-center bg-light">
+                            <i class="fas fa-box-open fa-4x text-muted"></i>
                         </div>
                     @endif
 
-                    <!-- Product Tags -->
-                    <div class="mt-3">
-                        @if($product->created_at->diffInDays(now()) < 7)
-                            <span class="badge bg-success me-2">NEW ARRIVAL</span>
-                        @endif
-                        @if($product->qty < 10)
-                            <span class="badge bg-danger me-2">SELLING FAST</span>
-                        @endif
-                        @if($product->display_price > $product->wholesale_price)
-                            <span class="badge bg-warning text-dark">SPECIAL OFFER</span>
-                        @endif
-                    </div>
+                    @if($product->additional_images)
+                        <div class="product-thumbnails">
+                            @foreach(json_decode($product->additional_images, true) as $index => $image)
+                                <img src="{{ asset('storage/' . $image) }}"
+                                     alt="{{ $product->name }} - Image {{ $index + 1 }}"
+                                     class="product-thumbnail {{ $index == 0 ? 'active' : '' }}"
+                                     onclick="changeMainImage('{{ asset('storage/' . $image) }}', this)">
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
             </div>
 
             <!-- Product Info -->
-            <div class="col-lg-6 mb-4">
-                <div class="product-info-card">
-                    <!-- Category -->
-                    <span class="product-category-badge">
-                        <i class="fas fa-tag me-1"></i>
-                        {{ $product->category->name ?? 'Uncategorized' }}
-                    </span>
-
-                    <!-- Title -->
+            <div class="col-lg-6">
+                <div class="product-info">
+                    <!-- Title and Meta -->
                     <h1 class="product-title">{{ $product->name }}</h1>
 
-                    <!-- Code -->
-                    <div class="product-code">
-                        <i class="fas fa-barcode"></i>
-                        Product Code: <strong>{{ $product->code }}</strong>
-                        @if($product->barcode)
-                            | Barcode: <strong>{{ $product->barcode }}</strong>
-                        @endif
-                    </div>
-
-                    <!-- Rating -->
-                    <div class="product-rating">
-                        <div class="stars">
+                    <div class="product-meta">
+                        <div class="product-rating">
+                            @php
+                                $avgRating = $product->average_rating ?? 0;
+                                $fullStars = floor($avgRating);
+                                $hasHalfStar = $avgRating - $fullStars >= 0.5;
+                            @endphp
                             @for($i = 1; $i <= 5; $i++)
-                                <i class="fas fa-star{{ $i <= 4 ? ' text-warning' : '' }}"></i>
+                                @if($i <= $fullStars)
+                                    <i class="fas fa-star text-warning"></i>
+                                @elseif($i == $fullStars + 1 && $hasHalfStar)
+                                    <i class="fas fa-star-half-alt text-warning"></i>
+                                @else
+                                    <i class="far fa-star text-muted"></i>
+                                @endif
                             @endfor
+                            <span class="ms-2">({{ $product->total_reviews ?? 0 }} reviews)</span>
                         </div>
-                        <span class="rating-count">(4.2 • 128 Reviews)</span>
-                        <span class="text-success ms-3">
-                            <i class="fas fa-check-circle me-1"></i>Verified Wholesaler
-                        </span>
+
+                        <div class="product-sku">
+                            <i class="fas fa-barcode me-2"></i>
+                            <span class="text-muted">SKU: {{ $product->code }}</span>
+                        </div>
+
+                        <div class="product-category">
+                            <i class="fas fa-tag me-2"></i>
+                            <span class="text-muted">{{ $product->category->name ?? 'Uncategorized' }}</span>
+                        </div>
                     </div>
 
-                    <!-- Price Section -->
-                    <div class="price-section">
-                        <div class="d-flex align-items-center flex-wrap">
-                            <span class="current-price">Rs. {{ number_format($product->wholesale_price, 2) }}</span>
+                    <!-- Pricing Information -->
+                    <div class="info-card">
+                        <h5 class="mb-3 d-flex align-items-center">
+                            <span class="material-icons-outlined me-2">payments</span>
+                            Pricing Information
+                        </h5>
+                        <div class="price-card">
+                            <div class="row">
+                                <!-- Cost Price -->
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <div class="text-muted mb-1">Cost Price</div>
+                                        <div class="price-display" style="color: #6b7280;">
+                                            Rs. {{ number_format($product->cost_price, 2) }}
+                                        </div>
+                                    </div>
+                                </div>
 
-                            @if($product->display_price > $product->wholesale_price)
-                                <span class="original-price">Rs. {{ number_format($product->display_price, 2) }}</span>
-                                @php
-                                    $discount = (($product->display_price - $product->wholesale_price) / $product->display_price) * 100;
-                                @endphp
-                                <span class="discount-badge">SAVE {{ round($discount) }}%</span>
+                                <!-- Selling Price -->
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <div class="text-muted mb-1">Selling Price</div>
+                                        <div class="price-display">
+                                            Rs. {{ number_format($product->selling_price, 2) }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Final Price -->
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <div class="text-muted mb-1">Final Price</div>
+                                        <div class="price-display" style="color: #10b981;">
+                                            Rs. {{ number_format($product->final_price, 2) }}
+                                            @if($product->discount > 0)
+                                                <span class="badge bg-success ms-2">-{{ $product->discount }}%</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Additional Pricing Details -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-2">
+                                        <span class="text-muted">Packaging Cost:</span>
+                                        <span class="fw-medium">Rs. {{ number_format($product->packaging_cost, 2) }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-2">
+                                        <span class="text-muted">Total Cost:</span>
+                                        <span class="fw-medium">Rs. {{ number_format($product->total_cost, 2) }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Profit Calculation -->
+                            @if($product->profit_amount > 0)
+                                <div class="mt-3 pt-3 border-top">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="text-center">
+                                                <div class="text-muted small">Profit Amount</div>
+                                                <div class="fw-bold text-success">
+                                                    Rs. {{ number_format($product->profit_amount, 2) }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="text-center">
+                                                <div class="text-muted small">Profit Margin</div>
+                                                <div class="fw-bold {{ $product->profit_margin > 20 ? 'text-success' : ($product->profit_margin > 10 ? 'text-warning' : 'text-info') }}">
+                                                    {{ number_format($product->profit_margin, 1) }}%
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             @endif
                         </div>
-
-                        <div class="price-breakdown mt-3">
-                            <div class="price-row">
-                                <span>Base Price</span>
-                                <span>Rs. {{ number_format($product->wholesale_price, 2) }}</span>
-                            </div>
-                            <div class="price-row">
-                                <span>Minimum Order</span>
-                                <span>{{ $product->min_order_quantity }} units</span>
-                            </div>
-                            <div class="price-row">
-                                <span>Estimated Delivery</span>
-                                <span>2-5 Business Days</span>
-                            </div>
-                            <div class="price-row">
-                                <span>Total (for {{ $product->min_order_quantity }} units)</span>
-                                <span class="text-primary fw-bold">
-                                    Rs. {{ number_format($product->wholesale_price * $product->min_order_quantity, 2) }}
-                                </span>
-                            </div>
-                        </div>
                     </div>
 
-                    <!-- Stock Info -->
-                    <div class="stock-info">
-                        <span class="stock-badge {{ $product->qty > 50 ? 'stock-high' : 'stock-low' }}">
-                            <i class="fas fa-{{ $product->qty > 50 ? 'check-circle' : 'exclamation-circle' }}"></i>
-                            {{ $product->qty > 50 ? 'In Stock' : 'Limited Stock' }}
-                        </span>
-                        <span class="available-stock">
-                            Available: <strong>{{ $product->qty }}</strong> units
-                        </span>
-                    </div>
-
-                    <!-- Quantity Selector -->
-                    <div class="quantity-selector">
-                        <div class="qty-input">
-                            <button class="qty-btn" onclick="decreaseQty()">-</button>
+                    <!-- Updated Quantity Control Section -->
+                    <div class="quantity-section">
+                        <label class="fw-bold mb-2 d-block">Quantity:</label>
+                        <div class="quantity-control-detailed">
+                            <button class="quantity-btn-detailed decrement-qty-detailed"
+                                    type="button"
+                                    onclick="decrementQuantityDetailed()"
+                                    disabled>
+                                <i class="fas fa-minus"></i>
+                            </button>
                             <input type="number"
-                                   id="quantityInput"
-                                   value="{{ $product->min_order_quantity }}"
-                                   min="{{ $product->min_order_quantity }}"
-                                   max="{{ $product->qty }}">
-                            <button class="qty-btn" onclick="increaseQty()">+</button>
+                                   id="productQuantity"
+                                   class="form-control text-center quantity-input-detailed"
+                                   value="0"
+                                   min="0"
+                                   max="{{ $product->qty }}"
+                                   data-price="{{ $product->final_price }}"
+                                   oninput="updateQuantityDetailed(this.value)">
+                            <button class="quantity-btn-detailed increment-qty-detailed"
+                                    type="button"
+                                    onclick="incrementQuantityDetailed()"
+                                {{ $product->qty == 0 ? 'disabled' : '' }}>
+                                <i class="fas fa-plus"></i>
+                            </button>
                         </div>
-                        <div class="min-order">
-                            Minimum Order: {{ $product->min_order_quantity }} units
+                        <div class="mt-2">
+                            @if($product->qty <= $product->min_stock_level)
+                                <div class="alert alert-warning py-2 mb-2">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    Low Stock: Only {{ $product->qty }} items left
+                                </div>
+                            @else
+                                <div class="text-muted small">
+                                    <i class="fas fa-check-circle me-2 text-success"></i>
+                                    {{ $product->qty }} items available
+                                </div>
+                            @endif
+                            <div class="text-muted small">
+                                <i class="fas fa-warehouse me-2"></i>
+                                Min Stock Level: {{ $product->min_stock_level }}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Total Price Display -->
+                    <div class="total-price-display mb-3">
+                        <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded">
+                            <span class="fw-bold">Total:</span>
+                            <span class="fs-4 fw-bold text-primary" id="totalPriceDetailed">Rs. 0</span>
                         </div>
                     </div>
 
                     <!-- Action Buttons -->
                     <div class="action-buttons">
-                        <button class="btn-primary-lg" onclick="addToCart()">
-                            <i class="fas fa-cart-plus"></i>
+                        <button class="btn-action btn-add-to-cart"
+                                onclick="addToCart({{ $product->id }})"
+                                id="addToCartBtn"
+                                disabled>
+                            <i class="fas fa-cart-plus me-2"></i>
                             Add to Cart
                         </button>
-                        <button class="btn-primary-lg btn-accent" onclick="buyNow()">
-                            <i class="fas fa-bolt"></i>
+                        <button class="btn-action btn-buy-now"
+                                onclick="buyNow({{ $product->id }})"
+                                id="buyNowBtn"
+                                disabled>
+                            <i class="fas fa-bolt me-2"></i>
                             Buy Now
                         </button>
                     </div>
 
-                    <div class="action-buttons">
-                        <button class="btn-secondary-lg" onclick="addToWishlist()">
-                            <i class="fas fa-heart"></i>
-                            Add to Wishlist
-                        </button>
-                        <button class="btn-secondary-lg" onclick="compareProduct()">
-                            <i class="fas fa-exchange-alt"></i>
-                            Compare
-                        </button>
-                    </div>
-
-                    <!-- Share Section -->
-                    <div class="share-section">
-                        <span class="share-label">Share this product:</span>
-                        <div class="share-buttons">
-                            <button class="share-btn facebook" onclick="shareOnFacebook()">
-                                <i class="fab fa-facebook-f"></i>
-                            </button>
-                            <button class="share-btn twitter" onclick="shareOnTwitter()">
-                                <i class="fab fa-twitter"></i>
-                            </button>
-                            <button class="share-btn whatsapp" onclick="shareOnWhatsApp()">
-                                <i class="fab fa-whatsapp"></i>
-                            </button>
-                            <button class="share-btn pinterest" onclick="shareOnPinterest()">
-                                <i class="fab fa-pinterest-p"></i>
-                            </button>
+                    <!-- Product Features -->
+                    @if($product->features)
+                        <div class="product-features mb-4">
+                            <h6 class="fw-bold mb-3">
+                                <i class="fas fa-star me-2"></i>
+                                Key Features
+                            </h6>
+                            <ul class="list-unstyled">
+                                @foreach(explode(',', $product->features) as $feature)
+                                    <li class="mb-2">
+                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                        {{ trim($feature) }}
+                                    </li>
+                                @endforeach
+                            </ul>
                         </div>
-                    </div>
-
-                    <!-- Guarantee -->
-                    <div class="mt-3">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="text-center">
-                                <i class="fas fa-shield-alt fa-2x text-primary"></i>
-                                <div class="small mt-1">Quality Guarantee</div>
-                            </div>
-                            <div class="text-center">
-                                <i class="fas fa-truck fa-2x text-success"></i>
-                                <div class="small mt-1">Free Shipping*</div>
-                            </div>
-                            <div class="text-center">
-                                <i class="fas fa-undo fa-2x text-info"></i>
-                                <div class="small mt-1">30-Day Returns</div>
-                            </div>
-                            <div class="text-center">
-                                <i class="fas fa-headset fa-2x text-warning"></i>
-                                <div class="small mt-1">24/7 Support</div>
-                            </div>
-                        </div>
-                    </div>
+                    @endif
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Product Details Tabs -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="details-tabs">
-                    <ul class="nav nav-tabs nav-tabs-custom" id="productTab" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="description-tab" data-bs-toggle="tab" data-bs-target="#description">
-                                <i class="fas fa-file-alt me-2"></i>Description
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="specifications-tab" data-bs-toggle="tab" data-bs-target="#specifications">
-                                <i class="fas fa-list-alt me-2"></i>Specifications
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="features-tab" data-bs-toggle="tab" data-bs-target="#features">
-                                <i class="fas fa-star me-2"></i>Features
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews">
-                                <i class="fas fa-comment-alt me-2"></i>Reviews (128)
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="shipping-tab" data-bs-toggle="tab" data-bs-target="#shipping">
-                                <i class="fas fa-shipping-fast me-2"></i>Shipping Info
-                            </button>
-                        </li>
-                    </ul>
+    <!-- Product Tabs -->
+    <div class="product-tabs">
+        <ul class="nav nav-tabs" id="productTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="description-tab" data-bs-toggle="tab" data-bs-target="#description" type="button">
+                    <i class="fas fa-file-alt me-2"></i>
+                    Description
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="specifications-tab" data-bs-toggle="tab" data-bs-target="#specifications" type="button">
+                    <i class="fas fa-list me-2"></i>
+                    Specifications
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button">
+                    <i class="fas fa-star me-2"></i>
+                    Reviews ({{ $reviews->total() }})
+                </button>
+            </li>
+        </ul>
 
-                    <div class="tab-content" id="productTabContent">
-                        <!-- Description Tab -->
-                        <div class="tab-pane fade show active" id="description">
-                            <div class="description-content">
-                                {{ $product->description ?? 'No description available for this product.' }}
+        <div class="tab-content" id="productTabContent">
+            <!-- Description Tab -->
+            <div class="tab-pane fade show active" id="description">
+                <div class="product-description">
+                    {!! $product->description !!}
+                </div>
+            </div>
+
+            <!-- Specifications Tab -->
+            <div class="tab-pane fade" id="specifications">
+                <div class="product-specifications">
+                    <table class="table table-striped">
+                        <tbody>
+                        <tr>
+                            <th width="200">Brand</th>
+                            <td>{{ $product->brand->name ?? 'Not specified' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Category</th>
+                            <td>{{ $product->category->name ?? 'Not specified' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Weight</th>
+                            <td>{{ $product->weight ?? 'N/A' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Dimensions</th>
+                            <td>{{ $product->dimensions ?? 'N/A' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Material</th>
+                            <td>{{ $product->material ?? 'N/A' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Manufacturer</th>
+                            <td>{{ $product->manufacturer ?? 'N/A' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Country of Origin</th>
+                            <td>{{ $product->country_of_origin ?? 'N/A' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Warranty</th>
+                            <td>{{ $product->warranty ?? 'No warranty' }}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Reviews Tab -->
+            <div class="tab-pane fade" id="reviews">
+                <!-- Add Review Form -->
+                @auth('wholesaler')
+                    <div class="add-review mb-4">
+                        <h5 class="fw-bold mb-3">Add Your Review</h5>
+                        <form action="{{ route('wholesaler.shop.product.review', $product->id) }}" method="POST">
+                            @csrf
+                            <div class="mb-3">
+                                <label class="form-label">Rating</label>
+                                <div class="rating-input">
+                                    @for($i = 5; $i >= 1; $i--)
+                                        <input type="radio" id="star{{ $i }}" name="rating" value="{{ $i }}" required>
+                                        <label for="star{{ $i }}" title="{{ $i }} stars">
+                                            <i class="far fa-star"></i>
+                                        </label>
+                                    @endfor
+                                </div>
                             </div>
+                            <div class="mb-3">
+                                <textarea class="form-control" name="review" rows="4" placeholder="Write your review here..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i>
+                                Submit Review
+                            </button>
+                        </form>
+                    </div>
+                @endauth
 
-                            @if($product->features)
-                                <div class="mt-4">
-                                    <h5>Key Highlights:</h5>
-                                    <ul class="list-unstyled">
+                <!-- Reviews List -->
+                <div class="reviews-list">
+                    <h5 class="fw-bold mb-3">Customer Reviews</h5>
+
+                    <!-- Rating Summary -->
+                    <div class="rating-summary mb-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-3 text-center">
+                                <div class="average-rating">
+                                    <h1 class="display-4 fw-bold text-primary">{{ number_format($product->average_rating, 1) }}</h1>
+                                    <div class="stars mb-2">
+                                        @for($i = 1; $i <= 5; $i++)
+                                            @if($i <= floor($product->average_rating))
+                                                <i class="fas fa-star text-warning"></i>
+                                            @elseif($i == ceil($product->average_rating) && fmod($product->average_rating, 1) >= 0.5)
+                                                <i class="fas fa-star-half-alt text-warning"></i>
+                                            @else
+                                                <i class="far fa-star text-muted"></i>
+                                            @endif
+                                        @endfor
+                                    </div>
+                                    <p class="text-muted">{{ $product->total_reviews }} reviews</p>
+                                </div>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="rating-distribution">
+                                    @for($rating = 5; $rating >= 1; $rating--)
                                         @php
-                                            $features = array_filter(array_map('trim', explode(',', $product->features)));
+                                            $ratingCount = $ratingDistribution->firstWhere('rating', $rating)->count ?? 0;
+                                            $percentage = $product->total_reviews > 0 ? ($ratingCount / $product->total_reviews) * 100 : 0;
                                         @endphp
-                                        @foreach($features as $feature)
-                                            <li class="mb-2">
-                                                <i class="fas fa-check-circle text-success me-2"></i>
-                                                {{ $feature }}
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            @endif
-                        </div>
-
-                        <!-- Specifications Tab -->
-                        <div class="tab-pane fade" id="specifications">
-                            <div class="specs-table">
-                                <div class="spec-row">
-                                    <div class="spec-label">Product Code</div>
-                                    <div class="spec-value">{{ $product->code }}</div>
-                                </div>
-                                <div class="spec-row">
-                                    <div class="spec-label">Brand</div>
-                                    <div class="spec-value">{{ $product->brand->name ?? 'N/A' }}</div>
-                                </div>
-                                <div class="spec-row">
-                                    <div class="spec-label">Category</div>
-                                    <div class="spec-value">{{ $product->category->name ?? 'N/A' }}</div>
-                                </div>
-                                @if($product->weight)
-                                    <div class="spec-row">
-                                        <div class="spec-label">Weight</div>
-                                        <div class="spec-value">{{ $product->weight }} kg</div>
-                                    </div>
-                                @endif
-                                @if($product->dimensions)
-                                    <div class="spec-row">
-                                        <div class="spec-label">Dimensions</div>
-                                        <div class="spec-value">{{ $product->dimensions }}</div>
-                                    </div>
-                                @endif
-                                <div class="spec-row">
-                                    <div class="spec-label">Minimum Order</div>
-                                    <div class="spec-value">{{ $product->min_order_quantity }} units</div>
-                                </div>
-                                <div class="spec-row">
-                                    <div class="spec-label">Current Stock</div>
-                                    <div class="spec-value">{{ $product->qty }} units</div>
-                                </div>
-                                <div class="spec-row">
-                                    <div class="spec-label">Wholesale Price</div>
-                                    <div class="spec-value">Rs. {{ number_format($product->wholesale_price, 2) }}</div>
-                                </div>
-                                <div class="spec-row">
-                                    <div class="spec-label">Display Price</div>
-                                    <div class="spec-value">Rs. {{ number_format($product->display_price, 2) }}</div>
-                                </div>
-                                <div class="spec-row">
-                                    <div class="spec-label">Status</div>
-                                    <div class="spec-value">
-                                        <span class="badge bg-{{ $product->status == 'active' ? 'success' : 'danger' }}">
-                                            {{ ucfirst($product->status) }}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Features Tab -->
-                        <div class="tab-pane fade" id="features">
-                            @if($product->features)
-                                <div class="row">
-                                    @php
-                                        $features = array_filter(array_map('trim', explode(',', $product->features)));
-                                    @endphp
-                                    @foreach($features as $feature)
-                                        <div class="col-md-6 mb-3">
-                                            <div class="d-flex align-items-start">
-                                                <i class="fas fa-check-circle text-success mt-1 me-2"></i>
-                                                <span>{{ $feature }}</span>
+                                        <div class="rating-bar mb-2">
+                                            <div class="d-flex align-items-center">
+                                                <span class="rating-label me-2">{{ $rating }} star</span>
+                                                <div class="progress flex-grow-1" style="height: 8px;">
+                                                    <div class="progress-bar bg-warning" style="width: {{ $percentage }}%"></div>
+                                                </div>
+                                                <span class="rating-count ms-2">{{ $ratingCount }}</span>
                                             </div>
                                         </div>
-                                    @endforeach
-                                </div>
-                            @else
-                                <p class="text-muted">No features specified for this product.</p>
-                            @endif
-                        </div>
-
-                        <!-- Reviews Tab -->
-                        <div class="tab-pane fade" id="reviews">
-                            <div class="text-center py-5">
-                                <i class="fas fa-comment-alt fa-3x text-muted mb-3"></i>
-                                <h4>No Reviews Yet</h4>
-                                <p class="text-muted">Be the first to review this product!</p>
-                                <button class="btn btn-primary">Write a Review</button>
-                            </div>
-                        </div>
-
-                        <!-- Shipping Tab -->
-                        <div class="tab-pane fade" id="shipping">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h5>Shipping Information</h5>
-                                    <ul class="list-unstyled">
-                                        <li class="mb-2">
-                                            <i class="fas fa-truck text-primary me-2"></i>
-                                            Free shipping on orders over Rs. 10,000
-                                        </li>
-                                        <li class="mb-2">
-                                            <i class="fas fa-clock text-warning me-2"></i>
-                                            Processing time: 1-2 business days
-                                        </li>
-                                        <li class="mb-2">
-                                            <i class="fas fa-globe text-success me-2"></i>
-                                            Ships to all major cities
-                                        </li>
-                                        <li class="mb-2">
-                                            <i class="fas fa-box text-info me-2"></i>
-                                            Estimated delivery: 2-5 business days
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div class="col-md-6">
-                                    <h5>Return Policy</h5>
-                                    <ul class="list-unstyled">
-                                        <li class="mb-2">
-                                            <i class="fas fa-undo text-danger me-2"></i>
-                                            30-day return policy
-                                        </li>
-                                        <li class="mb-2">
-                                            <i class="fas fa-check-circle text-success me-2"></i>
-                                            Free returns for defective items
-                                        </li>
-                                        <li class="mb-2">
-                                            <i class="fas fa-tag text-warning me-2"></i>
-                                            Original tags must be attached
-                                        </li>
-                                        <li class="mb-2">
-                                            <i class="fas fa-calendar-alt text-info me-2"></i>
-                                            Refund processed within 7 business days
-                                        </li>
-                                    </ul>
+                                    @endfor
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Reviews -->
+                    @forelse($reviews as $review)
+                        <div class="review-card">
+                            <div class="review-header">
+                                <div class="review-user">
+                                    <div class="user-avatar">
+                                        @if($review->user->avatar)
+                                            <img src="{{ asset('storage/' . $review->user->avatar) }}"
+                                                 alt="{{ $review->user->name }}"
+                                                 class="rounded-circle"
+                                                 width="40"
+                                                 height="40">
+                                        @else
+                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                                                 style="width: 40px; height: 40px;">
+                                                {{ substr($review->user->name, 0, 1) }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">{{ $review->user->name }}</h6>
+                                        <div class="stars small">
+                                            @for($i = 1; $i <= 5; $i++)
+                                                @if($i <= $review->rating)
+                                                    <i class="fas fa-star text-warning"></i>
+                                                @else
+                                                    <i class="far fa-star text-muted"></i>
+                                                @endif
+                                            @endfor
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="text-muted small">{{ $review->created_at->format('M d, Y') }}</span>
+                            </div>
+                            <div class="review-content">
+                                <p class="mb-0">{{ $review->review }}</p>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center py-4">
+                            <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No reviews yet</h5>
+                            <p class="text-muted">Be the first to review this product!</p>
+                        </div>
+                    @endforelse
+
+                    <!-- Pagination -->
+                    @if($reviews->hasPages())
+                        <div class="d-flex justify-content-center mt-4">
+                            {{ $reviews->links() }}
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Related Products -->
-        @if($relatedProducts->isNotEmpty())
-            <div class="row related-products">
-                <div class="col-12">
-                    <h3 class="section-title">Related Products</h3>
-                    <div class="row g-4">
-                        @foreach($relatedProducts as $related)
-                            <div class="col-xl-3 col-lg-4 col-md-6">
-                                <div class="product-card">
-                                    <div class="product-image-container">
-                                        <a href="{{ route('wholesaler.shop.product.show', $related->id) }}">
-                                            @if($related->image)
-                                                <img src="{{ asset('storage/' . $related->image) }}"
-                                                     alt="{{ $related->name }}"
-                                                     class="product-image">
-                                            @else
-                                                <div class="product-image d-flex align-items-center justify-content-center bg-light">
-                                                    <i class="fas fa-box-open fa-2x text-muted"></i>
-                                                </div>
-                                            @endif
-                                        </a>
-                                    </div>
-                                    <div class="product-info">
-                                        <h5 class="product-title">
-                                            <a href="{{ route('wholesaler.shop.product.show', $related->id) }}">
-                                                {{ Str::limit($related->name, 40) }}
-                                            </a>
-                                        </h5>
-                                        <div class="product-price">
-                                            <span class="current-price">Rs. {{ number_format($related->wholesale_price, 2) }}</span>
-                                        </div>
-                                        <div class="product-cta">
-                                            <button class="btn-add-cart w-100" onclick="addToCart({{ $related->id }})">
-                                                <i class="fas fa-cart-plus"></i> Add to Cart
-                                            </button>
-                                        </div>
-                                    </div>
+    <!-- Related Products -->
+    @if($relatedProducts->count() > 0)
+        <div class="related-products">
+            <h3 class="fw-bold mb-4">Related Products</h3>
+            <div class="row">
+                @foreach($relatedProducts as $relatedProduct)
+                    <div class="col-md-3 mb-4">
+                        <div class="card product-card h-100">
+                            @if($relatedProduct->image)
+                                <img src="{{ asset('storage/' . $relatedProduct->image) }}"
+                                     class="card-img-top"
+                                     alt="{{ $relatedProduct->name }}"
+                                     style="height: 200px; object-fit: cover;">
+                            @else
+                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center"
+                                     style="height: 200px;">
+                                    <i class="fas fa-box-open fa-3x text-muted"></i>
+                                </div>
+                            @endif
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <a href="{{ route('wholesaler.shop.product.show', $relatedProduct->id) }}"
+                                       class="text-dark text-decoration-none">
+                                        {{ Str::limit($relatedProduct->name, 40) }}
+                                    </a>
+                                </h6>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-primary">
+                                        Rs. {{ number_format($relatedProduct->display_price) }}
+                                    </span>
+                                    <button class="btn btn-sm btn-outline-primary"
+                                            onclick="window.location.href='{{ route('wholesaler.shop.product.show', $relatedProduct->id) }}'">
+                                        <i class="fas fa-eye me-1"></i>
+                                        View
+                                    </button>
                                 </div>
                             </div>
-                        @endforeach
+                        </div>
                     </div>
-                </div>
+                @endforeach
             </div>
-        @endif
-    </div>
+        </div>
+    @endif
 @endsection
 
 @push('script')
     <script>
-        // Quantity Controls
-        function increaseQty() {
-            const input = document.getElementById('quantityInput');
-            const max = parseInt(input.max);
-            const min = parseInt(input.min);
-            let value = parseInt(input.value);
+        // Product details quantity functions
+        function updateQuantityDetailed(value) {
+            const quantityInput = document.getElementById('productQuantity');
+            const decrementBtn = document.querySelector('.decrement-qty-detailed');
+            const incrementBtn = document.querySelector('.increment-qty-detailed');
+            const addToCartBtn = document.getElementById('addToCartBtn');
+            const buyNowBtn = document.getElementById('buyNowBtn');
+            const totalPriceElement = document.getElementById('totalPriceDetailed');
 
-            if (value < max) {
-                value++;
-                input.value = value;
+            let quantity = parseInt(value) || 0;
+            const maxQuantity = parseInt(quantityInput.max) || 0;
+            const unitPrice = parseFloat(quantityInput.dataset.price) || 0; // Use final_price
+
+            // Validate input
+            if (isNaN(quantity) || quantity < 0) quantity = 0;
+            if (quantity > maxQuantity) {
+                quantity = maxQuantity;
+                showNotification('warning', `Only ${maxQuantity} items available`);
+            }
+
+            // Update input value
+            quantityInput.value = quantity;
+
+            // Update button states
+            decrementBtn.disabled = quantity <= 0;
+            incrementBtn.disabled = quantity >= maxQuantity;
+
+            // Update cart buttons
+            addToCartBtn.disabled = quantity === 0;
+            buyNowBtn.disabled = quantity === 0;
+
+            // Calculate and update total price
+            const totalPrice = quantity * unitPrice;
+            totalPriceElement.textContent = 'Rs. ' + totalPrice.toLocaleString();
+        }
+
+        function incrementQuantityDetailed() {
+            const quantityInput = document.getElementById('productQuantity');
+            let currentValue = parseInt(quantityInput.value) || 0;
+            const maxQuantity = parseInt(quantityInput.max) || 0;
+
+            if (currentValue < maxQuantity) {
+                updateQuantityDetailed(currentValue + 1);
             }
         }
 
-        function decreaseQty() {
-            const input = document.getElementById('quantityInput');
-            const max = parseInt(input.max);
-            const min = parseInt(input.min);
-            let value = parseInt(input.value);
+        function decrementQuantityDetailed() {
+            const quantityInput = document.getElementById('productQuantity');
+            let currentValue = parseInt(quantityInput.value) || 0;
 
-            if (value > min) {
-                value--;
-                input.value = value;
+            if (currentValue > 0) {
+                updateQuantityDetailed(currentValue - 1);
             }
         }
 
-        // Validate quantity input
-        document.getElementById('quantityInput').addEventListener('change', function() {
-            const max = parseInt(this.max);
-            const min = parseInt(this.min);
-            let value = parseInt(this.value);
+        // Add to cart function for product details
+        async function addToCart(productId) {
+            const quantityInput = document.getElementById('productQuantity');
+            const quantity = parseInt(quantityInput.value) || 0;
 
-            if (isNaN(value) || value < min) {
-                this.value = min;
-            } else if (value > max) {
-                this.value = max;
-                showToast('error', `Maximum available quantity is ${max}`);
+            if (quantity === 0) {
+                showNotification('error', 'Please select quantity first');
+                return;
             }
-        });
 
-        // Add to Cart Function
-        function addToCart() {
-            const productId = {{ $product->id }};
-            const quantity = parseInt(document.getElementById('quantityInput').value);
+            const addToCartBtn = document.getElementById('addToCartBtn');
+            const originalText = addToCartBtn.innerHTML;
 
-            $.ajax({
-                url: '{{ route("wholesaler.shop.cart.add") }}',
-                method: 'POST',
-                data: {
-                    product_id: productId,
-                    quantity: quantity,
-                    _token: '{{ csrf_token() }}'
-                },
-                success: function(response) {
-                    if (response.success) {
-                        showToast('success', response.message);
-                        updateCartCount(response.cart_count);
-                        animateCart(productId);
-                    } else {
-                        showToast('error', response.message);
-                    }
-                },
-                error: function(xhr) {
-                    showToast('error', xhr.responseJSON?.message || 'Error adding to cart');
+            // Show loading
+            addToCartBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Adding...';
+            addToCartBtn.disabled = true;
+
+            try {
+                const response = await fetch('{{ route("wholesaler.shop.cart.add") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        quantity: quantity
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification('success', data.message || 'Product added to cart successfully!');
+
+                    // Reset quantity to 0 after successful add
+                    updateQuantityDetailed(0);
+                } else {
+                    showNotification('error', data.message || 'Failed to add to cart');
                 }
-            });
-        }
-
-        // Buy Now Function
-        function buyNow() {
-            addToCart();
-            setTimeout(() => {
-                window.location.href = '{{ route("wholesaler.shop.checkout") }}';
-            }, 500);
-        }
-
-        // Wishlist Function
-        function addToWishlist() {
-            showToast('info', 'Added to wishlist!');
-        }
-
-        // Compare Function
-        function compareProduct() {
-            showToast('info', 'Product added to comparison list');
-        }
-
-        // Share Functions
-        function shareOnFacebook() {
-            const url = encodeURIComponent(window.location.href);
-            window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
-        }
-
-        function shareOnTwitter() {
-            const text = encodeURIComponent('Check out this product: {{ $product->name }}');
-            const url = encodeURIComponent(window.location.href);
-            window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
-        }
-
-        function shareOnWhatsApp() {
-            const text = encodeURIComponent('Check out this product: {{ $product->name }} - ' + window.location.href);
-            window.open(`https://wa.me/?text=${text}`, '_blank');
-        }
-
-        function shareOnPinterest() {
-            const url = encodeURIComponent(window.location.href);
-            const media = encodeURIComponent('{{ $product->image ? asset("storage/" . $product->image) : "" }}');
-            const description = encodeURIComponent('{{ $product->name }}');
-            window.open(`https://pinterest.com/pin/create/button/?url=${url}&media=${media}&description=${description}`, '_blank');
-        }
-
-        // Image Gallery
-        function changeImage(src) {
-            document.getElementById('mainProductImage').src = src;
-            document.querySelectorAll('.thumbnail-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            event.target.closest('.thumbnail-item').classList.add('active');
-        }
-
-        // Toast Notification
-        function showToast(type, message) {
-            const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
-            toast.innerHTML = `
-                <div class="toast-content">
-                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
-                    ${message}
-                </div>
-            `;
-
-            toast.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: ${type === 'success' ? '#10b981' : '#ef4444'};
-                color: white;
-                padding: 15px 20px;
-                border-radius: 10px;
-                z-index: 9999;
-                animation: slideInRight 0.3s ease;
-            `;
-
-            document.body.appendChild(toast);
-
-            setTimeout(() => {
-                toast.style.animation = 'slideOutRight 0.3s ease forwards';
-                setTimeout(() => {
-                    document.body.removeChild(toast);
-                }, 300);
-            }, 3000);
-        }
-
-        // Cart Animation
-        function animateCart(productId) {
-            const addBtn = document.querySelector('.btn-primary-lg');
-            const cartIcon = document.querySelector('.fa-shopping-cart');
-
-            if (!addBtn || !cartIcon) return;
-
-            const btnRect = addBtn.getBoundingClientRect();
-            const cartRect = cartIcon.getBoundingClientRect();
-
-            const flyItem = document.createElement('div');
-            flyItem.style.cssText = `
-                position: fixed;
-                width: 30px;
-                height: 30px;
-                background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
-                border-radius: 50%;
-                z-index: 9999;
-                left: ${btnRect.left + btnRect.width/2}px;
-                top: ${btnRect.top + btnRect.height/2}px;
-                pointer-events: none;
-                transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: white;
-                font-size: 14px;
-            `;
-            flyItem.innerHTML = '+1';
-
-            document.body.appendChild(flyItem);
-
-            setTimeout(() => {
-                flyItem.style.left = `${cartRect.left}px`;
-                flyItem.style.top = `${cartRect.top}px`;
-                flyItem.style.transform = 'scale(0.1)';
-            }, 10);
-
-            setTimeout(() => {
-                document.body.removeChild(flyItem);
-                cartIcon.classList.add('animate__animated', 'animate__tada');
-                setTimeout(() => {
-                    cartIcon.classList.remove('animate__animated', 'animate__tada');
-                }, 1000);
-            }, 800);
-        }
-
-        function updateCartCount(count) {
-            const cartBadge = document.querySelector('.cart-count-badge');
-            if (cartBadge) {
-                cartBadge.textContent = count;
-                cartBadge.classList.add('animate__animated', 'animate__bounceIn');
-                setTimeout(() => {
-                    cartBadge.classList.remove('animate__animated', 'animate__bounceIn');
-                }, 500);
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('error', 'An error occurred. Please try again.');
+            } finally {
+                addToCartBtn.innerHTML = originalText;
+                addToCartBtn.disabled = quantity === 0;
             }
         }
 
-        // Initialize on page load
-        $(document).ready(function() {
-            // Load cart count
-            $.get('{{ route("wholesaler.shop.cart.count") }}', function(response) {
-                updateCartCount(response.count);
-            });
+        // Buy now function
+        async function buyNow(productId) {
+            const quantityInput = document.getElementById('productQuantity');
+            const quantity = parseInt(quantityInput.value) || 0;
 
-            // Initialize tab functionality
-            const triggerTabList = document.querySelectorAll('#productTab button');
-            triggerTabList.forEach(triggerEl => {
-                const tabTrigger = new bootstrap.Tab(triggerEl);
-                triggerEl.addEventListener('click', event => {
-                    event.preventDefault();
-                    tabTrigger.show();
+            if (quantity === 0) {
+                showNotification('error', 'Please select quantity first');
+                return;
+            }
+
+            const buyNowBtn = document.getElementById('buyNowBtn');
+            const originalText = buyNowBtn.innerHTML;
+
+            // Show loading
+            buyNowBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
+            buyNowBtn.disabled = true;
+
+            try {
+                const response = await fetch('{{ route("wholesaler.shop.buy.now") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        quantity: quantity
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    window.location.href = data.redirect;
+                } else {
+                    showNotification('error', data.message || 'Failed to process buy now');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('error', 'An error occurred. Please try again.');
+            } finally {
+                buyNowBtn.innerHTML = originalText;
+                buyNowBtn.disabled = quantity === 0;
+            }
+        }
+
+        // Change main image
+        function changeMainImage(src, element) {
+            document.getElementById('mainImage').src = src;
+
+            // Update active thumbnail
+            document.querySelectorAll('.product-thumbnail').forEach(thumb => {
+                thumb.classList.remove('active');
+            });
+            element.classList.add('active');
+        }
+
+        // Rating stars styling
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize rating stars
+            const ratingInputs = document.querySelectorAll('.rating-input input[type="radio"]');
+            ratingInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    const rating = this.value;
+                    const stars = this.parentElement.querySelectorAll('label i');
+
+                    stars.forEach((star, index) => {
+                        if (5 - index <= rating) {
+                            star.classList.remove('far');
+                            star.classList.add('fas');
+                        } else {
+                            star.classList.remove('fas');
+                            star.classList.add('far');
+                        }
+                    });
                 });
             });
+
+            // Initialize quantity
+            updateQuantityDetailed(0);
         });
     </script>
 @endpush

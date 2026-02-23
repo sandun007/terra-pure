@@ -5,7 +5,7 @@ namespace App\Imports;
 use App\Http\Controllers\CodeGenerator;
 use App\Models\Order;
 use App\Models\Product;
-use App\Models\Saler;
+use App\Models\Seller;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithStartRow;
 class OrderImport implements ToModel, WithStartRow
@@ -26,7 +26,7 @@ class OrderImport implements ToModel, WithStartRow
         if(auth()->user()->type == 'self_seller'){
             $this->total_cost = $this->total_cost + 40;
 
-            $seller = Saler::query()
+            $seller = Seller::query()
                 ->where('id', auth()->user()->id)
                 ->first();
 
@@ -45,7 +45,7 @@ class OrderImport implements ToModel, WithStartRow
 
                 $product_name = $product->name ?? 'Unknown';
 
-                Saler::query()
+                Seller::query()
                     ->where('id', $seller->id)
                     ->update([
                         'cal_deposit' => $deposit,
@@ -92,7 +92,7 @@ class OrderImport implements ToModel, WithStartRow
                 'city' => $row[16],
             ]);
         }
-       
+
     }
 
 }

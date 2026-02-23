@@ -11,20 +11,22 @@
         align-items: center;
         justify-content: space-between;
         position: sticky;
-        top: 0;
-        z-index: 1000;
+        margin-top: -70px;
+        z-index: 999;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .app-header.scrolled {
         box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
-        height: 70px;
+        height: 90px;
     }
 
     /* Header Sections */
     .header-left,
     .header-center,
-    .header-right {
+    .header-right,
+    .header-top
+    {
         display: flex;
         align-items: center;
         gap: 20px;
@@ -111,6 +113,7 @@
         background: white;
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         outline: none;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
     }
 
     .search-input::placeholder {
@@ -126,6 +129,17 @@
 
     .search-input:focus + .search-icon {
         color: #667eea;
+    }
+
+    .searching {
+        background: linear-gradient(90deg, #f8fafc 0%, #e2e8f0 50%, #f8fafc 100%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+    }
+
+    @keyframes loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
     }
 
     /* Notification Button */
@@ -170,12 +184,8 @@
     }
 
     @keyframes pulse {
-        0%, 100% {
-            transform: scale(1);
-        }
-        50% {
-            transform: scale(1.1);
-        }
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
     }
 
     /* User Dropdown */
@@ -278,10 +288,10 @@
     /* Dropdown Menu */
     .dropdown-menu {
         margin-top: 12px !important;
-        border: none;
-        border-radius: 16px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-        padding: 0;
+        border: none !important;
+        border-radius: 16px !important;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+        padding: 0 !important;
         min-width: 280px;
         animation: dropdownSlide 0.3s ease;
         overflow: hidden;
@@ -349,21 +359,21 @@
 
     .dropdown-divider {
         margin: 0;
-        border-color: #f1f5f9;
+        border-color: #f1f5f9 !important;
     }
 
     .dropdown-item {
-        padding: 14px 25px;
-        display: flex;
+        padding: 14px 25px !important;
+        display: flex !important;
         align-items: center;
         gap: 12px;
-        color: #475569;
-        font-weight: 500;
-        font-size: 14px;
-        transition: all 0.3s ease;
+        color: #475569 !important;
+        font-weight: 500 !important;
+        font-size: 14px !important;
+        transition: all 0.3s ease !important;
         cursor: pointer;
-        border: none;
-        background: transparent;
+        border: none !important;
+        background: transparent !important;
         width: 100%;
         text-align: left;
     }
@@ -374,9 +384,9 @@
     }
 
     .dropdown-item:hover {
-        background: linear-gradient(90deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
-        color: #667eea;
-        padding-left: 30px;
+        background: linear-gradient(90deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%) !important;
+        color: #667eea !important;
+        padding-left: 30px !important;
     }
 
     .dropdown-item:hover svg {
@@ -385,12 +395,24 @@
     }
 
     .logout-item:hover {
-        background: linear-gradient(90deg, rgba(239, 68, 68, 0.08) 0%, rgba(220, 38, 38, 0.08) 100%);
-        color: #ef4444;
+        background: linear-gradient(90deg, rgba(239, 68, 68, 0.08) 0%, rgba(220, 38, 38, 0.08) 100%) !important;
+        color: #ef4444 !important;
     }
 
     .logout-item:hover svg {
         color: #ef4444;
+    }
+
+    /* Status Dot */
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        background: #10b981;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+        display: inline-block;
+        margin-right: 6px;
+        vertical-align: middle;
     }
 
     /* Responsive Design */
@@ -399,9 +421,13 @@
             max-width: 400px;
             margin: 0 20px;
         }
+
+        .app-header {
+            padding: 0 20px;
+        }
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 991px) {
         .app-header {
             padding: 0 15px;
             height: 65px;
@@ -432,6 +458,15 @@
             padding: 4px;
             border-radius: 50%;
         }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+        }
+
+        .mobile-menu-toggle {
+            margin-right: 10px;
+        }
     }
 
     @media (max-width: 480px) {
@@ -439,15 +474,14 @@
             width: 40px;
             height: 40px;
         }
-    }
 
-    /* Status Dot */
-    .status-dot {
-        width: 8px;
-        height: 8px;
-        background: #10b981;
-        border-radius: 50%;
-        animation: pulse 2s infinite;
+        .app-header {
+            padding: 0 10px;
+        }
+
+        .header-right {
+            gap: 10px;
+        }
     }
 
     /* Smooth Transitions */
@@ -455,11 +489,23 @@
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
     }
+
+    /* Mobile menu open state */
+    body.menu-open {
+        overflow: hidden;
+    }
 </style>
 
 <header class="app-header">
-    <!-- Left Section: Logo -->
+    <!-- Left Section: Logo + Mobile Toggle -->
     <div class="header-left">
+        <button class="mobile-menu-toggle" id="mobileMenuToggle">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
         <a href="{{ route('wholesaler.dashboard') }}" class="brand-logo">
             <img src="{{ asset('asset/img/wordmark.png') }}" alt="DreamX Logo">
             <small class="logo-badge">Wholesale</small>
@@ -517,7 +563,9 @@
                             <span class="status-dot"></span>
                             Active Now
                         </small>
-                        <div class="business-name">🏢 {{ auth()->guard('wholesaler')->user()->business_name }}</div>
+                        @if(auth()->guard('wholesaler')->user()->business_name)
+                            <div class="business-name">🏢 {{ auth()->guard('wholesaler')->user()->business_name }}</div>
+                        @endif
                     </div>
                 </div>
 
@@ -590,75 +638,59 @@
 </header>
 
 <script>
-    // Header scroll effect
-    let lastScroll = 0;
-    const header = document.querySelector('.app-header');
+    // Search functionality with animation
+    $(document).ready(function() {
+        const searchInput = $('.search-input');
+        if (searchInput.length) {
+            searchInput.on('focus', function() {
+                $(this).parent().css('transform', 'scale(1.02)');
+            });
 
-    window.addEventListener('scroll', () => {
-        const currentScroll = window.pageYOffset;
-
-        if (currentScroll > 50) {
-            header.classList.add('scrolled');
-        } else {
-            header.classList.remove('scrolled');
+            searchInput.on('blur', function() {
+                $(this).parent().css('transform', 'scale(1)');
+            });
         }
 
-        lastScroll = currentScroll;
-    });
+        // Bootstrap dropdown functionality
+        $('.user-btn').on('click', function(e) {
+            e.stopPropagation();
+            const dropdown = $(this).next('.dropdown-menu');
+            const isExpanded = $(this).attr('aria-expanded') === 'true';
 
-    // Search functionality with animation
-    const searchInput = document.querySelector('.search-input');
-    if (searchInput) {
-        searchInput.addEventListener('focus', function() {
-            this.parentElement.style.transform = 'scale(1.02)';
+            // Close all other dropdowns
+            $('.dropdown-menu').not(dropdown).removeClass('show');
+            $('.user-btn').not(this).attr('aria-expanded', 'false');
+
+            // Toggle current dropdown
+            $(this).attr('aria-expanded', !isExpanded);
+            dropdown.toggleClass('show', !isExpanded);
         });
 
-        searchInput.addEventListener('blur', function() {
-            this.parentElement.style.transform = 'scale(1)';
-        });
-
-        // Add search functionality
-        searchInput.addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            // You can implement actual search logic here
-            console.log('Searching for:', searchTerm);
-        });
-    }
-
-    // Dropdown close on outside click
-    document.addEventListener('click', function(event) {
-        const dropdowns = document.querySelectorAll('.dropdown-menu.show');
-        dropdowns.forEach(dropdown => {
-            if (!dropdown.parentElement.contains(event.target)) {
-                const button = dropdown.previousElementSibling;
-                if (button) {
-                    button.setAttribute('aria-expanded', 'false');
-                    dropdown.classList.remove('show');
-                }
+        // Close dropdown when clicking outside
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.user-dropdown').length) {
+                $('.dropdown-menu').removeClass('show');
+                $('.user-btn').attr('aria-expanded', 'false');
             }
         });
-    });
 
-    // Notification dropdown functionality
-    const notificationBtn = document.querySelector('.notification-btn');
-    if (notificationBtn) {
-        notificationBtn.addEventListener('click', function() {
-            // You can implement notification fetching here
-            console.log('Fetching notifications...');
-        });
-    }
-
-    // Add active state to current page in dropdown
-    document.addEventListener('DOMContentLoaded', function() {
+        // Add active state to current page in dropdown
         const currentPath = window.location.pathname;
-        const dropdownItems = document.querySelectorAll('.dropdown-item[href]');
-
-        dropdownItems.forEach(item => {
-            if (item.getAttribute('href') === currentPath) {
-                item.style.background = 'linear-gradient(90deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)';
-                item.style.color = '#667eea';
-                item.style.borderLeft = '3px solid #667eea';
+        $('.dropdown-item[href]').each(function() {
+            const href = $(this).attr('href');
+            if (href === currentPath || currentPath.startsWith(href) && href !== '/') {
+                $(this).css({
+                    'background': 'linear-gradient(90deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
+                    'color': '#667eea',
+                    'border-left': '3px solid #667eea'
+                });
             }
+        });
+
+        // Notification dropdown
+        $('.notification-btn').on('click', function() {
+            // Implement notification fetching here
+            console.log('Fetching notifications...');
         });
     });
 </script>

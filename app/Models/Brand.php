@@ -13,6 +13,8 @@ class Brand extends Model
         'wholesaler_id',
         'code',
         'name',
+        'slug',
+        'description',
         'image',  // Changed from 'img' to 'image'
         'status',
     ];
@@ -21,6 +23,10 @@ class Brand extends Model
         'status' => 'string',
     ];
 
+    public function products()
+    {
+        return $this->hasMany(WholesalerProduct::class, 'brand_id');
+    }
     // Relationship with Wholesaler
     public function wholesaler()
     {

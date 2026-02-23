@@ -1,4 +1,4 @@
-@extends('seller.app')
+@extends('seller.layout.app')
 @push('title')
     Payment History
 @endpush
@@ -44,7 +44,8 @@
                                     <td class="action-table-data">
                                         <button class="btn btn-primary btn-sm">View</button>
                                     </td>
-                                </tr> <tr>
+                                </tr>
+                                <tr>
                                     <td>
                                         TRS/0001
                                     </td>
@@ -57,7 +58,8 @@
                                     <td class="action-table-data">
                                         <button class="btn btn-primary btn-sm">View</button>
                                     </td>
-                                </tr> <tr>
+                                </tr>
+                                <tr>
                                     <td>
                                         TRS/0001
                                     </td>
@@ -70,7 +72,8 @@
                                     <td class="action-table-data">
                                         <button class="btn btn-primary btn-sm">View</button>
                                     </td>
-                                </tr> <tr>
+                                </tr>
+                                <tr>
                                     <td>
                                         TRS/0001
                                     </td>
@@ -83,7 +86,8 @@
                                     <td class="action-table-data">
                                         <button class="btn btn-primary btn-sm">View</button>
                                     </td>
-                                </tr> <tr>
+                                </tr>
+                                <tr>
                                     <td>
                                         TRS/0001
                                     </td>
@@ -96,7 +100,8 @@
                                     <td class="action-table-data">
                                         <button class="btn btn-primary btn-sm">View</button>
                                     </td>
-                                </tr> <tr>
+                                </tr>
+                                <tr>
                                     <td>
                                         TRS/0001
                                     </td>

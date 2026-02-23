@@ -1,19 +1,42 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\Employee\EmployeeWholesalerOrderController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
-*/
+Route::prefix('employee')->middleware(['auth:employee', 'api'])->group(function() {
+    // API route for loading orders
+    Route::get('/orders', function(Request $request) {
+        try {
+            $employee = auth()->guard('employee')->user();
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+            $query = \App\Models\WholesalerOrder::with(['wholesaler', 'items'])
+                ->latest();
+
+            // Apply filters
+            if ($request->has('type') && $request->type !== 'all') {
+                if ($request->type === 'wholesaler') {
+                    // Already querying wholesaler orders
+                }
+                // Add other types if needed
+            }
+
+            if ($request->has('status') && $request->status !== 'all') {
+                $query->where('status', $request->status);
+            }
+
+            $orders = $query->limit(20)->get();
+
+            return response()->json([
+                'success' => true,
+                'orders' => $orders,
+                'count' => $orders->count()
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error loading orders'
+            ], 500);
+        }
+    });
 });

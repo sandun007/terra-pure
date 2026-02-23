@@ -1,1019 +1,1934 @@
-@extends('seller.app')
+@extends('seller.layout.app')
 @push('title')
     Seller Dashboard
 @endpush
+
+@push('styles')
+    <!-- Google Icons -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #c7d2fe;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --success-dark: #059669;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-success: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            --gradient-danger: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+            --gradient-warning: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            --gradient-info: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            --gradient-dark: linear-gradient(135deg, #4b5563 0%, #1f2937 100%);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+            --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.15);
+            --shadow-primary: 0 4px 20px rgba(99, 102, 241, 0.2);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+        }
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7ff 0%, #eef2ff 100%);
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* Modern Hero Header */
+        .hero-header {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border-radius: var(--radius-xl);
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-primary);
+            position: relative;
+            overflow: hidden;
+            animation: slideInDown 0.6s ease;
+        }
+
+        .hero-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.15), transparent 70%);
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .hero-header::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -10%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1), transparent 70%);
+            animation: floatReverse 10s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(-30px, -30px) rotate(180deg); }
+        }
+
+        @keyframes floatReverse {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(30px, 30px) rotate(-180deg); }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .hero-text h1 {
+            color: white;
+            font-size: 2.75rem;
+            font-weight: 900;
+            margin-bottom: 12px;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(to right, #ffffff, #f3f4f6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .hero-text p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.125rem;
+            margin: 0;
+            max-width: 600px;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .hero-badge {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-badge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .hero-badge:hover::before {
+            left: 100%;
+        }
+
+        .hero-badge:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Modern Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 30px;
+            box-shadow: var(--shadow-lg);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease;
+            animation-fill-mode: both;
+            cursor: pointer;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--stat-color);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: var(--stat-gradient);
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .stat-card:hover::after {
+            transform: translateX(100%);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .stat-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            background: var(--stat-gradient);
+            color: white;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover .stat-icon {
+            transform: rotateY(180deg) scale(1.1);
+        }
+
+        .stat-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 2.75rem;
+            font-weight: 900;
+            color: var(--gray-900);
+            margin-bottom: 10px;
+            line-height: 1;
+            background: var(--stat-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-change {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--gray-500);
+            padding: 6px 12px;
+            background: var(--gray-100);
+            border-radius: 20px;
+            width: fit-content;
+            transition: all 0.3s ease;
+        }
+
+        .stat-change.positive {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .stat-change.negative {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .stat-card:hover .stat-change {
+            transform: translateX(5px);
+        }
+
+        /* Modern Chart Container */
+        .chart-container {
+            position: relative;
+            height: 350px;
+            margin-top: 20px;
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+        }
+
+        .chart-container:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .chart-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .chart-tab {
+            padding: 10px 24px;
+            border: 2px solid var(--gray-200);
+            background: white;
+            color: var(--gray-600);
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--gradient-primary);
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 1;
+        }
+
+        .chart-tab.active::before {
+            transform: translateY(0);
+        }
+
+        .chart-tab span {
+            position: relative;
+            z-index: 2;
+        }
+
+        .chart-tab.active {
+            color: white;
+            border-color: transparent;
+            box-shadow: var(--shadow-primary);
+        }
+
+        .chart-tab:hover:not(.active) {
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        /* Modern Table */
+        .modern-table-container {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+        }
+
+        .modern-table-container:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .modern-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .modern-table thead {
+            background: linear-gradient(135deg, var(--gray-50), white);
+        }
+
+        .modern-table thead th {
+            padding: 18px 20px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--gray-700);
+            border-bottom: 2px solid var(--gray-200);
+            text-align: left;
+        }
+
+        .modern-table tbody tr {
+            transition: all 0.3s ease;
+            border-radius: var(--radius-sm);
+        }
+
+        .modern-table tbody tr:hover {
+            background: var(--gray-50);
+            transform: translateX(5px);
+        }
+
+        .modern-table tbody td {
+            padding: 20px;
+            border-bottom: 1px solid var(--gray-100);
+            color: var(--gray-700);
+            font-weight: 600;
+        }
+
+        /* Modern Badge */
+        .badge-modern {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 2px solid;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .badge-modern i {
+            font-size: 0.875rem;
+        }
+
+        .badge-pending {
+            border-color: rgba(245, 158, 11, 0.3);
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.25));
+            color: #92400e;
+        }
+
+        .badge-processing {
+            border-color: rgba(59, 130, 246, 0.3);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.25));
+            color: #1e40af;
+        }
+
+        .badge-delivered {
+            border-color: rgba(16, 185, 129, 0.3);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.25));
+            color: #065f46;
+        }
+
+        .badge-cancelled {
+            border-color: rgba(239, 68, 68, 0.3);
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.25));
+            color: #991b1b;
+        }
+
+        /* Modern Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .grid-column {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        /* Modern Card */
+        .modern-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 30px;
+            box-shadow: var(--shadow-md);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .modern-card:hover {
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+            transform: translateY(-5px);
+        }
+
+        .modern-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--gradient-primary);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .modern-card:hover::before {
+            transform: scaleY(1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card-title i {
+            color: var(--primary);
+        }
+
+        /* Product Grid */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+            border: 2px solid var(--gray-200);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .product-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: var(--radius-md);
+            margin-bottom: 15px;
+        }
+
+        .product-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .product-name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .product-price {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: var(--primary);
+        }
+
+        /* Quick Actions */
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .quick-action {
+            background: linear-gradient(135deg, var(--gray-50), white);
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            text-decoration: none;
+            color: var(--gray-700);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            text-align: center;
+        }
+
+        .quick-action:hover {
+            background: var(--gradient-primary);
+            color: white;
+            border-color: transparent;
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-primary);
+        }
+
+        .quick-action i {
+            font-size: 2rem;
+            color: var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .quick-action:hover i {
+            color: white;
+            transform: scale(1.2);
+        }
+
+        .quick-action span {
+            font-weight: 700;
+            font-size: 0.875rem;
+        }
+
+        /* Stock Alert */
+        .stock-alert {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.2));
+            border: 2px solid rgba(245, 158, 11, 0.3);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stock-alert:hover {
+            transform: translateX(5px);
+            box-shadow: 0 8px 24px rgba(245, 158, 11, 0.2);
+            border-color: var(--warning);
+        }
+
+        .stock-alert.critical {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.2));
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .stock-alert.critical:hover {
+            border-color: var(--danger);
+            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.2);
+        }
+
+        /* Performance Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .metric-item {
+            background: linear-gradient(135deg, var(--gray-50), white);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            border: 2px solid var(--gray-200);
+            transition: all 0.3s ease;
+        }
+
+        .metric-item:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--gray-900);
+            margin-bottom: 8px;
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            font-weight: 600;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin-top: 15px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--gray-600);
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: var(--gray-200);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-primary);
+            border-radius: 5px;
+            transition: width 1s ease;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--gray-500);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 15px;
+            }
+
+            .hero-header {
+                padding: 30px 20px;
+            }
+
+            .hero-text h1 {
+                font-size: 2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-actions-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animations */
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-delay-100 { animation-delay: 0.1s; }
+        .animate-delay-200 { animation-delay: 0.2s; }
+        .animate-delay-300 { animation-delay: 0.3s; }
+        .animate-delay-400 { animation-delay: 0.4s; }
+
+        /* Notification Badge */
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--gradient-danger);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 900;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+    </style>
+@endpush
+
 @section('content')
-    <div class="row">
-        <div class="col-xl-3 col-sm-6 col-12 d-flex">
-            <div class="dash-widget w-100">
-                <div class="dash-widgetimg">
-                    <span><img src="{{asset('asset/img/theme/dash1.svg')}}" alt="img"></span>
+    <div class="dashboard-container">
+        <!-- Hero Header -->
+        <div class="hero-header">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>🎯 Welcome Back, {{ auth()->guard('seller')->user()->name ?? 'Seller' }}!</h1>
+                    <p>Your store dashboard - Monitor sales, manage orders, and track performance</p>
                 </div>
-                <div class="dash-widgetcontent">
-                    <h5>RS.<span class="counters" data-count="307144.00">307144</span></h5>
-                    <h6>Total Sales</h6>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-sm-6 col-12 d-flex">
-            <div class="dash-widget dash1 w-100">
-                <div class="dash-widgetimg">
-                    <span><img src="{{asset('asset/img/theme/dash2.svg')}}" alt="img"></span>
-                </div>
-                <div class="dash-widgetcontent">
-                    <h5>RS.<span class="counters" data-count="4385.00">4385</span></h5>
-                    <h6>Total Profit</h6>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-sm-6 col-12 d-flex">
-            <div class="dash-widget dash2 w-100">
-                <div class="dash-widgetimg">
-                    <span><i class="fas fa-user-tag"></i></span>
-                </div>
-                <div class="dash-widgetcontent">
-                    <h5><span class="counters" data-count="385656.50">385656.5</span></h5>
-                    <h6>Total Return Amount</h6>
+                <div class="hero-badges">
+                    <div class="hero-badge">
+                        <span class="material-symbols-outlined">store</span>
+                        <span>Store ID: {{ auth()->guard('seller')->user()->code ?? 'N/A' }}</span>
+                    </div>
+                    <div class="hero-badge" onclick="showPerformanceReport()">
+                        <span class="material-symbols-outlined">trending_up</span>
+                        <span>Performance: {{ $stats['performance_score'] ?? '85' }}%</span>
+                    </div>
+                    <div class="hero-badge" onclick="showRatingDetails()">
+                        <span class="material-symbols-outlined">star</span>
+                        <span>Rating: {{ $stats['avg_rating'] ?? '4.8' }}/5.0</span>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-sm-6 col-12 d-flex">
-            <div class="dash-widget dash3 w-100">
-                <div class="dash-widgetimg">
-                    <span><img src="{{asset('asset/img/theme/dash4.svg')}}" alt="img"></span>
-                </div>
-                <div class="dash-widgetcontent">
-                    <h5>RS.<span class="counters" data-count="40000.00">40000</span></h5>
-                    <h6>Total Commission</h6>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-sm-6 col-12 d-flex">
-            <div class="dash-count">
-                <div class="dash-counts">
-                    <h4>100</h4>
-                    <h5>Customers</h5>
-                </div>
-                <div class="dash-imgs">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                         stroke-linejoin="round" class="feather feather-user">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-sm-6 col-12 d-flex">
-            <div class="dash-count das1">
-                <div class="dash-counts">
-                    <h4>110</h4>
-                    <h5>Total Product</h5>
-                </div>
-                <div class="dash-imgs">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                         stroke-linejoin="round" class="feather feather-user-check">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="8.5" cy="7" r="4"></circle>
-                        <polyline points="17 11 19 13 23 9"></polyline>
-                    </svg>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-sm-6 col-12 d-flex">
-            <div class="dash-count das2">
-                <div class="dash-counts">
-                    <h4>150</h4>
-                    <h5>Complete Orders</h5>
-                </div>
-                <div class="dash-imgs">
-                    <img src="{{asset('asset/img/theme/file-text-icon-01.svg')}}" class="img-fluid"
-                         alt="icon">
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-sm-6 col-12 d-flex">
-            <div class="dash-count das3">
-                <div class="dash-counts">
-                    <h4>170</h4>
-                    <h5>Happy Customer</h5>
-                </div>
-                <div class="dash-imgs">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                         stroke-linejoin="round" class="feather feather-file">
-                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                        <polyline points="13 2 13 9 20 9"></polyline>
-                    </svg>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Button trigger modal -->
 
-    <div class="row">
-        <div class="col-xl-7 col-sm-12 col-12 d-flex">
-            <div class="card flex-fill">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Your Sales & Profit</h5>
-                    <div class="graph-sets">
-                        <ul class="mb-0">
-                            <li>
-                                <span>Sales</span>
-                            </li>
-                            <li>
-                                <span>Purchase</span>
-                            </li>
-                        </ul>
-                        <div class="dropdown dropdown-wraper">
-                            <button class="btn btn-light btn-sm dropdown-toggle" type="button"
-                                    id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                2023
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card" style="--stat-gradient: var(--gradient-primary); --stat-color: #6366f1;"
+                 onclick="showRevenueDetails()">
+                <div class="stat-header">
+                    <div class="stat-title">Total Revenue</div>
+                    <div class="stat-icon">
+                        <span class="material-symbols-outlined">payments</span>
+                    </div>
+                </div>
+                <div class="stat-value">RS. {{ number_format($stats['total_revenue'] ?? 0, 2) }}</div>
+                <div class="stat-change {{ ($stats['revenue_change'] ?? 0) >= 0 ? 'positive' : 'negative' }}">
+                    <span class="material-symbols-outlined">
+                        {{ ($stats['revenue_change'] ?? 0) >= 0 ? 'trending_up' : 'trending_down' }}
+                    </span>
+                    <span>{{ ($stats['revenue_change'] ?? 0) >= 0 ? '+' : '' }}{{ $stats['revenue_change'] ?? 0 }}% this month</span>
+                </div>
+            </div>
+
+            <div class="stat-card" style="--stat-gradient: var(--gradient-success); --stat-color: #10b981;"
+                 onclick="showOrdersDetails()">
+                <div class="stat-header">
+                    <div class="stat-title">Total Orders</div>
+                    <div class="stat-icon">
+                        <span class="material-symbols-outlined">shopping_cart</span>
+                    </div>
+                </div>
+                <div class="stat-value">{{ number_format($stats['total_orders'] ?? 0) }}</div>
+                <div class="stat-change {{ ($stats['order_change'] ?? 0) >= 0 ? 'positive' : 'negative' }}">
+                    <span class="material-symbols-outlined">
+                        {{ ($stats['order_change'] ?? 0) >= 0 ? 'trending_up' : 'trending_down' }}
+                    </span>
+                    <span>{{ ($stats['order_change'] ?? 0) >= 0 ? '+' : '' }}{{ $stats['order_change'] ?? 0 }}% this month</span>
+                </div>
+            </div>
+
+            <div class="stat-card" style="--stat-gradient: var(--gradient-warning); --stat-color: #f59e0b;"
+                 onclick="showPendingOrders()">
+                <div class="stat-header">
+                    <div class="stat-title">Pending Orders</div>
+                    <div class="stat-icon">
+                        <span class="material-symbols-outlined">pending_actions</span>
+                    </div>
+                </div>
+                <div class="stat-value">{{ $stats['pending_orders'] ?? 0 }}</div>
+                <div class="stat-change {{ ($stats['pending_orders'] ?? 0) > 0 ? 'negative' : 'positive' }}">
+                    <span class="material-symbols-outlined">
+                        {{ ($stats['pending_orders'] ?? 0) > 0 ? 'warning' : 'check_circle' }}
+                    </span>
+                    <span>{{ ($stats['pending_orders'] ?? 0) > 0 ? 'Needs attention' : 'All clear' }}</span>
+                </div>
+                @if(($stats['pending_orders'] ?? 0) > 0)
+                    <div class="notification-badge">{{ $stats['pending_orders'] ?? 0 }}</div>
+                @endif
+            </div>
+
+            <div class="stat-card" style="--stat-gradient: var(--gradient-info); --stat-color: #3b82f6;"
+                 onclick="showProductsOverview()">
+                <div class="stat-header">
+                    <div class="stat-title">Active Products</div>
+                    <div class="stat-icon">
+                        <span class="material-symbols-outlined">inventory_2</span>
+                    </div>
+                </div>
+                <div class="stat-value">{{ $stats['total_products'] ?? 0 }}</div>
+                <div class="stat-change positive">
+                    <span class="material-symbols-outlined">check_circle</span>
+                    <span>{{ $stats['active_products'] ?? 0 }} active</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Left Column -->
+            <div class="grid-column">
+                <!-- Sales Chart -->
+                <div class="modern-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="material-symbols-outlined">trending_up</span>
+                            Sales Performance
+                        </h3>
+                        <div class="chart-tabs">
+                            <button class="chart-tab active" data-period="weekly">
+                                <span>Weekly</span>
                             </button>
-                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item">2023</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item">2022</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item">2021</a>
-                                </li>
-                            </ul>
+                            <button class="chart-tab" data-period="monthly">
+                                <span>Monthly</span>
+                            </button>
+                            <button class="chart-tab" data-period="yearly">
+                                <span>Yearly</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                    <div class="chart-legend" style="margin-top: 20px; display: flex; gap: 20px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="width: 12px; height: 12px; background: #6366f1; border-radius: 50%;"></div>
+                            <span style="font-size: 0.875rem; color: var(--gray-600);">Revenue</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="width: 12px; height: 12px; background: #10b981; border-radius: 50%;"></div>
+                            <span style="font-size: 0.875rem; color: var(--gray-600);">Orders</span>
                         </div>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div id="sales_charts" style="min-height: 335px;" class="">
-                        <div id="apexchartsm1yapawr"
-                             class="apexcharts-canvas apexchartsm1yapawr apexcharts-theme-"
-                             style="width: 878px; height: 320px;">
-                            <svg xmlns="http://www.w3.org/2000/svg" version="1.1"
-                                 xlink="http://www.w3.org/1999/xlink" class="apexcharts-svg"
-                                 xmlns:data="ApexChartsNS" transform="translate(0, 0)" width="878" height="320">
-                                <foreignObject x="0" y="0" width="878" height="320">
-                                    <div class="apexcharts-legend" xmlns="http://www.w3.org/1999/xhtml"
-                                         style="max-height: 160px;"></div>
-                                    <style type="text/css">
-                                        .apexcharts-flip-y {
-                                            transform: scaleY(-1) translateY(-100%);
-                                            transform-origin: top;
-                                            transform-box: fill-box;
-                                        }
 
-                                        .apexcharts-flip-x {
-                                            transform: scaleX(-1);
-                                            transform-origin: center;
-                                            transform-box: fill-box;
-                                        }
-
-                                        .apexcharts-legend {
-                                            display: flex;
-                                            overflow: auto;
-                                            padding: 0 10px;
-                                        }
-
-                                        .apexcharts-legend.apexcharts-legend-group-horizontal {
-                                            flex-direction: column;
-                                        }
-
-                                        .apexcharts-legend-group {
-                                            display: flex;
-                                        }
-
-                                        .apexcharts-legend-group-vertical {
-                                            flex-direction: column-reverse;
-                                        }
-
-                                        .apexcharts-legend.apx-legend-position-bottom, .apexcharts-legend.apx-legend-position-top {
-                                            flex-wrap: wrap
-                                        }
-
-                                        .apexcharts-legend.apx-legend-position-right, .apexcharts-legend.apx-legend-position-left {
-                                            flex-direction: column;
-                                            bottom: 0;
-                                        }
-
-                                        .apexcharts-legend.apx-legend-position-bottom.apexcharts-align-left, .apexcharts-legend.apx-legend-position-top.apexcharts-align-left, .apexcharts-legend.apx-legend-position-right, .apexcharts-legend.apx-legend-position-left {
-                                            justify-content: flex-start;
-                                            align-items: flex-start;
-                                        }
-
-                                        .apexcharts-legend.apx-legend-position-bottom.apexcharts-align-center, .apexcharts-legend.apx-legend-position-top.apexcharts-align-center {
-                                            justify-content: center;
-                                            align-items: center;
-                                        }
-
-                                        .apexcharts-legend.apx-legend-position-bottom.apexcharts-align-right, .apexcharts-legend.apx-legend-position-top.apexcharts-align-right {
-                                            justify-content: flex-end;
-                                            align-items: flex-end;
-                                        }
-
-                                        .apexcharts-legend-series {
-                                            cursor: pointer;
-                                            line-height: normal;
-                                            display: flex;
-                                            align-items: center;
-                                        }
-
-                                        .apexcharts-legend-text {
-                                            position: relative;
-                                            font-size: 14px;
-                                        }
-
-                                        .apexcharts-legend-text *, .apexcharts-legend-marker * {
-                                            pointer-events: none;
-                                        }
-
-                                        .apexcharts-legend-marker {
-                                            position: relative;
-                                            display: flex;
-                                            align-items: center;
-                                            justify-content: center;
-                                            cursor: pointer;
-                                            margin-right: 1px;
-                                        }
-
-                                        .apexcharts-legend-series.apexcharts-no-click {
-                                            cursor: auto;
-                                        }
-
-                                        .apexcharts-legend .apexcharts-hidden-zero-series, .apexcharts-legend .apexcharts-hidden-null-series {
-                                            display: none !important;
-                                        }
-
-                                        .apexcharts-inactive-legend {
-                                            opacity: 0.45;
-                                        }
-
-                                    </style>
-                                </foreignObject>
-                                <g class="apexcharts-datalabels-group" transform="translate(0, 0) scale(1)"></g>
-                                <g class="apexcharts-datalabels-group" transform="translate(0, 0) scale(1)"></g>
-                                <g class="apexcharts-yaxis" rel="0" transform="translate(21.01666259765625, 0)">
-                                    <g class="apexcharts-yaxis-texts-g">
-                                        <text x="20" y="33.666666666666664" text-anchor="end"
-                                              dominant-baseline="auto" font-size="11px"
-                                              font-family="Helvetica, Arial, sans-serif" font-weight="400"
-                                              fill="#373d3f" class="apexcharts-text apexcharts-yaxis-label "
-                                              style="font-family: Helvetica, Arial, sans-serif;">
-                                            <tspan>300</tspan>
-                                            <title>300</title></text>
-                                        <text x="20" y="84.13626666666667" text-anchor="end"
-                                              dominant-baseline="auto" font-size="11px"
-                                              font-family="Helvetica, Arial, sans-serif" font-weight="400"
-                                              fill="#373d3f" class="apexcharts-text apexcharts-yaxis-label "
-                                              style="font-family: Helvetica, Arial, sans-serif;">
-                                            <tspan>200</tspan>
-                                            <title>200</title></text>
-                                        <text x="20" y="134.60586666666666" text-anchor="end"
-                                              dominant-baseline="auto" font-size="11px"
-                                              font-family="Helvetica, Arial, sans-serif" font-weight="400"
-                                              fill="#373d3f" class="apexcharts-text apexcharts-yaxis-label "
-                                              style="font-family: Helvetica, Arial, sans-serif;">
-                                            <tspan>100</tspan>
-                                            <title>100</title></text>
-                                        <text x="20" y="185.07546666666667" text-anchor="end"
-                                              dominant-baseline="auto" font-size="11px"
-                                              font-family="Helvetica, Arial, sans-serif" font-weight="400"
-                                              fill="#373d3f" class="apexcharts-text apexcharts-yaxis-label "
-                                              style="font-family: Helvetica, Arial, sans-serif;">
-                                            <tspan>0</tspan>
-                                            <title>0</title></text>
-                                        <text x="20" y="235.54506666666668" text-anchor="end"
-                                              dominant-baseline="auto" font-size="11px"
-                                              font-family="Helvetica, Arial, sans-serif" font-weight="400"
-                                              fill="#373d3f" class="apexcharts-text apexcharts-yaxis-label "
-                                              style="font-family: Helvetica, Arial, sans-serif;">
-                                            <tspan>-100</tspan>
-                                            <title>-100</title></text>
-                                        <text x="20" y="286.0146666666667" text-anchor="end"
-                                              dominant-baseline="auto" font-size="11px"
-                                              font-family="Helvetica, Arial, sans-serif" font-weight="400"
-                                              fill="#373d3f" class="apexcharts-text apexcharts-yaxis-label "
-                                              style="font-family: Helvetica, Arial, sans-serif;">
-                                            <tspan>-200</tspan>
-                                            <title>-200</title></text>
-                                    </g>
-                                </g>
-                                <g class="apexcharts-inner apexcharts-graphical"
-                                   transform="translate(51.01666259765625, 30)">
-                                    <defs>
-                                        <linearGradient x1="0" y1="0" x2="0" y2="1"
-                                                        id="SvgjsLinearGradient1002">
-                                            <stop stop-opacity="0.4" stop-color="rgba(216,227,240,0.4)"
-                                                  offset="0"></stop>
-                                            <stop stop-opacity="0.5" stop-color="rgba(190,209,230,0.5)"
-                                                  offset="1"></stop>
-                                            <stop stop-opacity="0.5" stop-color="rgba(190,209,230,0.5)"
-                                                  offset="1"></stop>
-                                        </linearGradient>
-                                        <clipPath id="gridRectMaskm1yapawr">
-                                            <rect width="804.6500043869019" height="252.348" x="0" y="0" rx="0"
-                                                  ry="0" opacity="1" stroke-width="0" stroke="none"
-                                                  stroke-dasharray="0" fill="#fff"></rect>
-                                        </clipPath>
-                                        <clipPath id="gridRectBarMaskm1yapawr">
-                                            <rect width="808.6500043869019" height="256.348" x="-2" y="-2"
-                                                  rx="0" ry="0" opacity="1" stroke-width="0" stroke="none"
-                                                  stroke-dasharray="0" fill="#fff"></rect>
-                                        </clipPath>
-                                        <clipPath id="gridRectMarkerMaskm1yapawr">
-                                            <rect width="804.6500043869019" height="252.348" x="0" y="0" rx="0"
-                                                  ry="0" opacity="1" stroke-width="0" stroke="none"
-                                                  stroke-dasharray="0" fill="#fff"></rect>
-                                        </clipPath>
-                                        <clipPath id="forecastMaskm1yapawr"></clipPath>
-                                        <clipPath id="nonForecastMaskm1yapawr"></clipPath>
-                                        <filter id="SvgjsFilter1004" filterUnits="userSpaceOnUse" width="200%"
-                                                height="200%" x="-50%" y="-50%">
-                                            <feColorMatrix id="SvgjsFeColorMatrix1003" result="brightness"
-                                                           in="SourceGraphic" type="matrix" values="
-          2 0 0 0 0
-          0 2 0 0 0
-          0 0 2 0 0
-          0 0 0 1 0
-        "></feColorMatrix>
-                                        </filter>
-                                    </defs>
-                                    <rect width="17.88111120859782" height="252.348" x="661.6038853009542" y="0"
-                                          rx="0" ry="0" opacity="1" stroke-width="0" stroke="#b6b6b6"
-                                          stroke-dasharray="3" fill="url(#SvgjsLinearGradient1002)"
-                                          class="apexcharts-xcrosshairs" y2="252.348" filter="none"
-                                          fill-opacity="0.9" x1="661.6038853009542"
-                                          x2="661.6038853009542"></rect>
-                                    <line x1="0" y1="252.348" x2="0" y2="258.348" stroke="#e0e0e0"
-                                          stroke-dasharray="0" stroke-linecap="butt"
-                                          class="apexcharts-xaxis-tick"></line>
-                                    <line x1="89.40555604298909" y1="252.348" x2="89.40555604298909"
-                                          y2="258.348" stroke="#e0e0e0" stroke-dasharray="0"
-                                          stroke-linecap="butt" class="apexcharts-xaxis-tick"></line>
-                                    <line x1="178.81111208597818" y1="252.348" x2="178.81111208597818"
-                                          y2="258.348" stroke="#e0e0e0" stroke-dasharray="0"
-                                          stroke-linecap="butt" class="apexcharts-xaxis-tick"></line>
-                                    <line x1="268.2166681289673" y1="252.348" x2="268.2166681289673"
-                                          y2="258.348" stroke="#e0e0e0" stroke-dasharray="0"
-                                          stroke-linecap="butt" class="apexcharts-xaxis-tick"></line>
-                                    <line x1="357.62222417195636" y1="252.348" x2="357.62222417195636"
-                                          y2="258.348" stroke="#e0e0e0" stroke-dasharray="0"
-                                          stroke-linecap="butt" class="apexcharts-xaxis-tick"></line>
-                                    <line x1="447.02778021494544" y1="252.348" x2="447.02778021494544"
-                                          y2="258.348" stroke="#e0e0e0" stroke-dasharray="0"
-                                          stroke-linecap="butt" class="apexcharts-xaxis-tick"></line>
-                                    <line x1="536.4333362579346" y1="252.348" x2="536.4333362579346"
-                                          y2="258.348" stroke="#e0e0e0" stroke-dasharray="0"
-                                          stroke-linecap="butt" class="apexcharts-xaxis-tick"></line>
-                                    <line x1="625.8388923009237" y1="252.348" x2="625.8388923009237"
-                                          y2="258.348" stroke="#e0e0e0" stroke-dasharray="0"
-                                          stroke-linecap="butt" class="apexcharts-xaxis-tick"></line>
-                                    <line x1="715.2444483439128" y1="252.348" x2="715.2444483439128"
-                                          y2="258.348" stroke="#e0e0e0" stroke-dasharray="0"
-                                          stroke-linecap="butt" class="apexcharts-xaxis-tick"></line>
-                                    <line x1="804.650004386902" y1="252.348" x2="804.650004386902" y2="258.348"
-                                          stroke="#e0e0e0" stroke-dasharray="0" stroke-linecap="butt"
-                                          class="apexcharts-xaxis-tick"></line>
-                                    <g class="apexcharts-grid">
-                                        <g class="apexcharts-gridlines-horizontal">
-                                            <line x1="0" y1="50.4696" x2="804.6500043869019" y2="50.4696"
-                                                  stroke="#e0e0e0" stroke-dasharray="0" stroke-linecap="butt"
-                                                  class="apexcharts-gridline"></line>
-                                            <line x1="0" y1="100.9392" x2="804.6500043869019" y2="100.9392"
-                                                  stroke="#e0e0e0" stroke-dasharray="0" stroke-linecap="butt"
-                                                  class="apexcharts-gridline"></line>
-                                            <line x1="0" y1="151.40879999999999" x2="804.6500043869019"
-                                                  y2="151.40879999999999" stroke="#e0e0e0" stroke-dasharray="0"
-                                                  stroke-linecap="butt" class="apexcharts-gridline"></line>
-                                            <line x1="0" y1="201.8784" x2="804.6500043869019" y2="201.8784"
-                                                  stroke="#e0e0e0" stroke-dasharray="0" stroke-linecap="butt"
-                                                  class="apexcharts-gridline"></line>
-                                        </g>
-                                        <g class="apexcharts-gridlines-vertical"></g>
-                                        <line x1="0" y1="252.348" x2="804.6500043869019" y2="252.348"
-                                              stroke="transparent" stroke-dasharray="0"
-                                              stroke-linecap="butt"></line>
-                                        <line x1="0" y1="1" x2="0" y2="252.348" stroke="transparent"
-                                              stroke-dasharray="0" stroke-linecap="butt"></line>
-                                    </g>
-                                    <g class="apexcharts-grid-borders">
-                                        <line x1="0" y1="0" x2="804.6500043869019" y2="0" stroke="#e0e0e0"
-                                              stroke-dasharray="0" stroke-linecap="butt"
-                                              class="apexcharts-gridline"></line>
-                                        <line x1="0" y1="252.348" x2="804.6500043869019" y2="252.348"
-                                              stroke="#e0e0e0" stroke-dasharray="0" stroke-linecap="butt"
-                                              class="apexcharts-gridline"></line>
-                                        <line x1="0" y1="252.348" x2="804.6500043869019" y2="252.348"
-                                              stroke="#e0e0e0" stroke-dasharray="0" stroke-width="1"
-                                              stroke-linecap="butt"></line>
-                                    </g>
-                                    <g class="apexcharts-bar-series apexcharts-plot-series">
-                                        <g class="apexcharts-series" seriesName="Sales" rel="1"
-                                           data:realIndex="0">
-                                            <path
-                                                d="M 35.76222241719564 151.40980000000002 L 35.76222241719564 89.79932000000002 C 35.76222241719564 87.79932000000002 37.76222241719564 85.79932000000002 39.76222241719564 85.79932000000002 L 49.64333362579346 85.79932000000002 C 51.64333362579346 85.79932000000002 53.64333362579346 87.79932000000002 53.64333362579346 89.79932000000002 L 53.64333362579346 151.40980000000002 z "
-                                                fill="rgba(40,199,111,1)" fill-opacity="1" stroke="#28c76f"
-                                                stroke-opacity="1" stroke-linecap="round" stroke-width="0"
-                                                stroke-dasharray="0" class="apexcharts-bar-area " index="0"
-                                                clip-path="url(#gridRectBarMaskm1yapawr)"
-                                                pathTo="M 35.76222241719564 151.40980000000002 L 35.76222241719564 89.79932000000002 C 35.76222241719564 87.79932000000002 37.76222241719564 85.79932000000002 39.76222241719564 85.79932000000002 L 49.64333362579346 85.79932000000002 C 51.64333362579346 85.79932000000002 53.64333362579346 87.79932000000002 53.64333362579346 89.79932000000002 L 53.64333362579346 151.40980000000002 z "
-                                                pathFrom="M 35.76222241719564 151.40980000000002 L 35.76222241719564 151.40980000000002 L 53.64333362579346 151.40980000000002 L 53.64333362579346 151.40980000000002 L 53.64333362579346 151.40980000000002 L 53.64333362579346 151.40980000000002 L 53.64333362579346 151.40980000000002 L 35.76222241719564 151.40980000000002 z"
-                                                cy="85.79832000000002" cx="125.16777846018473" j="0" val="130"
-                                                barHeight="65.61048" barWidth="17.88111120859782"></path>
-                                            <path
-                                                d="M 125.16777846018473 151.40980000000002 L 125.16777846018473 49.42364000000001 C 125.16777846018473 47.42364000000001 127.16777846018473 45.42364000000001 129.16777846018473 45.42364000000001 L 139.04888966878255 45.42364000000001 C 141.04888966878255 45.42364000000001 143.04888966878255 47.42364000000001 143.04888966878255 49.42364000000001 L 143.04888966878255 151.40980000000002 z "
-                                                fill="rgba(40,199,111,1)" fill-opacity="1" stroke="#28c76f"
-                                                stroke-opacity="1" stroke-linecap="round" stroke-width="0"
-                                                stroke-dasharray="0" class="apexcharts-bar-area " index="0"
-                                                clip-path="url(#gridRectBarMaskm1yapawr)"
-                                                pathTo="M 125.16777846018473 151.40980000000002 L 125.16777846018473 49.42364000000001 C 125.16777846018473 47.42364000000001 127.16777846018473 45.42364000000001 129.16777846018473 45.42364000000001 L 139.04888966878255 45.42364000000001 C 141.04888966878255 45.42364000000001 143.04888966878255 47.42364000000001 143.04888966878255 49.42364000000001 L 143.04888966878255 151.40980000000002 z "
-                                                pathFrom="M 125.16777846018473 151.40980000000002 L 125.16777846018473 151.40980000000002 L 143.04888966878255 151.40980000000002 L 143.04888966878255 151.40980000000002 L 143.04888966878255 151.40980000000002 L 143.04888966878255 151.40980000000002 L 143.04888966878255 151.40980000000002 L 125.16777846018473 151.40980000000002 z"
-                                                cy="45.422640000000015" cx="214.57333450317384" j="1" val="210"
-                                                barHeight="105.98616" barWidth="17.88111120859782"></path>
-                                            <path
-                                                d="M 214.57333450317384 151.40980000000002 L 214.57333450317384 4.0009999999999994 C 214.57333450317384 2.0009999999999994 216.57333450317384 0.001 218.57333450317384 0.001 L 228.45444571177165 0.001 C 230.45444571177165 0.001 232.45444571177165 2.001 232.45444571177165 4.0009999999999994 L 232.45444571177165 151.40980000000002 z "
-                                                fill="rgba(40,199,111,1)" fill-opacity="1" stroke="#28c76f"
-                                                stroke-opacity="1" stroke-linecap="round" stroke-width="0"
-                                                stroke-dasharray="0" class="apexcharts-bar-area " index="0"
-                                                clip-path="url(#gridRectBarMaskm1yapawr)"
-                                                pathTo="M 214.57333450317384 151.40980000000002 L 214.57333450317384 4.0009999999999994 C 214.57333450317384 2.0009999999999994 216.57333450317384 0.001 218.57333450317384 0.001 L 228.45444571177165 0.001 C 230.45444571177165 0.001 232.45444571177165 2.001 232.45444571177165 4.0009999999999994 L 232.45444571177165 151.40980000000002 z "
-                                                pathFrom="M 214.57333450317384 151.40980000000002 L 214.57333450317384 151.40980000000002 L 232.45444571177165 151.40980000000002 L 232.45444571177165 151.40980000000002 L 232.45444571177165 151.40980000000002 L 232.45444571177165 151.40980000000002 L 232.45444571177165 151.40980000000002 L 214.57333450317384 151.40980000000002 z"
-                                                cy="0" cx="303.9788905461629" j="2" val="300"
-                                                barHeight="151.4088" barWidth="17.88111120859782"></path>
-                                            <path
-                                                d="M 303.9788905461629 151.40980000000002 L 303.9788905461629 9.047960000000014 C 303.9788905461629 7.047960000000014 305.9788905461629 5.047960000000013 307.9788905461629 5.047960000000013 L 317.86000175476073 5.047960000000013 C 319.86000175476073 5.047960000000013 321.86000175476073 7.047960000000014 321.86000175476073 9.047960000000014 L 321.86000175476073 151.40980000000002 z "
-                                                fill="rgba(40,199,111,1)" fill-opacity="1" stroke="#28c76f"
-                                                stroke-opacity="1" stroke-linecap="round" stroke-width="0"
-                                                stroke-dasharray="0" class="apexcharts-bar-area " index="0"
-                                                clip-path="url(#gridRectBarMaskm1yapawr)"
-                                                pathTo="M 303.9788905461629 151.40980000000002 L 303.9788905461629 9.047960000000014 C 303.9788905461629 7.047960000000014 305.9788905461629 5.047960000000013 307.9788905461629 5.047960000000013 L 317.86000175476073 5.047960000000013 C 319.86000175476073 5.047960000000013 321.86000175476073 7.047960000000014 321.86000175476073 9.047960000000014 L 321.86000175476073 151.40980000000002 z "
-                                                pathFrom="M 303.9788905461629 151.40980000000002 L 303.9788905461629 151.40980000000002 L 321.86000175476073 151.40980000000002 L 321.86000175476073 151.40980000000002 L 321.86000175476073 151.40980000000002 L 321.86000175476073 151.40980000000002 L 321.86000175476073 151.40980000000002 L 303.9788905461629 151.40980000000002 z"
-                                                cy="5.046960000000013" cx="393.384446589152" j="3" val="290"
-                                                barHeight="146.36184" barWidth="17.88111120859782"></path>
-                                            <path
-                                                d="M 393.384446589152 151.40980000000002 L 393.384446589152 79.70540000000001 C 393.384446589152 77.70540000000001 395.384446589152 75.70540000000001 397.384446589152 75.70540000000001 L 407.2655577977498 75.70540000000001 C 409.2655577977498 75.70540000000001 411.2655577977498 77.70540000000001 411.2655577977498 79.70540000000001 L 411.2655577977498 151.40980000000002 z "
-                                                fill="rgba(40,199,111,1)" fill-opacity="1" stroke="#28c76f"
-                                                stroke-opacity="1" stroke-linecap="round" stroke-width="0"
-                                                stroke-dasharray="0" class="apexcharts-bar-area " index="0"
-                                                clip-path="url(#gridRectBarMaskm1yapawr)"
-                                                pathTo="M 393.384446589152 151.40980000000002 L 393.384446589152 79.70540000000001 C 393.384446589152 77.70540000000001 395.384446589152 75.70540000000001 397.384446589152 75.70540000000001 L 407.2655577977498 75.70540000000001 C 409.2655577977498 75.70540000000001 411.2655577977498 77.70540000000001 411.2655577977498 79.70540000000001 L 411.2655577977498 151.40980000000002 z "
-                                                pathFrom="M 393.384446589152 151.40980000000002 L 393.384446589152 151.40980000000002 L 411.2655577977498 151.40980000000002 L 411.2655577977498 151.40980000000002 L 411.2655577977498 151.40980000000002 L 411.2655577977498 151.40980000000002 L 411.2655577977498 151.40980000000002 L 393.384446589152 151.40980000000002 z"
-                                                cy="75.7044" cx="482.79000263214107" j="4" val="150"
-                                                barHeight="75.7044" barWidth="17.88111120859782"></path>
-                                            <path
-                                                d="M 482.79000263214107 151.40980000000002 L 482.79000263214107 130.175 C 482.79000263214107 128.175 484.79000263214107 126.17500000000001 486.79000263214107 126.17500000000001 L 496.6711138407389 126.17500000000001 C 498.6711138407389 126.17500000000001 500.6711138407389 128.175 500.6711138407389 130.175 L 500.6711138407389 151.40980000000002 z "
-                                                fill="rgba(40,199,111,1)" fill-opacity="1" stroke="#28c76f"
-                                                stroke-opacity="1" stroke-linecap="round" stroke-width="0"
-                                                stroke-dasharray="0" class="apexcharts-bar-area " index="0"
-                                                clip-path="url(#gridRectBarMaskm1yapawr)"
-                                                pathTo="M 482.79000263214107 151.40980000000002 L 482.79000263214107 130.175 C 482.79000263214107 128.175 484.79000263214107 126.17500000000001 486.79000263214107 126.17500000000001 L 496.6711138407389 126.17500000000001 C 498.6711138407389 126.17500000000001 500.6711138407389 128.175 500.6711138407389 130.175 L 500.6711138407389 151.40980000000002 z "
-                                                pathFrom="M 482.79000263214107 151.40980000000002 L 482.79000263214107 151.40980000000002 L 500.6711138407389 151.40980000000002 L 500.6711138407389 151.40980000000002 L 500.6711138407389 151.40980000000002 L 500.6711138407389 151.40980000000002 L 500.6711138407389 151.40980000000002 L 482.79000263214107 151.40980000000002 z"
-                                                cy="126.174" cx="572.1955586751302" j="5" val="50"
-                                                barHeight="25.2348" barWidth="17.88111120859782"></path>
-                                            <path
-                                                d="M 572.1955586751302 151.40980000000002 L 572.1955586751302 49.42364000000001 C 572.1955586751302 47.42364000000001 574.1955586751302 45.42364000000001 576.1955586751302 45.42364000000001 L 586.0766698837281 45.42364000000001 C 588.0766698837281 45.42364000000001 590.0766698837281 47.42364000000001 590.0766698837281 49.42364000000001 L 590.0766698837281 151.40980000000002 z "
-                                                fill="rgba(40,199,111,1)" fill-opacity="1" stroke="#28c76f"
-                                                stroke-opacity="1" stroke-linecap="round" stroke-width="0"
-                                                stroke-dasharray="0" class="apexcharts-bar-area " index="0"
-                                                clip-path="url(#gridRectBarMaskm1yapawr)"
-                                                pathTo="M 572.1955586751302 151.40980000000002 L 572.1955586751302 49.42364000000001 C 572.1955586751302 47.42364000000001 574.1955586751302 45.42364000000001 576.1955586751302 45.42364000000001 L 586.0766698837281 45.42364000000001 C 588.0766698837281 45.42364000000001 590.0766698837281 47.42364000000001 590.0766698837281 49.42364000000001 L 590.0766698837281 151.40980000000002 z "
-                                                pathFrom="M 572.1955586751302 151.40980000000002 L 572.1955586751302 151.40980000000002 L 590.0766698837281 151.40980000000002 L 590.0766698837281 151.40980000000002 L 590.0766698837281 151.40980000000002 L 590.0766698837281 151.40980000000002 L 590.0766698837281 151.40980000000002 L 572.1955586751302 151.40980000000002 z"
-                                                cy="45.422640000000015" cx="661.6011147181193" j="6" val="210"
-                                                barHeight="105.98616" barWidth="17.88111120859782"></path>
-                                            <path
-                                                d="M 661.6011147181193 151.40980000000002 L 661.6011147181193 14.094919999999997 C 661.6011147181193 12.094919999999997 663.6011147181193 10.094919999999997 665.6011147181193 10.094919999999997 L 675.4822259267172 10.094919999999997 C 677.4822259267172 10.094919999999997 679.4822259267172 12.094919999999997 679.4822259267172 14.094919999999997 L 679.4822259267172 151.40980000000002 z "
-                                                fill="rgba(40,199,111,1)" fill-opacity="1" stroke="#28c76f"
-                                                stroke-opacity="1" stroke-linecap="round" stroke-width="0"
-                                                stroke-dasharray="0" class="apexcharts-bar-area " index="0"
-                                                clip-path="url(#gridRectBarMaskm1yapawr)"
-                                                pathTo="M 661.6011147181193 151.40980000000002 L 661.6011147181193 14.094919999999997 C 661.6011147181193 12.094919999999997 663.6011147181193 10.094919999999997 665.6011147181193 10.094919999999997 L 675.4822259267172 10.094919999999997 C 677.4822259267172 10.094919999999997 679.4822259267172 12.094919999999997 679.4822259267172 14.094919999999997 L 679.4822259267172 151.40980000000002 z "
-                                                pathFrom="M 661.6011147181193 151.40980000000002 L 661.6011147181193 151.40980000000002 L 679.4822259267172 151.40980000000002 L 679.4822259267172 151.40980000000002 L 679.4822259267172 151.40980000000002 L 679.4822259267172 151.40980000000002 L 679.4822259267172 151.40980000000002 L 661.6011147181193 151.40980000000002 z"
-                                                cy="10.093919999999997" cx="751.0066707611085" j="7" val="280"
-                                                barHeight="141.31488000000002"
-                                                barWidth="17.88111120859782"></path>
-                                            <path
-                                                d="M 751.0066707611085 151.40980000000002 L 751.0066707611085 102.41672000000003 C 751.0066707611085 100.41672000000003 753.0066707611085 98.41672000000003 755.0066707611085 98.41672000000003 L 764.8877819697063 98.41672000000003 C 766.8877819697063 98.41672000000003 768.8877819697063 100.41672000000003 768.8877819697063 102.41672000000003 L 768.8877819697063 151.40980000000002 z "
-                                                fill="rgba(40,199,111,1)" fill-opacity="1" stroke="#28c76f"
-                                                stroke-opacity="1" stroke-linecap="round" stroke-width="0"
-                                                stroke-dasharray="0" class="apexcharts-bar-area " index="0"
-                                                clip-path="url(#gridRectBarMaskm1yapawr)"
-                                                pathTo="M 751.0066707611085 151.40980000000002 L 751.0066707611085 102.41672000000003 C 751.0066707611085 100.41672000000003 753.0066707611085 98.41672000000003 755.0066707611085 98.41672000000003 L 764.8877819697063 98.41672000000003 C 766.8877819697063 98.41672000000003 768.8877819697063 100.41672000000003 768.8877819697063 102.41672000000003 L 768.8877819697063 151.40980000000002 z "
-                                                pathFrom="M 751.0066707611085 151.40980000000002 L 751.0066707611085 151.40980000000002 L 768.8877819697063 151.40980000000002 L 768.8877819697063 151.40980000000002 L 768.8877819697063 151.40980000000002 L 768.8877819697063 151.40980000000002 L 768.8877819697063 151.40980000000002 L 751.0066707611085 151.40980000000002 z"
-                                                cy="98.41572000000002" cx="840.4122268040976" j="8" val="105"
-                                                barHeight="52.99308" barWidth="17.88111120859782"></path>
-                                            <g class="apexcharts-bar-goals-markers">
-                                                <g className="apexcharts-bar-goals-groups"
-                                                   class="apexcharts-hidden-element-shown"
-                                                   clip-path="url(#gridRectMarkerMaskm1yapawr)"></g>
-                                                <g className="apexcharts-bar-goals-groups"
-                                                   class="apexcharts-hidden-element-shown"
-                                                   clip-path="url(#gridRectMarkerMaskm1yapawr)"></g>
-                                                <g className="apexcharts-bar-goals-groups"
-                                                   class="apexcharts-hidden-element-shown"
-                                                   clip-path="url(#gridRectMarkerMaskm1yapawr)"></g>
-                                                <g className="apexcharts-bar-goals-groups"
-                                                   class="apexcharts-hidden-element-shown"
-                                                   clip-path="url(#gridRectMarkerMaskm1yapawr)"></g>
-                                                <g className="apexcharts-bar-goals-groups"
-                                                   class="apexcharts-hidden-element-shown"
-                                                   clip-path="url(#gridRectMarkerMaskm1yapawr)"></g>
-                                                <g className="apexcharts-bar-goals-groups"
-                                                   class="apexcharts-hidden-element-shown"
-                                                   clip-path="url(#gridRectMarkerMaskm1yapawr)"></g>
-                                                <g className="apexcharts-bar-goals-groups"
-                                                   class="apexcharts-hidden-element-shown"
-                                                   clip-path="url(#gridRectMarkerMaskm1yapawr)"></g>
-                                                <g className="apexcharts-bar-goals-groups"
-                                                   class="apexcharts-hidden-element-shown"
-                                                   clip-path="url(#gridRectMarkerMaskm1yapawr)"></g>
-                                                <g className="apexcharts-bar-goals-groups"
-                                                   class="apexcharts-hidden-element-shown"
-                                                   clip-path="url(#gridRectMarkerMaskm1yapawr)"></g>
-                                            </g>
-                                        </g>
-                                        <g class="apexcharts-series" seriesName="Purchase" rel="2"
-                                           data:realIndex="1">
-                                            <path
-                                                d="M 35.76222241719564 151.41080000000002 L 35.76222241719564 223.11520000000004 C 35.76222241719564 225.11520000000004 37.76222241719564 227.11520000000004 39.76222241719564 227.11520000000004 L 49.64333362579346 227.11520000000004 C 51.64333362579346 227.11520000000004 53.64333362579346 225.11520000000004 53.64333362579346 223.11520000000004 L 53.64333362579346 151.41080000000002 z "
-                                                fill="rgba(234,84,85,1)" fill-opacity="1" stroke="#ea5455"
-                                                stroke-opacity="1" stroke-linecap="round" stroke-width="0"
-                                                stroke-dasharray="0" class="apexcharts-bar-area " index="1"
-                                                clip-path="url(#gridRectBarMaskm1yapawr)"
-                                                pathTo="M 35.76222241719564 151.41080000000002 L 35.76222241719564 223.11520000000004 C 35.76222241719564 225.11520000000004 37.76222241719564 227.11520000000004 39.76222241719564 227.11520000000004 L 49.64333362579346 227.11520000000004 C 51.64333362579346 227.11520000000004 53.64333362579346 225.11520000000004 53.64333362579346 223.11520000000004 L 53.64333362579346 151.41080000000002 z "
-                                                pathFrom="M 35.76222241719564 151.41080000000002 L 35.76222241719564 151.41080000000002 L 53.64333362579346 151.41080000000002 L 53.64333362579346 151.41080000000002 L 53.64333362579346 151.41080000000002 L 53.64333362579346 151.41080000000002 L 53.64333362579346 151.41080000000002 L 35.76222241719564 151.41080000000002 z"
-                                                cy="227.11420000000004" cx="125.16777846018473" j="0" val="-150"
-                                                barHeight="-75.7044" barWidth="17.88111120859782"></path>
-                                            <path
-                                                d="M 125.16777846018473 151.41080000000002 L 125.16777846018473 192.83344000000002 C 125.16777846018473 194.83344000000002 127.16777846018473 196.83344000000002 129.16777846018473 196.83344000000002 L 139.04888966878255 196.83344000000002 C 141.04888966878255 196.83344000000002 143.04888966878255 194.83344000000002 143.04888966878255 192.83344000000002 L 143.04888966878255 151.41080000000002 z "
-                                                fill="rgba(234,84,85,1)" fill-opacity="1" stroke="#ea5455"
-                                                stroke-opacity="1" stroke-linecap="round" stroke-width="0"
-                                                stroke-dasharray="0" class="apexcharts-bar-area " index="1"
-                                                clip-path="url(#gridRectBarMaskm1yapawr)"
-                                                pathTo="M 125.16777846018473 151.41080000000002 L 125.16777846018473 192.83344000000002 C 125.16777846018473 194.83344000000002 127.16777846018473 196.83344000000002 129.16777846018473 196.83344000000002 L 139.04888966878255 196.83344000000002 C 141.04888966878255 196.83344000000002 143.04888966878255 194.83344000000002 143.04888966878255 192.83344000000002 L 143.04888966878255 151.41080000000002 z "
-                                                pathFrom="M 125.16777846018473 151.41080000000002 L 125.16777846018473 151.41080000000002 L 143.04888966878255 151.41080000000002 L 143.04888966878255 151.41080000000002 L 143.04888966878255 151.41080000000002 L 143.04888966878255 151.41080000000002 L 143.04888966878255 151.41080000000002 L 125.16777846018473 151.41080000000002 z"
-                                                cy="196.83244000000002" cx="214.57333450317384" j="1" val="-90"
-                                                barHeight="-45.42264" barWidth="17.88111120859782"></path>
-                                            <path
-                                                d="M 214.57333450317384 151.41080000000002 L 214.57333450317384 172.64560000000003 C 214.57333450317384 174.64560000000003 216.57333450317384 176.64560000000003 218.57333450317384 176.64560000000003 L 228.45444571177165 176.64560000000003 C 230.45444571177165 176.64560000000003 232.45444571177165 174.64560000000003 232.45444571177165 172.64560000000003 L 232.45444571177165 151.41080000000002 z "
-                                                fill="rgba(234,84,85,1)" fill-opacity="1" stroke="#ea5455"
-                                                stroke-opacity="1" stroke-linecap="round" stroke-width="0"
-                                                stroke-dasharray="0" class="apexcharts-bar-area " index="1"
-                                                clip-path="url(#gridRectBarMaskm1yapawr)"
-                                                pathTo="M 214.57333450317384 151.41080000000002 L 214.57333450317384 172.64560000000003 C 214.57333450317384 174.64560000000003 216.57333450317384 176.64560000000003 218.57333450317384 176.64560000000003 L 228.45444571177165 176.64560000000003 C 230.45444571177165 176.64560000000003 232.45444571177165 174.64560000000003 232.45444571177165 172.64560000000003 L 232.45444571177165 151.41080000000002 z "
-                                                pathFrom="M 214.57333450317384 151.41080000000002 L 214.57333450317384 151.41080000000002 L 232.45444571177165 151.41080000000002 L 232.45444571177165 151.41080000000002 L 232.45444571177165 151.41080000000002 L 232.45444571177165 151.41080000000002 L 232.45444571177165 151.41080000000002 L 214.57333450317384 151.41080000000002 z"
-                                                cy="176.64460000000003" cx="303.9788905461629" j="2" val="-50"
-                                                barHeight="-25.2348" barWidth="17.88111120859782"></path>
-                                            <path
-                                                d="M 303.9788905461629 151.41080000000002 L 303.9788905461629 238.25608000000003 C 303.9788905461629 240.25608000000003 305.9788905461629 242.25608000000003 307.9788905461629 242.25608000000003 L 317.86000175476073 242.25608000000003 C 319.86000175476073 242.25608000000003 321.86000175476073 240.25608000000003 321.86000175476073 238.25608000000003 L 321.86000175476073 151.41080000000002 z "
-                                                fill="rgba(234,84,85,1)" fill-opacity="1" stroke="#ea5455"
-                                                stroke-opacity="1" stroke-linecap="round" stroke-width="0"
-                                                stroke-dasharray="0" class="apexcharts-bar-area " index="1"
-                                                clip-path="url(#gridRectBarMaskm1yapawr)"
-                                                pathTo="M 303.9788905461629 151.41080000000002 L 303.9788905461629 238.25608000000003 C 303.9788905461629 240.25608000000003 305.9788905461629 242.25608000000003 307.9788905461629 242.25608000000003 L 317.86000175476073 242.25608000000003 C 319.86000175476073 242.25608000000003 321.86000175476073 240.25608000000003 321.86000175476073 238.25608000000003 L 321.86000175476073 151.41080000000002 z "
-                                                pathFrom="M 303.9788905461629 151.41080000000002 L 303.9788905461629 151.41080000000002 L 321.86000175476073 151.41080000000002 L 321.86000175476073 151.41080000000002 L 321.86000175476073 151.41080000000002 L 321.86000175476073 151.41080000000002 L 321.86000175476073 151.41080000000002 L 303.9788905461629 151.41080000000002 z"
-                                                cy="242.25508000000002" cx="393.384446589152" j="3" val="-180"
-                                                barHeight="-90.84528" barWidth="17.88111120859782"></path>
-                                            <path
-                                                d="M 393.384446589152 151.41080000000002 L 393.384446589152 172.64560000000003 C 393.384446589152 174.64560000000003 395.384446589152 176.64560000000003 397.384446589152 176.64560000000003 L 407.2655577977498 176.64560000000003 C 409.2655577977498 176.64560000000003 411.2655577977498 174.64560000000003 411.2655577977498 172.64560000000003 L 411.2655577977498 151.41080000000002 z "
-                                                fill="rgba(234,84,85,1)" fill-opacity="1" stroke="#ea5455"
-                                                stroke-opacity="1" stroke-linecap="round" stroke-width="0"
-                                                stroke-dasharray="0" class="apexcharts-bar-area " index="1"
-                                                clip-path="url(#gridRectBarMaskm1yapawr)"
-                                                pathTo="M 393.384446589152 151.41080000000002 L 393.384446589152 172.64560000000003 C 393.384446589152 174.64560000000003 395.384446589152 176.64560000000003 397.384446589152 176.64560000000003 L 407.2655577977498 176.64560000000003 C 409.2655577977498 176.64560000000003 411.2655577977498 174.64560000000003 411.2655577977498 172.64560000000003 L 411.2655577977498 151.41080000000002 z "
-                                                pathFrom="M 393.384446589152 151.41080000000002 L 393.384446589152 151.41080000000002 L 411.2655577977498 151.41080000000002 L 411.2655577977498 151.41080000000002 L 411.2655577977498 151.41080000000002 L 411.2655577977498 151.41080000000002 L 411.2655577977498 151.41080000000002 L 393.384446589152 151.41080000000002 z"
-                                                cy="176.64460000000003" cx="482.79000263214107" j="4" val="-50"
-                                                barHeight="-25.2348" barWidth="17.88111120859782"></path>
-                                            <path
-                                                d="M 482.79000263214107 151.41080000000002 L 482.79000263214107 182.73952000000003 C 482.79000263214107 184.73952000000003 484.79000263214107 186.73952000000003 486.79000263214107 186.73952000000003 L 496.6711138407389 186.73952000000003 C 498.6711138407389 186.73952000000003 500.6711138407389 184.73952000000003 500.6711138407389 182.73952000000003 L 500.6711138407389 151.41080000000002 z "
-                                                fill="rgba(234,84,85,1)" fill-opacity="1" stroke="#ea5455"
-                                                stroke-opacity="1" stroke-linecap="round" stroke-width="0"
-                                                stroke-dasharray="0" class="apexcharts-bar-area " index="1"
-                                                clip-path="url(#gridRectBarMaskm1yapawr)"
-                                                pathTo="M 482.79000263214107 151.41080000000002 L 482.79000263214107 182.73952000000003 C 482.79000263214107 184.73952000000003 484.79000263214107 186.73952000000003 486.79000263214107 186.73952000000003 L 496.6711138407389 186.73952000000003 C 498.6711138407389 186.73952000000003 500.6711138407389 184.73952000000003 500.6711138407389 182.73952000000003 L 500.6711138407389 151.41080000000002 z "
-                                                pathFrom="M 482.79000263214107 151.41080000000002 L 482.79000263214107 151.41080000000002 L 500.6711138407389 151.41080000000002 L 500.6711138407389 151.41080000000002 L 500.6711138407389 151.41080000000002 L 500.6711138407389 151.41080000000002 L 500.6711138407389 151.41080000000002 L 482.79000263214107 151.41080000000002 z"
-                                                cy="186.73852000000002" cx="572.1955586751302" j="5" val="-70"
-                                                barHeight="-35.328720000000004"
-                                                barWidth="17.88111120859782"></path>
-                                            <path
-                                                d="M 572.1955586751302 151.41080000000002 L 572.1955586751302 197.88040000000004 C 572.1955586751302 199.88040000000004 574.1955586751302 201.88040000000004 576.1955586751302 201.88040000000004 L 586.0766698837281 201.88040000000004 C 588.0766698837281 201.88040000000004 590.0766698837281 199.88040000000004 590.0766698837281 197.88040000000004 L 590.0766698837281 151.41080000000002 z "
-                                                fill="rgba(234,84,85,1)" fill-opacity="1" stroke="#ea5455"
-                                                stroke-opacity="1" stroke-linecap="round" stroke-width="0"
-                                                stroke-dasharray="0" class="apexcharts-bar-area " index="1"
-                                                clip-path="url(#gridRectBarMaskm1yapawr)"
-                                                pathTo="M 572.1955586751302 151.41080000000002 L 572.1955586751302 197.88040000000004 C 572.1955586751302 199.88040000000004 574.1955586751302 201.88040000000004 576.1955586751302 201.88040000000004 L 586.0766698837281 201.88040000000004 C 588.0766698837281 201.88040000000004 590.0766698837281 199.88040000000004 590.0766698837281 197.88040000000004 L 590.0766698837281 151.41080000000002 z "
-                                                pathFrom="M 572.1955586751302 151.41080000000002 L 572.1955586751302 151.41080000000002 L 590.0766698837281 151.41080000000002 L 590.0766698837281 151.41080000000002 L 590.0766698837281 151.41080000000002 L 590.0766698837281 151.41080000000002 L 590.0766698837281 151.41080000000002 L 572.1955586751302 151.41080000000002 z"
-                                                cy="201.87940000000003" cx="661.6011147181193" j="6" val="-100"
-                                                barHeight="-50.4696" barWidth="17.88111120859782"></path>
-                                            <path
-                                                d="M 661.6011147181193 151.41080000000002 L 661.6011147181193 192.83344000000002 C 661.6011147181193 194.83344000000002 663.6011147181193 196.83344000000002 665.6011147181193 196.83344000000002 L 675.4822259267172 196.83344000000002 C 677.4822259267172 196.83344000000002 679.4822259267172 194.83344000000002 679.4822259267172 192.83344000000002 L 679.4822259267172 151.41080000000002 z "
-                                                fill="rgba(234,84,85,1)" fill-opacity="1" stroke="#ea5455"
-                                                stroke-opacity="1" stroke-linecap="round" stroke-width="0"
-                                                stroke-dasharray="0" class="apexcharts-bar-area " index="1"
-                                                clip-path="url(#gridRectBarMaskm1yapawr)"
-                                                pathTo="M 661.6011147181193 151.41080000000002 L 661.6011147181193 192.83344000000002 C 661.6011147181193 194.83344000000002 663.6011147181193 196.83344000000002 665.6011147181193 196.83344000000002 L 675.4822259267172 196.83344000000002 C 677.4822259267172 196.83344000000002 679.4822259267172 194.83344000000002 679.4822259267172 192.83344000000002 L 679.4822259267172 151.41080000000002 z "
-                                                pathFrom="M 661.6011147181193 151.41080000000002 L 661.6011147181193 151.41080000000002 L 679.4822259267172 151.41080000000002 L 679.4822259267172 151.41080000000002 L 679.4822259267172 151.41080000000002 L 679.4822259267172 151.41080000000002 L 679.4822259267172 151.41080000000002 L 661.6011147181193 151.41080000000002 z"
-                                                cy="196.83244000000002" cx="751.0066707611085" j="7" val="-90"
-                                                barHeight="-45.42264" barWidth="17.88111120859782"></path>
-                                            <path
-                                                d="M 751.0066707611085 151.41080000000002 L 751.0066707611085 200.40388000000002 C 751.0066707611085 202.40388000000002 753.0066707611085 204.40388000000002 755.0066707611085 204.40388000000002 L 764.8877819697063 204.40388000000002 C 766.8877819697063 204.40388000000002 768.8877819697063 202.40388000000002 768.8877819697063 200.40388000000002 L 768.8877819697063 151.41080000000002 z "
-                                                fill="rgba(234,84,85,1)" fill-opacity="1" stroke="#ea5455"
-                                                stroke-opacity="1" stroke-linecap="round" stroke-width="0"
-                                                stroke-dasharray="0" class="apexcharts-bar-area " index="1"
-                                                clip-path="url(#gridRectBarMaskm1yapawr)"
-                                                pathTo="M 751.0066707611085 151.41080000000002 L 751.0066707611085 200.40388000000002 C 751.0066707611085 202.40388000000002 753.0066707611085 204.40388000000002 755.0066707611085 204.40388000000002 L 764.8877819697063 204.40388000000002 C 766.8877819697063 204.40388000000002 768.8877819697063 202.40388000000002 768.8877819697063 200.40388000000002 L 768.8877819697063 151.41080000000002 z "
-                                                pathFrom="M 751.0066707611085 151.41080000000002 L 751.0066707611085 151.41080000000002 L 768.8877819697063 151.41080000000002 L 768.8877819697063 151.41080000000002 L 768.8877819697063 151.41080000000002 L 768.8877819697063 151.41080000000002 L 768.8877819697063 151.41080000000002 L 751.0066707611085 151.41080000000002 z"
-                                                cy="204.40288" cx="840.4122268040976" j="8" val="-105"
-                                                barHeight="-52.99308" barWidth="17.88111120859782"></path>
-                                            <g class="apexcharts-bar-goals-markers">
-                                                <g className="apexcharts-bar-goals-groups"
-                                                   class="apexcharts-hidden-element-shown"
-                                                   clip-path="url(#gridRectMarkerMaskm1yapawr)"></g>
-                                                <g className="apexcharts-bar-goals-groups"
-                                                   class="apexcharts-hidden-element-shown"
-                                                   clip-path="url(#gridRectMarkerMaskm1yapawr)"></g>
-                                                <g className="apexcharts-bar-goals-groups"
-                                                   class="apexcharts-hidden-element-shown"
-                                                   clip-path="url(#gridRectMarkerMaskm1yapawr)"></g>
-                                                <g className="apexcharts-bar-goals-groups"
-                                                   class="apexcharts-hidden-element-shown"
-                                                   clip-path="url(#gridRectMarkerMaskm1yapawr)"></g>
-                                                <g className="apexcharts-bar-goals-groups"
-                                                   class="apexcharts-hidden-element-shown"
-                                                   clip-path="url(#gridRectMarkerMaskm1yapawr)"></g>
-                                                <g className="apexcharts-bar-goals-groups"
-                                                   class="apexcharts-hidden-element-shown"
-                                                   clip-path="url(#gridRectMarkerMaskm1yapawr)"></g>
-                                                <g className="apexcharts-bar-goals-groups"
-                                                   class="apexcharts-hidden-element-shown"
-                                                   clip-path="url(#gridRectMarkerMaskm1yapawr)"></g>
-                                                <g className="apexcharts-bar-goals-groups"
-                                                   class="apexcharts-hidden-element-shown"
-                                                   clip-path="url(#gridRectMarkerMaskm1yapawr)"></g>
-                                                <g className="apexcharts-bar-goals-groups"
-                                                   class="apexcharts-hidden-element-shown"
-                                                   clip-path="url(#gridRectMarkerMaskm1yapawr)"></g>
-                                            </g>
-                                        </g>
-                                        <g class="apexcharts-datalabels" data:realIndex="0"></g>
-                                        <g class="apexcharts-datalabels" data:realIndex="1"></g>
-                                    </g>
-                                    <line x1="0" y1="0" x2="804.6500043869019" y2="0" stroke="#b6b6b6"
-                                          stroke-dasharray="0" stroke-width="1" stroke-linecap="butt"
-                                          class="apexcharts-ycrosshairs"></line>
-                                    <line x1="0" y1="0" x2="804.6500043869019" y2="0" stroke="#b6b6b6"
-                                          stroke-dasharray="0" stroke-width="0" stroke-linecap="butt"
-                                          class="apexcharts-ycrosshairs-hidden"></line>
-                                    <g class="apexcharts-xaxis" transform="translate(0, 0)">
-                                        <g class="apexcharts-xaxis-texts-g" transform="translate(0, -4)">
-                                            <text x="44.702778021494545" y="280.348" text-anchor="middle"
-                                                  dominant-baseline="auto" font-size="12px"
-                                                  font-family="Helvetica, Arial, sans-serif" font-weight="400"
-                                                  fill="#373d3f" class="apexcharts-text apexcharts-xaxis-label "
-                                                  style="font-family: Helvetica, Arial, sans-serif;">
-                                                <tspan> Jan</tspan>
-                                                <title> Jan </title></text>
-                                            <text x="134.10833406448364" y="280.348" text-anchor="middle"
-                                                  dominant-baseline="auto" font-size="12px"
-                                                  font-family="Helvetica, Arial, sans-serif" font-weight="400"
-                                                  fill="#373d3f" class="apexcharts-text apexcharts-xaxis-label "
-                                                  style="font-family: Helvetica, Arial, sans-serif;">
-                                                <tspan>Feb</tspan>
-                                                <title>Feb</title></text>
-                                            <text x="223.51389010747275" y="280.348" text-anchor="middle"
-                                                  dominant-baseline="auto" font-size="12px"
-                                                  font-family="Helvetica, Arial, sans-serif" font-weight="400"
-                                                  fill="#373d3f" class="apexcharts-text apexcharts-xaxis-label "
-                                                  style="font-family: Helvetica, Arial, sans-serif;">
-                                                <tspan>Mar</tspan>
-                                                <title>Mar</title></text>
-                                            <text x="312.9194461504618" y="280.348" text-anchor="middle"
-                                                  dominant-baseline="auto" font-size="12px"
-                                                  font-family="Helvetica, Arial, sans-serif" font-weight="400"
-                                                  fill="#373d3f" class="apexcharts-text apexcharts-xaxis-label "
-                                                  style="font-family: Helvetica, Arial, sans-serif;">
-                                                <tspan>Apr</tspan>
-                                                <title>Apr</title></text>
-                                            <text x="402.32500219345087" y="280.348" text-anchor="middle"
-                                                  dominant-baseline="auto" font-size="12px"
-                                                  font-family="Helvetica, Arial, sans-serif" font-weight="400"
-                                                  fill="#373d3f" class="apexcharts-text apexcharts-xaxis-label "
-                                                  style="font-family: Helvetica, Arial, sans-serif;">
-                                                <tspan>May</tspan>
-                                                <title>May</title></text>
-                                            <text x="491.73055823644" y="280.348" text-anchor="middle"
-                                                  dominant-baseline="auto" font-size="12px"
-                                                  font-family="Helvetica, Arial, sans-serif" font-weight="400"
-                                                  fill="#373d3f" class="apexcharts-text apexcharts-xaxis-label "
-                                                  style="font-family: Helvetica, Arial, sans-serif;">
-                                                <tspan>Jun</tspan>
-                                                <title>Jun</title></text>
-                                            <text x="581.1361142794292" y="280.348" text-anchor="middle"
-                                                  dominant-baseline="auto" font-size="12px"
-                                                  font-family="Helvetica, Arial, sans-serif" font-weight="400"
-                                                  fill="#373d3f" class="apexcharts-text apexcharts-xaxis-label "
-                                                  style="font-family: Helvetica, Arial, sans-serif;">
-                                                <tspan>Jul</tspan>
-                                                <title>Jul</title></text>
-                                            <text x="670.5416703224183" y="280.348" text-anchor="middle"
-                                                  dominant-baseline="auto" font-size="12px"
-                                                  font-family="Helvetica, Arial, sans-serif" font-weight="400"
-                                                  fill="#373d3f" class="apexcharts-text apexcharts-xaxis-label "
-                                                  style="font-family: Helvetica, Arial, sans-serif;">
-                                                <tspan>Aug</tspan>
-                                                <title>Aug</title></text>
-                                            <text x="759.9472263654075" y="280.348" text-anchor="middle"
-                                                  dominant-baseline="auto" font-size="12px"
-                                                  font-family="Helvetica, Arial, sans-serif" font-weight="400"
-                                                  fill="#373d3f" class="apexcharts-text apexcharts-xaxis-label "
-                                                  style="font-family: Helvetica, Arial, sans-serif;">
-                                                <tspan>Sep</tspan>
-                                                <title>Sep</title></text>
-                                        </g>
-                                    </g>
-                                    <g class="apexcharts-yaxis-annotations"></g>
-                                    <g class="apexcharts-xaxis-annotations"></g>
-                                    <g class="apexcharts-point-annotations"></g>
-                                </g>
-                            </svg>
-                            <div class="apexcharts-tooltip apexcharts-theme-light"
-                                 style="left: 721.561px; top: 5px;">
-                                <div class="apexcharts-tooltip-title"
-                                     style="font-family: Helvetica, Arial, sans-serif; font-size: 12px;">Aug
-                                </div>
-                                <div
-                                    class="apexcharts-tooltip-series-group apexcharts-tooltip-series-group-0 apexcharts-active"
-                                    style="order: 1; display: flex;"><span class="apexcharts-tooltip-marker"
-                                                                           style="background-color: rgb(40, 199, 111);"></span>
-                                    <div class="apexcharts-tooltip-text"
-                                         style="font-family: Helvetica, Arial, sans-serif; font-size: 12px;">
-                                        <div class="apexcharts-tooltip-y-group"><span
-                                                class="apexcharts-tooltip-text-y-label">Sales: </span><span
-                                                class="apexcharts-tooltip-text-y-value">280</span></div>
-                                        <div class="apexcharts-tooltip-goals-group"><span
-                                                class="apexcharts-tooltip-text-goals-label"></span><span
-                                                class="apexcharts-tooltip-text-goals-value"></span></div>
-                                        <div class="apexcharts-tooltip-z-group"><span
-                                                class="apexcharts-tooltip-text-z-label"></span><span
-                                                class="apexcharts-tooltip-text-z-value"></span></div>
-                                    </div>
-                                </div>
-                                <div class="apexcharts-tooltip-series-group apexcharts-tooltip-series-group-1"
-                                     style="order: 2; display: none;"><span class="apexcharts-tooltip-marker"
-                                                                            style="background-color: rgb(40, 199, 111);"></span>
-                                    <div class="apexcharts-tooltip-text"
-                                         style="font-family: Helvetica, Arial, sans-serif; font-size: 12px;">
-                                        <div class="apexcharts-tooltip-y-group"><span
-                                                class="apexcharts-tooltip-text-y-label">Sales: </span><span
-                                                class="apexcharts-tooltip-text-y-value">280</span></div>
-                                        <div class="apexcharts-tooltip-goals-group"><span
-                                                class="apexcharts-tooltip-text-goals-label"></span><span
-                                                class="apexcharts-tooltip-text-goals-value"></span></div>
-                                        <div class="apexcharts-tooltip-z-group"><span
-                                                class="apexcharts-tooltip-text-z-label"></span><span
-                                                class="apexcharts-tooltip-text-z-value"></span></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div
-                                class="apexcharts-yaxistooltip apexcharts-yaxistooltip-0 apexcharts-yaxistooltip-left apexcharts-theme-light">
-                                <div class="apexcharts-yaxistooltip-text"></div>
-                            </div>
-                            <div class="apexcharts-toolbar" style="top: 0px; right: 3px;">
-                                <div class="apexcharts-menu-icon" title="Menu">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                         viewBox="0 0 24 24">
-                                        <path fill="none" d="M0 0h24v24H0V0z"></path>
-                                        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"></path>
-                                    </svg>
-                                </div>
-                                <div class="apexcharts-menu">
-                                    <div class="apexcharts-menu-item exportSVG" title="Download SVG">Download
-                                        SVG
-                                    </div>
-                                    <div class="apexcharts-menu-item exportPNG" title="Download PNG">Download
-                                        PNG
-                                    </div>
-                                    <div class="apexcharts-menu-item exportCSV" title="Download CSV">Download
-                                        CSV
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                <!-- Recent Orders -->
+                <div class="modern-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="material-symbols-outlined">receipt_long</span>
+                            Recent Orders
+                        </h3>
+                        {{--                        <a href="{{ route('seller.orders.index') }}" style="--}}
+                        {{--                            color: var(--primary);--}}
+                        {{--                            text-decoration: none;--}}
+                        {{--                            font-weight: 700;--}}
+                        {{--                            font-size: 0.875rem;--}}
+                        {{--                            display: flex;--}}
+                        {{--                            align-items: center;--}}
+                        {{--                            gap: 8px;--}}
+                        {{--                        ">--}}
+                        {{--                            View All <span class="material-symbols-outlined">arrow_forward</span>--}}
+                        {{--                        </a>--}}
                     </div>
+
+                    @if(isset($recentOrders) && count($recentOrders) > 0)
+                        <div class="modern-table-container">
+                            <table class="modern-table">
+                                <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @foreach($recentOrders as $order)
+                                    <tr onclick="viewOrderDetails({{ $order->id }})">
+                                        <td><strong>#{{ $order->order_code ?? $order->id }}</strong></td>
+                                        <td>
+                                                <span class="material-symbols-outlined" style="font-size: 1rem; color: var(--primary); margin-right: 8px;">
+                                                    person
+                                                </span>
+                                            {{ $order->customer_name ?? ($order->customer->name ?? 'Customer') }}
+                                        </td>
+                                        <td><strong>RS. {{ number_format($order->total_amount ?? $order->amount ?? 0, 2) }}</strong></td>
+                                        <td>
+                                                <span class="badge-modern
+                                                    @if(in_array($order->status, ['pending', 'pending_payment'])) badge-pending
+                                                    @elseif(in_array($order->status, ['processing', 'confirmed'])) badge-processing
+                                                    @elseif($order->status == 'completed') badge-delivered
+                                                    @else badge-cancelled @endif">
+                                                    <span class="material-symbols-outlined" style="font-size: 0.875rem;">
+                                                        @if(in_array($order->status, ['pending', 'pending_payment'])) pending
+                                                        @elseif(in_array($order->status, ['processing', 'confirmed'])) schedule
+                                                        @elseif($order->status == 'completed') check_circle
+                                                        @else cancel @endif
+                                                    </span>
+                                                    {{ ucfirst(str_replace('_', ' ', $order->status)) }}
+                                                </span>
+                                        </td>
+                                        <td>{{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y') }}</td>
+                                    </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="empty-state">
+                            <span class="material-symbols-outlined">shopping_bag</span>
+                            <p>No orders found</p>
+                        </div>
+                    @endif
                 </div>
-            </div>
-        </div>
-        <div class="col-xl-5 col-sm-12 col-12 d-flex">
-            <div class="card flex-fill default-cover mb-4">
-                <div class="bg-danger card-header d-flex justify-content-between align-items-center">
-                    <h4 class="card-title mb-0 text-white">High Move Product</h4>
-                    <div class="view-all-link">
-                        <a href="javascript:void(0);" class="view-all d-flex align-items-center text-white">
-                            View All<span class="ps-2 d-flex align-items-center"><svg
-                                    xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" stroke-linejoin="round"
-                                    class="feather feather-arrow-right feather-16">
-                                    <line x1="5" y1="12" x2="19" y2="12"></line><polyline
-                                        points="12 5 19 12 12 19"></polyline></svg></span>
+
+                <!-- Top Products -->
+                <div class="modern-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="material-symbols-outlined">local_fire_department</span>
+                            Top Selling Products
+                        </h3>
+                        <a href="{{ route('seller.product.index') }}" style="
+                            color: var(--primary);
+                            text-decoration: none;
+                            font-weight: 700;
+                            font-size: 0.875rem;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                        ">
+                            View All <span class="material-symbols-outlined">arrow_forward</span>
                         </a>
                     </div>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive dataview">
-                        <table class="table dashboard-recent-products">
-                            <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Products</th>
-                                <th>Price</th>
-                                <th>Current Stock</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr>
-                                <td>1</td>
-                                <td>
-                                    Lenevo 3rd Generation</a>
-                                </td>
-                                <td>$12500</td>
-                                <td>10</td>
-                            </tr>
-                            <tr>
-                                <td>1</td>
-                                <td>
-                                    Lenevo 3rd Generation</a>
-                                </td>
-                                <td>$12500</td>
-                                <td>10</td>
-                            </tr>
-                            <tr>
-                                <td>1</td>
-                                <td>
-                                    Lenevo 3rd Generation</a>
-                                </td>
-                                <td>$12500</td>
-                                <td>10</td>
-                            </tr>
-                            <tr>
-                                <td>1</td>
-                                <td>
-                                    Lenevo 3rd Generation</a>
-                                </td>
-                                <td>$12500</td>
-                                <td>10</td>
-                            </tr>
-                            <tr>
-                                <td>1</td>
-                                <td>
-                                    Lenevo 3rd Generation</a>
-                                </td>
-                                <td>$12500</td>
-                                <td>10</td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
+
+                    @if(isset($topProducts) && count($topProducts) > 0)
+                        <div class="product-grid">
+                            @foreach($topProducts as $product)
+                                <div class="product-card" onclick="viewProduct({{ $product->id }})">
+                                    <img src="{{ asset('storage/' . $product->img) ?? 'https://via.placeholder.com/300' }}"
+                                         class="product-image"
+                                         alt="{{ $product->name }}"
+                                         onerror="this.src='https://via.placeholder.com/300'">
+                                    <div class="product-info">
+                                        <div class="product-name">{{ $product->name }}</div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <div class="product-price">RS. {{ number_format($product->display_price ?? $product->price ?? 0, 2) }}</div>
+                                            <div style="display: flex; align-items: center; gap: 4px; color: var(--success); font-weight: 700;">
+                                                <span class="material-symbols-outlined" style="font-size: 1rem;">trending_up</span>
+                                                <span>{{ $product->sales_count ?? $product->qty ?? 0 }} sold</span>
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 4px; color: var(--gray-500); font-size: 0.875rem;">
+                                            <span class="material-symbols-outlined" style="font-size: 1rem;">category</span>
+                                            <span>{{ $product->categoryModel->name ?? ($product->category ?? 'Uncategorized') }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="empty-state">
+                            <span class="material-symbols-outlined">inventory_2</span>
+                            <p>No products data available</p>
+                        </div>
+                    @endif
                 </div>
             </div>
-        </div>
-    </div>
-    <div class="card">
-        <div class="card-header">
-            <h4 class="card-title">Return Order</h4>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive dataview">
-                <table class="table dashboard-expired-products">
-                    <thead>
-                    <tr>
-                        <th>Order No</th>
-                        <th>Customer Name</th>
-                        <th>Seller Name</th>
-                        <th>Delivery Date</th>
-                        <th>Return Date</th>
-                        <th>Price</th>
-                        <th class="no-sort">Action</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td>
-                            ORD/00001
-                        </td>
-                        <td>Suranga</td>
-                        <td>Sudarshana</td>
-                        <td>29 Mar 2023</td>
-                        <td>29 Mar 2023</td>
-                        <td>Rs.1500.00</td>
-                        <td class="action-table-data">
-                            <div class="edit-delete-action">
-                                <a class="me-2 p-2" href="#">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                         stroke-linecap="round" stroke-linejoin="round"
-                                         class="feather feather-edit">
-                                        <path
-                                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                        <path
-                                            d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                    </svg>
-                                </a>
-                                <a class=" confirm-text p-2" href="javascript:void(0);">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                         stroke-linecap="round" stroke-linejoin="round"
-                                         class="feather feather-trash-2">
-                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                        <path
-                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                                        <line x1="14" y1="11" x2="14" y2="17"></line>
-                                    </svg>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            ORD/00001
-                        </td>
-                        <td>Suranga</td>
-                        <td>Sudarshana</td>
-                        <td>29 Mar 2023</td>
-                        <td>29 Mar 2023</td>
-                        <td>Rs.1500.00</td>
-                        <td class="action-table-data">
-                            <div class="edit-delete-action">
-                                <a class="me-2 p-2" href="#">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                         stroke-linecap="round" stroke-linejoin="round"
-                                         class="feather feather-edit">
-                                        <path
-                                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                        <path
-                                            d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                    </svg>
-                                </a>
-                                <a class=" confirm-text p-2" href="javascript:void(0);">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                         stroke-linecap="round" stroke-linejoin="round"
-                                         class="feather feather-trash-2">
-                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                        <path
-                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                                        <line x1="14" y1="11" x2="14" y2="17"></line>
-                                    </svg>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            ORD/00001
-                        </td>
-                        <td>Suranga</td>
-                        <td>Sudarshana</td>
-                        <td>29 Mar 2023</td>
-                        <td>29 Mar 2023</td>
-                        <td>Rs.1500.00</td>
-                        <td class="action-table-data">
-                            <div class="edit-delete-action">
-                                <a class="me-2 p-2" href="#">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                         stroke-linecap="round" stroke-linejoin="round"
-                                         class="feather feather-edit">
-                                        <path
-                                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                        <path
-                                            d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                    </svg>
-                                </a>
-                                <a class=" confirm-text p-2" href="javascript:void(0);">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                         stroke-linecap="round" stroke-linejoin="round"
-                                         class="feather feather-trash-2">
-                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                        <path
-                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                                        <line x1="14" y1="11" x2="14" y2="17"></line>
-                                    </svg>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
 
-                    </tbody>
-                </table>
+            <!-- Right Column -->
+            <div class="grid-column">
+                <!-- Quick Actions -->
+                <div class="modern-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="material-symbols-outlined">bolt</span>
+                            Quick Actions
+                        </h3>
+                    </div>
+                    <div class="quick-actions-grid">
+                        <a href="{{ route('seller.product.create') }}" class="quick-action">
+                            <span class="material-symbols-outlined">add_circle</span>
+                            <span>Add Product</span>
+                        </a>
+                        <a href="{{ route('seller.product.index') }}" class="quick-action">
+                            <span class="material-symbols-outlined">inventory</span>
+                            <span>Manage Products</span>
+                        </a>
+                                                <a href="{{ route('seller.new-order') }}" class="quick-action">
+                                                    <span class="material-symbols-outlined">shopping_cart</span>
+                                                    <span>View Orders</span>
+                                                </a>
+                        {{--                        <a href="{{ route('seller.reports') }}" class="quick-action">--}}
+                        {{--                            <span class="material-symbols-outlined">analytics</span>--}}
+                        {{--                            <span>View Reports</span>--}}
+                        {{--                        </a>--}}
+                    </div>
+                </div>
+
+                <!-- Stock Alerts -->
+                @if(isset($lowStockProducts) && count($lowStockProducts) > 0)
+                    <div class="modern-card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <span class="material-symbols-outlined" style="color: var(--warning);">warning</span>
+                                Stock Alerts
+                            </h3>
+                        </div>
+                        @foreach($lowStockProducts as $product)
+                            <div class="stock-alert {{ ($product->qty <= 0) ? 'critical' : '' }}"
+                                 onclick="restockProduct({{ $product->id }})">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <span class="material-symbols-outlined">
+                                            {{ ($product->qty <= 0) ? 'cancel' : 'warning' }}
+                                        </span>
+                                        <div>
+                                            <strong>{{ $product->name }}</strong>
+                                            <div style="font-size: 0.875rem; color: var(--gray-600); margin-top: 4px;">
+                                                {{ ($product->qty <= 0) ? 'Out of Stock' : 'Low Stock' }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="font-weight: 900; color: {{ ($product->qty <= 0) ? 'var(--danger)' : 'var(--warning)' }};">
+                                        {{ $product->qty ?? 0 }} units
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
+                <!-- Performance Metrics -->
+                <div class="modern-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="material-symbols-outlined">speed</span>
+                            Performance Metrics
+                        </h3>
+                    </div>
+                    <div class="metrics-grid">
+                        <div class="metric-item">
+                            <div class="metric-value">{{ $stats['conversion_rate'] ?? 0 }}%</div>
+                            <div class="metric-label">Conversion Rate</div>
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: {{ $stats['conversion_rate'] ?? 0 }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="metric-item">
+                            <div class="metric-value">{{ $stats['satisfaction_rate'] ?? 0 }}%</div>
+                            <div class="metric-label">Customer Satisfaction</div>
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: {{ $stats['satisfaction_rate'] ?? 0 }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="metric-item">
+                            <div class="metric-value">{{ $stats['completion_rate'] ?? 0 }}%</div>
+                            <div class="metric-label">Order Completion</div>
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: {{ $stats['completion_rate'] ?? 0 }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="metric-item">
+                            <div class="metric-value">{{ $stats['growth_rate'] ?? 0 }}%</div>
+                            <div class="metric-label">Monthly Growth</div>
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: min({{ $stats['growth_rate'] ?? 0 }}%, 100)"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Store Insights -->
+                <div class="modern-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="material-symbols-outlined">insights</span>
+                            Store Insights
+                        </h3>
+                    </div>
+                    <div style="display: grid; gap: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: var(--gray-50); border-radius: var(--radius-md);">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span class="material-symbols-outlined" style="color: var(--primary);">visibility</span>
+                                <div>
+                                    <div style="font-weight: 700; font-size: 0.875rem;">Product Views</div>
+                                    <div style="font-size: 0.75rem; color: var(--gray-500);">This month</div>
+                                </div>
+                            </div>
+                            <div style="font-weight: 900; font-size: 1.25rem;">{{ number_format($stats['product_views'] ?? 0) }}</div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: var(--gray-50); border-radius: var(--radius-md);">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span class="material-symbols-outlined" style="color: var(--success);">repeat</span>
+                                <div>
+                                    <div style="font-weight: 700; font-size: 0.875rem;">Repeat Customers</div>
+                                    <div style="font-size: 0.75rem; color: var(--gray-500);">Loyal clients</div>
+                                </div>
+                            </div>
+                            <div style="font-weight: 900; font-size: 1.25rem;">{{ $stats['repeat_customers'] ?? 0 }}</div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: var(--gray-50); border-radius: var(--radius-md);">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span class="material-symbols-outlined" style="color: var(--info);">schedule</span>
+                                <div>
+                                    <div style="font-weight: 700; font-size: 0.875rem;">Avg. Processing Time</div>
+                                    <div style="font-size: 0.75rem; color: var(--gray-500);">Order fulfillment</div>
+                                </div>
+                            </div>
+                            <div style="font-weight: 900; font-size: 1.25rem;">{{ $stats['avg_processing_time'] ?? '24' }}h</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 @endsection
 
+@push('scripts')
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <script>
+        // Welcome Notification
+        @if(session('success'))
+        document.addEventListener('DOMContentLoaded', function() {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                }
+            });
+
+            Toast.fire({
+                icon: 'success',
+                title: '{{ session('success') }}',
+                background: '#10b981',
+                color: 'white',
+                iconColor: 'white'
+            });
+        });
+        @endif
+
+        @if(session('error'))
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: '{{ session('error') }}',
+                confirmButtonColor: '#6366f1',
+                background: '#fef2f2',
+                color: '#991b1b'
+            });
+        });
+        @endif
+
+        // Initialize Chart
+        let salesChart = null;
+
+        function initChart() {
+            const ctx = document.getElementById('salesChart');
+            if (!ctx) return;
+
+            @if(isset($salesData) && count($salesData) > 0)
+            const data = @json($salesData);
+            const labels = data.map(item => item.label || item.date);
+            const revenue = data.map(item => item.revenue || item.sales || 0);
+            const orders = data.map(item => item.orders || item.count || 0);
+            @else
+            const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            const revenue = [1500, 2300, 1800, 2500, 3200, 2800, 3500];
+            const orders = [15, 23, 18, 25, 32, 28, 35];
+            @endif
+
+            const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(99, 102, 241, 0.3)');
+            gradient.addColorStop(1, 'rgba(99, 102, 241, 0.05)');
+
+            if (salesChart) {
+                salesChart.destroy();
+            }
+
+            salesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Revenue (RS)',
+                            data: revenue,
+                            borderColor: '#6366f1',
+                            backgroundColor: gradient,
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#6366f1',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 6
+                        },
+                        {
+                            label: 'Orders',
+                            data: orders,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.4,
+                            pointBackgroundColor: '#10b981',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(30, 41, 59, 0.95)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#ffffff',
+                            borderColor: '#6366f1',
+                            borderWidth: 1,
+                            padding: 12,
+                            usePointStyle: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return 'RS. ' + value.toLocaleString();
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+        }
+
+        // Chart Tab Switching
+        document.querySelectorAll('.chart-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                const period = this.dataset.period;
+                updateChartData(period);
+            });
+        });
+
+        function updateChartData(period) {
+            Swal.fire({
+                title: 'Loading Data...',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Simulate API call
+            setTimeout(() => {
+                Swal.close();
+
+                // Update chart with new data based on period
+                const newLabels = getLabelsForPeriod(period);
+                const newRevenue = generateRandomData(newLabels.length, 1000, 5000);
+                const newOrders = generateRandomData(newLabels.length, 10, 50);
+
+                if (salesChart) {
+                    salesChart.data.labels = newLabels;
+                    salesChart.data.datasets[0].data = newRevenue;
+                    salesChart.data.datasets[1].data = newOrders;
+                    salesChart.update();
+                }
+
+                showSuccessToast(`Switched to ${period} view`);
+            }, 1000);
+        }
+
+        function getLabelsForPeriod(period) {
+            switch(period) {
+                case 'weekly':
+                    return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                case 'monthly':
+                    return ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+                case 'yearly':
+                    return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                default:
+                    return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            }
+        }
+
+        function generateRandomData(count, min, max) {
+            return Array.from({length: count}, () =>
+                Math.floor(Math.random() * (max - min + 1)) + min
+            );
+        }
+
+        // Interactive Functions
+        function showRevenueDetails() {
+            Swal.fire({
+                title: '📊 Revenue Details',
+                html: `
+                    <div style="text-align: left; margin: 20px 0;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Total Revenue:</span>
+                            <strong>RS. {{ number_format($stats['total_revenue'] ?? 0, 2) }}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>This Month:</span>
+                            <strong>RS. {{ number_format($stats['monthly_revenue'] ?? 0, 2) }}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Last Month:</span>
+                            <strong>RS. {{ number_format($stats['last_month_revenue'] ?? 0, 2) }}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Growth:</span>
+                            <strong style="color: {{ ($stats['revenue_change'] ?? 0) >= 0 ? '#10b981' : '#ef4444' }};">
+                                {{ ($stats['revenue_change'] ?? 0) >= 0 ? '+' : '' }}{{ $stats['revenue_change'] ?? 0 }}%
+                            </strong>
+                        </div>
+                    </div>
+                `,
+                icon: 'info',
+                confirmButtonText: 'Close',
+                confirmButtonColor: '#6366f1',
+                width: 500
+            });
+        }
+
+        function showOrdersDetails() {
+            Swal.fire({
+                title: '📦 Order Statistics',
+                html: `
+                    <div style="text-align: left; margin: 20px 0;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Total Orders:</span>
+                            <strong>{{ $stats['total_orders'] ?? 0 }}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Completed:</span>
+                            <strong style="color: #10b981;">{{ $stats['completed_orders'] ?? 0 }}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Pending:</span>
+                            <strong style="color: #f59e0b;">{{ $stats['pending_orders'] ?? 0 }}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Cancelled:</span>
+                            <strong style="color: #ef4444;">{{ $stats['cancelled_orders'] ?? 0 }}</strong>
+                        </div>
+                    </div>
+                `,
+                icon: 'info',
+                confirmButtonText: 'Close',
+                confirmButtonColor: '#6366f1',
+                width: 500
+            });
+        }
+
+        function showPendingOrders() {
+            Swal.fire({
+                title: '⏳ Pending Orders',
+                html: `
+                    <div style="text-align: left; margin: 20px 0;">
+                        <p>You have <strong>{{ $stats['pending_orders'] ?? 0 }}</strong> pending orders that need attention.</p>
+                        <p style="color: var(--gray-600); font-size: 0.875rem; margin-top: 10px;">
+                            <span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;">
+                                info
+                            </span>
+                            Please process these orders to avoid delays.
+                        </p>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'View Orders',
+                cancelButtonText: 'Close',
+                confirmButtonColor: '#f59e0b',
+                cancelButtonColor: '#6b7280'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '{{ route('seller.new-order') }}?status=pending';
+                }
+            });
+        }
+
+        function showPerformanceReport() {
+            const performance = {{ $stats['performance_score'] ?? 85 }};
+            let message = '';
+            let icon = 'success';
+
+            if (performance >= 90) {
+                message = 'Excellent performance! Keep up the great work!';
+                icon = 'success';
+            } else if (performance >= 75) {
+                message = 'Good performance! There\'s room for improvement.';
+                icon = 'info';
+            } else {
+                message = 'Performance needs improvement. Check your metrics.';
+                icon = 'warning';
+            }
+
+            Swal.fire({
+                title: '📈 Performance Report',
+                html: `
+                    <div style="text-align: center; margin: 20px 0;">
+                        <div style="font-size: 3rem; font-weight: 900; color: #6366f1; margin-bottom: 20px;">
+                            ${performance}%
+                        </div>
+                        <div style="margin: 20px 0;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span>Order Completion:</span>
+                                <strong>{{ $stats['completion_rate'] ?? 0 }}%</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span>Customer Satisfaction:</span>
+                                <strong>{{ $stats['satisfaction_rate'] ?? 0 }}%</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span>Response Time:</span>
+                                <strong>{{ $stats['avg_response_time'] ?? '2' }}h</strong>
+                            </div>
+                        </div>
+                        <p style="color: var(--gray-600);">${message}</p>
+                    </div>
+                `,
+                icon: icon,
+                confirmButtonText: 'View Details',
+                confirmButtonColor: '#6366f1',
+                width: 500,
+                showCancelButton: true,
+                cancelButtonText: 'Close'
+            });
+        }
+
+        function showRatingDetails() {
+            Swal.fire({
+                title: '⭐ Customer Ratings',
+                html: `
+                    <div style="text-align: left; margin: 20px 0;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                            <div style="font-size: 2.5rem; font-weight: 900; color: #f59e0b;">
+                                {{ $stats['avg_rating'] ?? '4.8' }}
+                </div>
+                <div>
+                    <div style="color: #f59e0b; font-size: 1.25rem;">
+${generateStars({{ $stats['avg_rating'] ?? 4.8 }})}
+                                </div>
+                                <div style="color: var(--gray-600); font-size: 0.875rem;">
+                                    Based on {{ $stats['total_reviews'] ?? 0 }} reviews
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin: 20px 0;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <span>5 stars</span>
+                                <div style="flex: 1; height: 8px; background: var(--gray-200); border-radius: 4px;">
+                                    <div style="width: 70%; height: 100%; background: #f59e0b; border-radius: 4px;"></div>
+                                </div>
+                                <span>70%</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <span>4 stars</span>
+                                <div style="flex: 1; height: 8px; background: var(--gray-200); border-radius: 4px;">
+                                    <div style="width: 20%; height: 100%; background: #fbbf24; border-radius: 4px;"></div>
+                                </div>
+                                <span>20%</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <span>3 stars</span>
+                                <div style="flex: 1; height: 8px; background: var(--gray-200); border-radius: 4px;">
+                                    <div style="width: 7%; height: 100%; background: #fcd34d; border-radius: 4px;"></div>
+                                </div>
+                                <span>7%</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <span>2 stars</span>
+                                <div style="flex: 1; height: 8px; background: var(--gray-200); border-radius: 4px;">
+                                    <div style="width: 2%; height: 100%; background: #fde68a; border-radius: 4px;"></div>
+                                </div>
+                                <span>2%</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span>1 star</span>
+                                <div style="flex: 1; height: 8px; background: var(--gray-200); border-radius: 4px;">
+                                    <div style="width: 1%; height: 100%; background: #fef3c7; border-radius: 4px;"></div>
+                                </div>
+                                <span>1%</span>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                icon: 'info',
+                confirmButtonText: 'View Reviews',
+                confirmButtonColor: '#f59e0b',
+                width: 500,
+                showCancelButton: true,
+                cancelButtonText: 'Close'
+            });
+        }
+
+        function generateStars(rating) {
+            let stars = '';
+            const fullStars = Math.floor(rating);
+            const hasHalfStar = rating % 1 >= 0.5;
+
+            for (let i = 0; i < fullStars; i++) {
+                stars += '★';
+            }
+
+            if (hasHalfStar) {
+                stars += '★';
+            }
+
+            return stars;
+        }
+
+        function viewOrderDetails(orderId) {
+            Swal.fire({
+                title: 'Loading order details...',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Simulate API call
+            setTimeout(() => {
+                Swal.fire({
+                    title: 'Order #' + orderId,
+                    html: `
+                        <div style="text-align: left; margin: 20px 0;">
+                            <p>Order details would be displayed here.</p>
+                            <p>This is a simulation. In production, this would fetch real data.</p>
+                        </div>
+                    `,
+                    icon: 'info',
+                    confirmButtonText: 'Close',
+                    confirmButtonColor: '#6366f1'
+                });
+            }, 1000);
+        }
+
+        function viewProduct(productId) {
+            window.location.href = `/seller/products/${productId}`;
+        }
+
+        function restockProduct(productId) {
+            Swal.fire({
+                title: '🛒 Restock Product',
+                html: `
+                    <div style="text-align: left; margin: 20px 0;">
+                        <p>How many units would you like to add?</p>
+                        <input type="number" id="restockQuantity"
+                               class="swal2-input"
+                               placeholder="Enter quantity"
+                               min="1"
+                               value="10"
+                               style="width: 80%;">
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Restock',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#6366f1',
+                preConfirm: () => {
+                    const quantity = document.getElementById('restockQuantity').value;
+                    if (!quantity || quantity < 1) {
+                        Swal.showValidationMessage('Please enter a valid quantity');
+                        return false;
+                    }
+                    return quantity;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Simulate API call
+                    Swal.fire({
+                        title: 'Restocking...',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    setTimeout(() => {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: `Added ${result.value} units to stock`,
+                            icon: 'success',
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#10b981'
+                        });
+                    }, 1500);
+                }
+            });
+        }
+
+        function showProductsOverview() {
+            Swal.fire({
+                title: '📦 Products Overview',
+                html: `
+                    <div style="text-align: left; margin: 20px 0;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Total Products:</span>
+                            <strong>{{ $stats['total_products'] ?? 0 }}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Active Products:</span>
+                            <strong style="color: #10b981;">{{ $stats['active_products'] ?? 0 }}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Out of Stock:</span>
+                            <strong style="color: #ef4444;">{{ $stats['out_of_stock'] ?? 0 }}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Low Stock:</span>
+                            <strong style="color: #f59e0b;">{{ $stats['low_stock'] ?? 0 }}</strong>
+                        </div>
+                    </div>
+                `,
+                icon: 'info',
+                confirmButtonText: 'Manage Products',
+                confirmButtonColor: '#6366f1',
+                showCancelButton: true,
+                cancelButtonText: 'Close'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '{{ route('seller.product.index') }}';
+                }
+            });
+        }
+
+        // Auto-refresh dashboard every 5 minutes
+        function refreshDashboard() {
+            $.ajax({
+                url: '{{ route("seller.dashboard") }}',
+                method: 'GET',
+                success: function(response) {
+                    // Update stats dynamically
+                    console.log('Dashboard refreshed');
+                },
+                error: function() {
+                    console.error('Failed to refresh dashboard');
+                }
+            });
+        }
+
+        // Initialize dashboard
+        $(document).ready(function() {
+            initChart();
+
+            // Start auto-refresh
+            setInterval(refreshDashboard, 300000); // 5 minutes
+
+            // Show welcome message
+            setTimeout(() => {
+                if (!localStorage.getItem('dashboardWelcomeShown')) {
+                    showWelcomeMessage();
+                    localStorage.setItem('dashboardWelcomeShown', 'true');
+                }
+            }, 1000);
+        });
+
+        function showWelcomeMessage() {
+            const welcomeMessages = [
+                "Welcome back! Your store is looking great! 🚀",
+                "Ready to boost your sales today? 💰",
+                "Check out your latest stats and insights! 📊",
+                "Great job on maintaining your store! 👍"
+            ];
+
+            const randomMessage = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
+
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                }
+            });
+
+            Toast.fire({
+                icon: 'success',
+                title: randomMessage,
+                background: '#6366f1',
+                color: 'white',
+                iconColor: 'white'
+            });
+        }
+
+        function showSuccessToast(message) {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                }
+            });
+
+            Toast.fire({
+                icon: 'success',
+                title: message,
+                background: '#10b981',
+                color: 'white',
+                iconColor: 'white'
+            });
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl + R to refresh
+            if (e.ctrlKey && e.key === 'r') {
+                e.preventDefault();
+                refreshDashboard();
+                showSuccessToast('Dashboard refreshed!');
+            }
+
+            // Ctrl + N for new product
+            if (e.ctrlKey && e.key === 'n') {
+                e.preventDefault();
+                window.location.href = '{{ route('seller.product.create') }}';
+            }
+        });
+    </script>
+@endpush

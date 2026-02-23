@@ -14,23 +14,34 @@ return new class extends Migration
             $table->string('code')->unique();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->decimal('display_price', 15, 2);
-            $table->decimal('wholesale_price', 15, 2);
+
+            // Pricing fields
+            $table->decimal('cost_price', 15, 2)->default(0);
+            $table->decimal('selling_price', 15, 2)->default(0);
+            $table->decimal('discount', 5, 2)->default(0);
+            $table->decimal('packaging_cost', 15, 2)->default(0);
+
+            // Inventory fields
             $table->integer('qty')->default(0);
-            $table->integer('min_order_quantity')->default(1);
+            $table->integer('min_stock_level')->default(10);
+
+            // Relations
             $table->foreignId('category_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('brand_id')->nullable()->constrained()->onDelete('set null');
-            $table->decimal('weight', 8, 2)->nullable();
-            $table->string('dimensions')->nullable();
+
+            // Other fields
             $table->text('features')->nullable();
             $table->string('barcode')->nullable()->unique();
             $table->string('image')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
 
+            // Indexes
             $table->index(['wholesaler_id', 'status']);
             $table->index('category_id');
             $table->index('brand_id');
+            $table->index('qty');
+            $table->index(['selling_price', 'discount']);
         });
     }
 

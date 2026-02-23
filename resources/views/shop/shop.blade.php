@@ -1,4 +1,4 @@
-<!--@extends('seller.app')-->
+<!--@extends('seller.layout.app')-->
 
 <!--@push('title')-->
 <!--    Shop-->
@@ -65,7 +65,7 @@
 
 <!--        .buy-btn {-->
 <!--            font-size: 13px;-->
-            /*padding: 4px 0;*/
+/*padding: 4px 0;*/
 <!--        }-->
 
 <!--        .discount-badge {-->
@@ -111,7 +111,7 @@
 <!--                            <span class="discount-badge">{{ $product->discount }}%</span>-->
 <!--                        @endif-->
 
-                                <!-- Background image inside card-body -->
+<!-- Background image inside card-body -->
 <!--                                <div class="card-body p-2 d-flex justify-content-center align-items-center"-->
 <!--                                     style="background-image: url('{{ asset('storage/' . $product->img) }}');-->
 <!--                                     background-size: cover;-->
@@ -133,7 +133,7 @@
 <!--                                        <i class="far fa-star text-warning"></i>-->
 <!--                                        <i class="far fa-star text-warning"></i>-->
 <!--                                    </div>-->
-                                    
+
 <!--                                     <p class="product-price">Rs.{{ $product->display_price }}.00</p>-->
 <!--                                    <button class="btn btn-dark btn-sm w-100 buy-btn mb-2">-->
 <!--                                        <i class="fas fa-copy me-1"></i> Copy-->

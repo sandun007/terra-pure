@@ -4,10 +4,23 @@
 @endpush
 
 @push('css')
+    <!-- jQuery (needed for Bootstrap) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Feather Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
           rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- CSRF Token Meta Tag (ADD THIS) -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <style>
         * {
             font-family: 'Inter', sans-serif;
@@ -425,6 +438,25 @@
             font-size: 20px;
         }
 
+        /* Storage Info Styles */
+        .storage-info {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        .storage-info h6 {
+            color: #475569;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .storage-info p {
+            color: #64748b;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .dashboard-container {
@@ -465,6 +497,14 @@
 
 @section('content')
     <div class="dashboard-container">
+        <!-- Storage Info Section (Optional - can be hidden) -->
+        <div class="storage-info d-none" id="storageInfo">
+            <h6><i class="fas fa-database me-2"></i> Storage Information</h6>
+            <p>Wholesaler ID: <span id="wholesalerIdDisplay"></span></p>
+            <p>Storage Path: <span id="storagePathDisplay"></span></p>
+            <p>Disk Usage: <span id="diskUsageDisplay"></span></p>
+        </div>
+
         <!-- Enhanced Header -->
         <div class="dashboard-header">
             <div class="header-content">
@@ -691,11 +731,33 @@
             </div>
         </div>
     </div>
+
+    <!-- Storage script from controller -->
+    {!! $storageScript ?? '' !!}
 @endsection
 
 @push('script')
+    <!-- Inline WholesalerStorage JavaScript (instead of external file) -->
     <script>
+        /**
+         * Wholesaler Storage Utility - Inline version
+         */
+        class WholesalerStorage {
+            // ... keep all the WholesalerStorage class code the same ...
+        }
+
+        // Create global instance
+        window.WholesalerStorage = new WholesalerStorage();
+    </script>
+
+    <script>
+        // Wait for DOM and all resources to load
         document.addEventListener('DOMContentLoaded', function () {
+            // Initialize Feather Icons
+            if (typeof feather !== 'undefined') {
+                feather.replace();
+            }
+
             // Add entrance animations
             const cards = document.querySelectorAll('.wholesale-stat-card, .dashboard-section');
             cards.forEach((card, index) => {
@@ -720,139 +782,252 @@
                     updateChart(this.dataset.period);
                 });
             });
+
+            // Storage functionality
+            setupStorageFeatures();
         });
+
+        /**
+         * Setup storage-related features
+         */
+        function setupStorageFeatures() {
+            // Check if wholesaler data is loaded
+            if (window.WholesalerStorage && window.WholesalerStorage.hasData()) {
+                try {
+                    const data = window.WholesalerStorage.getAllData();
+                    console.log('Wholesaler data loaded from localStorage:', data);
+
+                    // Display storage info (optional)
+                    const wholesalerIdDisplay = document.getElementById('wholesalerIdDisplay');
+                    const storagePathDisplay = document.getElementById('storagePathDisplay');
+                    const storageInfo = document.getElementById('storageInfo');
+
+                    if (wholesalerIdDisplay) {
+                        wholesalerIdDisplay.textContent = data.wholesaler_id;
+                    }
+                    if (storagePathDisplay) {
+                        storagePathDisplay.textContent = `wholesaler/${data.wholesaler_id}/`;
+                    }
+                    if (storageInfo) {
+                        storageInfo.classList.remove('d-none');
+                    }
+                } catch (error) {
+                    console.error('Error displaying storage info:', error);
+                }
+            }
+
+            // Add logout handler to clear localStorage
+            document.querySelectorAll('.logout-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (window.WholesalerStorage) {
+                        window.WholesalerStorage.clearData();
+                    }
+                    window.location.href = this.href;
+                });
+            });
+        }
+
+        /**
+         * Get storage info from server
+         */
+        async function getStorageInfo() {
+            try {
+                // Get CSRF token from meta tag
+                const csrfToken = document.querySelector('meta[name="csrf-token"]');
+                if (!csrfToken) {
+                    console.error('CSRF token not found');
+                    return;
+                }
+
+                const response = await fetch('/wholesaler/storage-info', {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken.content
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    // Update display with real storage info
+                    const diskUsageDisplay = document.getElementById('diskUsageDisplay');
+                    if (diskUsageDisplay) {
+                        diskUsageDisplay.textContent =
+                            `${data.disk_usage.total_mb} MB (${data.disk_usage.total_files} files)`;
+                    }
+
+                    return data;
+                }
+            } catch (error) {
+                console.error('Error fetching storage info:', error);
+            }
+        }
 
         let salesChart;
 
         function initializeSalesChart() {
-            const ctx = document.getElementById('salesChart').getContext('2d');
+            const ctx = document.getElementById('salesChart');
+            if (!ctx) {
+                console.error('Chart canvas not found');
+                return;
+            }
 
-            // Use actual monthly sales data from controller if available
+            const ctx2d = ctx.getContext('2d');
+            if (!ctx2d) {
+                console.error('Could not get 2D context');
+                return;
+            }
+
+            // FIXED: Use actual monthly sales data from controller
+            @if(isset($monthlySales) && is_array($monthlySales) && count($monthlySales) > 0)
+            const realData = @json($monthlySales);
+            // Process real data for chart
+            const labels = realData.map(item => item.month);
+            const orders = realData.map(item => item.orders);
+            const revenue = realData.map(item => item.revenue);
+
+            const monthlyData = {
+                labels: labels,
+                orders: orders,
+                revenue: revenue
+            };
+            @else
+            // Use dummy data if no real data available
             const monthlyData = {
                 labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                 orders: [12, 19, 15, 25, 22, 30, 28, 35, 32, 40, 38, 45],
                 revenue: [12000, 19000, 15000, 25000, 22000, 30000, 28000, 35000, 32000, 40000, 38000, 45000]
             };
-
-            // If you have real data from $monthlySales, you can use it here
-            @if(isset($monthlySales) && $monthlySales->count() > 0)
-            const realData = @json($monthlySales);
-            // Process real data for chart here
             @endif
 
-                salesChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: monthlyData.labels,
-                    datasets: [
-                        {
-                            label: 'Orders',
-                            data: monthlyData.orders,
-                            backgroundColor: 'rgba(102, 126, 234, 0.8)',
-                            borderColor: 'rgba(102, 126, 234, 1)',
-                            borderWidth: 2,
-                            borderRadius: 8,
-                            borderSkipped: false,
-                        },
-                        {
-                            label: 'Revenue (RS)',
-                            data: monthlyData.revenue,
-                            backgroundColor: 'rgba(118, 75, 162, 0.8)',
-                            borderColor: 'rgba(118, 75, 162, 1)',
-                            borderWidth: 2,
-                            borderRadius: 8,
-                            borderSkipped: false,
-                            yAxisID: 'y1'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
+                try {
+                salesChart = new Chart(ctx2d, {
+                    type: 'bar',
+                    data: {
+                        labels: monthlyData.labels,
+                        datasets: [
+                            {
+                                label: 'Orders',
+                                data: monthlyData.orders,
+                                backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                                borderColor: 'rgba(102, 126, 234, 1)',
+                                borderWidth: 2,
+                                borderRadius: 8,
+                                borderSkipped: false,
+                            },
+                            {
+                                label: 'Revenue (RS)',
+                                data: monthlyData.revenue,
+                                backgroundColor: 'rgba(118, 75, 162, 0.8)',
+                                borderColor: 'rgba(118, 75, 162, 1)',
+                                borderWidth: 2,
+                                borderRadius: 8,
+                                borderSkipped: false,
+                                yAxisID: 'y1'
+                            }
+                        ]
                     },
-                    scales: {
-                        x: {
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                color: '#64748b'
-                            }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
                         },
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: {
-                                display: true,
-                                text: 'Number of Orders',
-                                color: '#64748b'
-                            },
-                            grid: {
-                                color: 'rgba(100, 116, 139, 0.1)'
-                            },
-                            ticks: {
-                                color: '#64748b'
-                            }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            title: {
-                                display: true,
-                                text: 'Revenue (RS)',
-                                color: '#64748b'
-                            },
-                            grid: {
-                                drawOnChartArea: false,
-                            },
-                            ticks: {
-                                color: '#64748b',
-                                callback: function (value) {
-                                    return 'RS. ' + value.toLocaleString();
+                        scales: {
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    color: '#64748b'
                                 }
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: {
-                                color: '#475569',
-                                usePointStyle: true,
-                                padding: 20
-                            }
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                            titleColor: '#f1f5f9',
-                            bodyColor: '#f1f5f9',
-                            borderColor: '#334155',
-                            borderWidth: 1,
-                            callbacks: {
-                                label: function (context) {
-                                    let label = context.dataset.label || '';
-                                    if (label.includes('Revenue')) {
-                                        return label + ': RS. ' + context.parsed.y.toLocaleString();
+                            },
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: 'Number of Orders',
+                                    color: '#64748b'
+                                },
+                                grid: {
+                                    color: 'rgba(100, 116, 139, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#64748b'
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: {
+                                    display: true,
+                                    text: 'Revenue (RS)',
+                                    color: '#64748b'
+                                },
+                                grid: {
+                                    drawOnChartArea: false,
+                                },
+                                ticks: {
+                                    color: '#64748b',
+                                    callback: function (value) {
+                                        return 'RS. ' + value.toLocaleString();
                                     }
-                                    return label + ': ' + context.parsed.y;
                                 }
                             }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    color: '#475569',
+                                    usePointStyle: true,
+                                    padding: 20
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                                titleColor: '#f1f5f9',
+                                bodyColor: '#f1f5f9',
+                                borderColor: '#334155',
+                                borderWidth: 1,
+                                callbacks: {
+                                    label: function (context) {
+                                        let label = context.dataset.label || '';
+                                        if (label.includes('Revenue')) {
+                                            return label + ': RS. ' + context.parsed.y.toLocaleString();
+                                        }
+                                        return label + ': ' + context.parsed.y;
+                                    }
+                                }
+                            }
+                        },
+                        animation: {
+                            duration: 1000,
+                            easing: 'easeOutQuart'
                         }
-                    },
-                    animation: {
-                        duration: 1000,
-                        easing: 'easeOutQuart'
                     }
-                }
-            });
+                });
+            } catch (error) {
+                console.error('Error creating chart:', error);
+            }
         }
 
         function updateChart(period) {
+            if (!salesChart) {
+                console.error('Chart not initialized');
+                return;
+            }
+
             // In a real application, you would fetch new data from the server based on the period
             let newData;
 
@@ -872,17 +1047,41 @@
                     };
                     break;
                 default: // monthly
+                    // If we have real data, use it for monthly view
+                @if(isset($monthlySales) && is_array($monthlySales) && count($monthlySales) > 0)
+                    const realData = @json($monthlySales);
+                    const labels = realData.map(item => item.month);
+                    const orders = realData.map(item => item.orders);
+                    const revenue = realData.map(item => item.revenue);
+
                     newData = {
+                        labels: labels,
+                        orders: orders,
+                        revenue: revenue
+                    };
+                    @else
+                        newData = {
                         labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                         orders: [12, 19, 15, 25, 22, 30, 28, 35, 32, 40, 38, 45],
                         revenue: [12000, 19000, 15000, 25000, 22000, 30000, 28000, 35000, 32000, 40000, 38000, 45000]
                     };
+                @endif
             }
 
-            salesChart.data.labels = newData.labels;
-            salesChart.data.datasets[0].data = newData.orders;
-            salesChart.data.datasets[1].data = newData.revenue;
-            salesChart.update();
+            try {
+                salesChart.data.labels = newData.labels;
+                salesChart.data.datasets[0].data = newData.orders;
+                salesChart.data.datasets[1].data = newData.revenue;
+                salesChart.update();
+            } catch (error) {
+                console.error('Error updating chart:', error);
+            }
         }
+
+        // Call storage info on page load
+        window.addEventListener('load', function() {
+            // Small delay to ensure everything is loaded
+            setTimeout(getStorageInfo, 1000);
+        });
     </script>
 @endpush

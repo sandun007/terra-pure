@@ -190,7 +190,7 @@
             </p>
         </div>
         <div class="page-actions">
-            <a href="{{ route('wholesaler.wholesaler.categories.index') }}" class="btn btn-outline-light d-flex align-items-center">
+            <a href="{{ route('wholesaler.categories.index') }}" class="btn btn-outline-light d-flex align-items-center">
                 <span class="material-icons-outlined me-2">arrow_back</span>
                 Back to Categories
             </a>

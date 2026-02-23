@@ -1,331 +1,337 @@
 @extends('wholesaler.layouts.app')
 @push('title')
-    {{ $shop->shop_name }} - Wholesale Shop
+    Wholesaler Shop
 @endpush
 @push('css')
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Icons+Outlined" rel="stylesheet">
     <style>
         :root {
-            --primary: #3a86ff;
-            --secondary: #8338ec;
-            --accent: #ff006e;
-            --dark: #1a1a2e;
-            --light: #f8f9fa;
-            --success: #06d6a0;
-            --warning: #ffd166;
-            --danger: #ef476f;
+            --main-theme-color: #667eea;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
         }
 
-        .hero-section {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        .shop-header {
+            background: linear-gradient(135deg, var(--main-theme-color) 0%, #764ba2 100%);
             color: white;
-            border-radius: 20px;
-            padding: 4rem 2rem;
-            margin-bottom: 3rem;
-            position: relative;
-            overflow: hidden;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+            border-radius: 15px;
         }
 
-        .hero-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none"><path d="M0,0v100l1000-100V0Z" fill="rgba(255,255,255,0.1)"/></svg>');
-            background-size: 100% 100px;
-            background-position: bottom;
-            background-repeat: no-repeat;
+        .filter-sidebar {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            position: sticky;
+            top: 100px;
         }
 
         .product-card {
             background: white;
-            border-radius: 16px;
+            border-radius: 15px;
             overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 1px solid #e2e8f0;
-            position: relative;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
             height: 100%;
+            display: flex;
+            flex-direction: column;
         }
 
         .product-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-            border-color: var(--primary);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
 
-        .product-image-container {
-            height: 220px;
+        .product-image-wrapper {
+            position: relative;
+            width: 100%;
+            padding-top: 100%;
             overflow: hidden;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            position: relative;
         }
 
         .product-image {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.5s ease;
+            transition: transform 0.3s ease;
         }
 
         .product-card:hover .product-image {
-            transform: scale(1.05);
+            transform: scale(1.1);
         }
 
-        .product-actions {
+        .product-badge {
             position: absolute;
-            top: 15px;
-            right: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            opacity: 0;
-            transform: translateX(20px);
-            transition: all 0.3s ease;
+            top: 10px;
+            right: 10px;
+            background: var(--danger-color);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            z-index: 2;
         }
 
-        .product-card:hover .product-actions {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        .action-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+        .product-rating {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 5px 10px;
+            border-radius: 20px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            background: white;
-            border: none;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            color: var(--dark);
+            gap: 5px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            z-index: 2;
         }
 
-        .action-btn:hover {
-            transform: scale(1.1);
-            background: var(--primary);
-            color: white;
-        }
-
-        .product-info {
-            padding: 20px;
+        .product-content {
+            padding: 1.25rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
         }
 
         .product-title {
             font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--dark);
-            margin-bottom: 10px;
-            line-height: 1.4;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
 
-        .product-price {
+        .product-meta {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .meta-badge {
+            background: #f1f5f9;
+            color: #475569;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 4px;
         }
 
-        .current-price {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--primary);
+        .product-pricing {
+            margin: 1rem 0;
         }
 
-        .original-price {
-            font-size: 0.9rem;
+        .price-display {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--main-theme-color);
+        }
+
+        .price-original {
+            font-size: 0.95rem;
             color: #94a3b8;
             text-decoration: line-through;
+            margin-left: 8px;
         }
 
-        .product-cta {
+        .wholesale-price {
+            color: var(--success-color);
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        .stock-info {
             display: flex;
-            gap: 10px;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+        }
+
+        .stock-high {
+            color: var(--success-color);
+        }
+
+        .stock-low {
+            color: var(--danger-color);
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: auto;
         }
 
         .btn-add-cart {
             flex: 1;
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            background: var(--main-theme-color);
             color: white;
             border: none;
-            padding: 12px;
+            padding: 10px;
             border-radius: 10px;
             font-weight: 600;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            transition: all 0.3s ease;
+            gap: 6px;
         }
 
         .btn-add-cart:hover {
+            background: #5568d3;
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(58, 134, 255, 0.3);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
 
         .btn-buy-now {
-            background: var(--accent);
+            flex: 1;
+            background: var(--success-color);
             color: white;
             border: none;
-            padding: 12px 20px;
+            padding: 10px;
             border-radius: 10px;
             font-weight: 600;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
 
         .btn-buy-now:hover {
+            background: #059669;
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(255, 0, 110, 0.3);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
         }
 
-        .featured-slider {
-            margin: 3rem 0;
-        }
-
-        .section-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--dark);
-            margin-bottom: 2rem;
-            position: relative;
-            padding-left: 20px;
-        }
-
-        .section-title::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 5px;
+        .btn-view-details {
+            width: 40px;
             height: 40px;
-            background: linear-gradient(to bottom, var(--primary), var(--secondary));
-            border-radius: 3px;
+            background: #f1f5f9;
+            border: none;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
         }
 
-        .filter-sidebar {
-            background: white;
-            border-radius: 16px;
-            padding: 25px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-            position: sticky;
-            top: 20px;
+        .btn-view-details:hover {
+            background: var(--main-theme-color);
+            color: white;
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--danger-color);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
         }
 
         .filter-group {
-            margin-bottom: 25px;
-        }
-
-        .price-range {
-            padding: 15px 0;
-        }
-
-        .range-slider {
-            width: 100%;
-            height: 5px;
-            background: #e2e8f0;
-            border-radius: 5px;
-            margin: 20px 0;
-            position: relative;
-        }
-
-        .range-slider .progress {
-            height: 100%;
-            left: 0%;
-            right: 0%;
-            position: absolute;
-            background: linear-gradient(to right, var(--primary), var(--secondary));
-            border-radius: 5px;
-        }
-
-        .range-input input {
-            position: absolute;
-            width: 100%;
-            height: 5px;
-            top: -5px;
-            background: none;
-            pointer-events: none;
-            -webkit-appearance: none;
-        }
-
-        .range-input input::-webkit-slider-thumb {
-            height: 20px;
-            width: 20px;
-            border-radius: 50%;
-            background: white;
-            border: 3px solid var(--primary);
-            pointer-events: auto;
-            cursor: pointer;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        .pagination-custom {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 3rem;
-        }
-
-        .page-item.active .page-link {
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            color: white;
-            border-color: transparent;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-        }
-
-        .empty-state-icon {
-            font-size: 4rem;
-            color: #cbd5e1;
             margin-bottom: 1.5rem;
         }
 
+        .filter-title {
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .filter-option input[type="checkbox"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .price-range-inputs {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .price-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+        }
+
+        .btn-apply-filters {
+            width: 100%;
+            background: var(--main-theme-color);
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        .sort-dropdown {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 15px;
+            font-weight: 600;
+        }
+
         @media (max-width: 768px) {
-            .product-cta {
-                flex-direction: column;
+            .filter-sidebar {
+                position: static;
+                margin-bottom: 2rem;
             }
         }
     </style>
 @endpush
 
 @section('content')
-    <!-- Hero Section -->
-    <div class="hero-section">
+    <div class="shop-header">
         <div class="container">
             <div class="row align-items-center">
-                <div class="col-lg-6">
-                    <div class="hero-content">
-                        <h1>Welcome to {{ $shop->shop_name }}</h1>
-                        <p>Discover premium quality products at wholesale prices. Browse our exclusive collection curated just for you.</p>
-                        <div class="mt-4">
-                            <a href="#products" class="btn btn-light btn-lg px-4 py-3 me-3">
-                                <i class="fas fa-shopping-bag me-2"></i>Shop Now
-                            </a>
-                            @if(auth()->guard('wholesaler')->check())
-                                <a href="{{ route('wholesaler.products.create') }}" class="btn btn-outline-light btn-lg px-4 py-3">
-                                    <i class="fas fa-plus-circle me-2"></i>Add Product
-                                </a>
-                            @endif
-                        </div>
-                    </div>
+                <div class="col-md-8">
+                    <h1 class="mb-2">Wholesaler Shop</h1>
+                    <p class="mb-0">Discover quality products at wholesale prices</p>
                 </div>
-                <div class="col-lg-6">
-                    <div class="text-center">
-                        <img src="https://cdn.pixabay.com/photo/2016/11/23/14/45/shopping-1853543_1280.png"
-                             alt="Online Shopping"
-                             class="img-fluid"
-                             style="max-height: 300px;">
-                    </div>
+                <div class="col-md-4 text-md-end">
+                    <a href="{{ route('wholesaler.shop.cart') }}" class="btn btn-light position-relative">
+                        <span class="material-icons-outlined me-2">shopping_cart</span>
+                        Cart
+                        <span class="cart-badge" id="cartCount">{{ $cartCount }}</span>
+                    </a>
                 </div>
             </div>
         </div>
@@ -333,387 +339,249 @@
 
     <div class="container">
         <div class="row">
-            <!-- Filters Sidebar -->
-            <div class="col-lg-3 mb-4">
+            <!-- Filter Sidebar -->
+            <div class="col-lg-3">
                 <div class="filter-sidebar">
-                    <!-- Search -->
-                    <div class="search-box mb-4">
-                        <form action="{{ route('wholesaler.shop.index') }}" method="GET">
-                            <div class="input-group">
-                                <input type="text" class="form-control" name="search" placeholder="Search products..."
-                                       value="{{ request('search') }}">
-                                <button class="btn btn-primary" type="submit">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <!-- Categories -->
-                    <div class="filter-group">
-                        <h6 class="filter-title mb-3">
-                            <i class="fas fa-list me-2"></i>
-                            Categories
-                        </h6>
-                        <div class="filter-options">
-                            <div class="filter-option mb-2">
-                                <a href="{{ route('wholesaler.shop.index') }}"
-                                   class="d-flex justify-content-between text-decoration-none {{ !request('category') ? 'text-primary' : 'text-dark' }}">
-                                    <span>All Categories</span>
-                                    <span class="badge bg-light text-dark">{{ $products->total() }}</span>
-                                </a>
-                            </div>
+                    <form action="{{ route('wholesaler.shop.index') }}" method="GET">
+                        <!-- Categories Filter -->
+                        <div class="filter-group">
+                            <h6 class="filter-title">
+                                <span class="material-icons-outlined">category</span>
+                                Categories
+                            </h6>
                             @foreach($categories as $category)
-                                <div class="filter-option mb-2">
-                                    <a href="{{ route('wholesaler.shop.index', ['category' => $category->id]) }}"
-                                       class="d-flex justify-content-between text-decoration-none {{ request('category') == $category->id ? 'text-primary' : 'text-dark' }}">
-                                        <span>{{ $category->name }}</span>
-                                        <span class="badge bg-light text-dark">{{ $category->products_count }}</span>
-                                    </a>
+                                <div class="filter-option">
+                                    <input type="checkbox" name="category[]" value="{{ $category->id }}"
+                                           id="cat{{ $category->id }}"
+                                        {{ request('category') == $category->id ? 'checked' : '' }}>
+                                    <label for="cat{{ $category->id }}">{{ $category->name }}</label>
                                 </div>
                             @endforeach
                         </div>
-                    </div>
 
-                    <!-- Price Range -->
-                    <div class="filter-group">
-                        <h6 class="filter-title mb-3">
-                            <i class="fas fa-filter me-2"></i>
-                            Price Range
-                        </h6>
-                        <div class="price-range">
-                            <form action="{{ route('wholesaler.shop.index') }}" method="GET" id="priceFilterForm">
-                                <div class="range-slider">
-                                    <div class="progress"></div>
-                                    <div class="range-input">
-                                        <input type="range" class="range-min" min="0" max="100000" value="{{ request('min_price', 0) }}" step="100">
-                                        <input type="range" class="range-max" min="0" max="100000" value="{{ request('max_price', 50000) }}" step="100">
-                                    </div>
+                        <!-- Brands Filter -->
+                        <div class="filter-group">
+                            <h6 class="filter-title">
+                                <span class="material-icons-outlined">branding_watermark</span>
+                                Brands
+                            </h6>
+                            @foreach($brands as $brand)
+                                <div class="filter-option">
+                                    <input type="checkbox" name="brand[]" value="{{ $brand->id }}"
+                                           id="brand{{ $brand->id }}"
+                                        {{ request('brand') == $brand->id ? 'checked' : '' }}>
+                                    <label for="brand{{ $brand->id }}">{{ $brand->name }}</label>
                                 </div>
-                                <div class="price-input mt-3">
-                                    <div class="row">
-                                        <div class="col-6">
-                                            <input type="number" class="form-control input-min" name="min_price"
-                                                   value="{{ request('min_price', 0) }}" placeholder="Min">
-                                        </div>
-                                        <div class="col-6">
-                                            <input type="number" class="form-control input-max" name="max_price"
-                                                   value="{{ request('max_price', 50000) }}" placeholder="Max">
-                                        </div>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary btn-sm w-100 mt-2">Apply Price</button>
-                                </div>
-                            </form>
+                            @endforeach
                         </div>
-                    </div>
+
+                        <!-- Price Range -->
+                        <div class="filter-group">
+                            <h6 class="filter-title">
+                                <span class="material-icons-outlined">payments</span>
+                                Price Range
+                            </h6>
+                            <div class="price-range-inputs">
+                                <input type="number" name="min_price" class="price-input" placeholder="Min"
+                                       value="{{ request('min_price') }}">
+                                <input type="number" name="max_price" class="price-input" placeholder="Max"
+                                       value="{{ request('max_price') }}">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-apply-filters">
+                            <span class="material-icons-outlined me-2">filter_alt</span>
+                            Apply Filters
+                        </button>
+                        <a href="{{ route('wholesaler.shop.index') }}" class="btn btn-outline-secondary w-100 mt-2">
+                            Clear Filters
+                        </a>
+                    </form>
                 </div>
             </div>
 
             <!-- Products Grid -->
             <div class="col-lg-9">
-                <!-- Products Header -->
+                <!-- Toolbar -->
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2 class="section-title" id="products">All Products</h2>
-                    <div class="d-flex gap-2">
-                        <span class="badge bg-primary px-3 py-2">
-                            <i class="fas fa-box me-2"></i>
-                            {{ $products->total() }} Products
-                        </span>
+                    <div>
+                        <h5 class="mb-0">{{ $products->total() }} Products Found</h5>
+                    </div>
+                    <div>
+                        <select class="sort-dropdown" onchange="window.location.href=this.value">
+                            <option value="{{ route('wholesaler.shop.index', array_merge(request()->all(), ['sort' => 'newest'])) }}"
+                                {{ request('sort') == 'newest' ? 'selected' : '' }}>Newest</option>
+                            <option value="{{ route('wholesaler.shop.index', array_merge(request()->all(), ['sort' => 'price_low'])) }}"
+                                {{ request('sort') == 'price_low' ? 'selected' : '' }}>Price: Low to High</option>
+                            <option value="{{ route('wholesaler.shop.index', array_merge(request()->all(), ['sort' => 'price_high'])) }}"
+                                {{ request('sort') == 'price_high' ? 'selected' : '' }}>Price: High to Low</option>
+                            <option value="{{ route('wholesaler.shop.index', array_merge(request()->all(), ['sort' => 'rating'])) }}"
+                                {{ request('sort') == 'rating' ? 'selected' : '' }}>Highest Rated</option>
+                            <option value="{{ route('wholesaler.shop.index', array_merge(request()->all(), ['sort' => 'popular'])) }}"
+                                {{ request('sort') == 'popular' ? 'selected' : '' }}>Most Popular</option>
+                        </select>
                     </div>
                 </div>
 
                 <!-- Products Grid -->
-                <div class="row g-4" id="productsGrid">
+                <div class="row g-4">
                     @forelse($products as $product)
-                        <div class="col-xl-3 col-lg-4 col-md-6">
+                        <div class="col-md-6 col-lg-4">
                             <div class="product-card">
-                                <!-- Product Image -->
-                                <div class="product-image-container">
-                                    <a href="{{ route('wholesaler.shop.product.show', $product->id) }}">
-                                        @if($product->image)
-                                            <img src="{{ asset('storage/' . $product->image) }}"
-                                                 alt="{{ $product->name }}"
-                                                 class="product-image">
-                                        @else
-                                            <div class="product-image d-flex align-items-center justify-content-center bg-light">
-                                                <i class="fas fa-box-open fa-3x text-muted"></i>
-                                            </div>
-                                        @endif
-                                    </a>
+                                <div class="product-image-wrapper">
+                                    @if($product->image)
+                                        <img src="{{ asset('storage/' . $product->image) }}"
+                                             alt="{{ $product->name }}"
+                                             class="product-image">
+                                    @else
+                                        <div class="product-image d-flex align-items-center justify-content-center">
+                                            <span class="material-icons-outlined" style="font-size: 4rem; color: #94a3b8;">
+                                                image
+                                            </span>
+                                        </div>
+                                    @endif
 
-                                    <!-- Quick Actions -->
-                                    <div class="product-actions">
-                                        <button class="action-btn" title="Quick View" onclick="quickView({{ $product->id }})">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <button class="action-btn" title="Add to Wishlist">
-                                            <i class="fas fa-heart"></i>
-                                        </button>
-                                    </div>
+                                    @if($product->qty < 10)
+                                        <span class="product-badge">Low Stock</span>
+                                    @endif
+
+                                    @if($product->average_rating > 0)
+                                        <div class="product-rating">
+                                            <span class="material-icons-outlined" style="color: #f59e0b; font-size: 1rem;">
+                                                star
+                                            </span>
+                                            {{ number_format($product->average_rating, 1) }}
+                                            <span style="color: #94a3b8;">({{ $product->total_reviews }})</span>
+                                        </div>
+                                    @endif
                                 </div>
 
-                                <!-- Product Info -->
-                                <div class="product-info">
-                                    <div class="product-category mb-2">
-                                        <span class="badge bg-light text-dark">
-                                            {{ $product->category->name ?? 'Uncategorized' }}
-                                        </span>
-                                    </div>
+                                <div class="product-content">
+                                    <h5 class="product-title">{{ $product->name }}</h5>
 
-                                    <h3 class="product-title">
-                                        <a href="{{ route('wholesaler.shop.product.show', $product->id) }}" class="text-decoration-none text-dark">
-                                            {{ $product->name }}
-                                        </a>
-                                    </h3>
-
-                                    <!-- Price -->
-                                    <div class="product-price">
-                                        <span class="current-price">
-                                            Rs. {{ number_format($product->wholesale_price, 2) }}
-                                        </span>
-                                        @if($product->display_price > $product->wholesale_price)
-                                            <span class="original-price">
-                                                Rs. {{ number_format($product->display_price, 2) }}
+                                    <div class="product-meta">
+                                        @if($product->category)
+                                            <span class="meta-badge">
+                                                <span class="material-icons-outlined" style="font-size: 0.9rem;">category</span>
+                                                {{ $product->category->name }}
+                                            </span>
+                                        @endif
+                                        @if($product->brand)
+                                            <span class="meta-badge">
+                                                <span class="material-icons-outlined" style="font-size: 0.9rem;">branding_watermark</span>
+                                                {{ $product->brand->name }}
                                             </span>
                                         @endif
                                     </div>
 
-                                    <!-- Stock Status -->
-                                    <div class="product-stock mb-3">
-                                        <span class="badge {{ $product->qty > 50 ? 'bg-success' : ($product->qty > 10 ? 'bg-warning' : 'bg-danger') }}">
-                                            <i class="fas fa-{{ $product->qty > 50 ? 'check-circle' : ($product->qty > 10 ? 'exclamation-circle' : 'times-circle') }} me-1"></i>
-                                            {{ $product->qty > 50 ? 'In Stock' : ($product->qty > 10 ? 'Limited Stock' : 'Low Stock') }}
-                                        </span>
+                                    <div class="product-pricing">
+                                        <div class="price-display">
+                                            Rs. {{ number_format($product->display_price, 2) }}
+                                        </div>
+                                        <div class="wholesale-price">
+                                            <span class="material-icons-outlined" style="font-size: 1rem; vertical-align: middle;">
+                                                store
+                                            </span>
+                                            Wholesale: Rs. {{ number_format($product->wholesale_price, 2) }}
+                                        </div>
                                     </div>
 
-                                    <!-- Call to Action -->
-                                    <div class="product-cta">
-                                        <button class="btn-add-cart" onclick="addToCart({{ $product->id }})">
-                                            <i class="fas fa-cart-plus"></i>
+                                    <div class="stock-info {{ $product->qty > 50 ? 'stock-high' : 'stock-low' }}">
+                                        <span class="material-icons-outlined" style="font-size: 1rem;">
+                                            {{ $product->qty > 50 ? 'check_circle' : 'warning' }}
+                                        </span>
+                                        {{ $product->qty }} in stock | Min Order: {{ $product->min_order_quantity }}
+                                    </div>
+
+                                    <div class="product-actions">
+                                        <button class="btn-add-cart" onclick="addToCart({{ $product->id }}, {{ $product->min_order_quantity }})">
+                                            <span class="material-icons-outlined">add_shopping_cart</span>
                                             Add to Cart
                                         </button>
-                                        <form action="{{ route('wholesaler.shop.buy.now') }}" method="POST" class="d-inline">
-                                            @csrf
-                                            <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                            <input type="hidden" name="quantity" value="{{ $product->min_order_quantity }}">
-                                            <button type="submit" class="btn-buy-now">
-                                                <i class="fas fa-bolt"></i>
-                                                Buy Now
-                                            </button>
-                                        </form>
+                                        <button class="btn-buy-now" onclick="buyNow({{ $product->id }}, {{ $product->min_order_quantity }})">
+                                            <span class="material-icons-outlined">shopping_bag</span>
+                                            Buy Now
+                                        </button>
+                                        <a href="{{ route('wholesaler.shop.product.show', $product->id) }}" class="btn-view-details">
+                                            <span class="material-icons-outlined">visibility</span>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     @empty
-                        <div class="col-12">
-                            <div class="empty-state">
-                                <div class="empty-state-icon">
-                                    <i class="fas fa-box-open fa-4x"></i>
-                                </div>
-                                <h3 class="mb-3">No Products Found</h3>
-                                <p class="text-muted mb-4">Start by adding your first product</p>
-                                <a href="{{ route('wholesaler.products.create') }}" class="btn btn-primary">
-                                    <i class="fas fa-plus-circle me-2"></i>Add First Product
-                                </a>
-                            </div>
+                        <div class="col-12 text-center py-5">
+                            <span class="material-icons-outlined" style="font-size: 5rem; color: #94a3b8;">
+                                inventory_2
+                            </span>
+                            <h4 class="mt-3 text-muted">No Products Found</h4>
+                            <p class="text-muted">Try adjusting your filters</p>
                         </div>
                     @endforelse
                 </div>
 
                 <!-- Pagination -->
-                @if($products->hasPages())
-                    <nav class="pagination-custom">
-                        {{ $products->withQueryString()->links() }}
-                    </nav>
-                @endif
+                <div class="mt-5">
+                    {{ $products->links() }}
+                </div>
             </div>
         </div>
-
-        <!-- Featured Products Section -->
-        @if($featuredProducts->isNotEmpty())
-            <section class="featured-slider">
-                <h2 class="section-title">Featured Products</h2>
-                <div class="swiper featuredSwiper">
-                    <div class="swiper-wrapper">
-                        @foreach($featuredProducts as $product)
-                            <div class="swiper-slide">
-                                <div class="product-card">
-                                    <div class="product-image-container">
-                                        <a href="{{ route('wholesaler.shop.product.show', $product->id) }}">
-                                            @if($product->image)
-                                                <img src="{{ asset('storage/' . $product->image) }}"
-                                                     alt="{{ $product->name }}"
-                                                     class="product-image">
-                                            @else
-                                                <div class="product-image d-flex align-items-center justify-content-center bg-light">
-                                                    <i class="fas fa-box-open fa-3x text-muted"></i>
-                                                </div>
-                                            @endif
-                                        </a>
-                                    </div>
-                                    <div class="product-info">
-                                        <h3 class="product-title">
-                                            <a href="{{ route('wholesaler.shop.product.show', $product->id) }}">
-                                                {{ Str::limit($product->name, 50) }}
-                                            </a>
-                                        </h3>
-                                        <div class="product-price">
-                                            <span class="current-price">Rs. {{ number_format($product->wholesale_price, 2) }}</span>
-                                        </div>
-                                        <div class="product-cta">
-                                            <button class="btn-add-cart w-100" onclick="addToCart({{ $product->id }})">
-                                                <i class="fas fa-cart-plus"></i> Add to Cart
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                    <div class="swiper-button-next"></div>
-                    <div class="swiper-button-prev"></div>
-                </div>
-            </section>
-        @endif
     </div>
 @endsection
 
 @push('script')
-    <script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
     <script>
-        // Initialize Swiper
-        var featuredSwiper = new Swiper('.featuredSwiper', {
-            slidesPerView: 1,
-            spaceBetween: 20,
-            navigation: {
-                nextEl: '.swiper-button-next',
-                prevEl: '.swiper-button-prev',
-            },
-            breakpoints: {
-                640: { slidesPerView: 2 },
-                768: { slidesPerView: 3 },
-                1024: { slidesPerView: 4 }
-            }
-        });
-
-        // Price Range Slider
-        const rangeInput = document.querySelectorAll(".range-input input"),
-            priceInput = document.querySelectorAll(".price-input input"),
-            range = document.querySelector(".range-slider .progress");
-        let priceGap = 1000;
-
-        priceInput.forEach(input => {
-            input.addEventListener("input", e => {
-                let minPrice = parseInt(priceInput[0].value),
-                    maxPrice = parseInt(priceInput[1].value);
-
-                if ((maxPrice - minPrice >= priceGap) && maxPrice <= rangeInput[1].max) {
-                    if (e.target.className === "input-min") {
-                        rangeInput[0].value = minPrice;
-                        range.style.left = ((minPrice / rangeInput[0].max) * 100) + "%";
-                    } else {
-                        rangeInput[1].value = maxPrice;
-                        range.style.right = 100 - (maxPrice / rangeInput[1].max) * 100 + "%";
-                    }
-                }
-            });
-        });
-
-        rangeInput.forEach(input => {
-            input.addEventListener("input", e => {
-                let minVal = parseInt(rangeInput[0].value),
-                    maxVal = parseInt(rangeInput[1].value);
-
-                if ((maxVal - minVal) < priceGap) {
-                    if (e.target.className === "range-min") {
-                        rangeInput[0].value = maxVal - priceGap;
-                    } else {
-                        rangeInput[1].value = minVal + priceGap;
-                    }
-                } else {
-                    priceInput[0].value = minVal;
-                    priceInput[1].value = maxVal;
-                    range.style.left = ((minVal / rangeInput[0].max) * 100) + "%";
-                    range.style.right = 100 - (maxVal / rangeInput[1].max) * 100 + "%";
-                }
-            });
-        });
-
-        // Add to Cart Function
-        function addToCart(productId) {
-            const quantity = 1;
-            $.ajax({
-                url: '{{ route("wholesaler.shop.cart.add") }}',
+        function addToCart(productId, minQty) {
+            fetch('{{ route("wholesaler.shop.cart.add") }}', {
                 method: 'POST',
-                data: {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
                     product_id: productId,
-                    quantity: quantity,
-                    _token: '{{ csrf_token() }}'
-                },
-                success: function(response) {
-                    if (response.success) {
-                        showToast('success', response.message);
-                        updateCartCount(response.cart_count);
-                        animateCart(productId);
+                    quantity: minQty
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('cartCount').textContent = data.cartCount;
+                        alert(data.message);
                     } else {
-                        showToast('error', response.message);
+                        alert(data.message);
                     }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error adding to cart');
+                });
+        }
+
+        function buyNow(productId, minQty) {
+            fetch('{{ route("wholesaler.shop.buy.now") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
-                error: function(xhr) {
-                    showToast('error', xhr.responseJSON?.message || 'Error adding to cart');
-                }
-            });
+                body: JSON.stringify({
+                    product_id: productId,
+                    quantity: minQty
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = data.redirect;
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error processing request');
+                });
         }
-
-        function updateCartCount(count) {
-            const cartBadge = document.querySelector('.cart-count-badge');
-            if (cartBadge) {
-                cartBadge.textContent = count;
-                cartBadge.classList.add('animate__animated', 'animate__bounceIn');
-                setTimeout(() => {
-                    cartBadge.classList.remove('animate__animated', 'animate__bounceIn');
-                }, 500);
-            }
-        }
-
-        function showToast(type, message) {
-            const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
-            toast.innerHTML = `
-            <div class="toast-content">
-                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
-                ${message}
-            </div>
-        `;
-
-            toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: ${type === 'success' ? '#10b981' : '#ef4444'};
-            color: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            z-index: 9999;
-            animation: slideInRight 0.3s ease;
-        `;
-
-            document.body.appendChild(toast);
-
-            setTimeout(() => {
-                toast.style.animation = 'slideOutRight 0.3s ease forwards';
-                setTimeout(() => {
-                    document.body.removeChild(toast);
-                }, 300);
-            }, 3000);
-        }
-
-        // Load cart count on page load
-        $(document).ready(function() {
-            $.get('{{ route("wholesaler.shop.cart.count") }}', function(response) {
-                updateCartCount(response.count);
-            });
-        });
     </script>
 @endpush

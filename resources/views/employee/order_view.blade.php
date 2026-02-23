@@ -1,9 +1,9 @@
-@extends('employee.app')
+@extends('employee.layout.app')
 @push('title')
     View Order
 @endpush
 @push('css')
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
 
     <style>
         .phone-img {
@@ -58,7 +58,8 @@
     </div>
     <form action="{{route('call.store')}}" class="add-product-form" method="post" enctype="multipart/form-data">
         @csrf
-        <input type="hidden" name="item_code" class="form-control" placeholder="Product Name" value="{{$order->item_code}}" required >
+        <input type="hidden" name="item_code" class="form-control" placeholder="Product Name"
+               value="{{$order->item_code}}" required>
 
         <input type="hidden" name="id" value="{{$id}}">
         <div class="add-product">
@@ -84,54 +85,68 @@
                                     <div class="mb-3">
                                         <label class="form-label">Order Code<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="order_code" class="form-control" required  value="{{$order->order_no}}" readonly>
+                                        <input type="text" name="order_code" class="form-control" required
+                                               value="{{$order->order_no}}" readonly>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Product Name<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="product_name" class="form-control" placeholder="Product Name" value="{{$order->item_name}}" required readonly>
+                                        <input type="text" name="product_name" class="form-control"
+                                               placeholder="Product Name" value="{{$order->item_name}}" required
+                                               readonly>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Price<span class="text-danger ms-1">*</span></label>
-                                        <input type="number" name="price" class="form-control" placeholder="price" value="{{$order->price ?? 0}}" readonly required>
+                                        <input type="number" name="price" class="form-control" placeholder="price"
+                                               value="{{$order->price ?? 0}}" readonly required>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Qty<span class="text-danger ms-1">*</span></label>
-                                        <input type="number" name="qty" class="form-control" value="{{$order->qty ?? 1}}" readonly required>
+                                        <input type="number" name="qty" class="form-control"
+                                               value="{{$order->qty ?? 1}}" readonly required>
                                     </div>
                                 </div>
                                 <div class="col-sm-12 col-12">
                                     <div class="mb-3">
-                                        <label class="form-label">Customer Name<span class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="customer_name" class="form-control" placeholder="Customer Name" value="{{$order->customer_name}}" required readonly>
+                                        <label class="form-label">Customer Name<span
+                                                class="text-danger ms-1">*</span></label>
+                                        <input type="text" name="customer_name" class="form-control"
+                                               placeholder="Customer Name" value="{{$order->customer_name}}" required
+                                               readonly>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Mobile No 01<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="phone_01" class="form-control" placeholder="Mobile No 01" value="{{$order->customer_phone_01}}" required readonly>
+                                        <input type="text" name="phone_01" class="form-control"
+                                               placeholder="Mobile No 01" value="{{$order->customer_phone_01}}" required
+                                               readonly>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Mobile No 02<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="phone_02" class="form-control" placeholder="Mobile No 02" value="{{$order->customer_phone_02}}" required readonly>
+                                        <input type="text" name="phone_02" class="form-control"
+                                               placeholder="Mobile No 02" value="{{$order->customer_phone_02}}" required
+                                               readonly>
                                     </div>
                                 </div>
 
 
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
-                                        <label class="form-label">Address <span class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="address" class="form-control" placeholder="Address" value="{{$order->customer_address}}" required readonly>
+                                        <label class="form-label">Address <span
+                                                class="text-danger ms-1">*</span></label>
+                                        <input type="text" name="address" class="form-control" placeholder="Address"
+                                               value="{{$order->customer_address}}" required readonly>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
@@ -140,7 +155,8 @@
                                         <select name="city" class="form-control select2" required disabled>
                                             <option value="">Select City</option>
                                             @foreach($cities as $city)
-                                                <option value="{{ $city->id }}" {{ strtolower($order->city) == strtolower($city->city) ? 'selected' : '' }}>
+                                                <option
+                                                    value="{{ $city->id }}" {{ strtolower($order->city) == strtolower($city->city) ? 'selected' : '' }}>
                                                     {{ $city->city }}
                                                 </option>
 
@@ -152,7 +168,8 @@
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Remark<span class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="remark" class="form-control" placeholder="Remark" value="{{$order->remark ?? ''}}" required readonly>
+                                        <input type="text" name="remark" class="form-control" placeholder="Remark"
+                                               value="{{$order->remark ?? ''}}" required readonly>
                                     </div>
                                 </div>
 
@@ -260,7 +277,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             $('.select2').select2({
                 placeholder: "Select a city",
                 allowClear: true

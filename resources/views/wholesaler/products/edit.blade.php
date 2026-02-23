@@ -360,20 +360,38 @@
 
                     <div class="mb-4">
                         <label class="form-label d-flex align-items-center">
-                            <span class="material-icons-outlined">price_check</span>
-                            <span class="required">Display Price (Rs.)</span>
+                            <span class="material-icons-outlined">attach_money</span>
+                            <span class="required">Cost Price (Rs.)</span>
                         </label>
-                        <input type="number" name="display_price" class="form-control" step="0.01"
-                               value="{{ old('display_price', $product->display_price) }}" required id="displayPrice">
+                        <input type="number" name="cost_price" class="form-control" step="0.01"
+                               value="{{ old('cost_price', $product->cost_price) }}" required id="costPrice">
                     </div>
 
                     <div class="mb-4">
                         <label class="form-label d-flex align-items-center">
-                            <span class="material-icons-outlined">store</span>
-                            <span class="required">Wholesale Price (Rs.)</span>
+                            <span class="material-icons-outlined">price_check</span>
+                            <span class="required">Selling Price (Rs.)</span>
                         </label>
-                        <input type="number" name="wholesale_price" class="form-control" step="0.01"
-                               value="{{ old('wholesale_price', $product->wholesale_price) }}" required id="wholesalePrice">
+                        <input type="number" name="selling_price" class="form-control" step="0.01"
+                               value="{{ old('selling_price', $product->selling_price) }}" required id="sellingPrice">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label d-flex align-items-center">
+                            <span class="material-icons-outlined">percent</span>
+                            Discount (%)
+                        </label>
+                        <input type="number" name="discount" class="form-control" step="0.01"
+                               value="{{ old('discount', $product->discount) }}" id="discount" min="0" max="100">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label d-flex align-items-center">
+                            <span class="material-icons-outlined">inventory</span>
+                            Packaging Cost (Rs.)
+                        </label>
+                        <input type="number" name="packaging_cost" class="form-control" step="0.01"
+                               value="{{ old('packaging_cost', $product->packaging_cost) }}" id="packagingCost" min="0">
                     </div>
 
                     <div class="mb-4">
@@ -387,11 +405,11 @@
 
                     <div class="mb-4">
                         <label class="form-label d-flex align-items-center">
-                            <span class="material-icons-outlined">shopping_cart</span>
-                            <span class="required">Minimum Order Quantity</span>
+                            <span class="material-icons-outlined">warning</span>
+                            <span class="required">Minimum Stock Level</span>
                         </label>
-                        <input type="number" name="min_order_quantity" class="form-control"
-                               value="{{ old('min_order_quantity', $product->min_order_quantity) }}" required min="1">
+                        <input type="number" name="min_stock_level" class="form-control"
+                               value="{{ old('min_stock_level', $product->min_stock_level) }}" required min="1">
                     </div>
 
                     <div class="mb-4">
@@ -416,51 +434,33 @@
                             Price Summary
                         </h6>
                         <div class="price-row">
-                            <span class="d-flex align-items-center">
-                                <span class="material-icons-outlined me-1" style="font-size: 1.2rem;">price_check</span>
-                                Display Price:
-                            </span>
-                            <span id="displayPriceDisplay" class="fw-bold">Rs. 0.00</span>
+            <span class="d-flex align-items-center">
+                <span class="material-icons-outlined me-1" style="font-size: 1.2rem;">attach_money</span>
+                Total Cost:
+            </span>
+                            <span id="totalCostDisplay" class="fw-bold">Rs. 0.00</span>
                         </div>
                         <div class="price-row">
-                            <span class="d-flex align-items-center">
-                                <span class="material-icons-outlined me-1" style="font-size: 1.2rem;">store</span>
-                                Wholesale Price:
-                            </span>
-                            <span id="wholesalePriceDisplay" class="fw-bold" style="color: #10b981;">Rs. 0.00</span>
+            <span class="d-flex align-items-center">
+                <span class="material-icons-outlined me-1" style="font-size: 1.2rem;">price_check</span>
+                Selling Price:
+            </span>
+                            <span id="sellingPriceDisplay" class="fw-bold">Rs. 0.00</span>
                         </div>
                         <div class="price-row">
-                            <span class="d-flex align-items-center">
-                                <span class="material-icons-outlined me-1" style="font-size: 1.2rem;">trending_up</span>
-                                Margin:
-                            </span>
-                            <span id="priceDifference" class="fw-bold">Rs. 0.00</span>
+            <span class="d-flex align-items-center">
+                <span class="material-icons-outlined me-1" style="font-size: 1.2rem;">percent</span>
+                After Discount:
+            </span>
+                            <span id="finalPriceDisplay" class="fw-bold" style="color: #10b981;">Rs. 0.00</span>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Product Specifications -->
-                <div class="form-card">
-                    <div class="section-header">
-                        <span class="material-icons-outlined">tune</span>
-                        <h5 class="mb-0">Product Specifications</h5>
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label d-flex align-items-center">
-                            <span class="material-icons-outlined">weight</span>
-                            Weight (kg)
-                        </label>
-                        <input type="number" name="weight" class="form-control" step="0.01"
-                               value="{{ old('weight', $product->weight) }}">
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label d-flex align-items-center">
-                            <span class="material-icons-outlined">straighten</span>
-                            Dimensions
-                        </label>
-                        <input type="text" name="dimensions" class="form-control"
-                               value="{{ old('dimensions', $product->dimensions) }}" placeholder="e.g., 10x5x2 cm">
+                        <div class="price-row">
+            <span class="d-flex align-items-center">
+                <span class="material-icons-outlined me-1" style="font-size: 1.2rem;">trending_up</span>
+                Profit Margin:
+            </span>
+                            <span id="profitMargin" class="fw-bold">0.00%</span>
+                        </div>
                     </div>
                 </div>
 

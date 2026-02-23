@@ -1,4 +1,4 @@
-@extends('seller.app')
+@extends('seller.layout.app')
 @push('title')
     My Product
 @endpush
@@ -70,7 +70,8 @@
                             <td>
                                 <button class="btn btn-primary btn-sm">view</button>
                             </td>
-                        </tr><tr>
+                        </tr>
+                        <tr>
                             <td>ITM/001</td>
                             <td>Lux saban</td>
                             <td>lassana ruwak</td>
@@ -81,7 +82,8 @@
                             <td>
                                 <button class="btn btn-primary btn-sm">view</button>
                             </td>
-                        </tr><tr>
+                        </tr>
+                        <tr>
                             <td>ITM/001</td>
                             <td>Lux saban</td>
                             <td>lassana ruwak</td>
@@ -92,7 +94,8 @@
                             <td>
                                 <button class="btn btn-primary btn-sm">view</button>
                             </td>
-                        </tr><tr>
+                        </tr>
+                        <tr>
                             <td>ITM/001</td>
                             <td>Lux saban</td>
                             <td>lassana ruwak</td>
@@ -103,7 +106,8 @@
                             <td>
                                 <button class="btn btn-primary btn-sm">view</button>
                             </td>
-                        </tr><tr>
+                        </tr>
+                        <tr>
                             <td>ITM/001</td>
                             <td>Lux saban</td>
                             <td>lassana ruwak</td>
@@ -114,7 +118,8 @@
                             <td>
                                 <button class="btn btn-primary btn-sm">view</button>
                             </td>
-                        </tr><tr>
+                        </tr>
+                        <tr>
                             <td>ITM/001</td>
                             <td>Lux saban</td>
                             <td>lassana ruwak</td>
@@ -125,7 +130,8 @@
                             <td>
                                 <button class="btn btn-primary btn-sm">view</button>
                             </td>
-                        </tr><tr>
+                        </tr>
+                        <tr>
                             <td>ITM/001</td>
                             <td>Lux saban</td>
                             <td>lassana ruwak</td>
@@ -136,7 +142,8 @@
                             <td>
                                 <button class="btn btn-primary btn-sm">view</button>
                             </td>
-                        </tr><tr>
+                        </tr>
+                        <tr>
                             <td>ITM/001</td>
                             <td>Lux saban</td>
                             <td>lassana ruwak</td>
@@ -147,7 +154,8 @@
                             <td>
                                 <button class="btn btn-primary btn-sm">view</button>
                             </td>
-                        </tr><tr>
+                        </tr>
+                        <tr>
                             <td>ITM/001</td>
                             <td>Lux saban</td>
                             <td>lassana ruwak</td>
