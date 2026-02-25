@@ -64,8 +64,6 @@ class SellerOrder extends Model
         'quantity'          => 'integer',
     ];
 
-    // ─── Relationships ────────────────────────────────────────────────
-
     public function seller()
     {
         return $this->belongsTo(User::class, 'seller_id');
@@ -81,8 +79,7 @@ class SellerOrder extends Model
         return $this->hasMany(SellerOrderItem::class, 'seller_order_id');
     }
 
-    // ─── Scopes ───────────────────────────────────────────────────────
-
+    // Scopes
     public function scopePending($query)
     {
         return $query->where('status', 'pending');
@@ -109,12 +106,6 @@ class SellerOrder extends Model
             ->orWhere('order_id', $orderNumber);
     }
 
-    // ─── Computed Attributes (do NOT shadow fillable columns) ─────────
-
-    /**
-     * Computed final total after discount.
-     * Named getFinalTotalAttribute so it does NOT conflict with stored 'subtotal' column.
-     */
     public function getComputedSubtotalAttribute(): float
     {
         return (float) ($this->quantity * $this->product_price);
@@ -133,12 +124,6 @@ class SellerOrder extends Model
         return $this->computedSubtotal - $this->discount_amount;
     }
 
-    // ─── Order ID Generation (race-condition safe) ────────────────────
-
-    /**
-     * Generate a unique sequential order ID.
-     * Uses DB-level locking to prevent duplicates under concurrent requests.
-     */
     public static function generateOrderId(): string
     {
         $prefix = 'ORD/';
@@ -148,7 +133,6 @@ class SellerOrder extends Model
         }
 
         try {
-            // Lock the table during read so concurrent requests don't get same number
             $lastOrder = DB::table('seller_orders')
                 ->lockForUpdate()
                 ->orderBy('id', 'desc')
@@ -173,7 +157,6 @@ class SellerOrder extends Model
 
         } catch (\Exception $e) {
             \Log::error('Error generating order ID: ' . $e->getMessage());
-            // Fallback: use timestamp-based ID to avoid collision
             return $prefix . date('ymdHis');
         }
     }

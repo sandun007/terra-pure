@@ -15,9 +15,6 @@ use Exception;
 
 class SellerOrderController extends Controller
 {
-    /**
-     * Display the order creation form
-     */
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -35,7 +32,6 @@ class SellerOrderController extends Controller
 
         $import = $user->cal_deposit ?? $user->deposit ?? 0;
 
-        // Get product data from URL parameters
         $productCode = $request->get('product_code');
         $productName = $request->get('product_name');
         $productPrice = $request->get('product_price');
@@ -62,12 +58,8 @@ class SellerOrderController extends Controller
         ));
     }
 
-    /**
-     * Store a newly created order - FIXED VERSION with SweetAlert integration
-     */
     public function store(Request $request)
     {
-        // Validate request
         $validated = $request->validate([
             'date' => 'required|date',
             'platform' => 'nullable|string',
@@ -87,7 +79,6 @@ class SellerOrderController extends Controller
 
         $user = Auth::user();
 
-        // Check if user is authenticated
         if (!$user) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
@@ -98,7 +89,6 @@ class SellerOrderController extends Controller
             return redirect()->route('login')->with('error', 'Please login to continue.');
         }
 
-        // Check deposit availability
         $availableDeposit = $user->cal_deposit ?? $user->deposit ?? 0;
         $cost = $user->cost ?? 0;
 
@@ -120,7 +110,6 @@ class SellerOrderController extends Controller
 
             DB::commit();
 
-            // For AJAX requests (SweetAlert)
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => true,
@@ -130,7 +119,6 @@ class SellerOrderController extends Controller
                 ]);
             }
 
-            // For regular form submission
             return redirect()->route('seller.pending-order')
                 ->with('success', 'Order #' . $result['order']->order_number . ' created successfully!');
 
@@ -155,12 +143,8 @@ class SellerOrderController extends Controller
         }
     }
 
-    /**
-     * Handle single order creation - FIXED to handle any user model
-     */
     private function handleSingleOrder(Request $request, $user)
     {
-        // Get product and verify stock
         $product = SellerProduct::findOrFail($request->product_id);
         $quantity = $request->quantity ?? 1;
 
@@ -168,14 +152,10 @@ class SellerOrderController extends Controller
             throw new Exception("Insufficient stock. Available: {$product->qty}, Requested: {$quantity}");
         }
 
-        // Generate order ID
         $orderId = SellerOrder::generateOrderId();
-
-        // Calculate amounts
         $productPrice = floatval($request->product_price);
         $totalAmount = $productPrice * $quantity;
 
-        // Prepare order data
         $orderData = [
             'seller_id' => $user->id,
             'order_id' => $orderId,
@@ -201,22 +181,15 @@ class SellerOrderController extends Controller
             'payment_status' => 'pending'
         ];
 
-        // Create order
         $order = SellerOrder::create($orderData);
 
-        // Deduct cost from user deposit - FIXED to handle both User and Saler models
         $cost = $user->cost ?? 0;
 
-        // Check if the user model has cal_deposit field (User model)
         if (isset($user->cal_deposit)) {
             $user->decrement('cal_deposit', $cost);
-        }
-        // Check if it has deposit field (Saler model)
-        elseif (isset($user->deposit)) {
+        } elseif (isset($user->deposit)) {
             $user->decrement('deposit', $cost);
-        }
-        // If it has both or neither, try both
-        else {
+        } else {
             try {
                 $user->decrement('cal_deposit', $cost);
             } catch (Exception $e) {
@@ -228,14 +201,12 @@ class SellerOrderController extends Controller
             }
         }
 
-        // Update last row count - check if field exists
         try {
             $user->update(['last_row_count' => 1]);
         } catch (Exception $e) {
             Log::warning('Could not update last_row_count', ['user_id' => $user->id]);
         }
 
-        // Decrement product stock
         $product->decrement('qty', $quantity);
 
         Log::info('Order created successfully', [
@@ -251,9 +222,6 @@ class SellerOrderController extends Controller
         ];
     }
 
-    /**
-     * Get product details via AJAX
-     */
     public function getProductDetails($code)
     {
         try {
@@ -271,7 +239,6 @@ class SellerOrderController extends Controller
                 'user_id' => $seller->id
             ]);
 
-            // Decode the code if it's URL encoded
             $decodedCode = urldecode($code);
 
             $product = SellerProduct::where('seller_id', $seller->id)
@@ -294,7 +261,7 @@ class SellerOrderController extends Controller
                     'code' => $product->code,
                     'display_price' => (float) $product->display_price,
                     'stock_price' => (float) $product->stock_price,
-                    'price' => (float) $product->display_price, // Alias for compatibility
+                    'price' => (float) $product->display_price,
                     'qty' => (int) $product->qty,
                     'min_qty' => (int) ($product->min_qty ?? 1),
                     'category' => $product->category->name ?? 'Uncategorized',
@@ -316,18 +283,12 @@ class SellerOrderController extends Controller
         }
     }
 
-    /**
-     * CSV/Leads Upload Page
-     */
     public function csvUploadPage()
     {
         $user = Auth::user();
         return view('seller.order.csv_upload', compact('user'));
     }
 
-    /**
-     * Bulk Insert from CSV with Call Status
-     */
     public function csvInsert(Request $request)
     {
         $request->validate([
@@ -348,7 +309,6 @@ class SellerOrderController extends Controller
         try {
             DB::beginTransaction();
 
-            // Get product details
             $product = SellerProduct::where('seller_id', $user->id)
                 ->where('code', $request->product_code)
                 ->firstOrFail();
@@ -356,21 +316,18 @@ class SellerOrderController extends Controller
             $successCount = 0;
             $errorCount = 0;
             $errors = [];
-            $defaultCallStatus = $request->call_status ?? 'Pending Call';
+            $defaultCallStatus = $request->call_status ?? 'Pending';
 
             foreach ($request->leads as $index => $lead) {
                 try {
-                    // Check stock
                     if ($product->qty < 1) {
                         $errors[] = "Row " . ($index + 1) . ": Insufficient stock";
                         $errorCount++;
                         continue;
                     }
 
-                    // Generate order ID
                     $orderId = SellerOrder::generateOrderId();
 
-                    // Prepare remark
                     $remarkParts = [];
                     if (!empty($lead['ad_name'])) $remarkParts[] = 'Ad: ' . $lead['ad_name'];
                     if (!empty($lead['campaign_name'])) $remarkParts[] = 'Campaign: ' . $lead['campaign_name'];
@@ -379,7 +336,6 @@ class SellerOrderController extends Controller
 
                     $remark = !empty($remarkParts) ? implode(' | ', $remarkParts) : null;
 
-                    // Create order
                     $orderData = [
                         'seller_id' => $user->id,
                         'order_id' => $orderId,
@@ -407,12 +363,10 @@ class SellerOrderController extends Controller
 
                     SellerOrder::create($orderData);
 
-                    // Update stock and deposit
                     $product->decrement('qty', 1);
 
                     $cost = $user->cost ?? 0;
 
-                    // Handle deposit decrement for both User and Saler models
                     if (isset($user->cal_deposit)) {
                         $user->decrement('cal_deposit', $cost);
                     } elseif (isset($user->deposit)) {
@@ -460,9 +414,6 @@ class SellerOrderController extends Controller
         }
     }
 
-    /**
-     * Display pending orders
-     */
     public function pendingOrder()
     {
         $user = Auth::user();
@@ -482,9 +433,6 @@ class SellerOrderController extends Controller
         return view('seller.order.pending_order_list', compact('orders', 'count'));
     }
 
-    /**
-     * Display completed orders
-     */
     public function completeOrder()
     {
         $user = Auth::user();
@@ -504,9 +452,6 @@ class SellerOrderController extends Controller
         return view('seller.order.complete_order_list', compact('orders', 'count'));
     }
 
-    /**
-     * Display returned orders
-     */
     public function returnOrder()
     {
         $user = Auth::user();
@@ -526,9 +471,6 @@ class SellerOrderController extends Controller
         return view('seller.order.return_order_list', compact('orders', 'count'));
     }
 
-    /**
-     * Display rescheduled orders
-     */
     public function reschedulingOrder()
     {
         $user = Auth::user();
@@ -548,9 +490,6 @@ class SellerOrderController extends Controller
         return view('seller.order.rescheduling_order_list', compact('orders', 'count'));
     }
 
-    /**
-     * Display a single order
-     */
     public function show($id)
     {
         if (!Schema::hasTable('seller_orders')) {
@@ -564,9 +503,6 @@ class SellerOrderController extends Controller
         return view('seller.order.order-show', compact('order'));
     }
 
-    /**
-     * Update an order
-     */
     public function update(Request $request, $id)
     {
         if (!Schema::hasTable('seller_orders')) {
@@ -610,9 +546,6 @@ class SellerOrderController extends Controller
         return redirect()->back()->with('success', 'Order updated successfully!');
     }
 
-    /**
-     * Delete an order
-     */
     public function destroy($id)
     {
         if (!Schema::hasTable('seller_orders')) {
@@ -630,17 +563,14 @@ class SellerOrderController extends Controller
         try {
             DB::beginTransaction();
 
-            // Refund deposit
             $refundAmount = $user->cost ?? 0;
 
-            // Handle deposit increment for both User and Saler models
             if (isset($user->cal_deposit)) {
                 $user->increment('cal_deposit', $refundAmount);
             } elseif (isset($user->deposit)) {
                 $user->increment('deposit', $refundAmount);
             }
 
-            // Restore stock
             if ($order->product_id) {
                 $product = SellerProduct::find($order->product_id);
                 if ($product) {

@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Employee;
+use App\Models\SellerProduct;
+use App\Models\EmployeeSellerProduct;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Schema;
@@ -216,9 +218,9 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Show price update form for a specific product
+     * Show price update form for a specific wholesaler product
      */
-    public function showPriceUpdateForm($id)
+    public function showWholesalerPriceUpdateForm($id)
     {
         try {
             $product = WholesalerProduct::with(['wholesaler', 'category'])->find($id);
@@ -241,16 +243,16 @@ class EmployeeController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error loading price update form: ' . $e->getMessage());
+            Log::error('Error loading wholesaler price update form: ' . $e->getMessage());
             return redirect()->route('employee.wholesaler.products')
                 ->with('error', 'Error loading price update form.');
         }
     }
 
     /**
-     * Update product selling price (FIXED TO UPDATE WHOLESALER PRODUCT PRICES)
+     * Update wholesaler product selling price
      */
-    public function updateProductPrice(Request $request)
+    public function updateWholesalerProductPrice(Request $request)
     {
         try {
             // 🔐 Get logged-in employee
@@ -402,9 +404,9 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Bulk price update - FIXED TO UPDATE WHOLESALER PRODUCT PRICES
+     * Bulk price update for wholesaler products
      */
-    public function bulkPriceUpdate(Request $request)
+    public function bulkWholesalerPriceUpdate(Request $request)
     {
         DB::beginTransaction();
 
@@ -553,9 +555,9 @@ class EmployeeController extends Controller
     }
 
     /**
-     * View product details with price history
+     * View wholesaler product details with price history
      */
-    public function viewProduct($id)
+    public function viewWholesalerProduct($id)
     {
         try {
             $product = WholesalerProduct::with(['wholesaler', 'category', 'brand', 'lastPriceUpdatedBy'])
@@ -577,7 +579,7 @@ class EmployeeController extends Controller
             return view('employee.wholesaler.product-view', compact('product', 'priceHistory', 'productStats'));
 
         } catch (\Exception $e) {
-            Log::error('View product error: ' . $e->getMessage());
+            Log::error('View wholesaler product error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Product not found: ' . $e->getMessage());
         }
     }
@@ -1143,6 +1145,136 @@ class EmployeeController extends Controller
         }
     }
 
+    // ========== SELLER PRODUCT MANAGEMENT METHODS ==========
+
+    /**
+     * Display all sellers with their products
+     */
+    public function sellerProducts(Request $request)
+    {
+        $controller = new \App\Http\Controllers\Employee\EmployeeSellerProductController();
+        return $controller->index($request);
+    }
+
+    /**
+     * Display products of a specific seller
+     */
+    public function sellerProductsBySeller(Request $request, $sellerId)
+    {
+        $controller = new \App\Http\Controllers\Employee\EmployeeSellerProductController();
+        return $controller->sellerProducts($request, $sellerId);
+    }
+
+    /**
+     * View seller product details
+     */
+    public function viewSellerProduct($productId)
+    {
+        $controller = new \App\Http\Controllers\Employee\EmployeeSellerProductController();
+        return $controller->showProduct($productId);
+    }
+
+    /**
+     * Show price update form for seller product
+     */
+    public function showSellerPriceUpdateForm($productId)
+    {
+        $controller = new \App\Http\Controllers\Employee\EmployeeSellerProductController();
+        return $controller->showPriceUpdateForm($productId);
+    }
+
+    /**
+     * Update seller product price
+     */
+    public function updateSellerProductPrice(Request $request)
+    {
+        $controller = new \App\Http\Controllers\Employee\EmployeeSellerProductController();
+        return $controller->updatePrice($request);
+    }
+
+    /**
+     * Bulk update seller product prices
+     */
+    public function bulkSellerPriceUpdate(Request $request)
+    {
+        $controller = new \App\Http\Controllers\Employee\EmployeeSellerProductController();
+        return $controller->bulkPriceUpdate($request);
+    }
+
+    /**
+     * Assign seller product to shop
+     */
+    public function assignSellerProductToShop(Request $request)
+    {
+        $controller = new \App\Http\Controllers\Employee\EmployeeSellerProductController();
+        return $controller->assignToShop($request);
+    }
+
+    /**
+     * Bulk assign seller products to shop
+     */
+    public function bulkAssignSellerProductsToShop(Request $request)
+    {
+        $controller = new \App\Http\Controllers\Employee\EmployeeSellerProductController();
+        return $controller->bulkAssignToShop($request);
+    }
+
+    /**
+     * Print seller product details
+     */
+    public function printSellerProduct($productId)
+    {
+        $controller = new \App\Http\Controllers\Employee\EmployeeSellerProductController();
+        return $controller->printProduct($productId);
+    }
+
+    /**
+     * Print seller product label
+     */
+    public function printSellerProductLabel($productId)
+    {
+        $controller = new \App\Http\Controllers\Employee\EmployeeSellerProductController();
+        return $controller->printProductLabel($productId);
+    }
+
+    /**
+     * Get seller product details for AJAX
+     */
+    public function getSellerProductDetails($productId)
+    {
+        $controller = new \App\Http\Controllers\Employee\EmployeeSellerProductController();
+        return $controller->getProductDetails($productId);
+    }
+
+    /**
+     * Get all shops for dropdown
+     */
+    public function getSellerShops()
+    {
+        $controller = new \App\Http\Controllers\Employee\EmployeeSellerProductController();
+        return $controller->getShops();
+    }
+
+    /**
+     * Seller product price change history
+     */
+    public function sellerPriceChangeHistory(Request $request)
+    {
+        $controller = new \App\Http\Controllers\Employee\EmployeeSellerProductController();
+        return $controller->priceChangeHistory($request);
+    }
+
+    /**
+     * Export seller products to CSV
+     */
+    public function exportSellerProducts(Request $request, $sellerId = null)
+    {
+        $controller = new \App\Http\Controllers\Employee\EmployeeSellerProductController();
+        return $controller->exportProducts($request, $sellerId);
+    }
+
+    // ========== SELLER ORDER MANAGEMENT ==========
+
     /**
      * Display seller orders
      */
@@ -1191,7 +1323,7 @@ class EmployeeController extends Controller
     /**
      * Update seller order status
      */
-    public function updateOrderStatus(Request $request, $id)
+    public function updateSellerOrderStatus(Request $request, $id)
     {
         try {
             $request->validate([
@@ -1207,7 +1339,7 @@ class EmployeeController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Update order status error: ' . $e->getMessage());
+            Log::error('Update seller order status error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating status: ' . $e->getMessage()
@@ -1218,7 +1350,7 @@ class EmployeeController extends Controller
     /**
      * View seller order
      */
-    public function viewOrder($id)
+    public function viewSellerOrder($id)
     {
         try {
             $order = Order::with(['seller', 'orderItems.product'])
@@ -1231,6 +1363,8 @@ class EmployeeController extends Controller
             return redirect()->back()->with('error', 'Order not found: ' . $e->getMessage());
         }
     }
+
+    // ========== EXPORT METHODS ==========
 
     /**
      * Export reports
@@ -1321,7 +1455,7 @@ class EmployeeController extends Controller
     /**
      * Delivery label print
      */
-    public function delivery_label_print($id)
+    public function deliveryLabelPrint($id)
     {
         try {
             $order = Order::with(['seller', 'customer'])
