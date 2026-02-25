@@ -82,8 +82,8 @@ Brand Create
                                     <div class="mb-3">
                                         <label class="form-label">Brand Code<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="code" class="form-control" required disabled value="{{$code}}">
-                                    </div>
+<input type="text" name="code" class="form-control" required readonly value="{{$code}}">
+<input type="hidden" name="code" value="{{$code}}">                                    </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
@@ -97,7 +97,7 @@ Brand Create
                                         <label class="form-label">Brand Image<span
                                                 class="text-danger ms-1">*</span></label>
                                         <div class="image-upload image-upload-two">
-                                            <input type="file" id="imageInput" name="img" multiple>
+                                            <input type="file" id="imageInput" name="image" multiple>
                                             <div class="image-uploads">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                      viewBox="0 0 24 24" fill="none" stroke="currentColor"
