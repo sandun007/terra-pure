@@ -259,6 +259,12 @@ Route::prefix('employee')->middleware('auth:employee')->group(function(){
         Route::post('/price-update', [EmployeeController::class, 'updateProductPrice'])->name('price-update');
         Route::post('/bulk-price-update', [EmployeeController::class, 'bulkPriceUpdate'])->name('bulk-price-update');
 
+        // Seller Management (Existing)
+        Route::prefix('seller')->name('seller.')->group(function() {
+            Route::get('/orders', [EmployeeController::class, 'sellerOrders'])->name('employee.seller.orders');
+            Route::post('/orders/status/update/{id}', [EmployeeController::class, 'updateOrderStatus'])->name('orders.status-update');
+            Route::get('/orders/view/{id}', [EmployeeController::class, 'viewOrder'])->name('order-view');
+        });
         // Print route
         Route::get('/print/{id}', [EmployeeWholesalerOrderController::class, 'printDeliveryLabel'])->name('print.out');
     });
@@ -294,19 +300,11 @@ Route::prefix('employee')->middleware('auth:employee')->group(function(){
         Route::get('/export/csv', [EmployeeWholesalerOrderController::class, 'export'])->name('export');
     });
 
-// Seller Product Management (FIXED ROUTE NAMES)
-    Route::prefix('seller-products')->name('employee.seller.products.')->group(function() {
-        Route::get('/', [App\Http\Controllers\Employee\EmployeeSellerProductController::class, 'index'])->name('index');
-        Route::get('/show/{id}', [App\Http\Controllers\Employee\EmployeeSellerProductController::class, 'show'])->name('show');
-        Route::get('/price-edit/{id}', [App\Http\Controllers\Employee\EmployeeSellerProductController::class, 'editPrice'])->name('price-edit');
-        Route::post('/price-update/{id}', [App\Http\Controllers\Employee\EmployeeSellerProductController::class, 'updatePrice'])->name('price-update');
-        Route::post('/approve/{id}', [App\Http\Controllers\Employee\EmployeeSellerProductController::class, 'approveProduct'])->name('approve');
-        Route::post('/reject/{id}', [App\Http\Controllers\Employee\EmployeeSellerProductController::class, 'rejectProduct'])->name('reject');
-        Route::post('/approve-price/{priceChangeId}', [App\Http\Controllers\Employee\EmployeeSellerProductController::class, 'approvePriceChange'])->name('approve-price');
-        Route::post('/reject-price/{priceChangeId}', [App\Http\Controllers\Employee\EmployeeSellerProductController::class, 'rejectPriceChange'])->name('reject-price');
-        Route::post('/bulk-price-update', [App\Http\Controllers\Employee\EmployeeSellerProductController::class, 'bulkPriceUpdate'])->name('bulk-price-update');
-        Route::get('/export', [App\Http\Controllers\Employee\EmployeeSellerProductController::class, 'export'])->name('export');
-        Route::get('/price-history', [App\Http\Controllers\Employee\EmployeeSellerProductController::class, 'priceHistory'])->name('price-history');
+    // Seller Management (Existing)
+    Route::prefix('seller')->name('seller.')->group(function() {
+        Route::get('/orders', [EmployeeController::class, 'sellerOrders'])->name('employee.seller.orders');
+        Route::post('/orders/status/update/{id}', [EmployeeController::class, 'updateOrderStatus'])->name('orders.status-update');
+        Route::get('/orders/view/{id}', [EmployeeController::class, 'viewOrder'])->name('order-view');
     });
 
     // Reports & Analytics
