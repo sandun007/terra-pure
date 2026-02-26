@@ -327,11 +327,11 @@
                     <p class="mb-0">Discover quality products at wholesale prices</p>
                 </div>
                 <div class="col-md-4 text-md-end">
-                    <a href="{{ route('wholesaler.shop.cart') }}" class="btn btn-light position-relative">
-                        <span class="material-icons-outlined me-2">shopping_cart</span>
-                        Cart
-                        <span class="cart-badge" id="cartCount">{{ $cartCount }}</span>
-                    </a>
+{{--                    <a href="{{ route('wholesaler.shop.cart') }}" class="btn btn-light position-relative">--}}
+{{--                        <span class="material-icons-outlined me-2">shopping_cart</span>--}}
+{{--                        Cart--}}
+{{--                        <span class="cart-badge" id="cartCount">{{ $cartCount }}</span>--}}
+{{--                    </a>--}}
                 </div>
             </div>
         </div>
@@ -531,18 +531,18 @@
 
 @push('script')
     <script>
-        function addToCart(productId, minQty) {
-            fetch('{{ route("wholesaler.shop.cart.add") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    product_id: productId,
-                    quantity: minQty
-                })
-            })
+        {{--function addToCart(productId, minQty) {--}}
+        {{--    fetch('{{ route("wholesaler.shop.cart.add") }}', {--}}
+        {{--        method: 'POST',--}}
+        {{--        headers: {--}}
+        {{--            'Content-Type': 'application/json',--}}
+        {{--            'X-CSRF-TOKEN': '{{ csrf_token() }}'--}}
+        {{--        },--}}
+        {{--        body: JSON.stringify({--}}
+        {{--            product_id: productId,--}}
+        {{--            quantity: minQty--}}
+        {{--        })--}}
+        {{--    })--}}
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -558,26 +558,26 @@
                 });
         }
 
-        function buyNow(productId, minQty) {
-            fetch('{{ route("wholesaler.shop.buy.now") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    product_id: productId,
-                    quantity: minQty
-                })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        window.location.href = data.redirect;
-                    } else {
-                        alert(data.message);
-                    }
-                })
+        {{--function buyNow(productId, minQty) {--}}
+        {{--    fetch('{{ route("wholesaler.shop.buy.now") }}', {--}}
+        {{--        method: 'POST',--}}
+        {{--        headers: {--}}
+        {{--            'Content-Type': 'application/json',--}}
+        {{--            'X-CSRF-TOKEN': '{{ csrf_token() }}'--}}
+        {{--        },--}}
+        {{--        body: JSON.stringify({--}}
+        {{--            product_id: productId,--}}
+        {{--            quantity: minQty--}}
+        {{--        })--}}
+        {{--    })--}}
+        //         .then(response => response.json())
+        //         .then(data => {
+        //             if (data.success) {
+        //                 window.location.href = data.redirect;
+        //             } else {
+        //                 alert(data.message);
+        //             }
+        //         })
                 .catch(error => {
                     console.error('Error:', error);
                     alert('Error processing request');

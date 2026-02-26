@@ -58,103 +58,63 @@ class SellerCall extends Model
         'formatted_total',
     ];
 
-    // ─── Relationships ────────────────────────────────────────────────
-
-    /**
-     * Get the seller that owns the call
-     */
     public function seller()
     {
         return $this->belongsTo(User::class, 'seller_id');
     }
 
-    /**
-     * Get the product associated with the call
-     */
     public function product()
     {
         return $this->belongsTo(SellerProduct::class, 'product_id');
     }
 
-    /**
-     * Get the associated order if converted
-     */
     public function order()
     {
         return $this->hasOne(SellerOrder::class, 'call_id');
     }
 
-    // ─── Scopes ───────────────────────────────────────────────────────
-
-    /**
-     * Scope to filter pending calls
-     */
+    // Scopes
     public function scopePending($query)
     {
         return $query->where('status', 'Pending');
     }
 
-    /**
-     * Scope to filter confirmed calls
-     */
     public function scopeConfirmed($query)
     {
         return $query->where('status', 'Conform');
     }
 
-    /**
-     * Scope to filter rejected calls
-     */
     public function scopeRejected($query)
     {
         return $query->where('status', 'Reject');
     }
 
-    /**
-     * Scope to filter not answered calls
-     */
     public function scopeNotAnswered($query)
     {
         return $query->where('status', 'Not Answer');
     }
 
-    /**
-     * Scope to filter by seller
-     */
     public function scopeBySeller($query, $sellerId)
     {
         return $query->where('seller_id', $sellerId);
     }
 
-    /**
-     * Scope to filter by status
-     */
     public function scopeByStatus($query, $status)
     {
         return $query->where('status', $status);
     }
 
-    /**
-     * Scope to filter by date range
-     */
     public function scopeDateRange($query, $startDate, $endDate)
     {
         return $query->whereBetween('date', [$startDate, $endDate]);
     }
 
-    /**
-     * Scope to filter not downloaded
-     */
     public function scopeNotDownloaded($query)
     {
         return $query->where('download_status', 0);
     }
 
-    // ─── Accessors & Mutators ─────────────────────────────────────────
-
-    /**
-     * Get status badge class for UI
-     */
+    // Accessors
     public function getStatusBadgeClassAttribute()
     {
         return match(strtolower($this->status)) {
@@ -168,17 +128,11 @@ class SellerCall extends Model
         };
     }
 
-    /**
-     * Get formatted total amount
-     */
     public function getFormattedTotalAttribute()
     {
         return 'Rs. ' . number_format($this->total, 2);
     }
 
-    /**
-     * Get status icon class
-     */
     public function getStatusIconAttribute()
     {
         return match(strtolower($this->status)) {
@@ -192,35 +146,21 @@ class SellerCall extends Model
         };
     }
 
-    /**
-     * Check if call is convertible to order
-     */
     public function getIsConvertibleAttribute()
     {
         return $this->status === 'Conform' && !$this->order()->exists();
     }
 
-    /**
-     * Check if call can be edited
-     */
     public function getIsEditableAttribute()
     {
         return in_array($this->status, ['Pending', 'Not Answer']);
     }
 
-    /**
-     * Check if call can be deleted
-     */
     public function getIsDeletableAttribute()
     {
         return $this->status === 'Pending';
     }
 
-    // ─── Helper Methods ───────────────────────────────────────────────
-
-    /**
-     * Generate unique call number
-     */
     public static function generateCallNumber()
     {
         $prefix = 'CALL/';
@@ -236,24 +176,17 @@ class SellerCall extends Model
         return $prefix . str_pad($newNumber, 6, '0', STR_PAD_LEFT);
     }
 
-    /**
-     * Mark as downloaded
-     */
     public function markAsDownloaded()
     {
         $this->update(['download_status' => true]);
     }
 
-    /**
-     * Convert call to order
-     */
     public function convertToOrder()
     {
         if (!$this->is_convertible) {
             return false;
         }
 
-        // Create order from call data
         $order = SellerOrder::create([
             'seller_id' => $this->seller_id,
             'product_id' => $this->product_id,
@@ -280,9 +213,6 @@ class SellerCall extends Model
         return $order;
     }
 
-    /**
-     * Update status with timestamp
-     */
     public function updateStatus($status, $remark = null)
     {
         $this->update([
@@ -292,36 +222,26 @@ class SellerCall extends Model
         ]);
     }
 
-    // ─── Boot Method ──────────────────────────────────────────────────
-
     protected static function boot()
     {
         parent::boot();
 
-        // Auto-generate call number if not provided
         static::creating(function ($call) {
             if (empty($call->call_number)) {
                 $call->call_number = self::generateCallNumber();
             }
-
-            // Set status date if status is set
             if ($call->status && empty($call->status_date)) {
                 $call->status_date = now();
             }
-
-            // Calculate total if not provided
             if (empty($call->total) && $call->qty && $call->price) {
                 $call->total = $call->qty * $call->price;
             }
         });
 
-        // Update total when qty or price changes
         static::updating(function ($call) {
             if ($call->isDirty(['qty', 'price'])) {
                 $call->total = $call->qty * $call->price;
             }
-
-            // Update status date when status changes
             if ($call->isDirty('status')) {
                 $call->status_date = now();
             }

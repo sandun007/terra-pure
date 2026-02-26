@@ -1,806 +1,609 @@
 @extends('seller.layout.app')
+
 @push('title')
-    {{ $product->name }} - Product Details
+    {{ $product->name }} — Product Details
 @endpush
+
 @push('css')
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
+
     <style>
         :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --secondary: #8b5cf6;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
+            --primary:      #4f46e5;
+            --primary-dark: #4338ca;
+            --secondary:    #7c3aed;
+            --success:      #10b981;
+            --warning:      #f59e0b;
+            --danger:       #ef4444;
+            --surface:      #ffffff;
+            --bg:           #f8fafc;
+            --border:       #e2e8f0;
+            --text:         #0f172a;
+            --muted:        #64748b;
+            --sans:         'DM Sans', sans-serif;
+            --mono:         'DM Mono', monospace;
+            --r-lg:         14px;
+            --r-xl:         18px;
+            --shadow-sm:    0 2px 8px rgba(0,0,0,.07);
+            --shadow-md:    0 6px 20px rgba(0,0,0,.09);
         }
 
-        .product-hero {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            border-radius: 20px;
-            padding: 2rem;
-            margin-bottom: 2rem;
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: var(--sans); background: var(--bg); }
+
+        .wrap { max-width: 1380px; margin: 0 auto; padding: 22px; }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r-xl);
+            box-shadow: var(--shadow-sm);
         }
 
-        .product-image-main {
-            width: 100%;
+        .breadcrumb { background: transparent; margin-bottom: 14px; }
+        .breadcrumb a { color: var(--primary); text-decoration: none; }
+        .breadcrumb .active { color: var(--muted); }
+
+        .product-header {
+            padding: 22px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        .product-header::before {
+            content: '';
+            position: absolute; left: 0; top: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+        .header-row { display: flex; gap: 16px; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; }
+        .prod-title { font-size: 24px; font-weight: 800; color: var(--text); margin: 6px 0 4px; line-height: 1.25; }
+        .prod-subtitle { color: var(--muted); margin: 0; font-size: 14px; }
+        .meta-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+        .chip {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 5px 10px; border-radius: 999px;
+            background: var(--bg); border: 1px solid var(--border);
+            color: var(--muted); font-size: 12px; font-weight: 600;
+        }
+        .chip i { color: var(--primary); }
+
+        .status-badge {
+            position: absolute; top: 18px; right: 18px;
+            padding: 5px 10px; border-radius: 999px;
+            font-size: 11px; font-weight: 800;
+            border: 2px solid;
+            display: inline-flex; gap: 5px; align-items: center;
+            text-transform: uppercase; letter-spacing: .4px;
+        }
+        .status-badge.active  { color: var(--success); background: rgba(16,185,129,.1);  border-color: rgba(16,185,129,.3); }
+        .status-badge.inactive{ color: var(--danger);  background: rgba(239,68,68,.1);   border-color: rgba(239,68,68,.3);  }
+
+        .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .hdr-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 9px 14px; border-radius: var(--r-lg);
+            border: 1.5px solid var(--border);
+            font-weight: 700; font-size: 13px;
+            text-decoration: none; cursor: pointer;
+            transition: all .2s; background: var(--surface); color: var(--text);
+            font-family: var(--sans);
+        }
+        .hdr-btn:hover { background: var(--bg); transform: translateY(-1px); color: var(--text); }
+        .hdr-btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .hdr-btn.primary:hover { background: var(--primary-dark); color: #fff; }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .gallery { overflow: hidden; }
+        .main-img-wrap {
+            position: relative;
             height: 400px;
-            object-fit: contain;
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            border: 1px solid #e2e8f0;
+            background: linear-gradient(135deg, #f1f5f9, #e8edf5);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .main-img { max-width: 100%; max-height: 100%; object-fit: contain; padding: 18px; transition: opacity .15s; }
+        .img-actions { position: absolute; top: 12px; right: 12px; display: flex; gap: 8px; }
+        .icon-btn {
+            width: 38px; height: 38px; border-radius: 999px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.9);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all .2s;
+        }
+        .icon-btn:hover { box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+
+        .thumbs {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px; padding: 12px;
+            background: var(--surface);
+        }
+        .thumb {
+            aspect-ratio: 1; border-radius: 10px;
+            border: 2px solid transparent; overflow: hidden;
+            cursor: pointer; transition: all .2s;
+        }
+        .thumb.active { border-color: var(--primary); }
+        .thumb:hover  { border-color: var(--secondary); transform: translateY(-1px); }
+        .thumb img    { width: 100%; height: 100%; object-fit: cover; }
+
+        .side { display: flex; flex-direction: column; gap: 16px; }
+
+        .box { padding: 18px; }
+        .price-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .box-title { font-weight: 800; color: var(--text); font-size: 15px; display: flex; align-items: center; gap: 7px; }
+        .badge-off {
+            background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.3);
+            color: var(--success); font-weight: 800;
+            padding: 3px 10px; border-radius: 999px; font-size: 12px;
+        }
+        .price-line  { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+        .price-big   { font-size: 28px; font-weight: 900; color: var(--primary); }
+        .price-strike{ color: #94a3b8; text-decoration: line-through; font-weight: 600; }
+
+        .info-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-top: 12px; }
+        .info-mini {
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: var(--r-lg); padding: 12px;
+        }
+        .info-mini .lbl { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+        .info-mini .val { font-weight: 800; color: var(--text); margin-top: 3px; font-size: 15px; }
+
+        .stock-note {
+            margin-top: 12px; padding: 10px 12px;
+            border-radius: var(--r-lg);
+            background: var(--bg); border: 1px solid var(--border);
+            color: var(--muted); font-weight: 700;
+            display: flex; gap: 10px; align-items: center;
+        }
+        .pulse-dot {
+            width: 9px; height: 9px; border-radius: 999px;
+            background: {{ ($product->qty ?? 0) > 50 ? '#10b981' : (($product->qty ?? 0) > 10 ? '#f59e0b' : '#ef4444') }};
+            animation: pulse 2s infinite; flex-shrink: 0;
+        }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+        .tabs { margin-top: 0; }
+        .tabs-head {
+            display: flex; gap: 6px; padding: 10px;
+            background: var(--bg); border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+        }
+        .tab-btn {
+            border: none; background: transparent;
+            padding: 9px 12px; border-radius: var(--r-lg);
+            font-weight: 800; font-size: 13px; color: var(--muted);
+            cursor: pointer; white-space: nowrap;
+            transition: all .2s; display: flex; gap: 6px; align-items: center;
+            font-family: var(--sans);
+        }
+        .tab-btn.active { background: var(--surface); border: 1px solid var(--border); color: var(--primary); }
+        .tab-body { padding: 20px; }
+        .pane { display: none; }
+        .pane.active { display: block; }
+
+        .spec-table { width: 100%; border-collapse: collapse; }
+        .spec-table th, .spec-table td { padding: 11px 14px; border-bottom: 1px solid var(--border); text-align: left; font-size: 14px; }
+        .spec-table th { width: 32%; background: var(--bg); color: var(--text); font-weight: 800; }
+        .spec-table td { color: var(--text); }
+
+        .fab-wrap { position: fixed; right: 18px; bottom: 18px; z-index: 1000; }
+        .fab {
+            width: 54px; height: 54px; border-radius: 999px;
+            background: var(--primary); border: none; color: #fff;
+            box-shadow: var(--shadow-md);
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all .2s;
+        }
+        .fab:hover { transform: translateY(-2px) scale(1.05); background: var(--primary-dark); }
+        .fab-menu {
+            position: absolute; bottom: 64px; right: 0;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--r-xl); box-shadow: var(--shadow-md);
+            padding: 8px; min-width: 180px;
+            display: none; flex-direction: column; gap: 4px;
+        }
+        .fab-wrap:hover .fab-menu { display: flex; }
+        .fab-item {
+            border: none; background: transparent;
+            padding: 9px 12px; border-radius: var(--r-lg);
+            cursor: pointer; font-weight: 700; font-size: 13px;
+            color: var(--text); font-family: var(--sans);
+            display: flex; gap: 8px; align-items: center;
+            transition: all .2s; text-align: left;
+        }
+        .fab-item:hover       { background: var(--bg); color: var(--primary); }
+        .fab-item.danger      { color: var(--danger); }
+        .fab-item.danger:hover{ background: rgba(239,68,68,.08); }
+
+        @media (max-width:1050px) {
+            .main-grid { grid-template-columns: 1fr; }
+            .main-img-wrap { height: 320px; }
+        }
+        @media (max-width:600px) {
+            .wrap { padding: 12px; }
+            .product-header { padding: 16px; }
+            .prod-title { font-size: 19px; }
+            .price-big  { font-size: 22px; }
+            .main-img-wrap { height: 240px; }
+            .thumbs { grid-template-columns: repeat(4,1fr); }
+            .info-grid { grid-template-columns: 1fr 1fr; }
+            .status-badge { position: static; margin-bottom: 8px; display: inline-flex; }
+        }
+        @media (max-width:420px) {
+            .info-grid { grid-template-columns: 1fr; }
         }
 
-        .product-thumbnails {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .product-thumbnail {
-            width: 80px;
-            height: 80px;
-            object-fit: cover;
-            border-radius: 10px;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: all 0.3s ease;
-        }
-
-        .product-thumbnail:hover,
-        .product-thumbnail.active {
-            border-color: var(--primary);
-        }
-
-        .product-info {
-            padding: 20px;
-        }
-
-        .product-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #1e293b;
-            margin-bottom: 1rem;
-        }
-
-        .product-meta {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .product-rating {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .product-price {
-            margin-bottom: 1.5rem;
-        }
-
-        .current-price {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: var(--primary);
-        }
-
-        .original-price {
-            font-size: 1.2rem;
-            color: #94a3b8;
-            text-decoration: line-through;
-            margin-left: 10px;
-        }
-
-        /* Quantity Controls */
-        .quantity-section {
-            margin-bottom: 1.5rem;
-        }
-
-        .quantity-control-detailed {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 10px;
-        }
-
-        .quantity-btn-detailed {
-            width: 48px;
-            height: 48px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            background: white;
-            color: #1e293b;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-
-        .quantity-btn-detailed:hover:not(:disabled) {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-            transform: translateY(-2px);
-        }
-
-        .quantity-btn-detailed:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .quantity-input-detailed {
-            width: 100px;
-            height: 48px;
-            text-align: center;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 1.2rem;
-            color: #1e293b;
-            transition: all 0.3s ease;
-        }
-
-        .quantity-input-detailed:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-        }
-
-        .stock-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 1.5rem;
-            padding: 12px 15px;
-            background: #f8fafc;
-            border-radius: 10px;
-        }
-
-        .stock-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: {{ $product->qty > 50 ? '#10b981' : ($product->qty > 10 ? '#f59e0b' : '#ef4444') }};
-            animation: pulse 2s infinite;
-        }
-
-        .stock-text {
-            font-weight: 600;
-            color: #475569;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 2rem;
-        }
-
-        .btn-action {
-            flex: 1;
-            padding: 16px 24px;
-            border: none;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .btn-add-to-cart {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
-        }
-
-        .btn-add-to-cart:hover:not(:disabled) {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
-        }
-
-        .btn-buy-now {
-            background: linear-gradient(135deg, var(--secondary) 0%, #7c3aed 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
-        }
-
-        .btn-buy-now:hover:not(:disabled) {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
-        }
-
-        .btn-action:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-
-        .product-tabs {
-            background: white;
-            border-radius: 15px;
-            padding: 2rem;
-            margin-top: 2rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        }
-
-        .tab-content {
-            padding: 1.5rem 0;
-        }
-
-        .product-description {
-            line-height: 1.8;
-            color: #475569;
-        }
-
-        .specifications-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .specifications-table th,
-        .specifications-table td {
-            padding: 12px 16px;
-            border-bottom: 1px solid #e2e8f0;
-            text-align: left;
-        }
-
-        .specifications-table th {
-            background: #f8fafc;
-            font-weight: 600;
-            color: #1e293b;
-            width: 30%;
-        }
-
-        .related-products {
-            margin-top: 3rem;
-        }
-
-        .related-product-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1rem;
-            border: 1px solid #e2e8f0;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            color: inherit;
-            display: block;
-        }
-
-        .related-product-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            border-color: var(--primary);
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        @media (max-width: 768px) {
-            .product-title {
-                font-size: 1.5rem;
-            }
-
-            .current-price {
-                font-size: 2rem;
-            }
-
-            .action-buttons {
-                flex-direction: column;
-            }
-
-            .product-image-main {
-                height: 300px;
-            }
+        /* Print: hide floating button & menus */
+        @media print {
+            .fab-wrap, .img-actions { display:none !important; }
+            body { background: #fff !important; }
+            .card { box-shadow: none !important; }
         }
     </style>
 @endpush
 
 @section('content')
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ route('seller.dashboard') }}">Dashboard</a></li>
-            <li class="breadcrumb-item"><a href="{{ route('shop.index') }}">Shop</a></li>
-            <li class="breadcrumb-item active" aria-current="page">{{ $product->name }}</li>
-        </ol>
-    </nav>
+    @php
+        $origPrice   = (float)($product->display_price ?? 0);
+        $costPrice   = (float)($product->stock_price ?? $product->cost_price ?? 0);
+        $discount    = (float)($product->discount ?? 0);
+        $finalPrice  = $discount > 0 ? $origPrice * (1 - $discount / 100) : $origPrice;
+        $profit      = $finalPrice - $costPrice;
+        $margin      = $costPrice > 0 ? ($profit / $costPrice) * 100 : 0;
+        $qty         = (int)($product->qty ?? 0);
+        $minQty      = (int)($product->min_qty ?? 0);
 
-    <!-- Product Details -->
-    <div class="product-hero">
-        <div class="row">
-            <!-- Product Images -->
-            <div class="col-lg-6 mb-4">
-                <div class="product-image-container">
-                    @if($product->image)
-                        <img src="{{ asset('storage/' . $product->image) }}"
-                             alt="{{ $product->name }}"
-                             class="product-image-main"
-                             id="mainImage">
-                    @else
-                        <div class="product-image-main d-flex align-items-center justify-content-center bg-light">
-                            <i class="fas fa-box-open fa-4x text-muted"></i>
-                        </div>
-                    @endif
+        $imgs = [];
+        if (!empty($product->image)) $imgs[] = $product->image;
+        if (!empty($product->additional_images)) {
+            $extra = json_decode($product->additional_images, true);
+            if (is_array($extra)) $imgs = array_merge($imgs, $extra);
+        }
+        $imgs = array_values(array_filter($imgs));
+    @endphp
+
+    <div class="wrap">
+
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ route('seller.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('seller.shop.seller.index') }}">Shop</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ $product->name }}</li>
+            </ol>
+        </nav>
+
+        <div class="card product-header">
+            <span class="status-badge {{ $product->status }}">
+                <span class="material-symbols-outlined" style="font-size:16px">
+                    {{ $product->status === 'active' ? 'check_circle' : 'block' }}
+                </span>
+                {{ ucfirst($product->status) }}
+            </span>
+
+            <div class="header-row">
+                <div style="flex:1;min-width:240px">
+                    <div class="meta-chips">
+                        <span class="chip"><i class="fa-solid fa-tag"></i> {{ $product->category->name ?? 'Uncategorized' }}</span>
+                        <span class="chip"><i class="fa-solid fa-barcode"></i> {{ $product->code }}</span>
+                        <span class="chip"><i class="fa-regular fa-calendar"></i> {{ optional($product->created_at)->format('M d, Y') }}</span>
+                    </div>
+                    <h1 class="prod-title">{{ $product->name }}</h1>
+                    <p class="prod-subtitle">{{ $product->short_description ?? 'No short description available.' }}</p>
                 </div>
-            </div>
 
-            <!-- Product Info -->
-            <div class="col-lg-6">
-                <div class="product-info">
-                    <!-- Title and Meta -->
-                    <h1 class="product-title">{{ $product->name }}</h1>
-
-                    <div class="product-meta">
-                        <div class="product-sku">
-                            <i class="fas fa-barcode me-2"></i>
-                            <span class="text-muted">Code: {{ $product->code }}</span>
-                        </div>
-
-                        <div class="product-category">
-                            <i class="fas fa-tag me-2"></i>
-                            <span class="text-muted">{{ $product->category->name ?? 'Uncategorized' }}</span>
-                        </div>
-                    </div>
-
-                    <!-- Pricing Information -->
-                    <div class="info-card mb-4">
-                        <h5 class="mb-3 d-flex align-items-center">
-                            <i class="fas fa-money-bill-wave me-2"></i>
-                            Pricing Information
-                        </h5>
-                        <div class="price-card">
-                            <div class="row">
-                                <!-- Stock Price -->
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <div class="text-muted mb-1">Stock Price</div>
-                                        <div class="price-display" style="color: #6b7280;">
-                                            Rs. {{ number_format($product->stock_price, 2) }}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Display Price -->
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <div class="text-muted mb-1">Display Price</div>
-                                        <div class="price-display" style="color: var(--primary);">
-                                            Rs. {{ number_format($product->display_price, 2) }}
-                                            @if($product->discount > 0)
-                                                <span class="badge bg-success ms-2">-{{ $product->discount }}%</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Profit Calculation -->
-                            @if($product->display_price > $product->stock_price)
-                                <div class="mt-3 pt-3 border-top">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="text-center">
-                                                <div class="text-muted small">Profit Amount</div>
-                                                <div class="fw-bold text-success">
-                                                    Rs. {{ number_format($product->display_price - $product->stock_price, 2) }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="text-center">
-                                                <div class="text-muted small">Profit Margin</div>
-                                                <div class="fw-bold text-success">
-                                                    @php
-                                                        $profitMargin = (($product->display_price - $product->stock_price) / $product->stock_price) * 100;
-                                                    @endphp
-                                                    {{ number_format($profitMargin, 1) }}%
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-
-                    <!-- Quantity Control Section -->
-                    <div class="quantity-section">
-                        <label class="fw-bold mb-2 d-block">Quantity:</label>
-                        <div class="quantity-control-detailed">
-                            <button class="quantity-btn-detailed decrement-qty-detailed"
-                                    type="button"
-                                    onclick="decrementQuantityDetailed()"
-                                    disabled>
-                                <i class="fas fa-minus"></i>
-                            </button>
-                            <input type="number"
-                                   id="productQuantity"
-                                   class="form-control text-center quantity-input-detailed"
-                                   value="0"
-                                   min="0"
-                                   max="{{ $product->qty }}"
-                                   data-price="{{ $product->display_price }}"
-                                   oninput="updateQuantityDetailed(this.value)">
-                            <button class="quantity-btn-detailed increment-qty-detailed"
-                                    type="button"
-                                    onclick="incrementQuantityDetailed()"
-                                {{ $product->qty == 0 ? 'disabled' : '' }}>
-                                <i class="fas fa-plus"></i>
-                            </button>
-                        </div>
-                        <div class="mt-2">
-                            @if($product->qty <= 0)
-                                <div class="alert alert-danger py-2 mb-2">
-                                    <i class="fas fa-times-circle me-2"></i>
-                                    Out of Stock
-                                </div>
-                            @elseif($product->qty < $product->min_qty)
-                                <div class="alert alert-warning py-2 mb-2">
-                                    <i class="fas fa-exclamation-triangle me-2"></i>
-                                    Low Stock: Only {{ $product->qty }} items left
-                                </div>
-                            @else
-                                <div class="text-muted small">
-                                    <i class="fas fa-check-circle me-2 text-success"></i>
-                                    {{ $product->qty }} items available
-                                </div>
-                            @endif
-                            <div class="text-muted small">
-                                <i class="fas fa-shopping-cart me-2"></i>
-                                Minimum Order: {{ $product->min_qty }}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Total Price Display -->
-                    <div class="total-price-display mb-3">
-                        <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded">
-                            <span class="fw-bold">Total:</span>
-                            <span class="fs-4 fw-bold text-primary" id="totalPriceDetailed">Rs. 0</span>
-                        </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="action-buttons">
-                        <button class="btn-action btn-add-to-cart"
-                                onclick="addToCart({{ $product->id }})"
-                                id="addToCartBtn"
-                                disabled>
-                            <i class="fas fa-cart-plus me-2"></i>
-                            Add to Cart
-                        </button>
-                        <button class="btn-action btn-buy-now"
-                                onclick="buyNow({{ $product->id }})"
-                                id="buyNowBtn"
-                                disabled>
-                            <i class="fas fa-bolt me-2"></i>
-                            Buy Now
-                        </button>
-                    </div>
-
-                    <!-- Product Features -->
-                    @if($product->features)
-                        <div class="product-features mb-4">
-                            <h6 class="fw-bold mb-3">
-                                <i class="fas fa-star me-2"></i>
-                                Key Features
-                            </h6>
-                            <ul class="list-unstyled">
-                                @foreach(explode(',', $product->features) as $feature)
-                                    <li class="mb-2">
-                                        <i class="fas fa-check-circle text-success me-2"></i>
-                                        {{ trim($feature) }}
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
+                <div class="header-actions">
+                    <a href="{{ route('seller.shop.seller.index') }}" class="hdr-btn">
+                        <span class="material-symbols-outlined">arrow_back</span> Back
+                    </a>
+                    <button class="hdr-btn" type="button" onclick="window.print()">
+                        <span class="material-symbols-outlined">print</span> Print
+                    </button>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Product Tabs -->
-    <div class="product-tabs">
-        <ul class="nav nav-tabs" id="productTab" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="description-tab" data-bs-toggle="tab" data-bs-target="#description" type="button">
-                    <i class="fas fa-file-alt me-2"></i>
-                    Description
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="specifications-tab" data-bs-toggle="tab" data-bs-target="#specifications" type="button">
-                    <i class="fas fa-list me-2"></i>
-                    Specifications
-                </button>
-            </li>
-        </ul>
+        <div class="main-grid">
 
-        <div class="tab-content" id="productTabContent">
-            <!-- Description Tab -->
-            <div class="tab-pane fade show active" id="description">
-                <div class="product-description">
-                    {!! $product->description ? nl2br(e($product->description)) : '<p class="text-muted">No description available.</p>' !!}
+            {{-- Gallery --}}
+            <div class="card gallery">
+                <div class="main-img-wrap">
+                    <img id="mainImage"
+                         class="main-img"
+                         src="{{ count($imgs) ? asset('storage/'.$imgs[0]) : asset('images/default-product.png') }}"
+                         alt="{{ $product->name }}"
+                         onerror="this.onerror=null;this.src='{{ asset('images/default-product.png') }}'">
+
+                    <div class="img-actions">
+                        <button class="icon-btn" type="button" onclick="zoomImage()" title="Zoom">
+                            <span class="material-symbols-outlined">zoom_in</span>
+                        </button>
+                        <button class="icon-btn" type="button" onclick="downloadImage()" title="Download">
+                            <span class="material-symbols-outlined">download</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="thumbs">
+                    @forelse($imgs as $i => $img)
+                        <div class="thumb {{ $i === 0 ? 'active' : '' }}"
+                             data-image="{{ asset('storage/'.$img) }}"
+                             onclick="changeImage(this)">
+                            <img src="{{ asset('storage/'.$img) }}"
+                                 alt="Image {{ $i+1 }}"
+                                 onerror="this.onerror=null;this.src='{{ asset('images/default-product.png') }}'">
+                        </div>
+                    @empty
+                        <div class="thumb active" data-image="{{ asset('images/default-product.png') }}" onclick="changeImage(this)">
+                            <img src="{{ asset('images/default-product.png') }}" alt="Default">
+                        </div>
+                    @endforelse
                 </div>
             </div>
 
-            <!-- Specifications Tab -->
-            <div class="tab-pane fade" id="specifications">
-                <div class="product-specifications">
-                    <table class="specifications-table">
+            {{-- Right side --}}
+            <div class="side">
+
+                {{-- Pricing --}}
+                <div class="card box">
+                    <div class="price-header">
+                        <div class="box-title">
+                            <i class="fa-solid fa-money-bill-wave" style="color:var(--primary)"></i>
+                            Pricing Summary
+                        </div>
+                        @if($discount > 0)
+                            <span class="badge-off">-{{ number_format($discount,0) }}% OFF</span>
+                        @endif
+                    </div>
+
+                    <div class="price-line">
+                        <div class="price-big">Rs. {{ number_format($finalPrice, 2) }}</div>
+                        @if($discount > 0)
+                            <div class="price-strike">Rs. {{ number_format($origPrice, 2) }}</div>
+                        @endif
+                    </div>
+
+                    <div class="info-grid">
+                        <div class="info-mini">
+                            <div class="lbl">Cost Price</div>
+                            <div class="val">Rs. {{ number_format($costPrice, 2) }}</div>
+                        </div>
+                        <div class="info-mini">
+                            <div class="lbl">Profit</div>
+                            <div class="val" style="color:{{ $profit >= 0 ? 'var(--success)' : 'var(--danger)' }}">
+                                {{ $profit >= 0 ? '+' : '' }}Rs. {{ number_format($profit, 2) }}
+                            </div>
+                        </div>
+                        <div class="info-mini">
+                            <div class="lbl">Profit Margin</div>
+                            <div class="val" style="color:{{ $margin >= 0 ? 'var(--success)' : 'var(--danger)' }}">
+                                {{ number_format($margin, 1) }}%
+                            </div>
+                        </div>
+                        <div class="info-mini">
+                            <div class="lbl">Available Stock</div>
+                            <div class="val">{{ $qty }} units</div>
+                        </div>
+                    </div>
+
+                    <div class="stock-note">
+                        <span class="pulse-dot"></span>
+                        <div>
+                            @if($qty <= 0)
+                                Out of Stock
+                            @elseif($qty < $minQty)
+                                Low Stock — Only {{ $qty }} left
+                            @else
+                                {{ $qty }} items available
+                            @endif
+                            <div style="font-size:11px;color:var(--muted);margin-top:2px">
+                                Minimum Order: {{ $minQty }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Quick Info --}}
+                <div class="card box">
+                    <div class="box-title">
+                        <i class="fa-solid fa-circle-info" style="color:var(--secondary)"></i>
+                        Quick Info
+                    </div>
+                    <div class="info-grid" style="margin-top:12px">
+                        <div class="info-mini">
+                            <div class="lbl">Brand</div>
+                            <div class="val">{{ $product->brand->name ?? 'Not specified' }}</div>
+                        </div>
+                        <div class="info-mini">
+                            <div class="lbl">Type</div>
+                            <div class="val">{{ ucfirst($product->type ?? 'N/A') }}</div>
+                        </div>
+                        <div class="info-mini">
+                            <div class="lbl">Barcode</div>
+                            <div class="val" style="font-family:var(--mono);font-size:13px">{{ $product->barcode ?? 'N/A' }}</div>
+                        </div>
+                        <div class="info-mini">
+                            <div class="lbl">Status</div>
+                            <div class="val">
+                                <span class="badge bg-{{ $product->status === 'active' ? 'success' : 'danger' }}">
+                                    {{ ucfirst($product->status) }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        {{-- Tabs --}}
+        <div class="card tabs" style="margin-bottom:80px">
+            <div class="tabs-head">
+                <button class="tab-btn active" data-tab="desc">
+                    <span class="material-symbols-outlined">description</span> Description
+                </button>
+                <button class="tab-btn" data-tab="spec">
+                    <span class="material-symbols-outlined">tune</span> Specifications
+                </button>
+            </div>
+            <div class="tab-body">
+                <div class="pane active" id="desc">
+                    @if($product->description)
+                        <div style="line-height:1.7;color:var(--text)">{!! nl2br(e($product->description)) !!}</div>
+                    @else
+                        <p class="text-muted">No description available.</p>
+                    @endif
+                </div>
+
+                <div class="pane" id="spec">
+                    <table class="spec-table">
                         <tbody>
-                        <tr>
-                            <th>Product Code</th>
-                            <td>{{ $product->code }}</td>
-                        </tr>
-                        <tr>
-                            <th>Category</th>
-                            <td>{{ $product->category->name ?? 'Not specified' }}</td>
-                        </tr>
-                        <tr>
-                            <th>Brand</th>
-                            <td>{{ $product->brand->name ?? 'Not specified' }}</td>
-                        </tr>
-                        <tr>
-                            <th>Type</th>
-                            <td>{{ ucfirst($product->type) }}</td>
-                        </tr>
-                        <tr>
-                            <th>Stock</th>
-                            <td>{{ $product->qty }} units</td>
-                        </tr>
-                        <tr>
-                            <th>Minimum Order</th>
-                            <td>{{ $product->min_qty }} units</td>
-                        </tr>
+                        <tr><th>Product Code</th><td><span style="font-family:var(--mono)">{{ $product->code }}</span></td></tr>
+                        <tr><th>Category</th><td>{{ $product->category->name ?? 'Not specified' }}</td></tr>
+                        <tr><th>Brand</th><td>{{ $product->brand->name ?? 'Not specified' }}</td></tr>
+                        <tr><th>Type</th><td>{{ ucfirst($product->type ?? 'N/A') }}</td></tr>
+                        <tr><th>Display Price</th><td>Rs. {{ number_format($origPrice, 2) }}</td></tr>
+                        <tr><th>Discount</th><td>{{ $discount > 0 ? $discount.'%' : 'None' }}</td></tr>
+                        <tr><th>Final Price</th><td><strong>Rs. {{ number_format($finalPrice, 2) }}</strong></td></tr>
+                        <tr><th>Cost Price</th><td>Rs. {{ number_format($costPrice, 2) }}</td></tr>
+                        <tr><th>Profit</th><td style="color:{{ $profit >= 0 ? 'var(--success)' : 'var(--danger)' }}">{{ $profit >= 0 ? '+' : '' }}Rs. {{ number_format($profit, 2) }}</td></tr>
+                        <tr><th>Stock</th><td>{{ $qty }} units</td></tr>
+                        <tr><th>Minimum Order</th><td>{{ $minQty }} units</td></tr>
                         @if($product->barcode)
-                            <tr>
-                                <th>Barcode</th>
-                                <td>{{ $product->barcode }}</td>
-                            </tr>
+                            <tr><th>Barcode</th><td><span style="font-family:var(--mono)">{{ $product->barcode }}</span></td></tr>
                         @endif
                         <tr>
                             <th>Status</th>
-                            <td>
-                                    <span class="badge bg-{{ $product->status == 'active' ? 'success' : 'danger' }}">
-                                        {{ ucfirst($product->status) }}
-                                    </span>
-                            </td>
+                            <td><span class="badge bg-{{ $product->status === 'active' ? 'success' : 'danger' }}">{{ ucfirst($product->status) }}</span></td>
                         </tr>
+                        <tr><th>Added</th><td>{{ optional($product->created_at)->format('F d, Y') }}</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
+
     </div>
 
-    <!-- Related Products -->
-    @if($relatedProducts->count() > 0)
-        <div class="related-products">
-            <h3 class="fw-bold mb-4">Related Products</h3>
-            <div class="row">
-                @foreach($relatedProducts as $relatedProduct)
-                    <div class="col-md-3 mb-4">
-                        <a href="{{ route('seller.shop.product.show', $relatedProduct->id) }}" class="related-product-card">
-                            @if($relatedProduct->image)
-                                <img src="{{ asset('storage/' . $relatedProduct->image) }}"
-                                     class="img-fluid mb-3 rounded"
-                                     alt="{{ $relatedProduct->name }}"
-                                     style="height: 150px; width: 100%; object-fit: cover;">
-                            @else
-                                <div class="bg-light rounded mb-3 d-flex align-items-center justify-content-center"
-                                     style="height: 150px;">
-                                    <i class="fas fa-box-open fa-2x text-muted"></i>
-                                </div>
-                            @endif
-                            <h6 class="mb-2">{{ Str::limit($relatedProduct->name, 40) }}</h6>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="fw-bold text-primary">
-                                    Rs. {{ number_format($relatedProduct->display_price) }}
-                                </span>
-                                <span class="badge bg-{{ $relatedProduct->qty > 0 ? 'success' : 'danger' }}">
-                                    {{ $relatedProduct->qty }} in stock
-                                </span>
-                            </div>
-                        </a>
-                    </div>
-                @endforeach
-            </div>
+    {{-- FAB --}}
+    <div class="fab-wrap">
+        <button class="fab" type="button" title="More actions">
+            <span class="material-symbols-outlined">more_vert</span>
+        </button>
+        <div class="fab-menu">
+            <button class="fab-item" type="button" onclick="copyLink()">
+                <span class="material-symbols-outlined">link</span> Copy Link
+            </button>
+            <button class="fab-item" type="button" onclick="downloadInfo()">
+                <span class="material-symbols-outlined">download</span> Download Info
+            </button>
+            @if(Route::has('seller.product.destroy'))
+                <button class="fab-item danger" type="button" onclick="confirmDelete()">
+                    <span class="material-symbols-outlined">delete</span> Delete
+                </button>
+            @endif
         </div>
-    @endif
+    </div>
 @endsection
 
 @push('script')
+    <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
     <script>
-        // Product details quantity functions
-        function updateQuantityDetailed(value) {
-            const quantityInput = document.getElementById('productQuantity');
-            const decrementBtn = document.querySelector('.decrement-qty-detailed');
-            const incrementBtn = document.querySelector('.increment-qty-detailed');
-            const addToCartBtn = document.getElementById('addToCartBtn');
-            const buyNowBtn = document.getElementById('buyNowBtn');
-            const totalPriceElement = document.getElementById('totalPriceDetailed');
-
-            let quantity = parseInt(value) || 0;
-            const maxQuantity = parseInt(quantityInput.max) || 0;
-            const unitPrice = parseFloat(quantityInput.dataset.price) || 0;
-
-            // Validate input
-            if (isNaN(quantity) || quantity < 0) quantity = 0;
-            if (quantity > maxQuantity) {
-                quantity = maxQuantity;
-                showNotification('warning', `Only ${maxQuantity} items available`);
-            }
-
-            // Update input value
-            quantityInput.value = quantity;
-
-            // Update button states
-            decrementBtn.disabled = quantity <= 0;
-            incrementBtn.disabled = quantity >= maxQuantity;
-
-            // Update cart buttons
-            addToCartBtn.disabled = quantity === 0;
-            buyNowBtn.disabled = quantity === 0;
-
-            // Calculate and update total price
-            const totalPrice = quantity * unitPrice;
-            totalPriceElement.textContent = 'Rs. ' + totalPrice.toLocaleString();
-        }
-
-        function incrementQuantityDetailed() {
-            const quantityInput = document.getElementById('productQuantity');
-            let currentValue = parseInt(quantityInput.value) || 0;
-            const maxQuantity = parseInt(quantityInput.max) || 0;
-
-            if (currentValue < maxQuantity) {
-                updateQuantityDetailed(currentValue + 1);
-            }
-        }
-
-        function decrementQuantityDetailed() {
-            const quantityInput = document.getElementById('productQuantity');
-            let currentValue = parseInt(quantityInput.value) || 0;
-
-            if (currentValue > 0) {
-                updateQuantityDetailed(currentValue - 1);
-            }
-        }
-
-        // Add to cart function for product details
-        async function addToCart(productId) {
-            const quantityInput = document.getElementById('productQuantity');
-            const quantity = parseInt(quantityInput.value) || 0;
-
-            if (quantity === 0) {
-                showNotification('error', 'Please select quantity first');
-                return;
-            }
-
-            const addToCartBtn = document.getElementById('addToCartBtn');
-            const originalText = addToCartBtn.innerHTML;
-
-            // Show loading
-            addToCartBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Adding...';
-            addToCartBtn.disabled = true;
-
-            try {
-                // Placeholder for cart functionality
-                {{--// const response = await fetch('{{ route("seller.shop.cart.add") }}', {--}}
-                //     method: 'POST',
-                //     headers: {
-                //         'Content-Type': 'application/json',
-                //         'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                //     },
-                //     body: JSON.stringify({
-                //         product_id: productId,
-                //         quantity: quantity
-                //     })
-                // });
-
-                // For now, show success message
-                await new Promise(resolve => setTimeout(resolve, 1000));
-
-                showNotification('success', `${quantity} item(s) added to cart!`);
-
-                // Reset quantity to 0 after successful add
-                updateQuantityDetailed(0);
-
-            } catch (error) {
-                console.error('Error:', error);
-                showNotification('error', 'An error occurred. Please try again.');
-            } finally {
-                addToCartBtn.innerHTML = originalText;
-                addToCartBtn.disabled = quantity === 0;
-            }
-        }
-
-        // Buy now function
-        async function buyNow(productId) {
-            const quantityInput = document.getElementById('productQuantity');
-            const quantity = parseInt(quantityInput.value) || 0;
-
-            if (quantity === 0) {
-                showNotification('error', 'Please select quantity first');
-                return;
-            }
-
-            const buyNowBtn = document.getElementById('buyNowBtn');
-            const originalText = buyNowBtn.innerHTML;
-
-            // Show loading
-            buyNowBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
-            buyNowBtn.disabled = true;
-
-            try {
-                // Direct order functionality
-                const response = await fetch('{{ route("seller.shop.order.now") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        product_id: productId,
-                        quantity: quantity
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    window.location.href = data.redirect;
-                } else {
-                    showNotification('error', data.message || 'Failed to process buy now');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showNotification('error', 'An error occurred. Please try again.');
-            } finally {
-                buyNowBtn.innerHTML = originalText;
-                buyNowBtn.disabled = quantity === 0;
-            }
-        }
-
-        // Helper function for notifications
-        function showNotification(type, message) {
-            const icon = type === 'success' ? 'fas fa-check-circle' :
-                type === 'error' ? 'fas fa-times-circle' :
-                    'fas fa-exclamation-triangle';
-
-            const alert = document.createElement('div');
-            alert.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-            alert.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
-            alert.innerHTML = `
-                <i class="${icon} me-2"></i> ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-
-            document.body.appendChild(alert);
-
-            // Auto remove after 5 seconds
-            setTimeout(() => {
-                if (alert.parentNode) {
-                    alert.parentNode.removeChild(alert);
-                }
-            }, 5000);
-        }
-
-        // Initialize quantity
-        document.addEventListener('DOMContentLoaded', function() {
-            updateQuantityDetailed(0);
+        /* Tabs */
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab).classList.add('active');
+            });
         });
+
+        /* Gallery */
+        function changeImage(el) {
+            const src = el.dataset.image;
+            const img = document.getElementById('mainImage');
+            img.style.opacity = '0.15';
+            setTimeout(() => { img.src = src; img.style.opacity = '1'; }, 140);
+            document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function zoomImage() {
+            const src = document.getElementById('mainImage').src;
+            Fancybox.show([{ src, type: 'image' }]);
+        }
+
+        function downloadImage() {
+            const a = Object.assign(document.createElement('a'), {
+                href: document.getElementById('mainImage').src,
+                download: '{{ \Illuminate\Support\Str::slug($product->name) }}.jpg'
+            });
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        }
+
+        /* FAB helpers */
+        function copyLink() {
+            navigator.clipboard.writeText(window.location.href)
+                .then(() => alert('Link copied!'))
+                .catch(() => alert('Copy failed.'));
+        }
+
+        function downloadInfo() {
+            const txt = [
+                'PRODUCT INFO',
+                '============',
+                'Name:       {{ $product->name }}',
+                'Code:       {{ $product->code }}',
+                'Category:   {{ $product->category->name ?? "Uncategorized" }}',
+                'Brand:      {{ $product->brand->name ?? "Not specified" }}',
+                '',
+                'Sale Price: Rs. {{ number_format($finalPrice, 2) }}',
+                'Display:    Rs. {{ number_format($origPrice, 2) }}',
+                'Discount:   {{ $discount > 0 ? $discount."%" : "None" }}',
+                'Cost Price: Rs. {{ number_format($costPrice, 2) }}',
+                'Profit:     Rs. {{ number_format($profit, 2) }}',
+                'Margin:     {{ number_format($margin, 1) }}%',
+                '',
+                'Stock:      {{ $qty }} units',
+                'Min Order:  {{ $minQty }} units',
+                '',
+                'Description:',
+                '{{ trim(preg_replace("/\s+/", " ", strip_tags($product->description ?? "No description"))) }}'
+            ].join('\n');
+
+            const url = URL.createObjectURL(new Blob([txt], { type:'text/plain' }));
+            const a = Object.assign(document.createElement('a'), {
+                href: url,
+                download: '{{ \Illuminate\Support\Str::slug($product->name) }}-info.txt'
+            });
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        @if(Route::has('seller.product.destroy'))
+        async function confirmDelete() {
+            if (!confirm('Delete this product permanently?')) return;
+            try {
+                const res = await fetch('{{ route("seller.product.destroy", $product->id) }}', {
+                    method: 'DELETE',
+                    headers: { 'X-CSRF-TOKEN':'{{ csrf_token() }}', 'Accept':'application/json' }
+                });
+                if (!res.ok) throw new Error();
+                window.location.href = '{{ route("seller.shop.seller.index") }}';
+            } catch {
+                alert('Delete failed.');
+            }
+        }
+        @endif
     </script>
 @endpush

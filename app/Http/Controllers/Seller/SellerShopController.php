@@ -94,31 +94,62 @@ class SellerShopController extends Controller
     /**
      * Display a single product
      */
-    public function showProduct($code)
+    public function showProduct(SellerProduct $product)
     {
         try {
             $seller = Auth::guard('seller')->user();
 
-            $product = SellerProduct::where('seller_id', $seller->id)
-                ->where('code', $code)
-                ->with(['category', 'brand'])
-                ->firstOrFail();
+            // ✅ Must be owner seller
+            if ((int)$product->seller_id !== (int)$seller->id) {
+                return redirect()->route('seller.shop.seller.index')->with('error', 'Product not found.');
+            }
+
+            // Load relations
+            $product->load(['category', 'brand']);
 
             $shop = SellerShop::where('seller_id', $seller->id)->first();
+
             $relatedProducts = SellerProduct::where('seller_id', $seller->id)
-                ->where('id', '!=', $product->id)
                 ->where('status', 'active')
+                ->where('id', '!=', $product->id)
+                ->latest()
                 ->limit(4)
                 ->get();
 
             return view('seller.shop.product-details', compact('shop', 'product', 'relatedProducts'));
 
         } catch (\Exception $e) {
-            \Log::error('Show product error: ' . $e->getMessage());
-            return redirect()->route('seller.shop.index')->with('error', 'Product not found with code: ' . $code);
+            \Log::error('showProduct error: ' . $e->getMessage());
+            return redirect()->route('seller.shop.seller.index')->with('error', 'Product not found.');
         }
     }
+    public function showProductById(SellerProduct $product)
+    {
+        $seller = Auth::guard('seller')->user();
 
+        // Security: only allow own products
+        if ((int) $product->seller_id !== (int) $seller->id) {
+            return redirect()->route('seller.shop.seller.index')->with('error', 'Product not found.');
+        }
+
+        // Optional: only show active products in shop
+        if ($product->status !== 'active') {
+            return redirect()->route('seller.shop.seller.index')->with('error', 'Product not available.');
+        }
+
+        $product->load(['category', 'brand']);
+
+        $shop = SellerShop::where('seller_id', $seller->id)->first();
+
+        $relatedProducts = SellerProduct::where('seller_id', $seller->id)
+            ->where('status', 'active')
+            ->where('id', '!=', $product->id)
+            ->latest()
+            ->limit(4)
+            ->get();
+
+        return view('seller.shop.product-details', compact('shop', 'product', 'relatedProducts'));
+    }
     /**
      * Find product by code - AJAX endpoint for order page
      */
