@@ -305,11 +305,6 @@
                     <a href="{{ route('seller.shop.seller.index') }}" class="hdr-btn">
                         <span class="material-symbols-outlined">arrow_back</span> Back
                     </a>
-                    @if(Route::has('seller.product.edit'))
-                        <a href="{{ route('seller.product.edit', $product->id) }}" class="hdr-btn primary">
-                            <span class="material-symbols-outlined">edit</span> Edit
-                        </a>
-                    @endif
                     <button class="hdr-btn" type="button" onclick="window.print()">
                         <span class="material-symbols-outlined">print</span> Print
                     </button>

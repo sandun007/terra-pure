@@ -317,7 +317,7 @@ class SellerCallController extends Controller
     public function csvUploadPage()
     {
         $seller = Auth::user();
-        return view('seller.calls.csv_upload', compact('seller'));
+        return view('seller.order.csv_upload', compact('seller'));
     }
 
     /**

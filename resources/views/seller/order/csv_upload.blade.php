@@ -154,6 +154,16 @@
         .prog-track{height:10px;background:var(--border);border-radius:999px;overflow:hidden}
         .prog-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--success));border-radius:999px;transition:width .3s ease;width:0%}
 
+        /* ── Bulk Upload Bar ─────────────────────────────── */
+        .bulk-bar{background:linear-gradient(135deg,var(--primary-l),#fff);border:1px solid #c7d2fe;border-radius:var(--r-lg);padding:16px 20px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+        .bulk-bar-left{display:flex;align-items:center;gap:10px}
+        .bulk-bar-left i{color:var(--primary);font-size:20px}
+        .bulk-bar-title{font-size:14px;font-weight:700;color:var(--dark)}
+        .bulk-bar-sub{font-size:11px;color:var(--mid);margin-top:2px}
+        .btn-bulk-upload{padding:10px 22px;background:linear-gradient(135deg,var(--primary),var(--primary-d));color:#fff;border:none;border-radius:var(--r-md);font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .2s;box-shadow:0 4px 12px rgba(99,102,241,.3)}
+        .btn-bulk-upload:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 16px rgba(99,102,241,.4)}
+        .btn-bulk-upload:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
         .action-bar{display:flex;gap:12px;justify-content:flex-end;padding-top:18px;border-top:2px solid var(--border);flex-wrap:wrap}
         .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 22px;border-radius:var(--r-lg);font-size:14px;font-weight:700;border:none;cursor:pointer;transition:all .2s;text-decoration:none;font-family:inherit}
         .btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
@@ -181,6 +191,19 @@
 
         #previewSection{display:none}
         #previewSection.show{display:block}
+
+        /* ── Upload progress overlay ─── */
+        .bulk-progress-wrap{display:none;background:white;border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
+        .bulk-progress-wrap.show{display:block}
+        .bulk-prog-title{font-size:14px;font-weight:700;color:var(--dark);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+        .bulk-prog-title i{color:var(--primary)}
+        .bulk-prog-row{display:flex;justify-content:space-between;font-size:12px;color:var(--mid);margin-bottom:6px}
+        .bulk-prog-track{height:14px;background:var(--border);border-radius:999px;overflow:hidden}
+        .bulk-prog-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--success));border-radius:999px;transition:width .3s ease;width:0%}
+        .bulk-prog-counts{display:flex;gap:16px;margin-top:10px;font-size:12px}
+        .bpc-success{color:var(--success);font-weight:700}
+        .bpc-error{color:var(--danger);font-weight:700}
+        .bpc-remain{color:var(--mid);font-weight:600}
     </style>
 @endpush
 
@@ -221,7 +244,8 @@
             <i class="fas fa-info-circle" style="font-size:17px;flex-shrink:0;margin-top:1px;"></i>
             <div>Upload a CSV from Facebook / Instagram Ads Manager. Required columns:
                 <strong>full name</strong> + <strong>phone</strong>. Select a product from your inventory below.
-                Change status using the dropdown — it saves automatically. Click <strong>Upload Row</strong> to create a call.
+                Use <strong>Upload Row</strong> for individual leads or <strong>Upload All Valid</strong> to send all at once.
+                After upload, all leads are transferred to the <strong>Pending Call List</strong>.
             </div>
         </div>
 
@@ -280,15 +304,44 @@
         <div class="card" id="previewSection">
             <div class="card-h">
                 <div class="ci ci-g"><i class="fas fa-table"></i></div>
-                <h2>Step 3 — Preview & Upload Individual Leads</h2>
+                <h2>Step 3 — Preview & Upload Leads</h2>
             </div>
             <div class="card-b">
 
                 <div class="stats-grid">
                     <div class="stat-box"><div class="stat-lbl">Total Leads</div><div class="stat-val" id="stTotal">0</div></div>
                     <div class="stat-box"><div class="stat-lbl">Valid</div><div class="stat-val sv-g" id="stValid">0</div></div>
-                    <div class="stat-box"><div class="stat-lbl">Invalid</div><div class="stat-val sv-r" id="stInvalid">0</div></div>
-                    <div class="stat-box"><div class="stat-lbl">Success Rate</div><div class="stat-val sv-b" id="stRate">0%</div></div>
+                    <div class="stat-box"><div class="stat-lbl">Uploaded</div><div class="stat-val sv-b" id="stUploaded">0</div></div>
+                    <div class="stat-box"><div class="stat-lbl">Remaining</div><div class="stat-val sv-r" id="stRemaining">0</div></div>
+                </div>
+
+                <!-- Bulk Upload Bar -->
+                <div class="bulk-bar" id="bulkBar">
+                    <div class="bulk-bar-left">
+                        <i class="fas fa-rocket"></i>
+                        <div>
+                            <div class="bulk-bar-title">Bulk Upload All Valid Leads</div>
+                            <div class="bulk-bar-sub" id="bulkBarSub">Select a product and load CSV to enable bulk upload</div>
+                        </div>
+                    </div>
+                    <button class="btn-bulk-upload" id="btnBulkUpload" disabled>
+                        <i class="fas fa-cloud-upload-alt"></i> Upload All Valid → Pending Calls
+                    </button>
+                </div>
+
+                <!-- Bulk Progress -->
+                <div class="bulk-progress-wrap" id="bulkProgressWrap">
+                    <div class="bulk-prog-title"><i class="fas fa-spinner fa-spin"></i> Uploading leads to Pending Call List…</div>
+                    <div class="bulk-prog-row">
+                        <span id="bulkProgLabel">Processing…</span>
+                        <span id="bulkProgPct">0%</span>
+                    </div>
+                    <div class="bulk-prog-track"><div class="bulk-prog-fill" id="bulkProgFill"></div></div>
+                    <div class="bulk-prog-counts">
+                        <span class="bpc-success"><i class="fas fa-check-circle"></i> <span id="bpcSuccess">0</span> uploaded</span>
+                        <span class="bpc-error"><i class="fas fa-times-circle"></i> <span id="bpcError">0</span> failed</span>
+                        <span class="bpc-remain"><i class="fas fa-hourglass-half"></i> <span id="bpcRemain">0</span> remaining</span>
+                    </div>
                 </div>
 
                 <div class="cols-box">
@@ -399,10 +452,11 @@
             /* ══════════════════════════════════════════════════
              *  STATE
              * ══════════════════════════════════════════════════ */
-            const SESS = 'csv_calls_v8';
+            const SESS = 'csv_calls_v9';
             let leads = [], filtered = [], csvCols = [];
             let page = 1, perPage = 25, allowNav = false, currentStatusFilter = 'all';
             let selectedProduct = null, products = [];
+            let isBulkUploading = false;
 
             const STATUS_META = {
                 p: { badge:'sb-p', icon:'fa-clock',        route:'{{ route("call.index") }}' },
@@ -433,7 +487,7 @@
             }
 
             /* ══════════════════════════════════════════════════
-             *  PRODUCT LOADING  — uses dedicated /call/seller-products endpoint
+             *  PRODUCT LOADING
              * ══════════════════════════════════════════════════ */
             async function loadProducts() {
                 $('productLoader').style.display = 'block';
@@ -498,6 +552,7 @@
                             stock: this.dataset.stock,
                         };
                         showSelectedProduct(selectedProduct);
+                        updateBulkBar();
                         saveSession();
                     });
                 });
@@ -523,6 +578,25 @@
                 $('selectedProductPrice').textContent = p.price;
                 $('selectedProductStock').textContent = p.stock;
                 $('selectedProductInfo').style.display = 'flex';
+                updateBulkBar();
+            }
+
+            /* ══════════════════════════════════════════════════
+             *  BULK BAR
+             * ══════════════════════════════════════════════════ */
+            function updateBulkBar() {
+                const validLeads = leads.filter(l => l.valid && !l.uploaded);
+                const btn = $('btnBulkUpload');
+                const sub = $('bulkBarSub');
+                if (!selectedProduct || validLeads.length === 0) {
+                    btn.disabled = true;
+                    sub.textContent = selectedProduct
+                        ? (leads.length === 0 ? 'Load a CSV file to enable bulk upload' : 'All valid leads already uploaded!')
+                        : 'Select a product and load CSV to enable bulk upload';
+                } else {
+                    btn.disabled = false;
+                    sub.textContent = `${validLeads.length} valid lead(s) ready to upload → Pending Call List`;
+                }
             }
 
             /* ══════════════════════════════════════════════════
@@ -565,7 +639,7 @@
                 leads.forEach(l=>{ l.valid=!!(l.name&&l.phone); });
                 $('fileName').textContent=saved.fileName||'—'; $('fileSize').textContent=saved.fileSize||'—';
                 $('fileBar').classList.add('show');
-                page=1; doFilter(); renderStats(); renderCols();
+                page=1; doFilter(); renderStats(); renderCols(); updateBulkBar();
                 $('previewSection').classList.add('show'); $('clearBtn').disabled=false;
                 $('sessionBanner').classList.remove('show');
                 Swal.fire({ icon:'success', title:'Session Restored!',
@@ -655,14 +729,15 @@
                 leads=[]; filtered=[]; csvCols=[]; page=1; perPage=25; currentStatusFilter='all'; selectedProduct=null;
                 clearSession();
                 const fi=$('fileInput'); if(fi) fi.value='';
-                ['fileBar','previewSection','progWrap','sessionBanner'].forEach(id=>$( id).classList.remove('show'));
+                ['fileBar','previewSection','progWrap','sessionBanner','bulkProgressWrap'].forEach(id=>$(id).classList.remove('show'));
                 $('clearBtn').disabled=true; $('tblSearch').value=''; $('perPage').value='25';
                 $('tblBody').innerHTML=''; $('colTags').innerHTML=''; $('pagBtns').innerHTML='';
                 $('pagInfo').textContent='—'; $('fileName').textContent='—'; $('fileSize').textContent='—';
                 $('selectedProductInfo').style.display='none';
-                ['stTotal','stValid','stInvalid'].forEach(id=>$(id).textContent='0'); $('stRate').textContent='0%';
+                ['stTotal','stValid','stUploaded','stRemaining'].forEach(id=>$(id).textContent='0');
                 document.querySelectorAll('.status-filter-btn').forEach(b=>{ b.classList.remove('active'); if(b.dataset.status==='all') b.classList.add('active'); });
                 document.querySelectorAll('.product-card').forEach(c=>c.classList.remove('selected'));
+                updateBulkBar();
             }
 
             /* ══════════════════════════════════════════════════
@@ -705,21 +780,26 @@
                         status :'Pending', uploaded:false, valid:false };
                 });
                 leads.forEach(l=>{ l.valid=!!(l.name&&l.phone); });
-                page=1; doFilter(); renderStats(); renderCols();
+                page=1; doFilter(); renderStats(); renderCols(); updateBulkBar();
                 $('previewSection').classList.add('show'); $('clearBtn').disabled=false; saveSession();
                 const v=leads.filter(l=>l.valid).length;
                 Swal.fire({ icon:'success', title:'CSV Loaded ✓',
                     html:'<div style="text-align:left;line-height:1.9;"><p>📊 <b>Total rows:</b> '+leads.length+'</p>'+
                         '<p>✅ <b>Valid leads:</b> '+v+'</p>'+
                         (leads.length-v>0?'<p>⚠️ <b>Invalid:</b> '+(leads.length-v)+'</p>':'')+
-                        '<p>📋 <b>Columns:</b> '+csvCols.length+'</p></div>',
+                        '<p>📋 <b>Columns:</b> '+csvCols.length+'</p>'+
+                        '<p>🚀 Use <b>Upload All Valid</b> to send all leads to Pending Calls at once.</p></div>',
                     confirmButtonColor:'#6366f1', confirmButtonText:'View Preview ›' });
             }
 
             function renderStats() {
                 const t=leads.length, v=leads.filter(l=>l.valid).length;
-                $('stTotal').textContent=t; $('stValid').textContent=v;
-                $('stInvalid').textContent=t-v; $('stRate').textContent=t?((v/t)*100).toFixed(1)+'%':'0%';
+                const u=leads.filter(l=>l.uploaded).length;
+                const rem=v-u;
+                $('stTotal').textContent=t;
+                $('stValid').textContent=v;
+                $('stUploaded').textContent=u;
+                $('stRemaining').textContent=Math.max(0,rem);
             }
             function renderCols() { $('colTags').innerHTML=csvCols.map(c=>'<span class="col-tag">'+esc(c)+'</span>').join(''); }
 
@@ -743,8 +823,37 @@
             }
 
             /* ══════════════════════════════════════════════════
-             *  UPLOAD A SINGLE LEAD
+             *  UPLOAD A SINGLE LEAD — with fresh CSRF token
              * ══════════════════════════════════════════════════ */
+            async function doUploadRequest(payload) {
+                await refreshCsrfToken();
+                const token = getCsrfToken();
+                const res = await fetch('{{ route("call.csv_insert") }}', {
+                    method :'POST',
+                    headers:{ 'Content-Type':'application/json', 'X-CSRF-TOKEN':token, 'X-Requested-With':'XMLHttpRequest' },
+                    credentials:'same-origin',
+                    body: JSON.stringify(payload),
+                });
+                if (res.status === 419) {
+                    await refreshCsrfToken();
+                    const retry = await fetch('{{ route("call.csv_insert") }}', {
+                        method:'POST',
+                        headers:{ 'Content-Type':'application/json', 'X-CSRF-TOKEN':getCsrfToken(), 'X-Requested-With':'XMLHttpRequest' },
+                        credentials:'same-origin', body:JSON.stringify(payload)
+                    });
+                    if (!retry.ok) throw new Error('Session expired. Please refresh the page.');
+                    return retry.json();
+                }
+                if (!res.ok) {
+                    let msg = 'Server error ' + res.status;
+                    try { const d=await res.json(); msg=d.message||msg; } catch(e){}
+                    throw new Error(msg);
+                }
+                const data = await res.json();
+                if (data.csrf_token) setCsrfToken(data.csrf_token);
+                return data;
+            }
+
             async function uploadLead(di) {
                 if (!selectedProduct) {
                     Swal.fire({ icon:'error', title:'No Product Selected', text:'Please select a product from Step 2.' }); return;
@@ -753,15 +862,62 @@
                 if (!l.valid) {
                     Swal.fire({ icon:'warning', title:'Invalid Lead', text:'This lead has no name or phone.' }); return;
                 }
-                if (parseInt(selectedProduct.stock) < 1) {
-                    Swal.fire({ icon:'error', title:'Out of Stock', text:'This product is out of stock.' }); return;
-                }
 
-                // ── Build payload — include product_id AND product_code ──────────
-                const payload = {
-                    product_code: selectedProduct.code,   // used for DB lookup
-                    product_id  : selectedProduct.id,     // extra hint for server
-                    leads: [{
+                const payload = buildPayload([l]);
+
+                // Progress bar
+                const pw=$('progWrap'), pf=$('progFill'), pt=$('progTxt'), pp=$('progPct');
+                pw.classList.add('show'); pf.style.width='0%'; pt.textContent='Uploading…'; pp.textContent='0%';
+                let fp=0;
+                const tk=setInterval(()=>{ if(fp<70){ fp+=Math.random()*15; const p=Math.min(fp,70).toFixed(0); pf.style.width=p+'%'; pp.textContent=p+'%'; } },200);
+
+                try {
+                    const data = await doUploadRequest(payload);
+                    clearInterval(tk);
+
+                    pf.style.width='100%'; pp.textContent='100%'; pt.textContent='Done!';
+                    await new Promise(r=>setTimeout(r,400));
+                    pw.classList.remove('show');
+
+                    if (data.success) {
+                        leads[di].uploaded=true; saveSession(); renderStats(); updateBulkBar();
+                        Swal.fire({
+                            icon:'success',
+                            title:'Uploaded!',
+                            html:'<p>Lead <strong>'+esc(l.name)+'</strong> has been transferred to <strong>Pending Call List</strong>.</p>',
+                            confirmButtonColor:'#10b981',
+                            confirmButtonText:'<i class="fas fa-list"></i> Go to Pending Calls',
+                            showCancelButton:true,
+                            cancelButtonText:'Stay here'
+                        }).then(r => {
+                            if (r.isConfirmed) {
+                                allowNav = true;
+                                window.location.href = STATUS_ROUTES[l.status] || '{{ route("call.index") }}';
+                            } else {
+                                render(); // refresh table to show uploaded state
+                            }
+                        });
+                    } else {
+                        throw new Error(data.message||'Upload failed');
+                    }
+
+                } catch(err) {
+                    clearInterval(tk);
+                    pw.classList.remove('show');
+                    console.error('Upload error:', err);
+                    Swal.fire({ icon:'error', title:'Upload Failed', text: err.message||'An error occurred. Please try again.', confirmButtonColor:'#6366f1' });
+                }
+            }
+
+            /* ══════════════════════════════════════════════════
+             *  BULK UPLOAD — all valid leads → pending calls
+             * ══════════════════════════════════════════════════ */
+            function buildPayload(leadsArr) {
+                return {
+                    product_code: selectedProduct.code,
+                    product_id  : selectedProduct.id,
+                    call_status : 'Pending',
+                    leads: leadsArr.map(l => ({
                         customer_name   : l.name,
                         customer_phone  : l.phone,
                         customer_address: l.addr,
@@ -772,69 +928,131 @@
                         created_time    : l.ctime,
                         lead_status     : l.lstatus,
                         call_status     : l.status || 'Pending',
-                    }],
+                    }))
                 };
-
-                // Progress bar
-                const pw=$('progWrap'), pf=$('progFill'), pt=$('progTxt'), pp=$('progPct');
-                pw.classList.add('show'); pf.style.width='0%'; pt.textContent='Uploading…'; pp.textContent='0%';
-                let fp=0;
-                const tk=setInterval(()=>{ if(fp<70){ fp+=Math.random()*15; const p=Math.min(fp,70).toFixed(0); pf.style.width=p+'%'; pp.textContent=p+'%'; } },200);
-
-                try {
-                    const token = getCsrfToken();
-                    const res = await fetch('{{ route("call.csv_insert") }}', {
-                        method :'POST',
-                        headers:{ 'Content-Type':'application/json', 'X-CSRF-TOKEN':token, 'X-Requested-With':'XMLHttpRequest' },
-                        credentials:'same-origin',
-                        body: JSON.stringify(payload),
-                    });
-
-                    clearInterval(tk);
-
-                    // 419 → refresh token and retry once
-                    if (res.status===419) {
-                        pw.classList.remove('show');
-                        await refreshCsrfToken();
-                        const retry=await fetch('{{ route("call.csv_insert") }}', {
-                            method:'POST',
-                            headers:{ 'Content-Type':'application/json', 'X-CSRF-TOKEN':getCsrfToken(), 'X-Requested-With':'XMLHttpRequest' },
-                            credentials:'same-origin', body:JSON.stringify(payload)
-                        });
-                        if (!retry.ok) throw new Error('Session expired. Please refresh the page and try again.');
-                        return processUploadResponse(await retry.json(), di, l);
-                    }
-
-                    if (!res.ok) {
-                        let msg = 'Server error ' + res.status;
-                        try { const d=await res.json(); msg=d.message||msg; } catch(e){}
-                        throw new Error(msg);
-                    }
-
-                    pf.style.width='100%'; pp.textContent='100%'; pt.textContent='Done!';
-                    await new Promise(r=>setTimeout(r,400));
-                    pw.classList.remove('show');
-
-                    const data=await res.json();
-                    if (data.csrf_token) setCsrfToken(data.csrf_token);
-                    return processUploadResponse(data, di, l);
-
-                } catch(err) {
-                    clearInterval(tk);
-                    pw.classList.remove('show');
-                    console.error('Upload error:', err);
-                    Swal.fire({ icon:'error', title:'Upload Failed', text: err.message||'An error occurred. Please try again.', confirmButtonColor:'#6366f1' });
-                }
             }
 
-            function processUploadResponse(data, di, l) {
-                if (data.success) {
-                    leads[di].uploaded=true; saveSession(); renderStats();
-                    Swal.fire({ icon:'success', title:'Uploaded!', timer:1500, showConfirmButton:false });
-                    setTimeout(()=>{ allowNav=true; window.location.href=STATUS_ROUTES[l.status]||'{{ route("call.index") }}'; }, 1500);
-                } else {
-                    throw new Error(data.message||'Upload failed');
+            async function bulkUploadAll() {
+                if (!selectedProduct) {
+                    Swal.fire({ icon:'error', title:'No Product Selected', text:'Please select a product.' }); return;
                 }
+                const validLeads = leads.filter(l => l.valid && !l.uploaded);
+                if (!validLeads.length) {
+                    Swal.fire({ icon:'info', title:'Nothing to Upload', text:'All valid leads are already uploaded.' }); return;
+                }
+
+                const confirm = await Swal.fire({
+                    icon: 'question',
+                    title: 'Upload All Valid Leads?',
+                    html: `<div style="text-align:left;line-height:2;">
+                        <p>📦 <b>Product:</b> ${esc(selectedProduct.code)} — ${esc(selectedProduct.name)}</p>
+                        <p>📋 <b>Leads to upload:</b> ${validLeads.length}</p>
+                        <p>📍 <b>Destination:</b> Pending Call List</p>
+                        <p style="font-size:12px;color:#64748b;">All leads will be created with status <b>Pending</b> and moved to your Pending Call List.</p>
+                    </div>`,
+                    showCancelButton: true,
+                    confirmButtonColor: '#6366f1',
+                    confirmButtonText: '<i class="fas fa-rocket"></i> Yes, Upload All',
+                    cancelButtonText: 'Cancel'
+                });
+                if (!confirm.isConfirmed) return;
+
+                isBulkUploading = true;
+                $('btnBulkUpload').disabled = true;
+                $('clearBtn').disabled = true;
+
+                // Show bulk progress
+                const bpw = $('bulkProgressWrap');
+                bpw.classList.add('show');
+                const bpf = $('bulkProgFill'), bpl = $('bulkProgLabel'), bpp = $('bulkProgPct');
+                const bpSuccess = $('bpcSuccess'), bpError = $('bpcError'), bpRemain = $('bpcRemain');
+
+                let successCount = 0, errorCount = 0;
+                const BATCH_SIZE = 20; // send 20 leads per request
+                const batches = [];
+                for (let i = 0; i < validLeads.length; i += BATCH_SIZE) {
+                    batches.push(validLeads.slice(i, i + BATCH_SIZE));
+                }
+
+                let processed = 0;
+                const total = validLeads.length;
+                const errors = [];
+
+                for (let bi = 0; bi < batches.length; bi++) {
+                    const batch = batches[bi];
+                    bpl.textContent = `Batch ${bi+1}/${batches.length} — uploading ${batch.length} leads…`;
+
+                    try {
+                        const payload = buildPayload(batch);
+                        const data = await doUploadRequest(payload);
+
+                        if (data.success) {
+                            // Mark leads as uploaded
+                            batch.forEach(l => { leads[l.id].uploaded = true; });
+                            successCount += data.successCount || batch.length;
+                            if (data.errorCount) errorCount += data.errorCount;
+                            if (data.errors && data.errors.length) errors.push(...data.errors);
+                        } else {
+                            errorCount += batch.length;
+                            errors.push(`Batch ${bi+1}: ${data.message || 'Failed'}`);
+                        }
+                    } catch(err) {
+                        errorCount += batch.length;
+                        errors.push(`Batch ${bi+1}: ${err.message}`);
+                        console.error('Batch upload error:', err);
+                    }
+
+                    processed += batch.length;
+                    const pct = Math.round((processed / total) * 100);
+                    bpf.style.width = pct + '%';
+                    bpp.textContent = pct + '%';
+                    bpSuccess.textContent = successCount;
+                    bpError.textContent = errorCount;
+                    bpRemain.textContent = Math.max(0, total - processed);
+
+                    saveSession();
+                    renderStats();
+                    render();
+
+                    // Small delay between batches to avoid overwhelming the server
+                    if (bi < batches.length - 1) {
+                        await new Promise(r => setTimeout(r, 300));
+                    }
+                }
+
+                isBulkUploading = false;
+                bpf.style.width = '100%';
+                bpl.textContent = 'Upload complete!';
+
+                // Show final result and redirect
+                setTimeout(async () => {
+                    bpw.classList.remove('show');
+
+                    const resultHtml = `<div style="text-align:left;line-height:2;">
+                        <p>✅ <b>${successCount}</b> lead(s) successfully uploaded</p>
+                        ${errorCount > 0 ? `<p>❌ <b>${errorCount}</b> lead(s) failed</p>` : ''}
+                        <p>📍 All leads transferred to <b>Pending Call List</b></p>
+                    </div>`;
+
+                    const result = await Swal.fire({
+                        icon: successCount > 0 ? 'success' : 'warning',
+                        title: successCount > 0 ? 'Upload Complete! 🎉' : 'Upload Issues',
+                        html: resultHtml,
+                        confirmButtonColor: '#10b981',
+                        confirmButtonText: '<i class="fas fa-list"></i> Go to Pending Call List',
+                        showCancelButton: true,
+                        cancelButtonText: 'Stay here'
+                    });
+
+                    if (result.isConfirmed) {
+                        clearSession();
+                        allowNav = true;
+                        window.location.href = '{{ route("call.index") }}';
+                    } else {
+                        updateBulkBar();
+                        $('clearBtn').disabled = false;
+                    }
+                }, 600);
             }
 
             /* ══════════════════════════════════════════════════
@@ -852,13 +1070,20 @@
                     tbody.innerHTML='<tr><td colspan="12" style="text-align:center;padding:28px;color:var(--muted);"><i class="fas fa-inbox" style="font-size:28px;display:block;margin-bottom:8px;"></i>No leads match the current filter.</td></tr>';
                 } else {
                     slice.forEach((di,ri)=>{
-                        const l=leads[di], num=s0+ri+1, dis=l.valid?'':'disabled';
+                        const l=leads[di], num=s0+ri+1, dis=(l.valid&&!l.uploaded)?'':'disabled';
                         const meta=STATUS_META[getStatusKey(l.status)]||STATUS_META.p;
                         const opts=['Pending','Conform','Reject','Not Answer','Other'].map(v=>'<option value="'+v+'"'+(l.status===v?' selected':'')+'>'+v+'</option>').join('');
-                        const uploadBtn=l.uploaded
-                            ?'<span style="color:var(--success);"><i class="fas fa-check-circle"></i> Uploaded</span>'
-                            :'<button class="table-upload-btn upload-row-btn" data-di="'+di+'" '+dis+'><i class="fas fa-cloud-upload-alt"></i> Upload Row</button>';
-                        const tr=document.createElement('tr'); tr.dataset.di=di;
+                        let uploadCell;
+                        if (l.uploaded) {
+                            uploadCell = '<span style="color:var(--success);font-size:12px;font-weight:700;"><i class="fas fa-check-circle"></i> In Pending Calls</span>';
+                        } else if (!l.valid) {
+                            uploadCell = '<span style="color:var(--muted);font-size:11px;"><i class="fas fa-ban"></i> Invalid</span>';
+                        } else {
+                            uploadCell = '<button class="table-upload-btn upload-row-btn" data-di="'+di+'"><i class="fas fa-cloud-upload-alt"></i> Upload Row</button>';
+                        }
+                        const tr=document.createElement('tr');
+                        if (l.uploaded) tr.style.opacity = '0.6';
+                        tr.dataset.di=di;
                         tr.innerHTML=
                             '<td class="row-num">'+num+'</td>'+
                             '<td>'+(l.valid?'<span class="badge-valid bv-ok"><i class="fas fa-check"></i> Valid</span>':'<span class="badge-valid bv-bad"><i class="fas fa-times"></i> Invalid</span>')+'</td>'+
@@ -871,7 +1096,7 @@
                             '<td title="'+esc(l.camp)+'">'+(esc(l.camp)||'—')+'</td>'+
                             '<td><span class="status-badge '+meta.badge+'" id="stbadge-'+di+'"><i class="fas '+meta.icon+'" style="font-size:9px;"></i> '+esc(l.status)+'</span></td>'+
                             '<td><select class="row-status-sel" data-di="'+di+'" '+dis+'>'+opts+'</select></td>'+
-                            '<td class="upload-cell">'+uploadBtn+'</td>';
+                            '<td class="upload-cell">'+uploadCell+'</td>';
                         tbody.appendChild(tr);
                     });
                 }
@@ -914,6 +1139,7 @@
              * ══════════════════════════════════════════════════ */
             function initClear() {
                 $('clearBtn').addEventListener('click', ()=>{
+                    if(isBulkUploading) return;
                     Swal.fire({ title:'Clear All Data?', html:'<p style="font-size:14px;color:#475569;">All <b>'+leads.length+'</b> leads will be removed.</p>',
                         icon:'warning', showCancelButton:true, confirmButtonColor:'#ef4444', confirmButtonText:'<i class="fas fa-trash"></i> Yes, Clear All' })
                         .then(r=>{ if(r.isConfirmed){ fullReset(); Swal.fire({ icon:'success', title:'Cleared', timer:1200, showConfirmButton:false }); } });
@@ -928,6 +1154,12 @@
                 loadProducts();
                 $('tblSearch').addEventListener('input', doFilter);
                 $('perPage').addEventListener('change', function(){ perPage=parseInt(this.value)||0; page=1; render(); });
+
+                // Bulk upload button
+                $('btnBulkUpload').addEventListener('click', () => {
+                    if (!isBulkUploading) bulkUploadAll();
+                });
+
                 checkRestore();
             }
 

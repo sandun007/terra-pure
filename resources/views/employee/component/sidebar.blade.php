@@ -88,15 +88,15 @@
         <ul>
             <!-- All Seller Products -->
             <li>
-                <a href="{{ route('employee.seller.products.index') }}"
-                   class="{{ request()->routeIs('employee.seller.products.*') ? 'active' : '' }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-                        <line x1="12" y1="11" x2="12" y2="17"></line>
-                        <line x1="9" y1="14" x2="15" y2="14"></line>
-                    </svg>
+{{--                <a href="{{ route('employee.seller.products.index') }}"--}}
+{{--                   class="{{ request()->routeIs('employee.seller.products.*') ? 'active' : '' }}">--}}
+{{--                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"--}}
+{{--                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">--}}
+{{--                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>--}}
+{{--                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>--}}
+{{--                        <line x1="12" y1="11" x2="12" y2="17"></line>--}}
+{{--                        <line x1="9" y1="14" x2="15" y2="14"></line>--}}
+{{--                    </svg>--}}
                     <span>Seller Products</span>
                     @php
                         $pendingCount = \App\Models\SellerProduct::whereNull('approved_by')
@@ -111,66 +111,66 @@
 
             <!-- Pending Approvals -->
             <li>
-                <a href="{{ route('employee.seller.products.index', ['approval' => 'pending']) }}"
-                   class="{{ request()->get('approval') == 'pending' ? 'active' : '' }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                    <span>Pending Approval</span>
-                    @if($pendingCount > 0)
-                        <span class="badge bg-warning ms-auto">{{ $pendingCount }}</span>
-                    @endif
-                </a>
+{{--                <a href="{{ route('employee.seller.products.index', ['approval' => 'pending']) }}"--}}
+{{--                   class="{{ request()->get('approval') == 'pending' ? 'active' : '' }}">--}}
+{{--                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"--}}
+{{--                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">--}}
+{{--                        <circle cx="12" cy="12" r="10"></circle>--}}
+{{--                        <polyline points="12 6 12 12 16 14"></polyline>--}}
+{{--                    </svg>--}}
+{{--                    <span>Pending Approval</span>--}}
+{{--                    @if($pendingCount > 0)--}}
+{{--                        <span class="badge bg-warning ms-auto">{{ $pendingCount }}</span>--}}
+{{--                    @endif--}}
+{{--                </a>--}}
             </li>
 
             <!-- Price Change Requests -->
-            <li>
-                <a href="{{ route('employee.seller.products.price-history', ['status' => 'pending']) }}"
-                   class="{{ request()->routeIs('employee.seller.products.price-history') && request('status') == 'pending' ? 'active' : '' }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                    </svg>
-                    <span>Price Change Requests</span>
-                    @php
-                        $pricePendingCount = \App\Models\EmployeePriceChange::where('status', 'pending')
-                            ->where('product_type', 'seller')
-                            ->count();
-                    @endphp
-                    @if($pricePendingCount > 0)
-                        <span class="badge bg-warning ms-auto">{{ $pricePendingCount }}</span>
-                    @endif
-                </a>
-            </li>
-
-            <!-- Price History -->
-            <li>
-                <a href="{{ route('employee.seller.products.price-history') }}"
-                   class="{{ request()->routeIs('employee.seller.products.price-history') && !request('status') ? 'active' : '' }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                    <span>Price History</span>
-                </a>
-            </li>
-
-            <!-- Seller Orders (existing) -->
 {{--            <li>--}}
-{{--                <a href="{{ route('seller.employee.seller.orders') }}"--}}
-{{--                   class="{{ request()->routeIs('seller.employee.seller.orders') ? 'active' : '' }}">--}}
+{{--                <a href="{{ route('employee.seller.products.price-history', ['status' => 'pending']) }}"--}}
+{{--                   class="{{ request()->routeIs('employee.seller.products.price-history') && request('status') == 'pending' ? 'active' : '' }}">--}}
 {{--                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"--}}
 {{--                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">--}}
-{{--                        <circle cx="9" cy="21" r="1"></circle>--}}
-{{--                        <circle cx="20" cy="21" r="1"></circle>--}}
-{{--                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>--}}
+{{--                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>--}}
 {{--                    </svg>--}}
-{{--                    <span>Seller Orders</span>--}}
+{{--                    <span>Price Change Requests</span>--}}
+{{--                    @php--}}
+{{--                        $pricePendingCount = \App\Models\EmployeePriceChange::where('status', 'pending')--}}
+{{--                            ->where('product_type', 'seller')--}}
+{{--                            ->count();--}}
+{{--                    @endphp--}}
+{{--                    @if($pricePendingCount > 0)--}}
+{{--                        <span class="badge bg-warning ms-auto">{{ $pricePendingCount }}</span>--}}
+{{--                    @endif--}}
 {{--                </a>--}}
 {{--            </li>--}}
+
+{{--            <!-- Price History -->--}}
+{{--            <li>--}}
+{{--                <a href="{{ route('employee.seller.products.price-history') }}"--}}
+{{--                   class="{{ request()->routeIs('employee.seller.products.price-history') && !request('status') ? 'active' : '' }}">--}}
+{{--                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"--}}
+{{--                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">--}}
+{{--                        <circle cx="12" cy="12" r="10"></circle>--}}
+{{--                        <polyline points="12 6 12 12 16 14"></polyline>--}}
+{{--                    </svg>--}}
+{{--                    <span>Price History</span>--}}
+{{--                </a>--}}
+{{--            </li>--}}
+
+            <!-- Seller Orders (existing) -->
+            <li>
+                <a href="{{ route('seller.employee.seller.orders') }}"
+                   class="{{ request()->routeIs('seller.employee.seller.orders') ? 'active' : '' }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span>Seller Orders</span>
+                </a>
+            </li>
 
             <!-- Seller Calls (existing) -->
             <li>
