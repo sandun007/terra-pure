@@ -44,7 +44,7 @@ class EmployeeDeliveryCall extends Model
 
     protected $casts = [
         'date' => 'date',
-        'status_date' => 'datetime',
+        'status_date' => 'datetime', // FIX: should keep time because you save now()
         'qty' => 'integer',
         'price' => 'decimal:2',
         'total' => 'decimal:2',
@@ -52,11 +52,6 @@ class EmployeeDeliveryCall extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
-    ];
-
-    protected $appends = [
-        'status_badge_class',
-        'formatted_total',
     ];
 
     public function seller()
@@ -74,7 +69,6 @@ class EmployeeDeliveryCall extends Model
         return $this->belongsTo(SellerCall::class, 'call_id');
     }
 
-    // Scopes
     public function scopeBySeller($query, $sellerId)
     {
         return $query->where('seller_id', $sellerId);
@@ -95,62 +89,8 @@ class EmployeeDeliveryCall extends Model
         return $query->where('download_status', 0);
     }
 
-    // Accessors
-    public function getStatusBadgeClassAttribute()
-    {
-        return match($this->status) {
-            'Pending' => 'bg-warning',
-            'packing' => 'bg-info',
-            'packed' => 'bg-primary',
-            'givedriver' => 'bg-success',
-            default => 'bg-secondary',
-        };
-    }
-
-    public function getFormattedTotalAttribute()
-    {
-        return 'Rs. ' . number_format($this->total, 2);
-    }
-
-    public function getStatusIconAttribute()
-    {
-        return match($this->status) {
-            'Pending' => 'fas fa-clock',
-            'packing' => 'fas fa-box-open',
-            'packed' => 'fas fa-box',
-            'givedriver' => 'fas fa-truck',
-            default => 'fas fa-question-circle',
-        };
-    }
-
     public function markAsDownloaded()
     {
         $this->update(['download_status' => true]);
-    }
-
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($call) {
-            if (empty($call->call_number)) {
-                $call->call_number = 'DEL/' . date('Ymd') . '/' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
-            }
-            if ($call->status && empty($call->status_date)) {
-                $call->status_date = now();
-            }
-            if (empty($call->total) && $call->qty && $call->price) {
-                $call->total = $call->qty * $call->price;
-            }
-        });
-
-        static::updating(function ($call) {
-            if ($call->isDirty(['qty', 'price'])) {
-                $call->total = $call->qty * $call->price;
-            }
-            if ($call->isDirty('status')) {
-                $call->status_date = now();
-            }
-        });
     }
 }

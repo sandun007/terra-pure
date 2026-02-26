@@ -30,7 +30,7 @@ return new class extends Migration
             $table->integer('qty')->default(1);
             $table->decimal('price', 10, 2)->default(0);
             $table->decimal('total', 10, 2)->default(0);
-            $table->enum('status', ['Pending', 'Conform', 'Reject', 'Not Answer', 'WhatsApp', 'Other'])->default('Pending');
+            $table->enum('status', ['Pending', 'packing', 'packed', 'givedriver'])->default('Pending');
             $table->text('remark')->nullable();
             $table->string('platform', 50)->nullable();
             $table->string('ad_name')->nullable();

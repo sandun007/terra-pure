@@ -26,6 +26,7 @@ use App\Http\Controllers\Wholesaler\WholesalerCategoryController;
 use App\Http\Controllers\Wholesaler\WholesalerOrderController;
 use App\Http\Controllers\Wholesaler\WholesalerPaymentController;
 use App\Http\Controllers\Wholesaler\WholesalerProductController;
+use App\Http\Controllers\Employee\EmployeeDeliveryCallController;
 use App\Http\Controllers\Wholesaler\WholesalerShopController;
 use App\Http\Controllers\WholesalerController;
 use Illuminate\Support\Carbon;
@@ -36,6 +37,8 @@ use Illuminate\Support\Facades\Route;
 | Web Routes
 |--------------------------------------------------------------------------
 */
+
+
 
 Route::get('/', [PageController::class, 'login'])->name('login');
 Route::post('/',[LoginController::class,'loginCheck'])->name('login.check');
@@ -240,6 +243,26 @@ Route::middleware('auth:seller')->group(function(){
 
 // ========== EMPLOYEE ROUTES ==========
 Route::prefix('employee')->middleware('auth:employee')->group(function(){
+
+    Route::prefix('delivery-calls')->name('employee.delivery_calls.')->group(function () {
+        Route::get('/', [EmployeeDeliveryCallController::class, 'index'])->name('index');
+
+        Route::get('/pending', [EmployeeDeliveryCallController::class, 'pending'])->name('pending');
+        Route::get('/packing', [EmployeeDeliveryCallController::class, 'packing'])->name('packing');
+        Route::get('/packed', [EmployeeDeliveryCallController::class, 'packed'])->name('packed');
+        Route::get('/givedriver', [EmployeeDeliveryCallController::class, 'givedriver'])->name('givedriver');
+
+        // view details
+        Route::get('/view/{id}', [EmployeeDeliveryCallController::class, 'show'])->name('view');
+
+        // single next status
+        Route::put('/{id}/status', [EmployeeDeliveryCallController::class, 'updateStatus'])->name('status.update');
+
+        // bulk next status
+        Route::put('/bulk/status', [EmployeeDeliveryCallController::class, 'bulkUpdateStatus'])->name('bulk.status');
+    });
+
+
     // Dashboard
     Route::get('/', [EmployeeController::class, 'dashboard'])->name('employee.dashboard');
     Route::post('/logout', [LoginController::class, 'logout'])->name('employee.logout');

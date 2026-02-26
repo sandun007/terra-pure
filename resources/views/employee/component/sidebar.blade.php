@@ -160,8 +160,8 @@
 
             <!-- Seller Orders (existing) -->
             <li>
-                <a href="{{ route('seller.employee.seller.orders') }}"
-                   class="{{ request()->routeIs('seller.employee.seller.orders') ? 'active' : '' }}">
+                <a href="{{ route('employee.delivery_calls.pending') }}"
+                   class="{{ request()->routeIs('employee.delivery_calls.*') ? 'active' : '' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="9" cy="21" r="1"></circle>

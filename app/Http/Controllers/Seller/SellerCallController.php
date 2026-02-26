@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\SellerCall;
 use App\Models\SellerProduct;
 use App\Models\City;
-use App\Models\User;
 use App\Models\EmployeeDeliveryCall;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -131,15 +130,15 @@ class SellerCallController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'customer_name'    => 'required|string|max:255',
-            'customer_phone_01'=> 'required|string|max:20',
-            'customer_phone_02'=> 'nullable|string|max:20',
-            'customer_address' => 'nullable|string',
-            'city'             => 'nullable|string|max:100',
-            'qty'              => 'required|integer|min:1',
-            'price'            => 'required|numeric|min:0',
-            'status'           => 'required|in:Pending,Conform,Reject,Not Answer,Other,WhatsApp',
-            'remark'           => 'nullable|string',
+            'customer_name'     => 'required|string|max:255',
+            'customer_phone_01' => 'required|string|max:20',
+            'customer_phone_02' => 'nullable|string|max:20',
+            'customer_address'  => 'nullable|string',
+            'city'              => 'nullable|string|max:100',
+            'qty'               => 'required|integer|min:1',
+            'price'             => 'required|numeric|min:0',
+            'status'            => 'required|in:Pending,Conform,Reject,Not Answer,Other,WhatsApp',
+            'remark'            => 'nullable|string',
         ]);
 
         $seller = Auth::user();
@@ -149,32 +148,31 @@ class SellerCallController extends Controller
 
             $call = SellerCall::where('seller_id', $seller->id)->findOrFail($id);
             $previousStatus = $call->status;
-            $total = $validated['qty'] * $validated['price'];
+
+            $total = (int)$validated['qty'] * (float)$validated['price'];
 
             $call->update([
-                'customer_name'    => $validated['customer_name'],
-                'customer_phone_01'=> $validated['customer_phone_01'],
-                'customer_phone_02'=> $validated['customer_phone_02'] ?? null,
-                'customer_address' => $validated['customer_address'] ?? null,
-                'city'             => $validated['city'] ?? null,
-                'qty'              => $validated['qty'],
-                'price'            => $validated['price'],
-                'total'            => $total,
-                'status'           => $validated['status'],
-                'status_date'      => now(),
-                'remark'           => $validated['remark'] ?? null,
+                'customer_name'     => $validated['customer_name'],
+                'customer_phone_01' => $validated['customer_phone_01'],
+                'customer_phone_02' => $validated['customer_phone_02'] ?? null,
+                'customer_address'  => $validated['customer_address'] ?? null,
+                'city'              => $validated['city'] ?? null,
+                'qty'               => $validated['qty'],
+                'price'             => $validated['price'],
+                'total'             => $total,
+                'status'            => $validated['status'],
+                'status_date'       => now(),
+                'remark'            => $validated['remark'] ?? null,
             ]);
 
+            // Deposit deduct only when switching into Conform
             if ($validated['status'] === 'Conform' && $previousStatus !== 'Conform') {
                 $this->handleDepositDeduction($seller, $call);
-
-                // Sync to employee_delivery_call is handled by model events
-                // No need to call it explicitly here
+                // Sync to employee_delivery_call is handled by SellerCall model events (fixed).
             }
 
             DB::commit();
 
-            // Redirect back to the appropriate list based on new status
             $route = $this->getStatusRoute($validated['status']);
             return redirect()->route($route)->with('success', 'Call updated successfully!');
 
@@ -199,14 +197,9 @@ class SellerCallController extends Controller
             $call = SellerCall::where('seller_id', $seller->id)->findOrFail($id);
             $status = $call->status;
 
-            // Delete from employee_delivery_call if exists
-            if ($call->status === 'Conform') {
-                EmployeeDeliveryCall::where('call_id', $call->id)->delete();
-            }
-
+            // SellerCall model deleted() event will delete employee_delivery_call if needed.
             $call->delete();
 
-            // Redirect back to the appropriate list
             $route = $this->getStatusRoute($status);
             return redirect()->route($route)->with('success', 'Call deleted successfully!');
 
@@ -264,9 +257,10 @@ class SellerCallController extends Controller
 
             foreach ($calls as $call) {
                 $previousStatus = $call->status;
+
                 $call->status = $validated['status'];
                 $call->status_date = now();
-                $call->save();
+                $call->save(); // model events handle sync (fixed)
 
                 if ($validated['status'] === 'Conform' && $previousStatus !== 'Conform') {
                     $this->handleDepositDeduction($seller, $call);
@@ -307,7 +301,6 @@ class SellerCallController extends Controller
 
         SellerCall::whereIn('id', $calls->pluck('id'))->update(['download_status' => 1]);
 
-        // Also update employee_delivery_call if status is Conform
         if ($status === 'Conform') {
             EmployeeDeliveryCall::whereIn('call_id', $calls->pluck('id'))
                 ->update(['download_status' => 1]);
@@ -505,10 +498,7 @@ class SellerCallController extends Controller
                         'download_status'   => false,
                     ];
 
-                    $call = SellerCall::create($callData);
-
-                    // If status is Conform, it will automatically sync to employee_delivery_call
-                    // via model events
+                    $call = SellerCall::create($callData); // model created() handles sync if Conform
 
                     $createdCalls[] = [
                         'id'            => $call->id,
@@ -570,9 +560,6 @@ class SellerCallController extends Controller
     // PRIVATE HELPERS
     // ─────────────────────────────────────────────────────────────────────────
 
-    /**
-     * Get route name based on status
-     */
     private function getStatusRoute($status)
     {
         $routeMap = [
@@ -587,24 +574,18 @@ class SellerCallController extends Controller
         return $routeMap[$status] ?? 'call.index';
     }
 
-    /**
-     * Multi-strategy product finder
-     */
     private function findProduct(int $sellerId, string $rawCode): ?SellerProduct
     {
         $code = trim($rawCode);
 
-        // 1. Exact match
         $p = SellerProduct::where('seller_id', $sellerId)->where('code', $code)->first();
         if ($p) return $p;
 
-        // 2. Case-insensitive
         $p = SellerProduct::where('seller_id', $sellerId)
             ->whereRaw('LOWER(TRIM(code)) = ?', [strtolower($code)])
             ->first();
         if ($p) return $p;
 
-        // 3. Code has no slash — treat as numeric suffix
         if (!str_contains($code, '/')) {
             $p = SellerProduct::where('seller_id', $sellerId)
                 ->where('code', 'LIKE', '%/' . $code)
@@ -612,7 +593,6 @@ class SellerCallController extends Controller
             if ($p) return $p;
         }
 
-        // 4. Code has slashes — extract last segment as numeric part
         if (str_contains($code, '/')) {
             $parts = explode('/', $code);
             $numPart = end($parts);
@@ -622,7 +602,6 @@ class SellerCallController extends Controller
             if ($p) return $p;
         }
 
-        // 5. Cross-seller fallback
         $p = SellerProduct::where('code', $code)->first();
         if ($p) {
             Log::warning('findProduct: seller_id mismatch — used cross-seller fallback', [
@@ -636,22 +615,24 @@ class SellerCallController extends Controller
         return null;
     }
 
-    /**
-     * Deduct cost from seller's deposit when a call is confirmed.
-     */
     private function handleDepositDeduction($seller, $call): void
     {
-        $cost = $seller->cost ?? 0;
+        $cost = (float)($seller->cost ?? 0);
         if ($cost <= 0) return;
 
-        $available = $seller->cal_deposit ?? $seller->deposit ?? 0;
+        // Prefer cal_deposit if it exists as an attribute, else fallback to deposit
+        $calDeposit = $seller->getAttribute('cal_deposit');
+        $deposit    = $seller->getAttribute('deposit');
+
+        $available = $calDeposit !== null ? (float)$calDeposit : (float)($deposit ?? 0);
+
         if ($available < $cost) {
             throw new Exception('Insufficient deposit balance.');
         }
 
-        if (isset($seller->cal_deposit)) {
+        if ($calDeposit !== null) {
             $seller->decrement('cal_deposit', $cost);
-        } elseif (isset($seller->deposit)) {
+        } else {
             $seller->decrement('deposit', $cost);
         }
 
