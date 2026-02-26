@@ -7,6 +7,7 @@ use App\Models\SellerCall;
 use App\Models\SellerProduct;
 use App\Models\City;
 use App\Models\User;
+use App\Models\EmployeeDeliveryCall;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +25,7 @@ class SellerCallController extends Controller
 
         $calls = SellerCall::where('seller_id', $seller->id)
             ->where('status', 'Pending')
-            ->with(['product', 'seller'])
+            ->with(['product', 'seller', 'employeeDeliveryCall'])
             ->latest()
             ->get();
 
@@ -40,7 +41,7 @@ class SellerCallController extends Controller
 
         $calls = SellerCall::where('seller_id', $seller->id)
             ->where('status', 'Conform')
-            ->with(['product', 'seller'])
+            ->with(['product', 'seller', 'employeeDeliveryCall'])
             ->latest()
             ->get();
 
@@ -103,7 +104,7 @@ class SellerCallController extends Controller
         $seller = Auth::user();
 
         $call = SellerCall::where('seller_id', $seller->id)
-            ->with(['product', 'seller'])
+            ->with(['product', 'seller', 'employeeDeliveryCall'])
             ->findOrFail($id);
 
         return view('seller.calls.show_call', compact('call'));
@@ -118,7 +119,7 @@ class SellerCallController extends Controller
         $cities = City::orderBy('city')->get();
 
         $call = SellerCall::where('seller_id', $seller->id)
-            ->with(['product', 'seller'])
+            ->with(['product', 'seller', 'employeeDeliveryCall'])
             ->findOrFail($id);
 
         return view('seller.calls.edit_call', compact('call', 'cities'));
@@ -166,6 +167,9 @@ class SellerCallController extends Controller
 
             if ($validated['status'] === 'Conform' && $previousStatus !== 'Conform') {
                 $this->handleDepositDeduction($seller, $call);
+
+                // Sync to employee_delivery_call is handled by model events
+                // No need to call it explicitly here
             }
 
             DB::commit();
@@ -194,6 +198,12 @@ class SellerCallController extends Controller
         try {
             $call = SellerCall::where('seller_id', $seller->id)->findOrFail($id);
             $status = $call->status;
+
+            // Delete from employee_delivery_call if exists
+            if ($call->status === 'Conform') {
+                EmployeeDeliveryCall::where('call_id', $call->id)->delete();
+            }
+
             $call->delete();
 
             // Redirect back to the appropriate list
@@ -248,12 +258,20 @@ class SellerCallController extends Controller
         try {
             DB::beginTransaction();
 
-            SellerCall::where('seller_id', $seller->id)
+            $calls = SellerCall::where('seller_id', $seller->id)
                 ->whereIn('id', $validated['call_ids'])
-                ->update([
-                    'status'      => $validated['status'],
-                    'status_date' => now(),
-                ]);
+                ->get();
+
+            foreach ($calls as $call) {
+                $previousStatus = $call->status;
+                $call->status = $validated['status'];
+                $call->status_date = now();
+                $call->save();
+
+                if ($validated['status'] === 'Conform' && $previousStatus !== 'Conform') {
+                    $this->handleDepositDeduction($seller, $call);
+                }
+            }
 
             DB::commit();
 
@@ -289,6 +307,12 @@ class SellerCallController extends Controller
 
         SellerCall::whereIn('id', $calls->pluck('id'))->update(['download_status' => 1]);
 
+        // Also update employee_delivery_call if status is Conform
+        if ($status === 'Conform') {
+            EmployeeDeliveryCall::whereIn('call_id', $calls->pluck('id'))
+                ->update(['download_status' => 1]);
+        }
+
         return redirect()->back()->with('success', 'Calls exported successfully!');
     }
 
@@ -306,9 +330,58 @@ class SellerCallController extends Controller
             'not_answer' => SellerCall::where('seller_id', $seller->id)->where('status', 'Not Answer')->count(),
             'other'      => SellerCall::where('seller_id', $seller->id)->where('status', 'Other')->count(),
             'total'      => SellerCall::where('seller_id', $seller->id)->count(),
+            'synced'     => EmployeeDeliveryCall::where('seller_id', $seller->id)->count(),
         ];
 
         return response()->json($stats);
+    }
+
+    /**
+     * Get employee delivery calls list
+     */
+    public function employeeDeliveryList()
+    {
+        $seller = Auth::user();
+
+        $deliveryCalls = EmployeeDeliveryCall::where('seller_id', $seller->id)
+            ->with(['product', 'originalCall'])
+            ->latest()
+            ->paginate(20);
+
+        return view('seller.calls.employee_delivery_list', compact('deliveryCalls'));
+    }
+
+    /**
+     * Manually sync a call to employee delivery
+     */
+    public function syncToEmployeeDelivery($id)
+    {
+        $seller = Auth::user();
+
+        try {
+            $call = SellerCall::where('seller_id', $seller->id)
+                ->where('status', 'Conform')
+                ->findOrFail($id);
+
+            $deliveryCall = $call->syncToEmployeeDelivery();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Call synced to employee delivery successfully!',
+                'data' => $deliveryCall
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Error syncing to employee delivery: ' . $e->getMessage(), [
+                'call_id' => $id,
+                'seller_id' => $seller->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error syncing call: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -433,10 +506,15 @@ class SellerCallController extends Controller
                     ];
 
                     $call = SellerCall::create($callData);
+
+                    // If status is Conform, it will automatically sync to employee_delivery_call
+                    // via model events
+
                     $createdCalls[] = [
                         'id'            => $call->id,
                         'status'        => $callStatus,
                         'customer_name' => $call->customer_name,
+                        'synced'        => $callStatus === 'Conform',
                     ];
                     $successCount++;
 

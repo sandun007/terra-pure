@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SellerCall extends Model
 {
@@ -71,6 +73,11 @@ class SellerCall extends Model
     public function order()
     {
         return $this->hasOne(SellerOrder::class, 'call_id');
+    }
+
+    public function employeeDeliveryCall()
+    {
+        return $this->hasOne(EmployeeDeliveryCall::class, 'call_id');
     }
 
     // Scopes
@@ -222,6 +229,101 @@ class SellerCall extends Model
         ]);
     }
 
+    /**
+     * Sync to employee_delivery_call table
+     */
+    public function syncToEmployeeDelivery()
+    {
+        try {
+            // Check if already synced
+            $existingSync = EmployeeDeliveryCall::where('call_id', $this->id)->first();
+
+            if ($existingSync) {
+                // Update existing record
+                $existingSync->update([
+                    'seller_id' => $this->seller_id,
+                    'product_id' => $this->product_id,
+                    'order_code' => $this->order_code,
+                    'call_number' => $this->call_number,
+                    'date' => $this->date,
+                    'status_date' => $this->status_date,
+                    'customer_name' => $this->customer_name,
+                    'customer_phone_01' => $this->customer_phone_01,
+                    'customer_phone_02' => $this->customer_phone_02,
+                    'customer_address' => $this->customer_address,
+                    'city' => $this->city,
+                    'district' => $this->district,
+                    'item_code' => $this->item_code,
+                    'item_name' => $this->item_name,
+                    'qty' => $this->qty,
+                    'price' => $this->price,
+                    'total' => $this->total,
+                    'status' => $this->status,
+                    'remark' => $this->remark,
+                    'platform' => $this->platform,
+                    'ad_name' => $this->ad_name,
+                    'campaign_name' => $this->campaign_name,
+                    'lead_status' => $this->lead_status,
+                    'call_duration' => $this->call_duration,
+                    'call_recording_url' => $this->call_recording_url,
+                    'download_status' => $this->download_status,
+                ]);
+
+                Log::info('Updated employee_delivery_call record', [
+                    'call_id' => $this->id,
+                    'delivery_id' => $existingSync->id
+                ]);
+
+                return $existingSync;
+            } else {
+                // Create new record
+                $deliveryCall = EmployeeDeliveryCall::create([
+                    'seller_id' => $this->seller_id,
+                    'product_id' => $this->product_id,
+                    'call_id' => $this->id,
+                    'order_code' => $this->order_code,
+                    'call_number' => $this->call_number,
+                    'date' => $this->date,
+                    'status_date' => $this->status_date,
+                    'customer_name' => $this->customer_name,
+                    'customer_phone_01' => $this->customer_phone_01,
+                    'customer_phone_02' => $this->customer_phone_02,
+                    'customer_address' => $this->customer_address,
+                    'city' => $this->city,
+                    'district' => $this->district,
+                    'item_code' => $this->item_code,
+                    'item_name' => $this->item_name,
+                    'qty' => $this->qty,
+                    'price' => $this->price,
+                    'total' => $this->total,
+                    'status' => $this->status,
+                    'remark' => $this->remark,
+                    'platform' => $this->platform,
+                    'ad_name' => $this->ad_name,
+                    'campaign_name' => $this->campaign_name,
+                    'lead_status' => $this->lead_status,
+                    'call_duration' => $this->call_duration,
+                    'call_recording_url' => $this->call_recording_url,
+                    'download_status' => $this->download_status,
+                ]);
+
+                Log::info('Created employee_delivery_call record', [
+                    'call_id' => $this->id,
+                    'delivery_id' => $deliveryCall->id
+                ]);
+
+                return $deliveryCall;
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to sync to employee_delivery_call', [
+                'call_id' => $this->id,
+                'error' => $e->getMessage()
+            ]);
+
+            throw $e;
+        }
+    }
+
     protected static function boot()
     {
         parent::boot();
@@ -242,8 +344,35 @@ class SellerCall extends Model
             if ($call->isDirty(['qty', 'price'])) {
                 $call->total = $call->qty * $call->price;
             }
-            if ($call->isDirty('status')) {
-                $call->status_date = now();
+        });
+
+        static::updated(function ($call) {
+            // Check if status is changing to Conform
+            if ($call->isDirty('status') && $call->status === 'Conform') {
+                $call->syncToEmployeeDelivery();
+            }
+
+            // Also sync if it's already Conform and other fields are updated
+            if ($call->status === 'Conform' && $call->wasChanged()) {
+                $call->syncToEmployeeDelivery();
+            }
+        });
+
+        static::created(function ($call) {
+            // If created with Conform status
+            if ($call->status === 'Conform') {
+                $call->syncToEmployeeDelivery();
+            }
+        });
+
+        static::deleted(function ($call) {
+            // Optionally delete from employee_delivery_call when call is deleted
+            if ($call->status === 'Conform') {
+                EmployeeDeliveryCall::where('call_id', $call->id)->delete();
+
+                Log::info('Deleted employee_delivery_call record due to call deletion', [
+                    'call_id' => $call->id
+                ]);
             }
         });
     }
