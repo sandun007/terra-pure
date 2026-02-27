@@ -31,7 +31,6 @@ use App\Http\Controllers\Wholesaler\WholesalerShopController;
 use App\Http\Controllers\WholesalerController;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
-
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -42,6 +41,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'login'])->name('login');
 Route::post('/',[LoginController::class,'loginCheck'])->name('login.check');
+
+
+
+
 
 // ========== ADMIN ROUTES ==========
 Route::middleware('auth:admin')->group(function(){

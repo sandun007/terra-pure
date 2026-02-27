@@ -2,7 +2,6 @@
 
 @section('content')
     <div class="container-fluid">
-
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <div class="d-flex align-items-center justify-content-between mb-3">
@@ -144,12 +143,13 @@
                                         </a>
 
                                         @if($nextStatus)
-                                            {{-- single update form (keep as-is) --}}
                                             <form class="w-50" method="POST"
                                                   action="{{ route('employee.delivery_calls.status.update', $c->id) }}"
                                                   onsubmit="return confirm('Update status to {{ $nextStatus }}?');">
                                                 @csrf
                                                 @method('PUT')
+                                                {{-- ✅ IMPORTANT: pass next_status for single form too --}}
+                                                <input type="hidden" name="next_status" value="{{ $nextStatus }}">
                                                 <button class="btn btn-sm btn-primary w-100" type="submit">
                                                     Update → {{ $nextStatus }}
                                                 </button>
@@ -185,8 +185,8 @@
             const bulkBtn = document.getElementById('bulkUpdateBtn');
             const progressEl = document.getElementById('bulkProgress');
             const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            const nextStatus = @json($nextStatus);
 
+            const nextStatus = @json($nextStatus); // e.g. "packing" / "packed" / "givedriver"
             const rowChecks = () => Array.from(document.querySelectorAll('.rowCheck'));
 
             if (selectAll) {
@@ -204,48 +204,45 @@
             });
 
             async function updateOne(id) {
-                // ✅ IMPORTANT: use your single route
                 const url = `/employee/delivery-calls/${id}/status`;
 
                 const res = await fetch(url, {
-                    method: 'POST', // Laravel method spoofing
+                    method: 'POST', // method spoofing
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
                         'X-CSRF-TOKEN': csrf,
                         'Accept': 'application/json'
                     },
                     body: new URLSearchParams({
-                        _method: 'PUT'
-                        // if your controller needs a "status" param, uncomment below:
-                        // status: nextStatus
+                        _method: 'PUT',
+                        next_status: nextStatus // ✅ FIX: send required field
                     })
                 });
 
-                // If controller returns JSON
-                if (res.headers.get('content-type')?.includes('application/json')) {
+                const ct = res.headers.get('content-type') || '';
+                if (ct.includes('application/json')) {
                     const data = await res.json();
                     if (!res.ok) throw new Error(data?.message || 'Update failed');
                     return data;
+                } else {
+                    // If your route returns redirect/html
+                    if (!res.ok) throw new Error('Update failed: HTTP ' + res.status);
+                    return true;
                 }
-
-                // If controller redirects (HTML response), treat non-OK as error
-                if (!res.ok) throw new Error('Update failed with status ' + res.status);
-                return true;
             }
 
             async function bulkUpdateSequential(ids) {
                 let ok = 0, fail = 0;
-
                 progressEl.style.display = 'inline';
                 progressEl.textContent = `Updating 0/${ids.length}...`;
 
                 for (let i = 0; i < ids.length; i++) {
                     const id = ids[i];
+
                     try {
                         await updateOne(id);
                         ok++;
 
-                        // optional UI update: mark row green + update badge text
                         const tr = document.getElementById('row_tr_' + id);
                         if (tr) tr.classList.add('table-success');
 
@@ -254,6 +251,8 @@
 
                     } catch (e) {
                         fail++;
+                        console.error('Update failed for ID', id, e);
+
                         const tr = document.getElementById('row_tr_' + id);
                         if (tr) tr.classList.add('table-danger');
                     }
@@ -267,14 +266,15 @@
             if (bulkBtn) {
                 bulkBtn.addEventListener('click', async function () {
                     const selected = rowChecks().filter(ch => ch.checked).map(ch => ch.value);
+
                     if (!selected.length) return alert('Please select at least one row.');
+                    if (!nextStatus) return alert('No next status configured for this page.');
 
                     if (!confirm('Update selected ' + selected.length + ' row(s) one-by-one?')) return;
 
                     bulkBtn.disabled = true;
                     try {
                         await bulkUpdateSequential(selected);
-                        // Optional: reload to refresh pagination + correct status set
                         window.location.reload();
                     } finally {
                         bulkBtn.disabled = false;

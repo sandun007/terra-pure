@@ -44,7 +44,7 @@ class EmployeeDeliveryCall extends Model
 
     protected $casts = [
         'date' => 'date',
-        'status_date' => 'datetime', // FIX: should keep time because you save now()
+        'status_date' => 'datetime',
         'qty' => 'integer',
         'price' => 'decimal:2',
         'total' => 'decimal:2',
@@ -67,30 +67,5 @@ class EmployeeDeliveryCall extends Model
     public function originalCall()
     {
         return $this->belongsTo(SellerCall::class, 'call_id');
-    }
-
-    public function scopeBySeller($query, $sellerId)
-    {
-        return $query->where('seller_id', $sellerId);
-    }
-
-    public function scopeByStatus($query, $status)
-    {
-        return $query->where('status', $status);
-    }
-
-    public function scopeDateRange($query, $startDate, $endDate)
-    {
-        return $query->whereBetween('date', [$startDate, $endDate]);
-    }
-
-    public function scopeNotDownloaded($query)
-    {
-        return $query->where('download_status', 0);
-    }
-
-    public function markAsDownloaded()
-    {
-        $this->update(['download_status' => true]);
     }
 }
