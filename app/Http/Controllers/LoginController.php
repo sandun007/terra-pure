@@ -33,7 +33,12 @@ class LoginController extends Controller
         // Seller login
         elseif ($check->type === 'seller') {
             if (Auth::guard('seller')->attempt(['username' => $request->username, 'password' => $request->password])) {
-                return redirect()->route('seller.dashboard');
+                if($check->seller_type == 'system'){
+                    return redirect()->route('seller.dashboard');
+                }
+                else if($check->seller_type == 'self'){
+                    return redirect()->route('seller.dashboard');
+                }
             }
         }
         // Wholesaler login
