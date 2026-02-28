@@ -35,13 +35,14 @@ class CategoryController extends Controller
 
         try {
             Category::query()->create([
-                'code'=>$code,
-                'name'=>$request->name,
-                'img'=>$imagePath,
-                'status'=>0,
-                'add_by'=>'admin',
-                'update_by'=>'admin',
-                'cancel'=>0
+                'code' => $code,
+                'name' => $request->name,
+                'img' => $imagePath,
+                'status' => $request->status ?? 'active',
+                'add_by' => 'admin',
+                'update_by' => 'admin',
+                'cancel' => 0,
+                'seller_code' => 0
             ]);
             return redirect()->back();
         }

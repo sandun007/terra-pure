@@ -36,10 +36,11 @@ class BrandController extends Controller
         $code = $codeGenerate->generateCode('brand');
         try {
             Brand::query()->create([
-                'code'=>$code,
-                'name'=>$request->name,
-                'img'=>$imagePath,
-                'seller_code'=>0
+                'code' => $code,
+                'name' => $request->name,
+                'image' => $imagePath,
+                'seller_code' => 0,
+                'status' => 'active'
             ]);
             return redirect()->back();
         }
