@@ -6,8 +6,8 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 
 // Make sure these namespaces are correct in your project:
-use App\Helpers\CodeGenerator;
-use App\Helpers\ImageUploader;
+use App\Http\Controllers\CodeGenerator;
+use App\Http\Controllers\ImageUploader;
 
 class CategoryController extends Controller
 {
