@@ -54,6 +54,17 @@ Category Create
             <a href="{{route('category.index')}}" class="btn btn-secondary">View Category List</a>
         </div>
     </div>
+
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <form action="{{route('category.store')}}" method="post" enctype="multipart/form-data" class="add-product-form">
         @csrf
         <div class="add-product">
@@ -89,7 +100,22 @@ Category Create
                                     <div class="mb-3">
                                         <label class="form-label">Category Name<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="name" class="form-control">
+                                        <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}">
+                                        @error('name')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Status</label>
+                                        <select name="status" class="form-control @error('status') is-invalid @enderror">
+                                            <option value="active" {{ old('status', 'active') == 'active' ? 'selected' : '' }}>Active</option>
+                                            <option value="inactive" {{ old('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                                        </select>
+                                        @error('status')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
@@ -97,7 +123,7 @@ Category Create
                                         <label class="form-label">Category Image<span
                                                 class="text-danger ms-1">*</span></label>
                                         <div class="image-upload image-upload-two">
-                                            <input type="file" id="imageInput" name="img" multiple>
+                                            <input type="file" id="imageInput" name="img" accept="image/*" class="@error('img') is-invalid @enderror">
                                             <div class="image-uploads">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                      viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -113,6 +139,9 @@ Category Create
                                         <div id="imagePreviewContainer" class="preview-container">
                                             <!-- Dynamically generated previews -->
                                         </div>
+                                        @error('img')
+                                        <div class="text-danger small mt-1">{{ $message }}</div>
+                                        @enderror
                                     </div>
                                 </div>
 
@@ -132,6 +161,28 @@ Category Create
 @endsection
 @push('script')
     <script>
+        $(document).ready(function() {
+            @if(session('success'))
+                Swal.fire({
+                    title: 'Success!',
+                    text: "{{ session('success') }}",
+                    icon: 'success',
+                    confirmButtonClass: 'btn btn-primary',
+                    buttonsStyling: false
+                });
+            @endif
+
+            @if(session('error'))
+                Swal.fire({
+                    title: 'Error!',
+                    text: "{{ session('error') }}",
+                    icon: 'error',
+                    confirmButtonClass: 'btn btn-primary',
+                    buttonsStyling: false
+                });
+            @endif
+        });
+
         document.getElementById('imageInput').addEventListener('change', function (event) {
             const files = event.target.files;
             const previewContainer = document.getElementById('imagePreviewContainer');
