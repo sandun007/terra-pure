@@ -11,6 +11,8 @@ class Brand extends Model
 
     protected $fillable = [
         'wholesaler_id',
+        'seller_id',
+        'seller_code',
         'code',
         'name',
         'slug',
