@@ -80,6 +80,7 @@ Route::middleware('auth:admin')->group(function(){
             Route::post('/',[SellerController::class,'store'])->name('admin.seller.store');
             Route::get('/delete/{id}', [SellerController::class, 'delete'])->name('seller.delete');
             Route::get('/{id}',[SellerController::class,'edit'])->name('admin.seller.edit');
+            Route::get('seller/{id}', [SellerController::class, 'show'])->name('admin.seller.view');
             Route::post('/update',[SellerController::class,'update'])->name('admin.seller.update');
         });
 

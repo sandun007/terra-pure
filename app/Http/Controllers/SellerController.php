@@ -10,10 +10,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class SellerController extends Controller
 {
-
     public function dashboard()
     {
         return view('seller.dashboard');
@@ -22,15 +22,21 @@ class SellerController extends Controller
     public function shop()
     {
         $products = Product::query()
-            ->where('seller_code',0)
+            ->where('seller_code', 0)
             ->get();
-        return view('seller.shop.shop',compact('products'));
+        return view('seller.shop.shop', compact('products'));
     }
 
     public function index()
     {
         $sellers = Saler::all();
         return view('seller.seller_list', compact('sellers'));
+    }
+    public function show($id)
+    {
+        $seller = Saler::findOrFail($id);
+
+        return view('seller.seller_view', compact('seller'));
     }
 
     public function create()
@@ -45,20 +51,16 @@ class SellerController extends Controller
         DB::beginTransaction();
 
         try {
-            // Upload images
             $NIC_front = ImageUploader::uploadImage($request->file('nic_front'), 'seller/nic_front');
-            $NIC_back = ImageUploader::uploadImage($request->file('nic_back'), 'seller/nic_back');
+            $NIC_back  = ImageUploader::uploadImage($request->file('nic_back'),  'seller/nic_back');
 
-            // Generate seller code
             $codeGenerate = new CodeGenerator;
             $code = $codeGenerate->generateCode('seller');
 
-            // Referral handling
             $level_02_seller_01 = 0;
             $level_03_seller_01 = 0;
 
             if ($request->ref_code != '0') {
-
                 $level_01_seller_02_check = Referral::query()
                     ->where('level_01_seller_02', $request->ref_code)
                     ->first();
@@ -78,10 +80,8 @@ class SellerController extends Controller
                 Referral::create([
                     'level_01_seller_01' => $request->ref_code,
                     'level_01_seller_02' => $code,
-
                     'level_02_seller_02' => $code,
                     'level_02_seller_01' => $level_02_seller_01,
-
                     'level_03_seller_02' => $code,
                     'level_03_seller_01' => $level_03_seller_01,
                 ]);
@@ -89,70 +89,61 @@ class SellerController extends Controller
                 Referral::create([
                     'level_01_seller_01' => 0,
                     'level_01_seller_02' => $code,
-
                     'level_02_seller_02' => $code,
                     'level_02_seller_01' => 0,
-
                     'level_03_seller_02' => $code,
                     'level_03_seller_01' => 0,
                 ]);
             }
 
-            // Create seller
             Saler::create([
-                'code' => $code,
-                'name' => $request->name,
-                'address' => $request->address,
-                'city' => $request->city ?? '',
-                'district' => $request->district,
-                'state' => $request->state ?? null,
-                'country' => $request->country ?? 'Sri Lanka',
-                'postal_code' => $request->postal_code ?? '',
-                'phone' => $request->phone,
-                'whatsapp' => $request->whatsapp,
-                'email' => $request->email,
-                'NIC_no' => $request->nic_no,
-                'NIC_front' => $NIC_front,
-                'NIC_back' => $NIC_back,
-                'cost' => 0,
-                'username' => $request->username,
-                'password' => Hash::make($request->password),
+                'code'          => $code,
+                'name'          => $request->name,
+                'address'       => $request->address,
+                'city'          => $request->city ?? '',
+                'district'      => $request->district,
+                'state'         => $request->state ?? null,
+                'country'       => $request->country ?? 'Sri Lanka',
+                'postal_code'   => $request->postal_code ?? '',
+                'phone'         => $request->phone,
+                'whatsapp'      => $request->whatsapp,
+                'email'         => $request->email,
+                'NIC_no'        => $request->nic_no,
+                'NIC_front'     => $NIC_front,
+                'NIC_back'      => $NIC_back,
+                'cost'          => 0,
+                'username'      => $request->username,
+                'password'      => Hash::make($request->password),
                 'view_password' => $request->password,
-                'status' => 'pending',
+                'status'        => 'pending',
             ]);
 
-            // Create user login
             User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'username' => $request->username,
-                'password' => Hash::make($request->password),
+                'name'          => $request->name,
+                'email'         => $request->email,
+                'username'      => $request->username,
+                'password'      => Hash::make($request->password),
                 'view_password' => $request->password,
-                'type' => 'seller',
+                'type'          => 'seller',
             ]);
 
             DB::commit();
-            return redirect()->back();
+            return redirect()->back()->with('success', 'Seller created successfully');
         } catch (\Exception $e) {
             DB::rollBack();
-            return $e;
+            return back()->with('error', $e->getMessage())->withInput();
         }
     }
 
     public function edit($id)
     {
-        $seller = Saler::query()
-            ->where('id',$id)
-            ->first();
-
+        $seller = Saler::findOrFail($id);
         return view('seller.seller_update', compact('seller'));
     }
 
     public function update(Request $request)
     {
-        $seller = Saler::query()
-            ->where('id',$request->id)
-            ->first();
+        $seller = Saler::findOrFail($request->id);
 
         $NIC_front = $request->hasFile('nic_front')
             ? ImageUploader::uploadImage($request->file('nic_front'), 'seller/nic_front')
@@ -162,52 +153,81 @@ class SellerController extends Controller
             ? ImageUploader::uploadImage($request->file('nic_back'), 'seller/nic_back')
             : $seller->NIC_back;
 
-        $new_deposit = $seller->cal_deposit + $request->deposit;
-        $full_deposit =$seller->deposit + $request->deposit;
+        $new_cal_deposit = $seller->cal_deposit + ($request->deposit ?? 0);
+        $full_deposit    = $seller->deposit    + ($request->deposit ?? 0);
 
         try {
-            Saler::query()
-                ->where('id',$request->id)
-                ->update([
-                    'code'=>$request->code,
-                    'name'=>$request->name,
-                    'address'=>$request->address,
-                    'city'=>$request->city,
-                    'postal_code'=>$request->postal_code,
-                    'district'=>$request->district,
-                    'state'=>$request->state ?? null,
-                    'country'=>$request->country ?? 'Sri Lanka',
-                    'phone'=>$request->phone,
-                    'whatsapp'=>$request->whatsapp,
-                    'email'=>$request->email,
-                    'NIC_no'=>$request->nic_no,
-                    'NIC_front'=>$NIC_front,
-                    'NIC_back'=>$NIC_back,
-                    'deposit'=>$full_deposit,
-                    'cal_deposit'=>$new_deposit,
-                    'username'=>$request->username,
-                    'password'=>Hash::make($request->password),
-                    'view_password'=>$request->password,
-                    'type'=>$request->type,
-                ]);
-            return redirect()->route('seller.list');
-        }
-        catch (\Exception $e) {
-            return $e;
+            $seller->update([
+                'code'          => $request->code,
+                'name'          => $request->name,
+                'address'       => $request->address,
+                'city'          => $request->city,
+                'postal_code'   => $request->postal_code,
+                'district'      => $request->district,
+                'state'         => $request->state ?? null,
+                'country'       => $request->country ?? 'Sri Lanka',
+                'phone'         => $request->phone,
+                'whatsapp'      => $request->whatsapp,
+                'email'         => $request->email,
+                'NIC_no'        => $request->nic_no,
+                'NIC_front'     => $NIC_front,
+                'NIC_back'      => $NIC_back,
+                'deposit'       => $full_deposit,
+                'cal_deposit'   => $new_cal_deposit,
+                'username'      => $request->username,
+                'password'      => $request->filled('password') ? Hash::make($request->password) : $seller->password,
+                'view_password' => $request->filled('password') ? $request->password : $seller->view_password,
+                'type'          => $request->type ?? $seller->type,
+            ]);
+
+            return redirect()->route('seller.list')->with('success', 'Seller updated successfully');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage())->withInput();
         }
     }
+
+    public function delete($id)
+    {
+        $seller = Saler::findOrFail($id);
+
+        try {
+            if ($seller->NIC_front) {
+                Storage::disk('public')->delete($seller->NIC_front);
+            }
+            if ($seller->NIC_back) {
+                Storage::disk('public')->delete($seller->NIC_back);
+            }
+            if ($seller->img) {
+                Storage::disk('public')->delete($seller->img);
+            }
+
+            Referral::where('level_01_seller_02', $seller->code)
+                ->orWhere('level_02_seller_02', $seller->code)
+                ->orWhere('level_03_seller_02', $seller->code)
+                ->delete();
+
+            $seller->delete();
+
+            User::where('username', $seller->username)->delete();
+
+            return redirect()->route('seller.list')
+                ->with('success', 'Seller deleted successfully');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Failed to delete seller: ' . $e->getMessage());
+        }
+    }
+
 
     public function new_order()
     {
         $codeGenerate = new CodeGenerator();
         $code = $codeGenerate->newCodeLoad('file');
         $user = auth()->user();
-        $import='0';
-        return view('seller.new_order',compact('import','user','code'));
-
+        $import = '0';
+        return view('seller.new_order', compact('import', 'user', 'code'));
     }
 
-    // In SellerController
     public function completeOrder()
     {
         return view('seller.complete_order_list');
@@ -233,93 +253,81 @@ class SellerController extends Controller
         return view('seller.seller_product');
     }
 
-    // PROFILE METHODS - Added for seller profile management
-
-    /**
-     * Display seller profile
-     */
     public function profile()
     {
         $seller = Auth::guard('saler')->user();
 
-        // Get statistics
         $stats = [
-            'total_orders' => $seller->orders()->count(),
-            'pending_orders' => $seller->orders()->where('status', 'pending')->count(),
-            'completed_orders' => $seller->orders()->where('status', 'completed')->count(),
-            'total_products' => $seller->products()->count(),
-            'total_sales' => $seller->total_sales ?? 0,
-            'current_deposit' => $seller->deposit ?? 0,
+            'total_orders'     => $seller->orders()->count() ?? 0,
+            'pending_orders'   => $seller->orders()->where('status', 'pending')->count() ?? 0,
+            'completed_orders' => $seller->orders()->where('status', 'completed')->count() ?? 0,
+            'total_products'   => $seller->products()->count() ?? 0,
+            'total_sales'      => $seller->total_sales ?? 0,
+            'current_deposit'  => $seller->deposit ?? 0,
         ];
 
         return view('seller.profile.profile', compact('seller', 'stats'));
     }
 
-    /**
-     * Update seller profile
-     */
     public function updateProfile(Request $request)
     {
         $seller = Auth::guard('saler')->user();
 
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:salers,email,' . $seller->id,
-            'phone' => 'required|string|max:20',
-            'whatsapp' => 'nullable|string|max:20',
-            'address' => 'required|string',
-            'city' => 'required|string|max:100',
-            'district' => 'required|string|max:100',
-            'state' => 'nullable|string|max:100',
-            'country' => 'nullable|string|max:100',
+            'name'        => 'required|string|max:255',
+            'email'       => 'required|email|unique:salers,email,' . $seller->id,
+            'phone'       => 'required|string|max:20',
+            'whatsapp'    => 'nullable|string|max:20',
+            'address'     => 'required|string',
+            'city'        => 'required|string|max:100',
+            'district'    => 'required|string|max:100',
+            'state'       => 'nullable|string|max:100',
+            'country'     => 'nullable|string|max:100',
             'postal_code' => 'required|string|max:20',
-            'type' => 'nullable|string|max:50',
-            'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'NIC_no' => 'nullable|string|max:20',
+            'type'        => 'nullable|string|max:50',
+            'img'         => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'NIC_no'      => 'nullable|string|max:20',
         ]);
 
         try {
-            // Handle profile image upload
             $imagePath = $seller->img;
+
             if ($request->hasFile('img')) {
-                // Delete old image if exists
-                if ($seller->img && \Storage::disk('public')->exists($seller->img)) {
-                    \Storage::disk('public')->delete($seller->img);
+                if ($seller->img && Storage::disk('public')->exists($seller->img)) {
+                    Storage::disk('public')->delete($seller->img);
                 }
 
-                $image = $request->file('img');
+                $image     = $request->file('img');
                 $imageName = 'seller_' . $seller->code . '_' . time() . '.' . $image->getClientOriginalExtension();
                 $imagePath = $image->storeAs('sellers/profiles', $imageName, 'public');
             }
 
-            // Update seller information
             $seller->update([
-                'name' => $request->name,
-                'email' => $request->email,
-                'phone' => $request->phone,
-                'whatsapp' => $request->whatsapp,
-                'address' => $request->address,
-                'city' => $request->city,
-                'district' => $request->district,
-                'state' => $request->state,
-                'country' => $request->country ?? 'Sri Lanka',
+                'name'        => $request->name,
+                'email'       => $request->email,
+                'phone'       => $request->phone,
+                'whatsapp'    => $request->whatsapp,
+                'address'     => $request->address,
+                'city'        => $request->city,
+                'district'    => $request->district,
+                'state'       => $request->state,
+                'country'     => $request->country ?? 'Sri Lanka',
                 'postal_code' => $request->postal_code,
-                'type' => $request->type,
-                'img' => $imagePath,
-                'NIC_no' => $request->NIC_no,
+                'type'        => $request->type,
+                'img'         => $imagePath,
+                'NIC_no'      => $request->NIC_no,
             ]);
 
             if ($request->ajax()) {
                 return response()->json([
-                    'success' => true,
-                    'message' => 'Profile updated successfully!',
-                    'profile_image_url' => $seller->profile_image_url
+                    'success'           => true,
+                    'message'           => 'Profile updated successfully!',
+                    'profile_image_url' => $imagePath ? Storage::url($imagePath) : null
                 ]);
             }
 
             return redirect()->route('seller.profile')
-                ->with('success', 'Profile updated successfully!');
-
+                ->with('success', 'Profile updated successfully');
         } catch (\Exception $e) {
             if ($request->ajax()) {
                 return response()->json([
@@ -328,9 +336,7 @@ class SellerController extends Controller
                 ], 500);
             }
 
-            return redirect()->back()
-                ->with('error', 'Failed to update profile: ' . $e->getMessage())
-                ->withInput();
+            return back()->with('error', $e->getMessage())->withInput();
         }
     }
 }
