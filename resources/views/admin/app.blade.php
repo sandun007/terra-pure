@@ -56,7 +56,7 @@
     <!-- Header Styles -->
     <link rel="stylesheet" href="{{ asset('asset/css/component/header.css') }}">
     <link rel="stylesheet" href="{{ asset('asset/css/component/sliderbar.css') }}">
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     @stack('css')
 </head>

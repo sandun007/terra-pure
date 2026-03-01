@@ -64,6 +64,9 @@ Route::middleware('auth:admin')->group(function(){
             Route::get('/list', [BrandController::class, 'index'])->name('brand.index');
             Route::get('/', [BrandController::class, 'create'])->name('brand.create');
             Route::post('/', [BrandController::class, 'store'])->name('brand.store');
+            Route::get('/view/{id}', [BrandController::class, 'show'])->name('brand.show');
+            Route::get('/edit/{id}', [BrandController::class, 'edit'])->name('brand.edit');
+    Route::put('/update/{id}', [BrandController::class, 'update'])->name('brand.update');
             Route::get('/{id}', [BrandController::class, 'delete'])->name('brand.delete');
         });
 
