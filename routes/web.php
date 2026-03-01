@@ -55,7 +55,7 @@ Route::middleware('auth:admin')->group(function(){
             Route::get('/create', [ProductController::class, 'create'])->name('product.create');
             Route::post('/create', [ProductController::class, 'store'])->name('product.store');
             Route::get('/edit/{id}', [ProductController::class, 'edit'])->name('product.edit');
-            Route::post('/update/{id}', [ProductController::class, 'update'])->name('product.update');
+            Route::put('/update/{id}', [ProductController::class, 'update'])->name('product.update');
             Route::get('/view/{id}', [ProductController::class, 'product_view'])->name('product.view');
             Route::get('/delete/{id}', [ProductController::class, 'delete'])->name('product.delete');
         });
@@ -83,12 +83,13 @@ Route::middleware('auth:admin')->group(function(){
             Route::post('/',[SellerController::class,'store'])->name('admin.seller.store');
             Route::get('/delete/{id}', [SellerController::class, 'delete'])->name('seller.delete');
             Route::get('/{id}',[SellerController::class,'edit'])->name('admin.seller.edit');
+            Route::get('seller/{id}', [SellerController::class, 'show'])->name('admin.seller.view');
             Route::post('/update',[SellerController::class,'update'])->name('admin.seller.update');
         });
 
         Route::prefix('order')->group(function () {
-            Route::get('new-order', [SellerController::class, 'new_order'])->name('admin.new-order');
-            Route::get('/complete-order', [OrderController::class, 'completeOrder'])->name('complete-order');
+            Route::get('new-order', [OrderController::class, 'new_order'])->name('admin.new_order');
+            Route::get('/complete-order', [OrderController::class, 'completeOrder'])->name('admin.complete_order_list');
             Route::get('/return-order', [OrderController::class, 'returnOrder'])->name('return-order');
             Route::get('/rescheduling-order', [OrderController::class, 'reschedulingOrder'])->name('rescheduling-order');
             Route::get('/pending-order', [OrderController::class, 'pendingOrder'])->name('pending-order');
@@ -125,7 +126,7 @@ Route::middleware('auth:seller')->group(function(){
         // Shop Routes
         Route::prefix('shop')->name('seller.shop.')->group(function () {
             Route::get('/', [SellerShopController::class, 'index'])->name('seller.index'); // Fixed: changed from seller.index to index
-            Route::get('/product/{code}', [SellerShopController::class, 'showProduct'])->name('product.show');
+            Route::get('/product/view/{product}', [\App\Http\Controllers\Seller\SellerShopController::class, 'showProduct'])->name('product.show');
             Route::get('/product/{code}/details', [SellerShopController::class, 'getProductDetails'])->name('product.details');
             Route::get('/product/find/{code}', [SellerShopController::class, 'findByCode'])->name('product.find'); // FIXED: This route was missing
             Route::post('/product/copy/{code}', [SellerShopController::class, 'copyProductCode'])->name('product.copy');
@@ -151,10 +152,10 @@ Route::middleware('auth:seller')->group(function(){
             Route::put('update/{id}', [SellerOrderController::class, 'update'])->name('order.update');
             Route::delete('destroy/{id}', [SellerOrderController::class, 'destroy'])->name('order.destroy');
 
-            // Product details for order form - FIXED: Using where parameter to allow slashes in code
+            // Product details for order form
             Route::get('product/{code}/details', [SellerOrderController::class, 'getProductDetails'])
                 ->name('product.details')
-                ->where('code', '.*'); // This allows slashes in the product code
+                ->where('code', '.*');
 
             // CSV Upload routes
             Route::get('csv-upload', [SellerOrderController::class, 'csvUploadPage'])->name('order.csv-upload');
@@ -171,18 +172,35 @@ Route::middleware('auth:seller')->group(function(){
             Route::get('/history',[SellerPaymentController::class,'payment_history'])->name('seller.payment_history');
         });
 
-        // For backward compatibility with old route names
-        Route::prefix('call')->group(function () {
-            Route::get('/', [SellerCallController::class, 'index'])->name('call.index');
-            Route::get('/view/{id}', [SellerCallController::class, 'show'])->name('call.view');
-            Route::post('/', [SellerCallController::class, 'update'])->name('call.store'); // POST maps to update for backward compatibility
-            Route::get('/conform_call_list', [SellerCallController::class, 'conformCallList'])->name('call.conform');
-            Route::get('/reject_call_list', [SellerCallController::class, 'rejectCallList'])->name('call.reject');
-            Route::get('/not_answer_call_list', [SellerCallController::class, 'notAnswerCallList'])->name('call.not_answer_call_list');
-            Route::get('/other_call_list', [SellerCallController::class, 'otherCallList'])->name('call.other_call_list');
-            Route::get('/export-calls', [SellerCallController::class, 'export'])->name('calls.export');
-        });
+        //seller call
+        Route::prefix('call')->name('call.')->group(function () {
+            // List views
+            Route::get('/', [SellerCallController::class, 'index'])->name('index');
+            Route::get('/conform_call_list', [SellerCallController::class, 'conformCallList'])->name('conform');
+            Route::get('/reject_call_list', [SellerCallController::class, 'rejectCallList'])->name('reject');
+            Route::get('/not_answer_call_list', [SellerCallController::class, 'notAnswerCallList'])->name('not_answer_call_list');
+            Route::get('/other_call_list', [SellerCallController::class, 'otherCallList'])->name('other_call_list');
 
+            // CRUD operations
+            Route::get('/view/{id}', [SellerCallController::class, 'show'])->name('view');
+            Route::get('/edit/{id}', [SellerCallController::class, 'edit'])->name('edit');
+            Route::put('/update/{id}', [SellerCallController::class, 'update'])->name('update');
+            Route::delete('/destroy/{id}', [SellerCallController::class, 'destroy'])->name('destroy');
+            Route::get('/print/{id}', [SellerCallController::class, 'print'])->name('print');
+
+            // Bulk operations
+            Route::post('/bulk-status', [SellerCallController::class, 'bulkUpdateStatus'])->name('bulk_status');
+            Route::get('/export-calls', [SellerCallController::class, 'export'])->name('export');
+            Route::get('/statistics', [SellerCallController::class, 'statistics'])->name('statistics');
+
+            // CSV upload
+            Route::get('/csv-upload', [SellerCallController::class, 'csvUploadPage'])->name('csv_upload');
+            Route::post('/csv-insert', [SellerCallController::class, 'csvInsert'])->name('csv_insert');
+
+            // Additional routes
+            Route::get('/seller-products', [SellerCallController::class, 'getSellerProducts'])->name('seller_products');
+            Route::get('/csrf-refresh', [SellerCallController::class, 'csrfRefresh'])->name('csrf_refresh');
+        });
         // Seller Product Routes - UPDATED
         Route::prefix('product')->name('seller.product.')->group(function (){
             Route::get('/', [SellerProductController::class, 'index'])->name('index');
@@ -245,6 +263,12 @@ Route::prefix('employee')->middleware('auth:employee')->group(function(){
         Route::post('/price-update', [EmployeeController::class, 'updateProductPrice'])->name('price-update');
         Route::post('/bulk-price-update', [EmployeeController::class, 'bulkPriceUpdate'])->name('bulk-price-update');
 
+        // Seller Management (Existing)
+        Route::prefix('seller')->name('seller.')->group(function() {
+            Route::get('/orders', [EmployeeController::class, 'sellerOrders'])->name('employee.seller.orders');
+            Route::post('/orders/status/update/{id}', [EmployeeController::class, 'updateOrderStatus'])->name('orders.status-update');
+            Route::get('/orders/view/{id}', [EmployeeController::class, 'viewOrder'])->name('order-view');
+        });
         // Print route
         Route::get('/print/{id}', [EmployeeWholesalerOrderController::class, 'printDeliveryLabel'])->name('print.out');
     });

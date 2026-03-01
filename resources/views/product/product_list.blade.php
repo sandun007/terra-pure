@@ -41,6 +41,7 @@
             color: #dc3545;
             font-weight: bold;
         }
+
     </style>
 @endpush
 
@@ -67,19 +68,19 @@
         </div>
     </div>
 
-    @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
+{{--    @if (session('success'))--}}
+{{--        <div class="alert alert-success alert-dismissible fade show" role="alert">--}}
+{{--            {{ session('success') }}--}}
+{{--            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>--}}
+{{--        </div>--}}
+{{--    @endif--}}
 
-    @if (session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
+{{--    @if (session('error'))--}}
+{{--        <div class="alert alert-danger alert-dismissible fade show" role="alert">--}}
+{{--            {{ session('error') }}--}}
+{{--            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>--}}
+{{--        </div>--}}
+{{--    @endif--}}
 
     <div class="row">
         <div class="col-12">
@@ -116,13 +117,20 @@
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        <a href="{{ route('product.view', $product->id) }}" class="btn btn-dark btn-sm" data-bs-toggle="tooltip" title="View">
+                                        <a href="{{ route('product.view', $product->id) }}"
+                                           class="btn btn-dark btn-sm"
+                                           data-bs-toggle="tooltip" title="View">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="{{ route('product.edit', $product->id) }}" class="btn btn-warning btn-sm" data-bs-toggle="tooltip" title="Edit">
+                                        <a href="{{ route('product.edit', $product->id) }}"
+                                           class="btn btn-warning btn-sm"
+                                           data-bs-toggle="tooltip" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="{{ route('product.delete', $product->id) }}" class="btn btn-danger btn-sm" data-bs-toggle="tooltip" title="Delete" onclick="return confirm('Are you sure you want to delete this product?')">
+                                        <a href="{{ route('product.delete', $product->id) }}"
+                                           class="btn btn-danger btn-sm delete-btn"
+                                           data-bs-toggle="tooltip"
+                                           title="Delete">
                                             <i class="fas fa-trash"></i>
                                         </a>
                                     </div>
@@ -140,6 +148,8 @@
 @push('script')
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
         $(document).ready(function () {
             $('#product-table').DataTable({
@@ -155,6 +165,73 @@
             var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl)
             });
+
+            //  Success Alert (Create / Update)
+            @if(session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: '{{ session('success') }}',
+                confirmButtonColor: '#28a745',
+                confirmButtonText: 'OK',
+                timer: 3000,
+                timerProgressBar: true,
+            });
+            @endif
+
+            //  Error Alert
+            @if(session('error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops!',
+                text: '{{ session('error') }}',
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'OK',
+                timer: 4000,
+                timerProgressBar: true,
+            });
+            @endif
+
+            //  Delete Confirmation
+            $(document).on('click', '.delete-btn', function (e) {
+                e.preventDefault();
+
+                const deleteUrl   = $(this).attr('href');
+                const productName = $(this).data('product-name');
+
+                Swal.fire({
+                    title: 'Delete Product?',
+                    html: `Are you sure you want to delete <strong>${productName}</strong>?<br><small class="text-muted">This action cannot be undone.</small>`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="fas fa-trash"></i> Yes, Delete it!',
+                    cancelButtonText: '<i class="fas fa-times"></i> Cancel',
+                    reverseButtons: true,
+                    focusCancel: true,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+
+                        // Show loading state
+                        Swal.fire({
+                            title: 'Deleting...',
+                            text: 'Please wait.',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            showConfirmButton: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        // Redirect to delete route
+                        window.location.href = deleteUrl;
+                    }
+                });
+            });
+
         });
+
     </script>
 @endpush

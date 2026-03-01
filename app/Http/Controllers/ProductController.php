@@ -67,7 +67,7 @@ class ProductController extends Controller
                 'min_qty' => 'required|numeric|min:0',
                 'stock_price' => 'required|numeric|min:0',
                 'display_price' => 'required|numeric|min:0',
-            ]);
+                ]);
 
             $imagePaths = [];
             if ($request->hasFile('img')) {
@@ -94,6 +94,7 @@ class ProductController extends Controller
             $product->display_price = $request->display_price;
             $product->discount = $request->discount ?? 0;
             $product->qty = $request->qty;
+            $product->stock = $request->qty;
             $product->min_qty = $request->min_qty;
             $product->packing_cost = $request->packing_cost ?? 0;
             $product->type = 'stock_item';
@@ -123,74 +124,75 @@ class ProductController extends Controller
     }
 
     public function update(Request $request, $id)
-    {
-        try {
-            $request->validate([
-                'name' => 'required|string|max:255',
-                'qty' => 'required|numeric|min:0',
-                'min_qty' => 'required|numeric|min:0',
-                'stock_price' => 'required|numeric|min:0',
-                'display_price' => 'required|numeric|min:0',
-            ]);
+{
+    try {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'qty' => 'required|numeric|min:0',
+            'min_qty' => 'required|numeric|min:0',
+            'stock_price' => 'required|numeric|min:0',
+            'display_price' => 'required|numeric|min:0',
+        ]);
 
-            $product = Product::findOrFail($id);
+        $product = Product::findOrFail($id);
 
-            $imagePaths = [];
+        $imagePaths = [];
 
-            // Handle new image uploads
-            if ($request->hasFile('img')) {
-                // Delete old images if they exist
-                if ($product->img) {
-                    if (is_json($product->img)) {
-                        $oldImages = json_decode($product->img, true);
-                        foreach ($oldImages as $oldImage) {
-                            ImageUploader::deleteImage($oldImage);
-                        }
-                    } else {
-                        ImageUploader::deleteImage($product->img);
+        // Handle new image uploads
+        if ($request->hasFile('img')) {
+            // Delete old images if they exist
+            if ($product->img) {
+                if (is_json($product->img)) {
+                    $oldImages = json_decode($product->img, true);
+                    foreach ($oldImages as $oldImage) {
+                        ImageUploader::deleteImage($oldImage);
                     }
-                }
-
-                // Upload new images
-                foreach ($request->file('img') as $image) {
-                    if ($image->isValid()) {
-                        $imagePath = ImageUploader::uploadSingleImage($image, 'products');
-                        if ($imagePath) {
-                            $imagePaths[] = $imagePath;
-                        }
-                    }
-                }
-            }
-
-            $product->name = $request->name;
-            $product->barcode = $request->barcode;
-            $product->brand = $request->brand;
-            $product->category = $request->category;
-            $product->description = $request->description;
-            $product->stock_price = $request->stock_price;
-            $product->display_price = $request->display_price;
-            $product->discount = $request->discount ?? 0;
-            $product->qty = $request->qty;
-            $product->min_qty = $request->min_qty;
-            $product->packing_cost = $request->packing_cost ?? 0;
-            $product->update_by = 'admin';
-
-            // Update images only if new images were uploaded
-            if (!empty($imagePaths)) {
-                if (count($imagePaths) === 1) {
-                    $product->img = $imagePaths[0];
                 } else {
-                    $product->img = json_encode($imagePaths);
+                    ImageUploader::deleteImage($product->img);
                 }
             }
 
-            $product->save();
-
-            return redirect()->route('product.index')->with('success', 'Product updated successfully.');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage())->withInput();
+            // Upload new images
+            foreach ($request->file('img') as $image) {
+                if ($image->isValid()) {
+                    $imagePath = ImageUploader::uploadSingleImage($image, 'products');
+                    if ($imagePath) {
+                        $imagePaths[] = $imagePath;
+                    }
+                }
+            }
         }
+
+        $product->name = $request->name;
+        $product->barcode = $request->barcode;
+        $product->brand = $request->brand;
+        $product->category = $request->category;
+        $product->description = $request->description;
+        $product->stock_price = $request->stock_price;
+        $product->display_price = $request->display_price;
+        $product->discount = $request->discount ?? 0;
+        $product->qty = $request->qty;
+        $product->stock = $request->qty;
+        $product->min_qty = $request->min_qty;
+        $product->packing_cost = $request->packing_cost ?? 0;
+        $product->update_by = 'admin';
+
+        // Update images only if new images were uploaded
+        if (!empty($imagePaths)) {
+            if (count($imagePaths) === 1) {
+                $product->img = $imagePaths[0];
+            } else {
+                $product->img = json_encode($imagePaths);
+            }
+        }
+
+        $product->save();
+
+        return redirect()->route('product.index')->with('success', 'Product updated successfully.');
+    } catch (\Exception $e) {
+        return redirect()->back()->with('error', $e->getMessage())->withInput();
     }
+}
 
     public function product_view($id)
     {

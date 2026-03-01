@@ -68,8 +68,8 @@
                                     <span>Order</span>
                                 </a>
                                 <div class="dropdown-menu" aria-labelledby="orderDropdown">
-                                    <a class="dropdown-item" href="{{route('admin.new-order')}}">New Order</a>
-                                    <a class="dropdown-item" href="{{route('seller.complete-order')}}">Complete Order</a>
+                                    <a class="dropdown-item" href="{{route('admin.new_order')}}">New Order</a>
+                                    <a class="dropdown-item" href="{{route('admin.complete_order_list')}}">Complete Order</a>
                                     <a class="dropdown-item" href="{{route('seller.rescheduling-order')}}">Reschedule
                                         Order</a>
                                     <a class="dropdown-item" href="{{route('seller.return-order')}}">Return Order</a>

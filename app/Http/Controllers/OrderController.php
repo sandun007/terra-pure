@@ -30,7 +30,7 @@ class OrderController extends Controller
             if (auth()->guard('seller')->check()) {
                 return redirect()->route('seller.new-order')->with('success', 'Orders imported successfully');
             } else {
-                return redirect()->route('admin.new-order')->with('success', 'Orders imported successfully');
+                return redirect()->route('admin.new_order')->with('success', 'Orders imported successfully');
             }
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error importing orders: ' . $e->getMessage());

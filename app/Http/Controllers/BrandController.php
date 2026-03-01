@@ -5,17 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\Brand;
 use Illuminate\Http\Request;
 
+// If these are in App\Helpers or App\Services, import accordingly:
+use App\Helpers\CodeGenerator;
+use App\Helpers\ImageUploader;
+
 class BrandController extends Controller
 {
-
     public function index()
     {
         try {
             $brands = Brand::where(function ($q) {
-    $q->where('seller_code', 0)
-      ->orWhereNull('seller_code');
-})->get();
-            $brandCount = $brands->count(); // Get total number of brands
+                $q->where('seller_code', 0)
+                  ->orWhereNull('seller_code');
+            })->get();
+
+            $brandCount = $brands->count();
 
             return view('product.brand_list', compact('brands', 'brandCount'));
         } catch (\Exception $e) {
@@ -27,110 +31,104 @@ class BrandController extends Controller
     {
         $codeGenerate = new CodeGenerator();
         $code = $codeGenerate->newCodeLoad('brand');
+
         return view('product.brand_create', compact('code'));
     }
 
     public function store(Request $request)
-{
-    
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'image'  => 'required|image|mimes:jpg,jpeg,png|max:2048',
-    ]);
-
-    try {
-
-        // Upload Image
-        $imagePath = ImageUploader::uploadImage($request->file('image'), 'brand');
-
-        // Generate Code
-        $codeGenerate = new CodeGenerator;
-        $code = $codeGenerate->generateCode('brand');
-
-        // Create Brand
-        Brand::create([
-            'code'        => $code,
-            'name'        => $request->name,
-            'image'         => $imagePath,
-            'status'      => 1,
-            'seller_code' => 0
+    {
+        $request->validate([
+            'name'  => 'required|string|max:255',
+            'image' => 'required|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        return redirect()->back()->with('success', 'Brand created successfully');
+        try {
+            // Upload Image
+            $imagePath = ImageUploader::uploadImage($request->file('image'), 'brand');
 
-    } catch (\Exception $e) {
+            // Generate Code
+            $codeGenerate = new CodeGenerator();
+            $code = $codeGenerate->generateCode('brand');
 
-        return redirect()->back()
-            ->with('error', 'Something went wrong!')
-            ->withInput();
+            // Create Brand
+            Brand::create([
+                'code'        => $code,
+                'name'        => $request->name,
+                'image'       => $imagePath,
+                'status'      => 1,     // active = 1
+                'seller_code' => 0,
+            ]);
+
+            return redirect()->back()->with('success', 'Brand created successfully');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Something went wrong!')
+                ->withInput();
+        }
     }
-}
-
 
     public function edit($id)
-{
-    $brand = Brand::findOrFail($id);
-    return view('product.brand_update', compact('brand'));
-}
-
-public function update(Request $request, $id)
-{
-    try {
-
+    {
         $brand = Brand::findOrFail($id);
+        return view('product.brand_update', compact('brand'));
+    }
 
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'status' => 'required|in:0,1',
-            'img' => 'nullable|image|mimes:jpg,jpeg,png|max:2048'
-        ]);
+    public function update(Request $request, $id)
+    {
+        try {
+            $brand = Brand::findOrFail($id);
 
-        // If new image uploaded
-        if ($request->hasFile('img')) {
+            $request->validate([
+                'name'   => 'required|string|max:255',
+                'status' => 'required|in:0,1',
+                'img'    => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            ]);
 
-            // Delete old image
+            // If new image uploaded
+            if ($request->hasFile('img')) {
+
+                // Delete old image (if stored in public disk path)
+                if ($brand->image && file_exists(storage_path('app/public/' . $brand->image))) {
+                    unlink(storage_path('app/public/' . $brand->image));
+                }
+
+                // Upload new image using same helper for consistency
+                $brand->image = ImageUploader::uploadImage($request->file('img'), 'brand');
+            }
+
+            $brand->name = $request->name;
+            $brand->status = (int) $request->status;
+            $brand->save();
+
+            return redirect()->route('brand.index')
+                ->with('success', 'Brand updated successfully');
+
+        } catch (\Exception $e) {
+            return $e->getMessage();
+        }
+    }
+
+    public function delete($id)
+    {
+        try {
+            $brand = Brand::findOrFail($id);
+
+            // Optional: delete image file also
             if ($brand->image && file_exists(storage_path('app/public/' . $brand->image))) {
                 unlink(storage_path('app/public/' . $brand->image));
             }
 
-            $file = $request->file('img');
-            $filename = time().'.'.$file->getClientOriginalExtension();
-            $file->storeAs('brand', $filename, 'public');
+            $brand->delete();
 
-            $brand->image = 'brand/'.$filename;   // ✅ correct column
+            return redirect()->back()->with('success', 'Brand deleted successfully');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Brand not found');
         }
-
-        $brand->name = $request->name;
-        $brand->status = $request->status;
-
-        $brand->save();
-
-        return redirect()->route('brand.index')
-                         ->with('success', 'Brand updated successfully');
-
-    } catch (\Exception $e) {
-        return $e->getMessage();
     }
-}
-
-    public function delete($id)
-{
-    try {
-
-        $brand = Brand::findOrFail($id); // will auto throw 404 if not found
-        $brand->delete();
-
-        return redirect()->back()->with('success', 'Brand deleted successfully');
-
-    } catch (\Exception $e) {
-        return redirect()->back()->with('error', 'Brand not found');
-    }
-}
 
     public function show($id)
-{
-    $brand = Brand::findOrFail($id);
-    return view('product.brand_view', compact('brand'));
-}
-
+    {
+        $brand = Brand::findOrFail($id);
+        return view('product.brand_view', compact('brand'));
+    }
 }
