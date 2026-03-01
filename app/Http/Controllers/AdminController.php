@@ -14,10 +14,26 @@ class AdminController extends Controller
         return view('admin.admin_create');
     }
 
+    public function index()
+    {
+        try {
+            $admins = Admin::query()
+                ->latest()
+                ->get();
+            $count = $admins->count();
+
+            return view('admin.admin_list', compact('admins', 'count'));
+        } catch (\Exception $exception) {
+            return back()->with('error', 'Failed to load admins: ' . $exception->getMessage());
+        }
+    }
+
     public function store(Request $request)
     {
-
-        $imagePath = ImageUploader::uploadImage($request->file('img'), 'admin/images');
+        $imagePath = null;
+        if ($request->hasFile('img')) {
+            $imagePath = ImageUploader::uploadImage($request->file('img'), 'admin/images');
+        }
 
         try {
             Admin::query()->create([
@@ -30,7 +46,7 @@ class AdminController extends Controller
                 'password' => Hash::make($request->password),
                 'view_password' => $request->password,
             ]);
-            User::query()->create([
+            $user = new User([
                 'name' => $request->name,
                 'email' => $request->email,
                 'username' => $request->username,
@@ -38,9 +54,18 @@ class AdminController extends Controller
                 'view_password' => $request->password,
                 'type' => 'admin',
             ]);
-            return redirect()->route('admin.create');
+            $user->saveQuietly();
+
+            return redirect()->route('admin.admins.index')->with('success', 'Admin created successfully!');
         } catch (\Exception $e) {
-            return $e;
+            return back()->with('error', 'Failed to create admin: ' . $e->getMessage());
         }
     }
+
+    public function show($id)
+    {
+        $admin = Admin::findOrFail($id);
+        return view('admin.admin_view', compact('admin'));
+    }
+
 }

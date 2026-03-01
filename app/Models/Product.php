@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Schema;
 
 class Product extends Model
 {
@@ -27,6 +29,7 @@ class Product extends Model
         'discount',
         'qty',
         'min_qty',
+        'stock',
         'packing_cost',
         'seller_code',
         'wholesaler_id', // Added this
@@ -47,9 +50,14 @@ class Product extends Model
     }
 
     // Relationship with Order Items
-    public function orderItems()
+    public function orderItems(): HasMany
     {
-        return $this->hasMany(OrderItem::class);
+        if (Schema::hasTable('wholesaler_order_items')) {
+            return $this->hasMany(WholesalerOrderItem::class, 'product_id');
+        } else {
+            // return $this->hasMany(OrderItem::class);
+            return $this->hasMany(WholesalerOrderItem::class, 'product_id'); // Default to wholesaler items
+        }
     }
 
     // Scope for wholesaler products

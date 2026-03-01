@@ -388,5 +388,6 @@
         sellingPriceInput.addEventListener('input', updatePriceDisplay);
         discountInput.addEventListener('input', updatePriceDisplay);
         packingCostInput.addEventListener('input', updatePriceDisplay);
+
     </script>
 @endpush

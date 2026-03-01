@@ -50,11 +50,12 @@ class Category extends Model
     // Get image URL
     public function getImageUrlAttribute()
     {
-        if ($this->image && file_exists(public_path('storage/' . $this->image))) {
+        // Check new image column first
+        if ($this->image) {
             return asset('storage/' . $this->image);
         }
         // Fallback to old img column
-        if ($this->img && file_exists(public_path('storage/' . $this->img))) {
+        if ($this->img) {
             return asset('storage/' . $this->img);
         }
         return asset('assets/images/default-category.png');

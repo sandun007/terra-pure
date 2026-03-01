@@ -31,6 +31,10 @@ use App\Http\Controllers\Wholesaler\WholesalerShopController;
 use App\Http\Controllers\WholesalerController;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Order;
+use Maatwebsite\Excel\Facades\Excel;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -79,21 +83,23 @@ Route::post('/',[LoginController::class,'loginCheck'])->name('login.check');
 
 
 // ========== ADMIN ROUTES ==========
-Route::middleware('auth:admin')->group(function(){
+Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])->group(function(){
     Route::prefix('admin')->group(function () {
         Route::post('/logout', [LoginController::class, 'logout'])->name('admin.logout');
         Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('admin.dashboard');
         Route::get('/dashboard/chart-data', [App\Http\Controllers\Admin\DashboardController::class, 'getChartData'])->name('admin.dashboard.chart-data');
         Route::get('/', [PageController::class, 'dashboard'])->name('admin.dashboard');
+        Route::get('/admins' , [AdminController::class,'index'] )->name('admin.admins.index');
+        Route::get('/admins/{id}/view', [AdminController::class, 'show'])->name('admin.admins.view');
         Route::get('/create',[AdminController::class,'create'])->name('admin.create');
-        Route::post('/',[AdminController::class,'store'])->name('admin.store');
+        Route::post('/store',[AdminController::class,'store'])->name('admin.store');
 
         Route::prefix('product')->group(function () {
             Route::get('/', [ProductController::class, 'index'])->name('product.index');
             Route::get('/create', [ProductController::class, 'create'])->name('product.create');
             Route::post('/create', [ProductController::class, 'store'])->name('product.store');
             Route::get('/edit/{id}', [ProductController::class, 'edit'])->name('product.edit');
-            Route::post('/update/{id}', [ProductController::class, 'update'])->name('product.update');
+            Route::put('/update/{id}', [ProductController::class, 'update'])->name('product.update');
             Route::get('/view/{id}', [ProductController::class, 'product_view'])->name('product.view');
             Route::get('/delete/{id}', [ProductController::class, 'delete'])->name('product.delete');
         });
@@ -102,6 +108,9 @@ Route::middleware('auth:admin')->group(function(){
             Route::get('/list', [BrandController::class, 'index'])->name('brand.index');
             Route::get('/', [BrandController::class, 'create'])->name('brand.create');
             Route::post('/', [BrandController::class, 'store'])->name('brand.store');
+            Route::get('/view/{id}', [BrandController::class, 'show'])->name('brand.show');
+            Route::get('/edit/{id}', [BrandController::class, 'edit'])->name('brand.edit');
+    Route::put('/update/{id}', [BrandController::class, 'update'])->name('brand.update');
             Route::get('/{id}', [BrandController::class, 'delete'])->name('brand.delete');
         });
 
@@ -109,6 +118,9 @@ Route::middleware('auth:admin')->group(function(){
             Route::get('/list', [CategoryController::class, 'index'])->name('category.index');
             Route::get('/', [CategoryController::class, 'create'])->name('category.create');
             Route::post('/', [CategoryController::class, 'store'])->name('category.store');
+            Route::get('/view/{id}', [CategoryController::class, 'show'])->name('category.show');
+            Route::get('/edit/{id}', [CategoryController::class, 'edit'])->name('category.edit');
+            Route::post('/update/{id}', [CategoryController::class, 'update'])->name('category.update');
             Route::get('/{id}', [CategoryController::class, 'delete'])->name('category.delete');
         });
 
@@ -118,12 +130,13 @@ Route::middleware('auth:admin')->group(function(){
             Route::post('/',[SellerController::class,'store'])->name('admin.seller.store');
             Route::get('/delete/{id}', [SellerController::class, 'delete'])->name('seller.delete');
             Route::get('/{id}',[SellerController::class,'edit'])->name('admin.seller.edit');
+            Route::get('seller/{id}', [SellerController::class, 'show'])->name('admin.seller.view');
             Route::post('/update',[SellerController::class,'update'])->name('admin.seller.update');
         });
 
         Route::prefix('order')->group(function () {
-            Route::get('new-order', [SellerController::class, 'new_order'])->name('admin.new-order');
-            Route::get('/complete-order', [OrderController::class, 'completeOrder'])->name('complete-order');
+            Route::get('new-order', [OrderController::class, 'new_order'])->name('admin.new_order');
+            Route::get('/complete-order', [OrderController::class, 'completeOrder'])->name('admin.complete_order_list');
             Route::get('/return-order', [OrderController::class, 'returnOrder'])->name('return-order');
             Route::get('/rescheduling-order', [OrderController::class, 'reschedulingOrder'])->name('rescheduling-order');
             Route::get('/pending-order', [OrderController::class, 'pendingOrder'])->name('pending-order');

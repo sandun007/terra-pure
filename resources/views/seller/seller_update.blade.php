@@ -384,5 +384,34 @@
             }
         });
     </script>
+    <!-- SweetAlert Success / Error Message -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            @if (session('success'))
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Success',
+                text: '{{ session('success') }}',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+            @endif
+
+            @if (session('error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: '{{ session('error') }}',
+            });
+            @endif
+        });
+    </script>
 
 @endpush

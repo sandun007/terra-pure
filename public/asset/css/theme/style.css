@@ -1,3 +1,7 @@
+.sidebar .sidebar-menu > ul > li.submenu.submenu-open > ul,
+.sidebars .sidebar-menu > ul > li.submenu.submenu-open > ul {
+  display: block;
+}
 @charset "UTF-8";
 /****** Utils ******/
 @import url("https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&display=swap");

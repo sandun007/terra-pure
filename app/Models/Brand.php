@@ -11,6 +11,8 @@ class Brand extends Model
 
     protected $fillable = [
         'wholesaler_id',
+        'seller_id',
+        'seller_code',
         'code',
         'name',
         'slug',
@@ -45,7 +47,8 @@ class Brand extends Model
         if ($this->image) {
             return asset('storage/' . $this->image);
         }
-        return asset('images/default-brand.png');
+        
+        return asset('assets/images/default-brand.png');
     }
 
     // Scope for active brands
