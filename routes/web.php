@@ -302,23 +302,24 @@ Route::prefix('employee')->middleware('auth:employee')->group(function(){
 
     // Delivery Calls
     Route::prefix('delivery-calls')->name('employee.delivery_calls.')->group(function () {
-        Route::get('/',            [EmployeeDeliveryCallController::class, 'index'])->name('index');
-        Route::get('/pending',     [EmployeeDeliveryCallController::class, 'pending'])->name('pending');
-        Route::get('/packing',     [EmployeeDeliveryCallController::class, 'packing'])->name('packing');
-        Route::get('/packed',      [EmployeeDeliveryCallController::class, 'packed'])->name('packed');
-        Route::get('/givedriver',  [EmployeeDeliveryCallController::class, 'givedriver'])->name('givedriver');
-        Route::get('/{id}',        [EmployeeDeliveryCallController::class, 'show'])->name('show');
 
-        // Business selector
+        // ── GET list pages ────────────────────────────────────────────────────
+        Route::get('/',           [EmployeeDeliveryCallController::class, 'index'])->name('index');
+        Route::get('/pending',    [EmployeeDeliveryCallController::class, 'pending'])->name('pending');
+        Route::get('/packing',    [EmployeeDeliveryCallController::class, 'packing'])->name('packing');
+        Route::get('/packed',     [EmployeeDeliveryCallController::class, 'packed'])->name('packed');
+        Route::get('/givedriver', [EmployeeDeliveryCallController::class, 'givedriver'])->name('givedriver');
+
+        // ── Fixed POST / PATCH routes (all before any /{id} wildcard) ────────
+        Route::post('/tracking',     [EmployeeDeliveryCallController::class, 'tracking'])->name('tracking');
         Route::post('/set-business', [EmployeeDeliveryCallController::class, 'setBusiness'])->name('set_business');
-
-        // Status transitions
-        Route::post('/{id}/status',  [EmployeeDeliveryCallController::class, 'updateStatus'])->name('update_status');
         Route::post('/bulk-status',  [EmployeeDeliveryCallController::class, 'bulkUpdateStatus'])->name('bulk_status');
-
-        // Origin updates
-        Route::patch('/{id}/origin', [EmployeeDeliveryCallController::class, 'updateOrigin'])->name('update_origin');
         Route::patch('/bulk-origin', [EmployeeDeliveryCallController::class, 'bulkUpdateOrigin'])->name('bulk_origin');
+
+        // ── /{id} wildcard routes — numeric IDs only ──────────────────────────
+        Route::get('/{id}',          [EmployeeDeliveryCallController::class, 'show'])->name('show')->whereNumber('id');
+        Route::post('/{id}/status',  [EmployeeDeliveryCallController::class, 'updateStatus'])->name('update_status')->whereNumber('id');
+        Route::patch('/{id}/origin', [EmployeeDeliveryCallController::class, 'updateOrigin'])->name('update_origin')->whereNumber('id');
     });
 
 
