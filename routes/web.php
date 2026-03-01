@@ -85,8 +85,8 @@ Route::middleware('auth:admin')->group(function(){
         });
 
         Route::prefix('order')->group(function () {
-            Route::get('new-order', [SellerController::class, 'new_order'])->name('admin.new-order');
-            Route::get('/complete-order', [OrderController::class, 'completeOrder'])->name('complete-order');
+            Route::get('new-order', [OrderController::class, 'new_order'])->name('admin.new_order');
+            Route::get('/complete-order', [OrderController::class, 'completeOrder'])->name('admin.complete_order_list');
             Route::get('/return-order', [OrderController::class, 'returnOrder'])->name('return-order');
             Route::get('/rescheduling-order', [OrderController::class, 'reschedulingOrder'])->name('rescheduling-order');
             Route::get('/pending-order', [OrderController::class, 'pendingOrder'])->name('pending-order');
