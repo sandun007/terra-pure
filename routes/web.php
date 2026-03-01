@@ -29,6 +29,9 @@ use App\Http\Controllers\Wholesaler\WholesalerShopController;
 use App\Http\Controllers\WholesalerController;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Order;
+use Maatwebsite\Excel\Facades\Excel;
 
 /*
 |--------------------------------------------------------------------------
@@ -46,8 +49,12 @@ Route::middleware('auth:admin')->group(function(){
         Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('admin.dashboard');
         Route::get('/dashboard/chart-data', [App\Http\Controllers\Admin\DashboardController::class, 'getChartData'])->name('admin.dashboard.chart-data');
         Route::get('/', [PageController::class, 'dashboard'])->name('admin.dashboard');
+        Route::get('/admins' , [AdminController::class,'index'] )->name('admin.admins.index');
         Route::get('/create',[AdminController::class,'create'])->name('admin.create');
-        Route::post('/',[AdminController::class,'store'])->name('admin.store');
+        Route::post('/store',[AdminController::class,'store'])->name('admin.store');
+        Route::get('/admins/{id}/edit', [AdminController::class, 'edit'])->name('admin.admins.edit');
+        Route::post('/admins/{id}/update', [AdminController::class, 'update'])->name('admin.admins.update');
+        Route::delete('/admins/{id}', [AdminController::class, 'destroy'])->name('admin.admins.destroy');
 
         Route::prefix('product')->group(function () {
             Route::get('/', [ProductController::class, 'index'])->name('product.index');
@@ -70,6 +77,9 @@ Route::middleware('auth:admin')->group(function(){
             Route::get('/list', [CategoryController::class, 'index'])->name('category.index');
             Route::get('/', [CategoryController::class, 'create'])->name('category.create');
             Route::post('/', [CategoryController::class, 'store'])->name('category.store');
+            Route::get('/view/{id}', [CategoryController::class, 'show'])->name('category.show');
+            Route::get('/edit/{id}', [CategoryController::class, 'edit'])->name('category.edit');
+            Route::post('/update/{id}', [CategoryController::class, 'update'])->name('category.update');
             Route::get('/{id}', [CategoryController::class, 'delete'])->name('category.delete');
         });
 
