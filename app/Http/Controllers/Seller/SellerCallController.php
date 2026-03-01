@@ -6,55 +6,49 @@ use App\Http\Controllers\Controller;
 use App\Models\SellerCall;
 use App\Models\SellerProduct;
 use App\Models\City;
-use App\Models\User;
+use App\Models\EmployeeDeliveryCall;
+use App\Services\Curfoxapiservice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
+
 class SellerCallController extends Controller
 {
-    /**
-     * Display pending calls list
-     */
+    public function __construct(private Curfoxapiservice $curfox) {}
+
+    // ── List views ────────────────────────────────────────────────────────
+
     public function index()
     {
         $seller = Auth::user();
-
-        $calls = SellerCall::where('seller_id', $seller->id)
+        $calls  = SellerCall::where('seller_id', $seller->id)
             ->where('status', 'Pending')
-            ->with(['product', 'seller'])
+            ->with(['product', 'seller', 'employeeDeliveryCall'])
             ->latest()
             ->get();
 
         return view('seller.calls.pending_call_list', compact('calls'));
     }
 
-    /**
-     * Display confirmed calls list
-     */
     public function conformCallList()
     {
         $seller = Auth::user();
-
-        $calls = SellerCall::where('seller_id', $seller->id)
+        $calls  = SellerCall::where('seller_id', $seller->id)
             ->where('status', 'Conform')
-            ->with(['product', 'seller'])
+            ->with(['product', 'seller', 'employeeDeliveryCall'])
             ->latest()
             ->get();
 
         return view('seller.calls.conform_call_list', compact('calls'));
     }
 
-    /**
-     * Display rejected calls list
-     */
     public function rejectCallList()
     {
         $seller = Auth::user();
-
-        $calls = SellerCall::where('seller_id', $seller->id)
+        $calls  = SellerCall::where('seller_id', $seller->id)
             ->where('status', 'Reject')
             ->with(['product', 'seller'])
             ->latest()
@@ -63,14 +57,10 @@ class SellerCallController extends Controller
         return view('seller.calls.reject_call_list', compact('calls'));
     }
 
-    /**
-     * Display not answered calls list
-     */
     public function notAnswerCallList()
     {
         $seller = Auth::user();
-
-        $calls = SellerCall::where('seller_id', $seller->id)
+        $calls  = SellerCall::where('seller_id', $seller->id)
             ->where('status', 'Not Answer')
             ->with(['product', 'seller'])
             ->latest()
@@ -79,14 +69,10 @@ class SellerCallController extends Controller
         return view('seller.calls.not_answer_call_list', compact('calls'));
     }
 
-    /**
-     * Display other status calls list
-     */
     public function otherCallList()
     {
         $seller = Auth::user();
-
-        $calls = SellerCall::where('seller_id', $seller->id)
+        $calls  = SellerCall::where('seller_id', $seller->id)
             ->where('status', 'Other')
             ->with(['product', 'seller'])
             ->latest()
@@ -95,50 +81,43 @@ class SellerCallController extends Controller
         return view('seller.calls.other_call_list', compact('calls'));
     }
 
-    /**
-     * Show call details view only (read-only)
-     */
+    // ── CRUD ──────────────────────────────────────────────────────────────
+
     public function show($id)
     {
         $seller = Auth::user();
-
-        $call = SellerCall::where('seller_id', $seller->id)
-            ->with(['product', 'seller'])
+        $call   = SellerCall::where('seller_id', $seller->id)
+            ->with(['product', 'seller', 'employeeDeliveryCall'])
             ->findOrFail($id);
 
         return view('seller.calls.show_call', compact('call'));
     }
 
-    /**
-     * Show call edit form
-     */
     public function edit($id)
     {
         $seller = Auth::user();
         $cities = City::orderBy('city')->get();
-
-        $call = SellerCall::where('seller_id', $seller->id)
-            ->with(['product', 'seller'])
+        $call   = SellerCall::where('seller_id', $seller->id)
+            ->with(['product', 'seller', 'employeeDeliveryCall'])
             ->findOrFail($id);
 
         return view('seller.calls.edit_call', compact('call', 'cities'));
     }
 
-    /**
-     * Update call status and details
-     */
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'customer_name'    => 'required|string|max:255',
-            'customer_phone_01'=> 'required|string|max:20',
-            'customer_phone_02'=> 'nullable|string|max:20',
-            'customer_address' => 'nullable|string',
-            'city'             => 'nullable|string|max:100',
-            'qty'              => 'required|integer|min:1',
-            'price'            => 'required|numeric|min:0',
-            'status'           => 'required|in:Pending,Conform,Reject,Not Answer,Other,WhatsApp',
-            'remark'           => 'nullable|string',
+            'customer_name'          => 'required|string|max:255',
+            'customer_phone_01'      => 'required|string|max:20',
+            'customer_phone_02'      => 'nullable|string|max:20',
+            'customer_address'       => 'nullable|string',
+            'city'                   => 'nullable|string|max:100',
+            'destination_city_id'    => 'nullable|integer',
+            'destination_state_name' => 'nullable|string|max:150',
+            'qty'                    => 'required|integer|min:1',
+            'price'                  => 'required|numeric|min:0',
+            'status'                 => 'required|in:Pending,Conform,Reject,Not Answer,Other,WhatsApp',
+            'remark'                 => 'nullable|string',
         ]);
 
         $seller = Auth::user();
@@ -146,31 +125,36 @@ class SellerCallController extends Controller
         try {
             DB::beginTransaction();
 
-            $call = SellerCall::where('seller_id', $seller->id)->findOrFail($id);
+            $call           = SellerCall::where('seller_id', $seller->id)->findOrFail($id);
             $previousStatus = $call->status;
-            $total = $validated['qty'] * $validated['price'];
+            $total          = (int) $validated['qty'] * (float) $validated['price'];
 
+            // ── FIX #4: destination_city_id/state_name are now in $fillable so
+            //    this update() call will actually persist them. Previously they
+            //    were validated but silently dropped. ──
             $call->update([
-                'customer_name'    => $validated['customer_name'],
-                'customer_phone_01'=> $validated['customer_phone_01'],
-                'customer_phone_02'=> $validated['customer_phone_02'] ?? null,
-                'customer_address' => $validated['customer_address'] ?? null,
-                'city'             => $validated['city'] ?? null,
-                'qty'              => $validated['qty'],
-                'price'            => $validated['price'],
-                'total'            => $total,
-                'status'           => $validated['status'],
-                'status_date'      => now(),
-                'remark'           => $validated['remark'] ?? null,
+                'customer_name'          => $validated['customer_name'],
+                'customer_phone_01'      => $validated['customer_phone_01'],
+                'customer_phone_02'      => $validated['customer_phone_02'] ?? null,
+                'customer_address'       => $validated['customer_address'] ?? null,
+                'city'                   => $validated['city'] ?? null,
+                'destination_city_id'    => $validated['destination_city_id'] ?? null,
+                'destination_state_name' => $validated['destination_state_name'] ?? null,
+                'qty'                    => $validated['qty'],
+                'price'                  => $validated['price'],
+                'total'                  => $total,
+                'status'                 => $validated['status'],
+                'status_date'            => now(),
+                'remark'                 => $validated['remark'] ?? null,
             ]);
 
             if ($validated['status'] === 'Conform' && $previousStatus !== 'Conform') {
                 $this->handleDepositDeduction($seller, $call);
+                // syncToEmployeeDelivery() is triggered by SellerCall::updated() model event.
             }
 
             DB::commit();
 
-            // Redirect back to the appropriate list based on new status
             $route = $this->getStatusRoute($validated['status']);
             return redirect()->route($route)->with('success', 'Call updated successfully!');
 
@@ -184,19 +168,15 @@ class SellerCallController extends Controller
         }
     }
 
-    /**
-     * Delete a call record
-     */
     public function destroy($id)
     {
         $seller = Auth::user();
 
         try {
-            $call = SellerCall::where('seller_id', $seller->id)->findOrFail($id);
+            $call   = SellerCall::where('seller_id', $seller->id)->findOrFail($id);
             $status = $call->status;
-            $call->delete();
+            $call->delete();  // model deleted() event removes employee_delivery_call
 
-            // Redirect back to the appropriate list
             $route = $this->getStatusRoute($status);
             return redirect()->route($route)->with('success', 'Call deleted successfully!');
 
@@ -209,9 +189,6 @@ class SellerCallController extends Controller
         }
     }
 
-    /**
-     * Print call details
-     */
     public function print($id)
     {
         $seller = Auth::user();
@@ -224,17 +201,13 @@ class SellerCallController extends Controller
             return view('seller.calls.print_call', compact('call'));
 
         } catch (Exception $e) {
-            Log::error('Error printing call: ' . $e->getMessage(), [
-                'call_id'   => $id,
-                'seller_id' => $seller->id,
-            ]);
+            Log::error('Error printing call: ' . $e->getMessage(), ['call_id' => $id, 'seller_id' => $seller->id]);
             return redirect()->back()->with('error', 'Error printing call: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Bulk update call status
-     */
+    // ── Bulk status update ────────────────────────────────────────────────
+
     public function bulkUpdateStatus(Request $request)
     {
         $validated = $request->validate([
@@ -248,12 +221,21 @@ class SellerCallController extends Controller
         try {
             DB::beginTransaction();
 
-            SellerCall::where('seller_id', $seller->id)
+            $calls = SellerCall::where('seller_id', $seller->id)
                 ->whereIn('id', $validated['call_ids'])
-                ->update([
-                    'status'      => $validated['status'],
-                    'status_date' => now(),
-                ]);
+                ->get();
+
+            foreach ($calls as $call) {
+                $previousStatus = $call->status;
+
+                $call->status      = $validated['status'];
+                $call->status_date = now();
+                $call->save(); // model events handle sync
+
+                if ($validated['status'] === 'Conform' && $previousStatus !== 'Conform') {
+                    $this->handleDepositDeduction($seller, $call);
+                }
+            }
 
             DB::commit();
 
@@ -269,9 +251,8 @@ class SellerCallController extends Controller
         }
     }
 
-    /**
-     * Export calls
-     */
+    // ── Export ────────────────────────────────────────────────────────────
+
     public function export(Request $request)
     {
         $seller = Auth::user();
@@ -289,12 +270,16 @@ class SellerCallController extends Controller
 
         SellerCall::whereIn('id', $calls->pluck('id'))->update(['download_status' => 1]);
 
+        if ($status === 'Conform') {
+            EmployeeDeliveryCall::whereIn('call_id', $calls->pluck('id'))
+                ->update(['download_status' => 1]);
+        }
+
         return redirect()->back()->with('success', 'Calls exported successfully!');
     }
 
-    /**
-     * Get call statistics
-     */
+    // ── Statistics ────────────────────────────────────────────────────────
+
     public function statistics()
     {
         $seller = Auth::user();
@@ -306,31 +291,69 @@ class SellerCallController extends Controller
             'not_answer' => SellerCall::where('seller_id', $seller->id)->where('status', 'Not Answer')->count(),
             'other'      => SellerCall::where('seller_id', $seller->id)->where('status', 'Other')->count(),
             'total'      => SellerCall::where('seller_id', $seller->id)->count(),
+            'synced'     => EmployeeDeliveryCall::where('seller_id', $seller->id)->count(),
         ];
 
         return response()->json($stats);
     }
 
-    /**
-     * CSV Upload page
-     */
+    // ── Employee delivery views ───────────────────────────────────────────
+
+    public function employeeDeliveryList()
+    {
+        $seller = Auth::user();
+
+        $deliveryCalls = EmployeeDeliveryCall::where('seller_id', $seller->id)
+            ->with(['product', 'originalCall'])
+            ->latest()
+            ->paginate(20);
+
+        return view('seller.calls.employee_delivery_list', compact('deliveryCalls'));
+    }
+
+    public function syncToEmployeeDelivery($id)
+    {
+        $seller = Auth::user();
+
+        try {
+            $call = SellerCall::where('seller_id', $seller->id)
+                ->where('status', 'Conform')
+                ->findOrFail($id);
+
+            $deliveryCall = $call->syncToEmployeeDelivery();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Call synced to employee delivery successfully!',
+                'data'    => $deliveryCall,
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Error syncing to employee delivery: ' . $e->getMessage(), [
+                'call_id'   => $id,
+                'seller_id' => $seller->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error syncing call: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    // ── CSV ───────────────────────────────────────────────────────────────
+
     public function csvUploadPage()
     {
         $seller = Auth::user();
         return view('seller.order.csv_upload', compact('seller'));
     }
 
-    /**
-     * Refresh CSRF token — called by JS every 10 min and on tab focus
-     */
     public function csrfRefresh()
     {
         return response()->json(['token' => csrf_token()]);
     }
 
-    /**
-     * Return seller's products as JSON for the CSV upload product selector
-     */
     public function getSellerProducts()
     {
         $seller = Auth::user();
@@ -342,10 +365,7 @@ class SellerCallController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get(['id', 'code', 'name', 'display_price', 'qty']);
 
-            return response()->json([
-                'success'  => true,
-                'products' => $products,
-            ]);
+            return response()->json(['success' => true, 'products' => $products]);
 
         } catch (Exception $e) {
             Log::error('getSellerProducts error: ' . $e->getMessage());
@@ -353,9 +373,6 @@ class SellerCallController extends Controller
         }
     }
 
-    /**
-     * Insert CSV leads into seller_calls
-     */
     public function csvInsert(Request $request)
     {
         $request->validate([
@@ -378,7 +395,7 @@ class SellerCallController extends Controller
 
             $product = $this->findProduct($seller->id, $request->product_code);
 
-            if (!$product) {
+            if (! $product) {
                 $available = SellerProduct::where('seller_id', $seller->id)
                     ->where('status', 'active')
                     ->pluck('code')
@@ -391,52 +408,74 @@ class SellerCallController extends Controller
                 ], 422);
             }
 
-            $successCount = 0;
-            $errorCount = 0;
-            $errors = [];
+            $cityMap      = $this->buildCityMap();
+            // ── FIX #10: warn the user if city resolution is unavailable ──
+            $cityApiDown  = empty($cityMap);
+            // ──────────────────────────────────────────────────────────────
+
+            $successCount  = 0;
+            $errorCount    = 0;
+            $errors        = [];
             $defaultStatus = $request->call_status ?? 'Pending';
-            $createdCalls = [];
+            $createdCalls  = [];
 
             foreach ($request->leads as $index => $lead) {
                 try {
                     $remarkParts = [];
-                    if (!empty($lead['ad_name'])) $remarkParts[] = 'Ad: ' . $lead['ad_name'];
-                    if (!empty($lead['campaign_name'])) $remarkParts[] = 'Campaign: ' . $lead['campaign_name'];
-                    if (!empty($lead['created_time'])) $remarkParts[] = 'Lead Date: ' . $lead['created_time'];
-                    if (!empty($lead['lead_status'])) $remarkParts[] = 'FB Status: ' . $lead['lead_status'];
+                    if (! empty($lead['ad_name']))       $remarkParts[] = 'Ad: ' . $lead['ad_name'];
+                    if (! empty($lead['campaign_name'])) $remarkParts[] = 'Campaign: ' . $lead['campaign_name'];
+                    if (! empty($lead['created_time']))  $remarkParts[] = 'Lead Date: ' . $lead['created_time'];
+                    if (! empty($lead['lead_status']))   $remarkParts[] = 'FB Status: ' . $lead['lead_status'];
 
-                    $remark = !empty($remarkParts) ? implode(' | ', $remarkParts) : null;
+                    $remark     = ! empty($remarkParts) ? implode(' | ', $remarkParts) : null;
                     $callStatus = $lead['call_status'] ?? $defaultStatus;
 
-                    $callData = [
-                        'seller_id'         => $seller->id,
-                        'product_id'        => $product->id,
-                        'date'              => now()->toDateString(),
-                        'customer_name'     => $lead['customer_name'],
-                        'customer_phone_01' => $lead['customer_phone'],
-                        'customer_phone_02' => $lead['customer_phone_02'] ?? null,
-                        'customer_address'  => $lead['customer_address'] ?? null,
-                        'city'              => $lead['city'] ?? null,
-                        'item_code'         => $product->code,
-                        'item_name'         => $product->name,
-                        'qty'               => 1,
-                        'price'             => $product->display_price,
-                        'total'             => $product->display_price,
-                        'status'            => $callStatus,
-                        'status_date'       => now(),
-                        'platform'          => $lead['platform'] ?? 'fb',
-                        'ad_name'           => $lead['ad_name'] ?? null,
-                        'campaign_name'     => $lead['campaign_name'] ?? null,
-                        'lead_status'       => $lead['lead_status'] ?? null,
-                        'remark'            => $remark,
-                        'download_status'   => false,
-                    ];
+                    $cityId    = null;
+                    $stateName = null;
+                    $cityName  = $lead['city'] ?? null;
 
-                    $call = SellerCall::create($callData);
+                    if ($cityName && ! $cityApiDown) {
+                        $key   = strtolower(trim($cityName));
+                        $match = $cityMap[$key] ?? null;
+                        if ($match) {
+                            $cityId    = $match['id'];
+                            $stateName = $match['state_name'];
+                            $cityName  = $match['name']; // canonical name
+                        }
+                    }
+
+                    $call = SellerCall::create([
+                        'seller_id'              => $seller->id,
+                        'product_id'             => $product->id,
+                        'date'                   => now()->toDateString(),
+                        'customer_name'          => $lead['customer_name'],
+                        'customer_phone_01'      => $lead['customer_phone'],
+                        'customer_phone_02'      => $lead['customer_phone_02'] ?? null,
+                        'customer_address'       => $lead['customer_address'] ?? null,
+                        'city'                   => $cityName,
+                        'destination_city_id'    => $cityId,
+                        'destination_state_name' => $stateName,
+                        'item_code'              => $product->code,
+                        'item_name'              => $product->name,
+                        'qty'                    => 1,
+                        'price'                  => $product->display_price,
+                        'total'                  => $product->display_price,
+                        'status'                 => $callStatus,
+                        'status_date'            => now(),
+                        'platform'               => $lead['platform'] ?? 'fb',
+                        'ad_name'                => $lead['ad_name'] ?? null,
+                        'campaign_name'          => $lead['campaign_name'] ?? null,
+                        'lead_status'            => $lead['lead_status'] ?? null,
+                        'remark'                 => $remark,
+                        'download_status'        => false,
+                    ]); // model created() handles sync if Conform
+
                     $createdCalls[] = [
                         'id'            => $call->id,
                         'status'        => $callStatus,
                         'customer_name' => $call->customer_name,
+                        'city_resolved' => (bool) $cityId,
+                        'synced'        => $callStatus === 'Conform',
                     ];
                     $successCount++;
 
@@ -449,16 +488,19 @@ class SellerCallController extends Controller
             DB::commit();
 
             $redirectStatus = $defaultStatus;
-            $statusCounts = array_count_values(array_column($createdCalls, 'status'));
-            if (!empty($statusCounts)) {
+            $statusCounts   = array_count_values(array_column($createdCalls, 'status'));
+            if (! empty($statusCounts)) {
                 arsort($statusCounts);
                 $redirectStatus = key($statusCounts);
             }
 
+            $cityResolved = count(array_filter($createdCalls, fn ($c) => $c['city_resolved']));
             $message = "Successfully created {$successCount} calls.";
-            if ($errorCount > 0) {
-                $message .= " {$errorCount} failed.";
-            }
+            // ── FIX #10 cont.: surface city API warning ──
+            if ($cityApiDown)           $message .= ' ⚠ City delivery API unavailable — city IDs not resolved.';
+            elseif ($cityResolved > 0)  $message .= " {$cityResolved} cities resolved via delivery API.";
+            // ─────────────────────────────────────────────
+            if ($errorCount > 0) $message .= " {$errorCount} failed.";
 
             return response()->json([
                 'success'        => true,
@@ -470,6 +512,7 @@ class SellerCallController extends Controller
                 'redirect_url'   => route($this->getStatusRoute($redirectStatus)),
                 'created_calls'  => $createdCalls,
                 'status_summary' => $statusCounts,
+                'city_api_down'  => $cityApiDown,
                 'csrf_token'     => csrf_token(),
             ]);
 
@@ -488,55 +531,191 @@ class SellerCallController extends Controller
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // PRIVATE HELPERS
-    // ─────────────────────────────────────────────────────────────────────────
+    // ── Confirm endpoints ─────────────────────────────────────────────────
 
-    /**
-     * Get route name based on status
-     */
-    private function getStatusRoute($status)
+    public function confirmCall(Request $request, int $id)
     {
-        $routeMap = [
+        $seller = Auth::user();
+
+        $call = SellerCall::where('seller_id', $seller->id)
+            ->where('status', 'Pending')
+            ->findOrFail($id);
+
+        try {
+            DB::beginTransaction();
+
+            [$cityId, $stateName, $cityName] = $this->resolveCityForCall($call);
+
+            $call->update([
+                'status'                 => 'Conform',
+                'status_date'            => now(),
+                'destination_city_id'    => $cityId    ?? $call->destination_city_id,
+                'destination_state_name' => $stateName ?? $call->destination_state_name,
+                'city'                   => $cityName  ?? $call->city,
+            ]);
+
+            $this->handleDepositDeduction($seller, $call);
+
+            // ── FIX #5: fresh() re-queries the relation from DB after the update above.
+            //    Without it, $call->employeeDeliveryCall may still be the un-loaded null
+            //    proxy from before update(), causing createEmployeeDeliveryCall() to run
+            //    even when syncToEmployeeDelivery() already created the record via model event. ──
+            $call->refresh();
+            $deliveryCall = $call->employeeDeliveryCall
+                ?? $this->createEmployeeDeliveryCall($call, $cityId, $stateName, $cityName);
+            // ─────────────────────────────────────────────────────────────────────────────────
+
+            if ($cityId && ! $deliveryCall->destination_city_id) {
+                $deliveryCall->update([
+                    'destination_city_id'    => $cityId,
+                    'destination_state_name' => $stateName,
+                    'city'                   => $cityName ?? $deliveryCall->city,
+                ]);
+            }
+
+            DB::commit();
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success'          => true,
+                    'message'          => 'Call confirmed and sent to delivery queue.',
+                    'delivery_call_id' => $deliveryCall->id,
+                    'city_resolved'    => (bool) $cityId,
+                ]);
+            }
+
+            return redirect()->route('call.conform')->with('success', 'Call confirmed!');
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('confirmCall failed', ['call_id' => $id, 'error' => $e->getMessage()]);
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            }
+            return redirect()->back()->with('error', 'Failed: ' . $e->getMessage());
+        }
+    }
+
+    public function bulkConfirmCalls(Request $request)
+    {
+        $request->validate([
+            'call_ids'   => 'required|array|min:1',
+            'call_ids.*' => 'integer',
+        ]);
+
+        $seller  = Auth::user();
+        $ok      = 0;
+        $fail    = 0;
+        $errors  = [];
+
+        $cityMap = $this->buildCityMap();
+
+        foreach ($request->call_ids as $id) {
+            // ── FIX #6: each call gets its own independent transaction.
+            //    Previously the transaction was opened inside the loop but
+            //    $cityMap was built outside — a failure in one call would
+            //    roll back everything processed so far in that iteration,
+            //    but the outer loop would continue, leaving inconsistent state.
+            //    Now each call is fully atomic and independent. ──
+            try {
+                $call = SellerCall::where('seller_id', $seller->id)
+                    ->where('status', 'Pending')
+                    ->findOrFail($id);
+
+                DB::beginTransaction();
+
+                [$cityId, $stateName, $cityName] = $this->resolveCityWithMap($call, $cityMap);
+
+                $call->update([
+                    'status'                 => 'Conform',
+                    'status_date'            => now(),
+                    'destination_city_id'    => $cityId    ?? $call->destination_city_id,
+                    'destination_state_name' => $stateName ?? $call->destination_state_name,
+                    'city'                   => $cityName  ?? $call->city,
+                ]);
+
+                $this->handleDepositDeduction($seller, $call);
+
+                // ── FIX #5 (same as confirmCall): refresh before checking relation ──
+                $call->refresh();
+                $deliveryCall = $call->employeeDeliveryCall
+                    ?? $this->createEmployeeDeliveryCall($call, $cityId, $stateName, $cityName);
+
+                if ($cityId && ! $deliveryCall->destination_city_id) {
+                    $deliveryCall->update([
+                        'destination_city_id'    => $cityId,
+                        'destination_state_name' => $stateName,
+                        'city'                   => $cityName ?? $deliveryCall->city,
+                    ]);
+                }
+
+                DB::commit();
+                $ok++;
+
+            } catch (Exception $e) {
+                DB::rollBack();
+                $fail++;
+                $errors[] = "Call #{$id}: " . $e->getMessage();
+                Log::error('bulkConfirmCalls failed for ' . $id, ['error' => $e->getMessage()]);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Confirmed {$ok} calls." . ($fail ? " {$fail} failed." : ''),
+            'ok'      => $ok,
+            'fail'    => $fail,
+            'errors'  => $errors,
+        ]);
+    }
+
+    public function curfoxCitiesJson()
+    {
+        try {
+            $cities = $this->curfox->getAllCities();
+            return response()->json(['success' => true, 'data' => $cities]);
+        } catch (Exception $e) {
+            Log::error('curfoxCitiesJson: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // ── Private helpers ───────────────────────────────────────────────────
+
+    private function getStatusRoute($status): string
+    {
+        return [
             'Pending'    => 'call.index',
             'Conform'    => 'call.conform',
             'Reject'     => 'call.reject',
             'Not Answer' => 'call.not_answer_call_list',
             'Other'      => 'call.other_call_list',
             'WhatsApp'   => 'call.index',
-        ];
-
-        return $routeMap[$status] ?? 'call.index';
+        ][$status] ?? 'call.index';
     }
 
-    /**
-     * Multi-strategy product finder
-     */
     private function findProduct(int $sellerId, string $rawCode): ?SellerProduct
     {
         $code = trim($rawCode);
 
-        // 1. Exact match
         $p = SellerProduct::where('seller_id', $sellerId)->where('code', $code)->first();
         if ($p) return $p;
 
-        // 2. Case-insensitive
         $p = SellerProduct::where('seller_id', $sellerId)
             ->whereRaw('LOWER(TRIM(code)) = ?', [strtolower($code)])
             ->first();
         if ($p) return $p;
 
-        // 3. Code has no slash — treat as numeric suffix
-        if (!str_contains($code, '/')) {
+        if (! str_contains($code, '/')) {
             $p = SellerProduct::where('seller_id', $sellerId)
                 ->where('code', 'LIKE', '%/' . $code)
                 ->first();
             if ($p) return $p;
         }
 
-        // 4. Code has slashes — extract last segment as numeric part
         if (str_contains($code, '/')) {
-            $parts = explode('/', $code);
+            $parts   = explode('/', $code);
             $numPart = end($parts);
             $p = SellerProduct::where('seller_id', $sellerId)
                 ->where('code', 'LIKE', '%' . $numPart)
@@ -544,7 +723,6 @@ class SellerCallController extends Controller
             if ($p) return $p;
         }
 
-        // 5. Cross-seller fallback
         $p = SellerProduct::where('code', $code)->first();
         if ($p) {
             Log::warning('findProduct: seller_id mismatch — used cross-seller fallback', [
@@ -558,22 +736,22 @@ class SellerCallController extends Controller
         return null;
     }
 
-    /**
-     * Deduct cost from seller's deposit when a call is confirmed.
-     */
     private function handleDepositDeduction($seller, $call): void
     {
-        $cost = $seller->cost ?? 0;
+        $cost = (float) ($seller->cost ?? 0);
         if ($cost <= 0) return;
 
-        $available = $seller->cal_deposit ?? $seller->deposit ?? 0;
+        $calDeposit = $seller->getAttribute('cal_deposit');
+        $deposit    = $seller->getAttribute('deposit');
+        $available  = $calDeposit !== null ? (float) $calDeposit : (float) ($deposit ?? 0);
+
         if ($available < $cost) {
             throw new Exception('Insufficient deposit balance.');
         }
 
-        if (isset($seller->cal_deposit)) {
+        if ($calDeposit !== null) {
             $seller->decrement('cal_deposit', $cost);
-        } elseif (isset($seller->deposit)) {
+        } else {
             $seller->decrement('deposit', $cost);
         }
 
@@ -581,6 +759,105 @@ class SellerCallController extends Controller
             'call_id'   => $call->id,
             'seller_id' => $seller->id,
             'amount'    => $cost,
+        ]);
+    }
+
+    /**
+     * Build lowercase-keyed city map from Curfox API (cached 24h).
+     * Returns empty array silently if API is unreachable.
+     *
+     * @return array<string, array{id:int, name:string, state_name:string}>
+     */
+    private function buildCityMap(): array
+    {
+        $map = [];
+        try {
+            foreach ($this->curfox->getAllCities() as $city) {
+                $map[strtolower(trim($city['name']))] = $city;
+            }
+        } catch (Exception $e) {
+            Log::warning('Curfox buildCityMap failed: ' . $e->getMessage());
+        }
+        return $map;
+    }
+
+    /**
+     * Resolve city for a single call (fresh API lookup, no pre-built map).
+     *
+     * @return array{0:int|null, 1:string|null, 2:string|null}  [cityId, stateName, cityName]
+     */
+    private function resolveCityForCall(SellerCall $call): array
+    {
+        if ($call->destination_city_id) {
+            return [$call->destination_city_id, $call->destination_state_name, $call->city];
+        }
+
+        $term = $call->city ?? $call->district ?? null;
+        if (! $term) return [null, null, null];
+
+        try {
+            $info = $this->curfox->findCityByName($term);
+            if ($info) {
+                return [(int) $info['city_id'], $info['state_name'], $info['city_name']];
+            }
+        } catch (Exception $e) {
+            Log::warning('resolveCityForCall API error: ' . $e->getMessage());
+        }
+
+        return [null, null, $term];
+    }
+
+    /**
+     * Resolve city using a pre-built map (for batch operations).
+     *
+     * @return array{0:int|null, 1:string|null, 2:string|null}
+     */
+    private function resolveCityWithMap(SellerCall $call, array $cityMap): array
+    {
+        if ($call->destination_city_id) {
+            return [$call->destination_city_id, $call->destination_state_name, $call->city];
+        }
+
+        $term = strtolower(trim($call->city ?? $call->district ?? ''));
+        if ($term && isset($cityMap[$term])) {
+            $m = $cityMap[$term];
+            return [(int) $m['id'], $m['state_name'], $m['name']];
+        }
+
+        return [null, null, $call->city ?? null];
+    }
+
+    /**
+     * Create an EmployeeDeliveryCall record for a confirmed call.
+     */
+    private function createEmployeeDeliveryCall(
+        SellerCall $call,
+        ?int       $cityId,
+        ?string    $stateName,
+        ?string    $cityName
+    ): EmployeeDeliveryCall {
+        return EmployeeDeliveryCall::create([
+            'seller_id'              => $call->seller_id,
+            'product_id'             => $call->product_id,
+            'call_id'                => $call->id,
+            'order_code'             => $call->order_code ?? null,
+            'date'                   => $call->date ?? now()->toDateString(),
+            'customer_name'          => $call->customer_name,
+            'customer_phone_01'      => $call->customer_phone_01,
+            'customer_phone_02'      => $call->customer_phone_02,
+            'customer_address'       => $call->customer_address,
+            'city'                   => $cityName ?? $call->city,
+            'district'               => $call->district ?? null,
+            'destination_city_id'    => $cityId,
+            'destination_state_name' => $stateName,
+            'item_code'              => $call->item_code,
+            'item_name'              => $call->item_name,
+            'qty'                    => $call->qty ?? 1,
+            'price'                  => $call->price ?? 0,
+            'total'                  => ($call->price ?? 0) * ($call->qty ?? 1),
+            'status'                 => 'Pending',
+            'remark'                 => $call->remark,
+            'platform'               => $call->platform ?? null,
         ]);
     }
 }
