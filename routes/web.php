@@ -43,18 +43,16 @@ Route::get('/', [PageController::class, 'login'])->name('login');
 Route::post('/',[LoginController::class,'loginCheck'])->name('login.check');
 
 // ========== ADMIN ROUTES ==========
-Route::middleware('auth:admin')->group(function(){
+Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])->group(function(){
     Route::prefix('admin')->group(function () {
         Route::post('/logout', [LoginController::class, 'logout'])->name('admin.logout');
         Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('admin.dashboard');
         Route::get('/dashboard/chart-data', [App\Http\Controllers\Admin\DashboardController::class, 'getChartData'])->name('admin.dashboard.chart-data');
         Route::get('/', [PageController::class, 'dashboard'])->name('admin.dashboard');
         Route::get('/admins' , [AdminController::class,'index'] )->name('admin.admins.index');
+        Route::get('/admins/{id}/view', [AdminController::class, 'show'])->name('admin.admins.view');
         Route::get('/create',[AdminController::class,'create'])->name('admin.create');
         Route::post('/store',[AdminController::class,'store'])->name('admin.store');
-        Route::get('/admins/{id}/edit', [AdminController::class, 'edit'])->name('admin.admins.edit');
-        Route::post('/admins/{id}/update', [AdminController::class, 'update'])->name('admin.admins.update');
-        Route::delete('/admins/{id}', [AdminController::class, 'destroy'])->name('admin.admins.destroy');
 
         Route::prefix('product')->group(function () {
             Route::get('/', [ProductController::class, 'index'])->name('product.index');
