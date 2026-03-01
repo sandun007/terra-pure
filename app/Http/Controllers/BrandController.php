@@ -32,7 +32,7 @@ class BrandController extends Controller
 
     public function store(Request $request)
 {
-    // ✅ Validation
+    
     $request->validate([
         'name' => 'required|string|max:255',
         'image'  => 'required|image|mimes:jpg,jpeg,png|max:2048',

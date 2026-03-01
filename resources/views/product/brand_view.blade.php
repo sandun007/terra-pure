@@ -77,11 +77,11 @@
         <a href="{{ route('brand.edit', $brand->id) }}" class="btn btn-warning me-2">
             <i class="fas fa-edit me-2"></i>Edit Brand
         </a>
-        <a href="{{ route('brand.delete', $brand->id) }}"
-           class="btn btn-danger"
-           onclick="return confirm('Are you sure you want to delete this brand?')">
-            <i class="fas fa-trash me-2"></i>Delete
-        </a>
+        <a href="{{ route('brand.delete', $brand->id) }}" 
+   class="btn btn-danger delete-brand" 
+   data-id="{{ $brand->id }}">
+   <i class="fas fa-trash me-2"></i>Delete
+</a>
     </div>
 </div>
 
@@ -146,3 +146,32 @@
 </div>
 
 @endsection
+@push('script')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const deleteButtons = document.querySelectorAll('.delete-brand');
+
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault(); // prevent the default link action
+            const url = this.href;
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // If confirmed, go to the delete URL
+                    window.location.href = url;
+                }
+            });
+        });
+    });
+});
+</script>
+@endpush
