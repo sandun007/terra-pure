@@ -1,823 +1,708 @@
 @extends('wholesaler.layouts.app')
+
 @push('title')
-    {{ $shop->shop_name ?? 'My Shop' }} | Wholesale Marketplace
+    My Shop
 @endpush
 
 @push('css')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
     <style>
-        /* Hero Section with Advanced Animation and Background Image */
-        .shop-hero {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.95) 0%, rgba(139, 92, 246, 0.95) 50%, rgba(168, 85, 247, 0.95) 100%);
-            padding: 3rem 0;
-            margin-bottom: 2rem;
-            position: relative;
-            overflow: hidden;
-            /* Add background image with asset route */
-            background-image:
-                url('{{ asset("asset/img/seller_3.jpg") }}');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-light: #eef2ff;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #0f172a;
+            --mid: #64748b;
+            --border: #e2e8f0;
+            --surface: #ffffff;
+            --bg: #f8fafc;
+            --mono: 'DM Mono', monospace;
+            --sans: 'DM Sans', sans-serif;
+            --r-xl: 16px;
+            --r-lg: 12px;
+            --r-md: 8px;
+            --shadow-xs: 0 1px 2px rgba(0,0,0,.05);
+            --shadow-sm: 0 2px 8px rgba(0,0,0,.07);
+            --shadow-md: 0 6px 20px rgba(0,0,0,.09);
+            --shadow-lg: 0 12px 40px rgba(0,0,0,.12);
         }
 
-        /* Alternative: If you want to use shop-specific image */
-        .shop-hero.with-shop-image {
-            background-image:
-                linear-gradient(135deg, rgba(99, 102, 241, 0.95) 0%, rgba(139, 92, 246, 0.95) 50%, rgba(168, 85, 247, 0.95) 100%),
-                url('{{ $shop->banner_image ? asset("storage/" . $shop->banner_image) : asset("images/default-hero.jpg") }}');
-        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; }
+        body { font-family: var(--sans); background: var(--bg); }
 
-        .shop-hero::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: heroPattern 20s linear infinite;
-            z-index: 1;
-        }
+        /* ── Layout ── */
+        .shop-wrapper { padding: 28px; max-width: 1600px; margin: 0 auto; }
 
-        .shop-hero::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.05) 50%, transparent 70%);
-            animation: heroShine 3s ease-in-out infinite;
-            z-index: 1;
+        /* ── Page Header ── */
+        .page-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
         }
-
-        /* Ensure content appears above pseudo-elements */
-        .shop-hero .container {
-            position: relative;
-            z-index: 2;
-        }
-
-        @keyframes heroPattern {
-            0% {
-                transform: translate(0, 0);
-            }
-            100% {
-                transform: translate(50px, 50px);
-            }
-        }
-
-        @keyframes heroShine {
-            0%, 100% {
-                opacity: 0;
-            }
-            50% {
-                opacity: 1;
-            }
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes scaleIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0px);
-            }
-            50% {
-                transform: translateY(-10px);
-            }
-        }
-
-        .shop-info-card {
-            background: rgba(255, 255, 255, 0.98);
-            border-radius: 20px;
-            padding: 2.5rem;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-            position: relative;
-            z-index: 1;
-            animation: fadeInUp 0.6s ease-out;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .shop-info-card::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(45deg, #6366f1, #8b5cf6, #a855f7, #6366f1);
-            border-radius: 20px;
-            z-index: -1;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            background-size: 300% 300%;
-            animation: gradientShift 3s ease infinite;
-        }
-
-        .shop-info-card:hover::before {
-            opacity: 0.6;
-        }
-
-        @keyframes gradientShift {
-            0% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
-            100% {
-                background-position: 0% 50%;
-            }
-        }
-
-        .shop-title {
-            font-size: 2.5rem;
+        .page-title {
+            font-size: 24px;
             font-weight: 800;
-            background: linear-gradient(135deg, #1e293b 0%, #6366f1 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 1rem;
-            animation: fadeInUp 0.8s ease-out 0.2s backwards;
-        }
-
-        .shop-description {
-            animation: fadeInUp 0.8s ease-out 0.4s backwards;
-        }
-
-        .shop-badges {
-            animation: fadeInUp 0.8s ease-out 0.6s backwards;
-        }
-
-        .badge {
-            animation: scaleIn 0.5s ease-out backwards;
-            transition: transform 0.3s ease;
-        }
-
-        .badge:hover {
-            transform: scale(1.05) translateY(-2px);
-        }
-
-        .product-card {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            border: 1px solid #e2e8f0;
-            animation: fadeInUp 0.5s ease-out backwards;
-        }
-
-        .product-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 12px 35px rgba(99, 102, 241, 0.2);
-        }
-
-        .card-img-container {
-            width: 100%;
-            height: 200px;
-            overflow: hidden;
-            background: #f8fafc;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-            position: relative;
-        }
-
-        .card-img-container::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .product-card:hover .card-img-container::after {
-            left: 100%;
-        }
-
-        .card-img {
-            max-height: 100%;
-            max-width: 100%;
-            object-fit: contain;
-            transition: transform 0.3s ease;
-        }
-
-        .product-card:hover .card-img {
-            transform: scale(1.05);
-        }
-
-        .card-content {
-            padding: 1.25rem;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .card-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 0.5rem;
-            line-height: 1.4;
-            height: 45px;
-            overflow: hidden;
-        }
-
-        .product-pricing {
-            margin: 1rem 0;
-        }
-
-        .price-display {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .stock-info {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 1rem;
-            font-size: 0.875rem;
-            color: #64748b;
-        }
-
-        .stock-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #10b981;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        .stock-dot.low {
-            background: #f59e0b;
-        }
-
-        .stock-dot.out {
-            background: #ef4444;
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-                transform: scale(1);
-            }
-            50% {
-                opacity: 0.7;
-                transform: scale(1.1);
-            }
-        }
-
-        .quantity-controls {
+            color: var(--dark);
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 1rem;
+            margin: 0 0 4px;
+            line-height: 1.2;
         }
+        .page-subtitle { font-size: 14px; color: var(--mid); }
+        .header-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 
-        .quantity-btn {
-            width: 36px;
-            height: 36px;
-            border: 1px solid #e2e8f0;
-            background: white;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .quantity-btn:hover:not(:disabled) {
-            background: #6366f1;
-            border-color: #6366f1;
-            color: white;
-            transform: scale(1.1);
-        }
-
-        .quantity-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .quantity-input {
-            width: 60px;
-            height: 36px;
-            text-align: center;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            font-weight: 600;
-            transition: border-color 0.2s ease;
-        }
-
-        .quantity-input:focus {
-            outline: none;
-            border-color: #6366f1;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-        }
-
-        .order-now-btn {
+        /* ── Search ── */
+        .search-wrap { position: relative; width: 300px; }
+        .search-input {
             width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            position: relative;
-            overflow: hidden;
+            padding: 11px 48px 11px 14px;
+            border: 2px solid var(--border);
+            border-radius: var(--r-lg);
+            font-family: var(--sans);
+            font-size: 14px;
+            background: var(--surface);
+            transition: border-color .2s, box-shadow .2s;
+            -webkit-appearance: none;
+            appearance: none;
         }
-
-        .order-now-btn::before {
-            content: '';
+        .search-input::-webkit-search-cancel-button,
+        .search-input::-webkit-search-decoration,
+        .search-input::-ms-clear { display: none; }
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79,70,229,.1);
+        }
+        .search-btn {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s ease, height 0.6s ease;
+            right: 5px; top: 50%;
+            transform: translateY(-50%);
+            background: var(--primary);
+            border: none;
+            color: #fff;
+            width: 34px; height: 34px;
+            border-radius: var(--r-md);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: background .2s;
         }
+        .search-btn:hover { background: var(--primary-hover); }
 
-        .order-now-btn:hover::before {
-            width: 300px;
-            height: 300px;
+        /* ── Next Code Banner ── */
+        .code-banner {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            background: #fff;
+            border: 2px solid var(--border);
+            border-left: 4px solid var(--primary);
+            border-radius: var(--r-lg);
+            padding: 16px 20px;
+            margin-bottom: 22px;
+            flex-wrap: wrap;
+            box-shadow: var(--shadow-sm);
         }
-
-        .order-now-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+        .code-banner-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--mid); margin-bottom: 3px; }
+        .code-banner-value { font-family: var(--mono); font-size: 20px; font-weight: 600; color: var(--primary); user-select: all; }
+        .code-banner-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+        .chip-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 14px; border-radius: var(--r-md);
+            font-size: 13px; font-weight: 600;
+            border: 2px solid var(--border);
+            cursor: pointer; transition: all .2s;
+            background: var(--bg); color: var(--dark);
+            font-family: var(--sans); text-decoration: none;
         }
+        .chip-btn:hover { border-color: var(--primary); background: var(--primary-light); color: var(--primary); transform: translateY(-1px); }
+        .chip-btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .chip-btn.primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); color: #fff; }
 
-        .order-now-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
+        /* ── Stats ── */
+        .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 22px; }
+        .stat-card {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: 18px;
+            display: flex; align-items: center; gap: 14px;
+            cursor: pointer; transition: all .2s;
         }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--primary); }
+        .stat-icon { width: 46px; height: 46px; border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .si-purple { background:#ede9fe; color:var(--primary); }
+        .si-green  { background:#d1fae5; color:var(--success); }
+        .si-amber  { background:#fef3c7; color:var(--warning); }
+        .si-red    { background:#fee2e2; color:var(--danger); }
+        .stat-num { font-size: 26px; font-weight: 800; color: var(--dark); line-height: 1; }
+        .stat-lbl { font-size: 12px; color: var(--mid); margin-top: 2px; }
 
+        /* ── Toolbar ── */
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 22px;
+        }
+        .filt-btn {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 8px 14px;
+            border: 2px solid var(--border);
+            border-radius: 999px;
+            background: var(--surface);
+            font-size: 13px; font-weight: 600; color: var(--dark);
+            cursor: pointer; transition: all .2s;
+            font-family: var(--sans);
+        }
+        .filt-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .filt-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .sort-select {
+            margin-left: auto;
+            padding: 8px 14px;
+            border: 2px solid var(--border);
+            border-radius: var(--r-md);
+            font-family: var(--sans);
+            font-size: 13px; font-weight: 600; color: var(--dark);
+            background: var(--surface); cursor: pointer; transition: border-color .2s;
+        }
+        .sort-select:focus { border-color: var(--primary); outline: none; }
+
+        /* ── Product Grid ── */
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(270px,1fr)); gap: 22px; }
+
+        /* ── Product Card ── */
+        .p-card {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--r-xl);
+            overflow: hidden;
+            display: flex; flex-direction: column;
+            transition: transform .28s ease, box-shadow .28s ease, border-color .28s ease;
+            box-shadow: var(--shadow-xs);
+            animation: fadeUp .4s ease-out both;
+        }
+        .p-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); border-color: var(--primary); }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+        .p-img-wrap {
+            height: 175px;
+            background: linear-gradient(135deg,#f1f5f9,#e8edf5);
+            display: flex; align-items: center; justify-content: center;
+            position: relative; overflow: hidden;
+        }
+        .p-img { max-width:100%; max-height:100%; object-fit:contain; transition:transform .3s; }
+        .p-card:hover .p-img { transform:scale(1.05); }
+        .p-no-img { font-size:48px; color:#cbd5e1; }
+
+        .p-badges { position:absolute; top:10px; left:10px; right:10px; display:flex; justify-content:space-between; pointer-events:none; }
+        .p-badge { padding:3px 9px; border-radius:999px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; }
+        .pb-discount { background:var(--danger); color:#fff; }
+        .pb-in  { background:#d1fae5; color:#065f46; }
+        .pb-low { background:#fef3c7; color:#92400e; }
+        .pb-out { background:#fee2e2; color:#991b1b; }
+
+        .p-body { padding:16px; flex:1; display:flex; flex-direction:column; }
+        .p-name {
+            font-size:15px; font-weight:700; color:var(--dark); line-height:1.4;
+            display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+            overflow:hidden; min-height:42px; margin-bottom:10px;
+        }
+        .p-code-chip {
+            display:inline-flex; align-items:center; gap:6px;
+            padding:6px 13px;
+            background:var(--primary-light);
+            border:1.5px solid #c7d2fe;
+            border-radius:999px;
+            font-family:var(--mono); font-size:12px; font-weight:600; color:var(--primary);
+            cursor:pointer; transition:all .2s; user-select:none;
+            margin-bottom:10px; width:fit-content;
+        }
+        .p-code-chip:hover { background:#e0e7ff; border-color:var(--primary); transform:translateY(-1px); }
+        .p-meta-row { display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+        .p-category {
+            display:inline-flex; align-items:center; gap:4px;
+            padding:3px 9px; border-radius:6px;
+            font-size:11px; font-weight:600;
+            background:#f8fafc; color:var(--mid); border:1px solid var(--border);
+        }
+        .p-qty {
+            display:inline-flex; align-items:center; gap:3px;
+            padding:3px 9px; border-radius:999px;
+            font-size:11px; font-weight:600;
+            background:#f1f5f9; color:var(--mid);
+            margin-left:auto;
+        }
+        .p-price { font-size:20px; font-weight:800; color:var(--danger); margin-bottom:14px; }
+        .p-price-orig { font-size:13px; font-weight:400; color:#9ca3af; text-decoration:line-through; margin-left:6px; }
+
+        /* ── Card Actions ── */
+        .p-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:auto; }
+        .act-btn {
+            display:flex; align-items:center; justify-content:center; gap:5px;
+            padding:10px 6px;
+            border-radius:var(--r-md);
+            font-size:12px; font-weight:700;
+            border:none; cursor:pointer;
+            transition:all .2s;
+            font-family:var(--sans);
+            text-decoration:none !important;
+            position:relative; z-index:1;
+        }
+        .act-copy { background:var(--dark); color:#fff !important; }
+        .act-copy:hover { background:#1e293b; transform:translateY(-1px); color:#fff !important; }
+        .act-view { background:var(--primary); color:#fff !important; }
+        .act-view:hover { background:var(--primary-hover); transform:translateY(-1px); color:#fff !important; }
+        .act-order { background:var(--success); color:#fff !important; }
+        .act-order:hover { background:#059669; transform:translateY(-1px); color:#fff !important; }
+
+        /* ── Empty State ── */
         .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            background: white;
-            border-radius: 12px;
-            border: 2px dashed #e2e8f0;
-            animation: fadeInUp 0.5s ease-out;
+            text-align:center; padding:64px 24px;
+            background:var(--surface);
+            border:2px dashed var(--border);
+            border-radius:var(--r-xl); margin-top:20px;
         }
 
-        .empty-state-icon {
-            font-size: 4rem;
-            color: #cbd5e1;
-            margin-bottom: 1rem;
-            animation: float 3s ease-in-out infinite;
+        /* ── Pagination ── */
+        .custom-pagination .page-link { border:none; color:var(--dark); padding:8px 14px; margin:0 2px; border-radius:var(--r-md); font-weight:600; transition:all .2s; }
+        .custom-pagination .page-link:hover { background:var(--primary); color:#fff; }
+        .custom-pagination .page-item.active .page-link { background:var(--primary); color:#fff; border:none; }
+
+        /* ── Toast ── */
+        .toast-float {
+            position:fixed; top:20px; right:20px; z-index:9999;
+            min-width:280px;
+            background:var(--surface);
+            border-radius:var(--r-lg);
+            box-shadow:var(--shadow-lg);
+            border-left:4px solid var(--success);
+            padding:13px 16px;
+            display:flex; align-items:center; gap:10px;
+            transform:translateX(360px); opacity:0;
+            transition:all .32s cubic-bezier(.68,-.55,.265,1.55);
+        }
+        .toast-float.show { transform:translateX(0); opacity:1; }
+
+        /* ── Responsive ── */
+        @media (max-width:1100px) { .stats-row { grid-template-columns:repeat(2,1fr); } }
+        @media (max-width:768px) {
+            .shop-wrapper { padding:16px; }
+            .product-grid { grid-template-columns:repeat(2,1fr); gap:12px; }
+            .search-wrap { width:100%; }
+            .header-actions { width:100%; }
+            .page-header { flex-direction:column; }
+            .code-banner { flex-direction:column; align-items:stretch; }
+            .code-banner-actions { margin-left:0; }
+            .chip-btn { flex:1; justify-content:center; }
+            .sort-select { width:100%; margin-left:0; }
+        }
+        @media (max-width:480px) {
+            .stats-row { grid-template-columns:repeat(2,1fr); }
+            .product-grid { grid-template-columns:repeat(2,1fr); gap:10px; }
+            .p-body { padding:12px; }
+            .p-name { font-size:13px; min-height:36px; }
+            .p-price { font-size:17px; }
+            .p-code-chip { font-size:11px; padding:5px 10px; }
+            .act-btn { font-size:11px; padding:8px 4px; }
         }
 
-        /* Google Icon Styling */
-        .material-icons {
-            font-family: 'Material Icons';
-            font-weight: normal;
-            font-style: normal;
-            font-size: 20px;
-            line-height: 1;
-            letter-spacing: normal;
-            text-transform: none;
-            display: inline-block;
-            white-space: nowrap;
-            word-wrap: normal;
-            direction: ltr;
-            vertical-align: middle;
-        }
-
-        /* SweetAlert2 Custom Styling */
-        .swal2-popup {
-            border-radius: 16px !important;
-            padding: 2rem !important;
-        }
-
-        .swal2-icon {
-            border-width: 3px !important;
-        }
-
-        .swal2-confirm {
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
-            border-radius: 8px !important;
-            padding: 10px 30px !important;
-            font-weight: 600 !important;
-        }
-
-        .swal2-cancel {
-            border-radius: 8px !important;
-            padding: 10px 30px !important;
-            font-weight: 600 !important;
-        }
-
-        /* Loading Animation */
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .loading-spinner {
-            animation: spin 1s linear infinite;
-        }
-
-        /* Stagger animation for product cards */
-        .product-card:nth-child(1) { animation-delay: 0.1s; }
-        .product-card:nth-child(2) { animation-delay: 0.2s; }
-        .product-card:nth-child(3) { animation-delay: 0.3s; }
-        .product-card:nth-child(4) { animation-delay: 0.4s; }
-        .product-card:nth-child(5) { animation-delay: 0.5s; }
-        .product-card:nth-child(6) { animation-delay: 0.6s; }
-        .product-card:nth-child(7) { animation-delay: 0.7s; }
-        .product-card:nth-child(8) { animation-delay: 0.8s; }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .shop-hero {
-                background-attachment: scroll;
-            }
-
-            .shop-title {
-                font-size: 2rem;
-            }
+        /* SweetAlert2 overrides */
+        .swal2-popup { font-family:var(--sans) !important; border-radius:var(--r-xl) !important; }
+        .swal2-title { font-size:19px !important; font-weight:700 !important; color:var(--dark) !important; }
+        .product-code-highlight {
+            background:var(--primary-light); border:2px solid var(--primary);
+            border-radius:var(--r-md); padding:10px 16px;
+            font-family:var(--mono); font-size:17px; font-weight:600; color:var(--primary);
+            display:inline-block; margin:6px 0; letter-spacing:.5px;
         }
     </style>
-    <!-- Google Material Icons -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <!-- SweetAlert2 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 @endpush
 
 @section('content')
-    <!-- Shop Hero with Advanced Animation and Background Image -->
-    <div class="shop-hero {{ $shop->banner_image ? 'with-shop-image' : '' }}">
-        <div class="container">
-            <div class="shop-info-card">
-                <h1 class="shop-title">{{ $shop->shop_name }}</h1>
-                @if($shop->description)
-                    <p class="text-muted shop-description">{{ Str::limit($shop->description, 200) }}</p>
-                @endif
-                <div class="d-flex gap-3 mt-3 shop-badges">
-                    <span class="badge bg-primary" style="animation-delay: 0.7s;">
-                        <i class="material-icons" style="font-size: 16px; vertical-align: middle;">inventory_2</i>
-                        Products: {{ $products->total() }}
-                    </span>
-                    @if($shop->is_verified)
-                        <span class="badge bg-success" style="animation-delay: 0.8s;">
-                            <i class="material-icons" style="font-size: 16px; vertical-align: middle;">verified</i>
-                            Verified Seller
-                        </span>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="shop-wrapper">
 
-    <div class="container py-4">
-        <!-- Search Bar -->
-        <div class="mb-4">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <form action="{{ route('wholesaler.shop.index') }}" method="GET" class="d-flex gap-2">
-                        <div class="flex-grow-1">
-                            <input type="text"
-                                   name="search"
-                                   class="form-control"
-                                   placeholder="Search products..."
-                                   value="{{ request('search') }}">
-                        </div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="material-icons" style="font-size: 18px; vertical-align: middle;">search</i>
-                            Search
-                        </button>
-                        @if(request('search'))
-                            <a href="{{ route('wholesaler.shop.index') }}" class="btn btn-outline-secondary">
-                                <i class="material-icons" style="font-size: 18px; vertical-align: middle;">clear</i>
-                            </a>
-                        @endif
-                    </form>
+        {{-- ── Page Header ── --}}
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">
+                    <span class="material-icons-round" style="color:var(--primary);font-size:28px">storefront</span>
+                    My Shop
+                </h1>
+                <p class="page-subtitle">Manage your products and inventory</p>
+            </div>
+
+            <div class="header-actions">
+                <div class="search-wrap">
+                    <input type="text"
+                           id="productSearch"
+                           class="search-input"
+                           placeholder="Search by code or product name…"
+                           value="{{ request()->get('search','') }}"
+                           autocomplete="off">
+                    <button class="search-btn" onclick="performSearch()" title="Search" type="button">
+                        <span class="material-icons-round" style="font-size:19px">search</span>
+                    </button>
                 </div>
-                <div class="col-md-4 text-end">
-                    <select class="form-select" onchange="window.location.href=this.value" style="max-width: 200px;">
-                        <option value="{{ route('wholesaler.shop.index', ['sort' => 'newest']) }}"
-                            {{ request('sort') == 'newest' ? 'selected' : '' }}>Newest First</option>
-                        <option value="{{ route('wholesaler.shop.index', ['sort' => 'price_low']) }}"
-                            {{ request('sort') == 'price_low' ? 'selected' : '' }}>Price: Low to High</option>
-                        <option value="{{ route('wholesaler.shop.index', ['sort' => 'price_high']) }}"
-                            {{ request('sort') == 'price_high' ? 'selected' : '' }}>Price: High to Low</option>
-                        <option value="{{ route('wholesaler.shop.index', ['sort' => 'name_asc']) }}"
-                            {{ request('sort') == 'name_asc' ? 'selected' : '' }}>Name: A-Z</option>
-                    </select>
-                </div>
+
+                <a href="{{ route('wholesaler.products.create') }}" class="chip-btn primary">
+                    <span class="material-icons-round" style="font-size:17px">add</span>
+                    Add Product
+                </a>
             </div>
         </div>
 
-        <!-- Products Grid -->
-        <div class="row g-4">
-            @forelse($products as $product)
-                <div class="col-md-6 col-lg-4 col-xl-3">
-                    <div class="product-card" data-product-id="{{ $product->id }}">
-                        <div class="card-img-container">
+        {{-- ── Next Code Banner ── --}}
+        @if(isset($nextProductCode))
+            <div class="code-banner">
+                <div>
+                    <div class="code-banner-label">
+                        <span class="material-icons-round" style="font-size:13px;vertical-align:middle">qr_code</span>
+                        Next Available Product Code
+                    </div>
+                    <div class="code-banner-value">{{ $nextProductCode }}</div>
+                </div>
+                <div class="code-banner-actions">
+                    <button class="chip-btn primary" onclick="copyText('{{ $nextProductCode }}')" type="button">
+                        <span class="material-icons-round" style="font-size:15px">content_copy</span>
+                        Copy Code
+                    </button>
+                    <button class="chip-btn" onclick="copyText('WS/ITM/')" type="button">
+                        <span class="material-icons-round" style="font-size:15px">tag</span>
+                        Copy Prefix
+                    </button>
+                </div>
+            </div>
+        @endif
+
+        {{-- ── Stats ── --}}
+        @php
+            $totalProducts = $products->total();
+            $inStock  = $products->where('qty', '>', 0)->count();
+            $lowStock = $products->where('qty', '>', 0)->filter(fn($p) => $p->qty <= ($p->min_qty ?? 5))->count();
+            $outStock = $products->where('qty', '<=', 0)->count();
+        @endphp
+
+        <div class="stats-row">
+            <div class="stat-card" onclick="filterProducts('all')">
+                <div class="stat-icon si-purple"><span class="material-icons-round">inventory_2</span></div>
+                <div><div class="stat-num">{{ $totalProducts }}</div><div class="stat-lbl">Total Products</div></div>
+            </div>
+            <div class="stat-card" onclick="filterProducts('in_stock')">
+                <div class="stat-icon si-green"><span class="material-icons-round">check_circle</span></div>
+                <div><div class="stat-num">{{ $inStock }}</div><div class="stat-lbl">In Stock</div></div>
+            </div>
+            <div class="stat-card" onclick="filterProducts('low_stock')">
+                <div class="stat-icon si-amber"><span class="material-icons-round">warning</span></div>
+                <div><div class="stat-num">{{ $lowStock }}</div><div class="stat-lbl">Low Stock</div></div>
+            </div>
+            <div class="stat-card" onclick="filterProducts('out_of_stock')">
+                <div class="stat-icon si-red"><span class="material-icons-round">cancel</span></div>
+                <div><div class="stat-num">{{ $outStock }}</div><div class="stat-lbl">Out of Stock</div></div>
+            </div>
+        </div>
+
+        {{-- ── Toolbar: filters + sort ── --}}
+        <div class="toolbar">
+            <button class="filt-btn {{ !request('filter') || request('filter') == 'all' ? 'active' : '' }}" onclick="filterProducts('all')" type="button">
+                <span class="material-icons-round" style="font-size:15px">grid_view</span> All
+            </button>
+            <button class="filt-btn {{ request('filter') == 'in_stock' ? 'active' : '' }}" onclick="filterProducts('in_stock')" type="button">
+                <span class="material-icons-round" style="font-size:15px">check_circle</span> In Stock
+            </button>
+            <button class="filt-btn {{ request('filter') == 'low_stock' ? 'active' : '' }}" onclick="filterProducts('low_stock')" type="button">
+                <span class="material-icons-round" style="font-size:15px">warning</span> Low Stock
+            </button>
+            <button class="filt-btn {{ request('filter') == 'out_of_stock' ? 'active' : '' }}" onclick="filterProducts('out_of_stock')" type="button">
+                <span class="material-icons-round" style="font-size:15px">cancel</span> Out of Stock
+            </button>
+
+            <select id="sortSelect" class="sort-select" onchange="changeSort()">
+                <option value="newest"    {{ request('sort','newest') == 'newest'    ? 'selected':'' }}>🆕 Newest First</option>
+                <option value="code_asc"  {{ request('sort') == 'code_asc'           ? 'selected':'' }}>📦 Code: A–Z</option>
+                <option value="code_desc" {{ request('sort') == 'code_desc'          ? 'selected':'' }}>📦 Code: Z–A</option>
+                <option value="price_low" {{ request('sort') == 'price_low'          ? 'selected':'' }}>💰 Price: Low–High</option>
+                <option value="price_high"{{ request('sort') == 'price_high'         ? 'selected':'' }}>💰 Price: High–Low</option>
+                <option value="name_asc"  {{ request('sort') == 'name_asc'           ? 'selected':'' }}>🔤 Name: A–Z</option>
+                <option value="name_desc" {{ request('sort') == 'name_desc'          ? 'selected':'' }}>🔤 Name: Z–A</option>
+            </select>
+        </div>
+
+        {{-- ── Alerts ── --}}
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2 mb-4" role="alert">
+                <span class="material-icons-round">error</span>
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2 mb-4" role="alert">
+                <span class="material-icons-round">check_circle</span>
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        {{-- ── Products Grid ── --}}
+        @if($products->count() > 0)
+            <div class="product-grid">
+                @foreach($products as $product)
+                    @php
+                        $hasDiscount = $product->discount > 0;
+                        $finalPrice  = $hasDiscount
+                            ? $product->display_price * (1 - $product->discount / 100)
+                            : $product->display_price;
+
+                        if ($product->qty <= 0) {
+                            $stockKey   = 'pb-out';
+                            $stockLabel = 'Out of Stock';
+                        } elseif ($product->qty <= ($product->min_qty ?? 5)) {
+                            $stockKey   = 'pb-low';
+                            $stockLabel = 'Low Stock';
+                        } else {
+                            $stockKey   = 'pb-in';
+                            $stockLabel = 'In Stock';
+                        }
+                    @endphp
+
+                    <div class="p-card"
+                         data-id="{{ $product->id }}"
+                         data-code="{{ $product->code }}"
+                         data-name="{{ e($product->name) }}"
+                         data-price="{{ $finalPrice }}"
+                         data-original-price="{{ $product->display_price }}"
+                         data-discount="{{ $product->discount }}"
+                         data-stock="{{ $product->qty }}"
+                         data-min-qty="{{ $product->min_qty ?? 1 }}"
+                         data-image="{{ $product->image ? asset('storage/'.$product->image) : '' }}"
+                         data-description="{{ e($product->description ?? '') }}"
+                         data-category="{{ $product->category->name ?? 'Uncategorized' }}">
+
+                        <div class="p-img-wrap">
                             @if($product->image)
-                                <img src="{{ asset('storage/' . $product->image) }}"
+                                <img src="{{ asset('storage/'.$product->image) }}"
                                      alt="{{ $product->name }}"
-                                     class="card-img">
+                                     class="p-img"
+                                     loading="lazy"
+                                     onerror="this.onerror=null;this.src='{{ asset('images/default-product.png') }}'">
                             @else
-                                <i class="material-icons" style="font-size: 48px; color: #9ca3af;">inventory_2</i>
+                                <span class="material-icons-round p-no-img">inventory_2</span>
                             @endif
+
+                            <div class="p-badges">
+                                @if($hasDiscount)
+                                    <span class="p-badge pb-discount">-{{ $product->discount }}%</span>
+                                @else
+                                    <span></span>
+                                @endif
+                                <span class="p-badge {{ $stockKey }}">{{ $stockLabel }}</span>
+                            </div>
                         </div>
 
-                        <div class="card-content">
-                            <h3 class="card-title">{{ Str::limit($product->name, 60) }}</h3>
+                        <div class="p-body">
+                            <div class="p-code-chip"
+                                 title="Click to copy: {{ $product->code }}"
+                                 onclick="copyProductCode('{{ $product->code }}')">
+                                <span class="material-icons-round" style="font-size:15px">qr_code_scanner</span>
+                                {{ $product->code }}
+                            </div>
 
-                            {{-- Updated price display section --}}
-                            <div class="product-pricing">
-                                <div class="price-display">Rs. {{ number_format($product->display_price, 2) }}</div>
-                                @if($product->discount > 0)
-                                    <div class="wholesale-price small">
-                                        <i class="fas fa-store me-1"></i>
-                                        After Discount: Rs. {{ number_format($product->final_price, 2) }}
-                                        <span class="badge bg-success ms-1">-{{ $product->discount }}%</span>
-                                    </div>
+                            <h3 class="p-name" title="{{ $product->name }}">{{ $product->name }}</h3>
+
+                            <div class="p-meta-row">
+                                <span class="p-category">
+                                    <span class="material-icons-round" style="font-size:13px">folder</span>
+                                    {{ $product->category->name ?? 'Uncategorized' }}
+                                </span>
+
+                                <span class="p-qty" style="margin-left:auto">
+                                    <span class="material-icons-round" style="font-size:12px">inventory</span>
+                                    {{ $product->qty }} units
+                                </span>
+                            </div>
+
+                            <div class="p-price">
+                                Rs. {{ number_format($finalPrice, 2) }}
+                                @if($hasDiscount)
+                                    <span class="p-price-orig">Rs. {{ number_format($product->display_price, 2) }}</span>
                                 @endif
                             </div>
 
-                            <div class="stock-info">
-                                <div class="stock-dot {{ $product->qty > 50 ? '' : ($product->qty > 10 ? 'low' : 'out') }}"></div>
-                                <span>{{ $product->qty }} in stock</span>
-                            </div>
-
-                            <div class="quantity-controls">
-                                <button class="quantity-btn decrement-btn"
-                                        onclick="decrementQuantity({{ $product->id }})"
-                                        disabled>
-                                    <i class="material-icons" style="font-size: 18px;">remove</i>
+                            <div class="p-actions">
+                                <button class="act-btn act-copy"
+                                        onclick="copyProductCode('{{ $product->code }}')"
+                                        title="Copy product code"
+                                        type="button">
+                                    <span class="material-icons-round" style="font-size:15px">content_copy</span>
+                                    Copy
                                 </button>
-                                <input type="number"
-                                       class="quantity-input"
-                                       id="quantity-{{ $product->id }}"
-                                       value="0"
-                                       min="0"
-                                       max="{{ $product->qty }}"
-                                       data-price="{{ $product->display_price }}"
-                                       data-name="{{ $product->name }}"
-                                       oninput="updateQuantity({{ $product->id }}, this.value)">
-                                <button class="quantity-btn increment-btn"
-                                        onclick="incrementQuantity({{ $product->id }})">
-                                    <i class="material-icons" style="font-size: 18px;">add</i>
-                                </button>
-                            </div>
 
-                            <button class="order-now-btn"
-                                    onclick="placeOrder({{ $product->id }})"
-                                    id="order-btn-{{ $product->id }}"
-                                    disabled>
-                                <i class="material-icons" style="font-size: 20px;">shopping_bag</i>
-                                Order Now
-                            </button>
+                                <a href="{{ route('wholesaler.shop.product.show', $product->code) }}"
+                                   class="act-btn act-view"
+                                   title="View product details">
+                                    <span class="material-icons-round" style="font-size:16px">visibility</span>
+                                    View
+                                </a>
+                            </div>
                         </div>
                     </div>
-                </div>
-            @empty
-                <div class="col-12">
-                    <div class="empty-state">
-                        <div class="empty-state-icon">
-                            <i class="material-icons" style="font-size: 64px;">inventory_2</i>
-                        </div>
-                        <h4 class="mb-3">No Products Found</h4>
-                        <p class="text-muted mb-4">Try adjusting your search criteria</p>
-                    </div>
-                </div>
-            @endforelse
-        </div>
-
-        <!-- Pagination -->
-        @if($products->hasPages())
-            <div class="mt-5">
-                {{ $products->links() }}
+                @endforeach
+            </div>
+        @else
+            <div class="empty-state">
+                <span class="material-icons-round" style="font-size:64px;color:#cbd5e1;display:block;margin-bottom:12px">inventory</span>
+                <h3 class="h5 mb-2">No Products Found</h3>
+                <p class="text-muted mb-4">
+                    @if(request('search'))
+                        No products match "{{ request('search') }}"
+                    @else
+                        You haven't added any products yet.
+                    @endif
+                </p>
+                <a href="{{ route('wholesaler.products.create') }}" class="btn btn-primary d-inline-flex align-items-center gap-2">
+                    <span class="material-icons-round">add</span> Add Your First Product
+                </a>
             </div>
         @endif
+
+        {{-- ── Pagination ── --}}
+        @if ($products->hasPages())
+            <div class="d-flex justify-content-center mt-4">
+                <div class="custom-pagination">
+                    {{ $products->withQueryString()->links('pagination::bootstrap-5') }}
+                </div>
+            </div>
+        @endif
+
+        @if($products->count() > 0)
+            <div class="text-end mt-3 text-muted" style="font-size:13px">
+                Showing {{ $products->firstItem() }}–{{ $products->lastItem() }} of {{ $products->total() }} products
+            </div>
+        @endif
+
+    </div>
+
+    {{-- Toast --}}
+    <div class="toast-float" id="appToast">
+        <span class="material-icons-round" id="toastIcon" style="flex-shrink:0">check_circle</span>
+        <div style="flex:1">
+            <strong id="toastTitle">Done</strong>
+            <p id="toastMsg" class="mb-0" style="font-size:13px"></p>
+        </div>
+        <button class="btn-close" onclick="hideToast()" type="button"></button>
     </div>
 @endsection
 
 @push('script')
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <script>
-        // Quantity management
-        function updateQuantity(productId, value) {
-            const quantityInput = document.getElementById(`quantity-${productId}`);
-            const orderBtn = document.getElementById(`order-btn-${productId}`);
-            const decrementBtn = document.querySelector(`.decrement-btn[onclick="decrementQuantity(${productId})"]`);
-            const incrementBtn = document.querySelector(`.increment-btn[onclick="incrementQuantity(${productId})"]`);
+        /* ── Toast ── */
+        let _toastTimer;
+        function showToast(title, msg, type = 'success') {
+            const colors = { success:'#10b981', error:'#ef4444', warning:'#f59e0b', info:'#3b82f6' };
+            const icons  = { success:'check_circle', error:'error', warning:'warning', info:'info' };
+            const t = document.getElementById('appToast');
+            t.style.borderLeftColor = colors[type];
+            document.getElementById('toastIcon').textContent = icons[type];
+            document.getElementById('toastIcon').style.color = colors[type];
+            document.getElementById('toastTitle').textContent = title;
+            document.getElementById('toastMsg').textContent = msg;
+            t.classList.add('show');
+            clearTimeout(_toastTimer);
+            _toastTimer = setTimeout(hideToast, 3000);
+        }
+        function hideToast() { document.getElementById('appToast').classList.remove('show'); }
 
-            let quantity = parseInt(value) || 0;
-            const maxQuantity = parseInt(quantityInput.max) || 0;
-
-            // Validate input
-            if (isNaN(quantity) || quantity < 0) quantity = 0;
-            if (quantity > maxQuantity) {
-                quantity = maxQuantity;
+        /* ─── FIXED: Copy Product Code and Redirect to New Order ─── */
+        function copyProductCode(code) {
+            // First copy to clipboard
+            navigator.clipboard.writeText(code).then(() => {
+                // Show success message
                 Swal.fire({
-                    icon: 'warning',
-                    title: 'Stock Limit',
-                    text: `Only ${maxQuantity} items available`,
-                    timer: 2000,
-                    showConfirmButton: false,
-                    toast: true,
-                    position: 'top-end'
+                    icon: 'success',
+                    title: 'Code Copied!',
+                    text: `Product code: ${code}`,
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    // Redirect to new order page with the product code
+                    window.location.href = `{{ route('wholesaler.order.new') }}?product_code=${encodeURIComponent(code)}`;
                 });
-            }
-
-            // Update input
-            quantityInput.value = quantity;
-
-            // Update button states
-            orderBtn.disabled = quantity === 0;
-            decrementBtn.disabled = quantity <= 0;
-            incrementBtn.disabled = quantity >= maxQuantity;
-
-            // Store quantity in data attribute
-            orderBtn.setAttribute('data-quantity', quantity);
-        }
-
-        function incrementQuantity(productId) {
-            const quantityInput = document.getElementById(`quantity-${productId}`);
-            let currentValue = parseInt(quantityInput.value) || 0;
-            const maxQuantity = parseInt(quantityInput.max) || 0;
-
-            if (currentValue < maxQuantity) {
-                updateQuantity(productId, currentValue + 1);
-            }
-        }
-
-        function decrementQuantity(productId) {
-            const quantityInput = document.getElementById(`quantity-${productId}`);
-            let currentValue = parseInt(quantityInput.value) || 0;
-
-            if (currentValue > 0) {
-                updateQuantity(productId, currentValue - 1);
-            }
-        }
-
-        // Direct order placement with SweetAlert
-        async function placeOrder(productId) {
-            const quantityInput = document.getElementById(`quantity-${productId}`);
-            const quantity = parseInt(quantityInput.value) || 0;
-            const productName = quantityInput.getAttribute('data-name');
-            const productPrice = quantityInput.getAttribute('data-price');
-            const orderBtn = document.getElementById(`order-btn-${productId}`);
-
-            if (quantity === 0) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops...',
-                    text: 'Please select quantity first',
-                    confirmButtonText: 'Got it!'
-                });
-                return;
-            }
-
-            // Confirmation dialog
-            const result = await Swal.fire({
-                title: 'Confirm Order',
-                html: `
-                    <div style="text-align: left; padding: 1rem;">
-                        <p><strong>Product:</strong> ${productName}</p>
-                        <p><strong>Quantity:</strong> ${quantity}</p>
-                        <p><strong>Total:</strong> Rs. ${(productPrice * quantity).toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
-                    </div>
-                `,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, Place Order',
-                cancelButtonText: 'Cancel',
-                confirmButtonColor: '#6366f1',
-                cancelButtonColor: '#64748b'
+            }).catch(() => {
+                // If copy fails, still redirect with the code
+                window.location.href = `{{ route('wholesaler.order.new') }}?product_code=${encodeURIComponent(code)}`;
             });
+        }
 
-            if (!result.isConfirmed) return;
+        /* ─── Filter / Sort / Search ── */
+        function filterProducts(filter) {
+            const url = new URL(window.location.href);
+            filter !== 'all' ? url.searchParams.set('filter', filter) : url.searchParams.delete('filter');
+            url.searchParams.delete('page');
+            window.location.href = url.toString();
+        }
+        function changeSort() {
+            const url = new URL(window.location.href);
+            url.searchParams.set('sort', document.getElementById('sortSelect').value);
+            url.searchParams.delete('page');
+            window.location.href = url.toString();
+        }
+        function performSearch() {
+            const q = document.getElementById('productSearch').value.trim();
+            const url = new URL(window.location.href);
+            q ? url.searchParams.set('search', q) : url.searchParams.delete('search');
+            url.searchParams.delete('page');
+            window.location.href = url.toString();
+        }
 
-            // Show loading
-            const originalText = orderBtn.innerHTML;
-            orderBtn.innerHTML = '<i class="material-icons loading-spinner" style="font-size: 20px;">refresh</i> Processing...';
-            orderBtn.disabled = true;
-
+        /* ─── Copy Text Helper ── */
+        async function copyText(text) {
             try {
-                const response = await fetch('{{ route("wholesaler.shop.order.now") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        product_id: productId,
-                        quantity: quantity,
-                        customer_name: '{{ Auth::guard("wholesaler")->user()->name }}',
-                        customer_email: '{{ Auth::guard("wholesaler")->user()->email }}',
-                        customer_phone: '{{ Auth::guard("wholesaler")->user()->phone ?? "" }}',
-                        shipping_address: 'Default Address',
-                        payment_method: 'cash_on_delivery',
-                        notes: ''
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Order Placed!',
-                        text: data.message,
-                        confirmButtonText: 'View Order',
-                        confirmButtonColor: '#6366f1',
-                        timer: 3000
-                    });
-
-                    // Reset quantity
-                    updateQuantity(productId, 0);
-
-                    // Redirect to order page
-                    window.location.href = data.redirect;
-                } else {
-                    let errorMessage = data.message;
-                    if (data.errors) {
-                        errorMessage += '\n' + Object.values(data.errors).map(e => e[0]).join('\n');
-                    }
-
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Order Failed',
-                        text: errorMessage,
-                        confirmButtonText: 'Try Again',
-                        confirmButtonColor: '#ef4444'
-                    });
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Network Error',
-                    text: 'An error occurred. Please check your connection and try again.',
-                    confirmButtonText: 'OK',
-                    confirmButtonColor: '#ef4444'
-                });
-            } finally {
-                orderBtn.innerHTML = originalText;
-                orderBtn.disabled = false;
+                await navigator.clipboard.writeText(text);
+                showToast('Copied!', text, 'success');
+            } catch {
+                showToast('Error', 'Could not copy text.', 'error');
             }
         }
 
-        // Initialize quantity controls
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.quantity-input').forEach(input => {
-                updateQuantity(input.id.replace('quantity-', ''), 0);
-            });
+        /* ─── Init ── */
+        document.addEventListener('DOMContentLoaded', () => {
+            const si = document.getElementById('productSearch');
+            if (si) {
+                let timer;
+                si.addEventListener('input', () => {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => {
+                        if (si.value.length >= 2 || si.value.length === 0) performSearch();
+                    }, 500);
+                });
+                si.addEventListener('keypress', e => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        performSearch();
+                    }
+                });
+            }
 
-            // Add smooth scroll behavior
-            document.documentElement.style.scrollBehavior = 'smooth';
+            setTimeout(() => {
+                document.querySelectorAll('.alert').forEach(a => {
+                    a.classList.remove('show');
+                    setTimeout(() => a.remove(), 300);
+                });
+            }, 5000);
         });
     </script>
 @endpush

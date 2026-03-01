@@ -22,6 +22,7 @@ use App\Http\Controllers\SellerController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\Wholesaler\WholesalerBrandController;
+use App\Http\Controllers\Wholesaler\WholesalerCallController;
 use App\Http\Controllers\Wholesaler\WholesalerCategoryController;
 use App\Http\Controllers\Wholesaler\WholesalerOrderController;
 use App\Http\Controllers\Wholesaler\WholesalerPaymentController;
@@ -335,34 +336,72 @@ Route::middleware('auth:wholesaler')->group(function () {
         Route::post('/profile/avatar', [WholesalerController::class, 'uploadAvatar'])->name('profile.avatar');
 
 
-        // Shop Routes (Public Facing)
+
+        // Shop Routes
         Route::prefix('shop')->name('shop.')->group(function () {
             Route::get('/', [WholesalerShopController::class, 'index'])->name('index');
-            Route::get('/product/{id}', [WholesalerShopController::class, 'showProduct'])->name('product.show');
-            Route::post('/order-now', [WholesalerShopController::class, 'orderNow'])->name('order.now');
             Route::get('/search', [WholesalerShopController::class, 'search'])->name('search');
+            // FIXED: Use code parameter instead of product model binding
+            Route::get('/product/{code}', [WholesalerShopController::class, 'showProduct'])->name('product.show');
+            Route::get('/product/id/{id}', [WholesalerShopController::class, 'showProductById'])->name('product.show-by-id');
+
+            // API endpoints
+            Route::get('/api/product/{code}', [WholesalerShopController::class, 'findByCode'])->name('api.product.find');
+            Route::get('/api/product/{code}/details', [WholesalerShopController::class, 'getProductDetails'])->name('api.product.details');
         });
 
-        // Order Management
-        Route::prefix('orders')->name('orders.')->group(function () {
-            Route::get('/', [WholesalerOrderController::class, 'index'])->name('index');
-            Route::get('/view/{id}', [WholesalerOrderController::class, 'show'])->name('show');
-            Route::put('/{id}/status', [WholesalerOrderController::class, 'updateStatus'])->name('updateStatus');
+        // Order Routes
+        Route::prefix('order')->name('order.')->group(function () {
+            Route::get('/new', [WholesalerOrderController::class, 'index'])->name('new');
+            Route::post('/store', [WholesalerOrderController::class, 'store'])->name('store');
+            Route::get('/csv-upload', [WholesalerOrderController::class, 'csvUploadPage'])->name('csv-upload');
+            Route::post('/csv-insert', [WholesalerOrderController::class, 'csvInsert'])->name('csv_insert');
 
-            // Status-based routes
-            Route::get('/status/pending', [WholesalerOrderController::class, 'pending'])->name('pending');
-            Route::get('/status/confirmed', [WholesalerOrderController::class, 'confirmed'])->name('confirmed');
-            Route::get('/status/processing', [WholesalerOrderController::class, 'processing'])->name('processing');
-            Route::get('/status/shipped', [WholesalerOrderController::class, 'shipped'])->name('shipped');
-            Route::get('/status/completed', [WholesalerOrderController::class, 'completed'])->name('completed');
-            Route::get('/status/cancelled', [WholesalerOrderController::class, 'cancelled'])->name('cancelled');
+            // Order lists
+            Route::get('/pending', [WholesalerOrderController::class, 'pendingOrder'])->name('pending-order');
+            Route::get('/complete', [WholesalerOrderController::class, 'completeOrder'])->name('complete-order');
+            Route::get('/return', [WholesalerOrderController::class, 'returnOrder'])->name('return-order');
+            Route::get('/rescheduling', [WholesalerOrderController::class, 'reschedulingOrder'])->name('rescheduling-order');
 
-            // Invoice routes
-            Route::get('/{id}/invoice/download', [WholesalerOrderController::class, 'downloadInvoice'])->name('invoice.download');
-            Route::get('/{id}/invoice/view', [WholesalerOrderController::class, 'viewInvoice'])->name('invoice.view');
+            // Single order operations
+            Route::get('/show/{id}', [WholesalerOrderController::class, 'show'])->name('show');
+            Route::put('/update/{id}', [WholesalerOrderController::class, 'update'])->name('update');
+            Route::delete('/destroy/{id}', [WholesalerOrderController::class, 'destroy'])->name('destroy');
 
-            // Export
-            Route::get('/export/csv', [WholesalerOrderController::class, 'export'])->name('export');
+            // FIXED: This route must accept any characters including slashes
+            Route::get('/product/{code}/details', [WholesalerOrderController::class, 'getProductDetails'])
+                ->name('product.details')
+                ->where('code', '.*');  // This allows any characters including slashes
+        });
+
+        // Call Management Routes
+        Route::prefix('call')->name('call.')->group(function () {
+            // List views
+            Route::get('/', [WholesalerCallController::class, 'index'])->name('index');
+            Route::get('/conform_call_list', [WholesalerCallController::class, 'conformCallList'])->name('conform');
+            Route::get('/reject_call_list', [WholesalerCallController::class, 'rejectCallList'])->name('reject');
+            Route::get('/not_answer_call_list', [WholesalerCallController::class, 'notAnswerCallList'])->name('not_answer_call_list');
+            Route::get('/other_call_list', [WholesalerCallController::class, 'otherCallList'])->name('other_call_list');
+
+            // CRUD operations
+            Route::get('/view/{id}', [WholesalerCallController::class, 'show'])->name('view');
+            Route::get('/edit/{id}', [WholesalerCallController::class, 'edit'])->name('edit');
+            Route::put('/update/{id}', [WholesalerCallController::class, 'update'])->name('update');
+            Route::delete('/destroy/{id}', [WholesalerCallController::class, 'destroy'])->name('destroy');
+            Route::get('/print/{id}', [WholesalerCallController::class, 'print'])->name('print');
+
+            // Bulk operations
+            Route::post('/bulk-status', [WholesalerCallController::class, 'bulkUpdateStatus'])->name('bulk_status');
+            Route::get('/export-calls', [WholesalerCallController::class, 'export'])->name('export');
+            Route::get('/statistics', [WholesalerCallController::class, 'statistics'])->name('statistics');
+
+            // CSV upload
+            Route::get('/csv-upload', [WholesalerCallController::class, 'csvUploadPage'])->name('csv_upload');
+            Route::post('/csv-insert', [WholesalerCallController::class, 'csvInsert'])->name('csv_insert');
+
+            // Additional routes
+            Route::get('/wholesaler-products', [WholesalerCallController::class, 'getWholesalerProducts'])->name('wholesaler_products');
+            Route::get('/csrf-refresh', [WholesalerCallController::class, 'csrfRefresh'])->name('csrf_refresh');
         });
 
         // Product Management (Backend)

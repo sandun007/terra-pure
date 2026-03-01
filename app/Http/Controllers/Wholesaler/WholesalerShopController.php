@@ -5,13 +5,9 @@ namespace App\Http\Controllers\Wholesaler;
 use App\Http\Controllers\Controller;
 use App\Models\WholesalerShop;
 use App\Models\WholesalerProduct;
-use App\Models\WholesalerOrder;
-use App\Models\WholesalerOrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class WholesalerShopController extends Controller
 {
@@ -22,224 +18,267 @@ class WholesalerShopController extends Controller
     {
         try {
             $wholesaler = Auth::guard('wholesaler')->user();
-            $shop = WholesalerShop::where('wholesaler_id', $wholesaler->id)->first();
 
-            if (!$shop) {
-                return redirect()->route('wholesaler.dashboard')->with('error', 'Please create your shop first!');
-            }
-
+            // Get products
             $query = WholesalerProduct::where('wholesaler_id', $wholesaler->id)
                 ->with(['category', 'brand'])
                 ->where('status', 'active');
 
-            $query->withCount(['reviews as average_rating' => function ($q) {
-                $q->select(DB::raw('COALESCE(AVG(rating), 0)'));
-            }])
-                ->withCount(['reviews as total_reviews' => function ($q) {
-                    $q->where('status', 'active');
-                }]);
-
-            // Search functionality
+            // Search by CODE, name, description
             if ($request->has('search') && $request->search != '') {
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%")
-                        ->orWhere('code', 'like', "%{$search}%")
-                        ->orWhere('features', 'like', "%{$search}%");
+                    $q->where('code', 'like', "%{$search}%")
+                        ->orWhere('name', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
                 });
             }
 
-            // Sort options - use display_price for sorting
-            $sortOptions = [
-                'newest' => ['created_at', 'desc'],
-                'oldest' => ['created_at', 'asc'],
-                'price_low' => ['display_price', 'asc'],
-                'price_high' => ['display_price', 'desc'],
-                'name_asc' => ['name', 'asc'],
-                'name_desc' => ['name', 'desc'],
-            ];
+            // Filter by stock status
+            if ($request->has('filter') && $request->filter != 'all') {
+                switch ($request->filter) {
+                    case 'in_stock':
+                        $query->where('qty', '>', 0);
+                        break;
+                    case 'low_stock':
+                        $query->where('qty', '>', 0)
+                            ->whereRaw('qty <= min_qty');
+                        break;
+                    case 'out_of_stock':
+                        $query->where('qty', '<=', 0);
+                        break;
+                }
+            }
 
+            // Sort options
             $sort = $request->get('sort', 'newest');
-            if (array_key_exists($sort, $sortOptions)) {
-                $query->orderBy($sortOptions[$sort][0], $sortOptions[$sort][1]);
-            } else {
-                $query->orderBy('created_at', 'desc');
+            switch ($sort) {
+                case 'price_low':
+                    $query->orderBy('display_price', 'asc');
+                    break;
+                case 'price_high':
+                    $query->orderBy('display_price', 'desc');
+                    break;
+                case 'code_asc':
+                    $query->orderBy('code', 'asc');
+                    break;
+                case 'code_desc':
+                    $query->orderBy('code', 'desc');
+                    break;
+                case 'name_asc':
+                    $query->orderBy('name', 'asc');
+                    break;
+                case 'name_desc':
+                    $query->orderBy('name', 'desc');
+                    break;
+                default:
+                    $query->orderBy('created_at', 'desc');
             }
 
             $products = $query->paginate(12)->withQueryString();
+            $shop = WholesalerShop::where('wholesaler_id', $wholesaler->id)->first();
+            $nextProductCode = $this->generateNextProductCode();
 
-            return view('wholesaler.shop.shop', compact('shop', 'products'));
+            return view('wholesaler.shop.shop', compact('shop', 'products', 'nextProductCode'));
 
         } catch (\Exception $e) {
-            \Log::error('Shop index error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error loading shop: ' . $e->getMessage());
+            Log::error('Shop index error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error loading products');
         }
     }
 
     /**
-     * Display a single product
+     * Display a single product by code
      */
-    public function showProduct($id)
+    public function showProduct($code)
     {
         try {
             $wholesaler = Auth::guard('wholesaler')->user();
 
+            // Find product by code
             $product = WholesalerProduct::where('wholesaler_id', $wholesaler->id)
+                ->where('code', $code)
                 ->with(['category', 'brand'])
-                ->withCount(['reviews as average_rating' => function ($query) {
-                    $query->select(DB::raw('COALESCE(AVG(rating), 0)'));
-                }])
-                ->withCount(['reviews as total_reviews' => function ($query) {
-                    $query->where('status', 'active');
-                }])
-                ->findOrFail($id);
+                ->first();
+
+            if (!$product) {
+                return redirect()->route('wholesaler.shop.index')->with('error', 'Product not found.');
+            }
+
+            // Check if product belongs to wholesaler
+            if ((int)$product->wholesaler_id !== (int)$wholesaler->id) {
+                return redirect()->route('wholesaler.shop.index')->with('error', 'Product not found.');
+            }
 
             $shop = WholesalerShop::where('wholesaler_id', $wholesaler->id)->first();
 
             $relatedProducts = WholesalerProduct::where('wholesaler_id', $wholesaler->id)
-                ->where('id', '!=', $id)
                 ->where('status', 'active')
+                ->where('id', '!=', $product->id)
+                ->latest()
                 ->limit(4)
                 ->get();
 
             return view('wholesaler.shop.product-details', compact('shop', 'product', 'relatedProducts'));
 
         } catch (\Exception $e) {
-            \Log::error('Show product error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Product not found: ' . $e->getMessage());
+            Log::error('showProduct error: ' . $e->getMessage());
+            return redirect()->route('wholesaler.shop.index')->with('error', 'Product not found.');
         }
     }
 
     /**
-     * Process Order Now - Use display_price for calculations
+     * Show product by ID (for backward compatibility)
      */
-    public function orderNow(Request $request)
+    public function showProductById($id)
     {
-        DB::beginTransaction();
-
         try {
             $wholesaler = Auth::guard('wholesaler')->user();
 
-            // Validate request
-            $validator = Validator::make($request->all(), [
-                'product_id' => 'required|exists:wholesaler_products,id',
-                'quantity' => 'required|integer|min:1',
-                'customer_name' => 'required|string|max:255',
-                'customer_email' => 'required|email|max:255',
-                'customer_phone' => 'required|string|max:20',
-                'shipping_address' => 'required|string|max:500',
-                'payment_method' => 'required|in:cash_on_delivery,credit_card,bank_transfer',
-                'notes' => 'nullable|string|max:1000',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-
+            // Find product by ID
             $product = WholesalerProduct::where('wholesaler_id', $wholesaler->id)
-                ->where('id', $request->product_id)
-                ->lockForUpdate()
-                ->firstOrFail();
+                ->with(['category', 'brand'])
+                ->find($id);
 
-            // Check stock availability
-            if ($product->qty < $request->quantity) {
-                return response()->json([
-                    'success' => false,
-                    'message' => "Only {$product->qty} items available in stock"
-                ], 400);
+            if (!$product) {
+                return redirect()->route('wholesaler.shop.index')->with('error', 'Product not found.');
             }
 
-            // Get shop for tax calculation
+            // Optional: only show active products in shop
+            if ($product->status !== 'active') {
+                return redirect()->route('wholesaler.shop.index')->with('error', 'Product not available.');
+            }
+
             $shop = WholesalerShop::where('wholesaler_id', $wholesaler->id)->first();
 
-            // Calculate order total using display_price
-            $unitPrice = $product->display_price ?? $product->selling_price;
-            $subtotal = $unitPrice * $request->quantity;
-            $taxRate = $shop->tax_rate ?? 5;
-            $tax = $subtotal * ($taxRate / 100);
-            $shipping = $this->calculateShipping($subtotal);
-            $total = $subtotal + $tax + $shipping;
+            $relatedProducts = WholesalerProduct::where('wholesaler_id', $wholesaler->id)
+                ->where('status', 'active')
+                ->where('id', '!=', $product->id)
+                ->latest()
+                ->limit(4)
+                ->get();
 
-            // Generate unique order number
-            $orderNumber = $this->generateOrderNumber();
-            while (WholesalerOrder::where('order_number', $orderNumber)->exists()) {
-                $orderNumber = $this->generateOrderNumber();
+            return view('wholesaler.shop.product-details', compact('shop', 'product', 'relatedProducts'));
+
+        } catch (\Exception $e) {
+            Log::error('showProductById error: ' . $e->getMessage());
+            return redirect()->route('wholesaler.shop.index')->with('error', 'Product not found.');
+        }
+    }
+
+    /**
+     * Find product by code - AJAX endpoint for order page
+     */
+    public function findByCode($code)
+    {
+        try {
+            $wholesaler = Auth::guard('wholesaler')->user();
+
+            $product = WholesalerProduct::where('wholesaler_id', $wholesaler->id)
+                ->where('code', $code)
+                ->where('status', 'active')
+                ->with(['category', 'brand'])
+                ->first();
+
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product not found with code: ' . $code
+                ], 404);
             }
 
-            // Create order
-            $order = WholesalerOrder::create([
-                'wholesaler_id' => $wholesaler->id,
-                'order_number' => $orderNumber,
-                'subtotal' => $subtotal,
-                'tax' => $tax,
-                'shipping' => $shipping,
-                'total_amount' => $total,
-                'payment_method' => $request->payment_method,
-                'payment_status' => $request->payment_method == 'cash_on_delivery' ? 'pending' : 'paid',
-                'status' => 'pending',
-                'shipping_address' => $request->shipping_address,
-                'customer_name' => $request->customer_name,
-                'customer_email' => $request->customer_email,
-                'customer_phone' => $request->customer_phone,
-                'notes' => $request->notes,
-            ]);
-
-            // Create order item - use display_price
-            WholesalerOrderItem::create([
-                'order_id' => $order->id,
-                'product_id' => $product->id,
-                'product_name' => $product->name,
-                'quantity' => $request->quantity,
-                'unit_price' => $unitPrice,
-                'total_price' => $subtotal,
-            ]);
-
-            // Update product stock
-            $product->decrement('qty', $request->quantity);
-
-            DB::commit();
+            // Calculate final price with discount
+            $finalPrice = $product->display_price;
+            if ($product->discount > 0) {
+                $finalPrice = $product->display_price * (1 - $product->discount / 100);
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Order placed successfully!',
-                'order_id' => $order->id,
-                'order_number' => $order->order_number,
-                'redirect' => route('wholesaler.orders.show', $order->id)
+                'product' => [
+                    'id' => $product->id,
+                    'code' => $product->code,
+                    'name' => $product->name,
+                    'description' => $product->description ?? 'No description available',
+                    'display_price' => (float) $finalPrice,
+                    'original_price' => (float) $product->display_price,
+                    'stock_price' => (float) $product->stock_price,
+                    'discount' => (float) ($product->discount ?? 0),
+                    'qty' => (int) $product->qty,
+                    'min_qty' => (int) ($product->min_qty ?? 1),
+                    'category' => $product->category->name ?? 'Uncategorized',
+                    'brand' => $product->brand->name ?? null,
+                    'image' => $product->image ? asset('storage/' . $product->image) : null,
+                    'stock_status' => $product->qty > 0
+                        ? ($product->qty <= $product->min_qty ? 'low' : 'available')
+                        : 'out'
+                ]
             ]);
 
         } catch (\Exception $e) {
-            DB::rollBack();
-            \Log::error('Order Now Error: ' . $e->getMessage());
-
+            Log::error('Find product by code error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Error processing order: ' . $e->getMessage()
+                'message' => 'Error finding product: ' . $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Calculate shipping cost based on subtotal
+     * Get product details via AJAX - FIXED for the route error
      */
-    private function calculateShipping($subtotal)
+    public function getProductDetails($code)
     {
-        if ($subtotal > 5000) return 0;
-        if ($subtotal <= 1000) return 200;
-        if ($subtotal <= 3000) return 150;
-        return 100;
-    }
+        try {
+            $wholesaler = Auth::guard('wholesaler')->user();
 
-    /**
-     * Generate unique order number
-     */
-    private function generateOrderNumber()
-    {
-        return 'ORD-' . date('Ymd') . '-' . strtoupper(Str::random(6));
+            // Decode URL-encoded code
+            $decodedCode = urldecode($code);
+
+            $product = WholesalerProduct::where('wholesaler_id', $wholesaler->id)
+                ->where('code', $decodedCode)
+                ->with(['category', 'brand'])
+                ->first();
+
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product not found with code: ' . $decodedCode
+                ], 404);
+            }
+
+            $finalPrice = $product->display_price;
+            if ($product->discount > 0) {
+                $finalPrice = $product->display_price * (1 - $product->discount / 100);
+            }
+
+            return response()->json([
+                'success' => true,
+                'product' => [
+                    'id' => $product->id,
+                    'code' => $product->code,
+                    'name' => $product->name,
+                    'description' => $product->description ?? '',
+                    'display_price' => (float) $finalPrice,
+                    'original_price' => (float) $product->display_price,
+                    'stock_price' => (float) $product->stock_price,
+                    'discount' => (float) ($product->discount ?? 0),
+                    'qty' => (int) $product->qty,
+                    'min_qty' => (int) ($product->min_qty ?? 1),
+                    'category' => $product->category->name ?? 'Uncategorized',
+                    'brand' => $product->brand->name ?? null,
+                    'image' => $product->image ? asset('storage/' . $product->image) : null,
+                    'stock_status' => $product->qty > 0 ? ($product->qty <= $product->min_qty ? 'low' : 'available') : 'out',
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Get product details error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Product not found with code: ' . $code
+            ], 404);
+        }
     }
 
     /**
@@ -249,38 +288,44 @@ class WholesalerShopController extends Controller
     {
         try {
             $wholesaler = Auth::guard('wholesaler')->user();
-            $shop = WholesalerShop::where('wholesaler_id', $wholesaler->id)->first();
-
             $query = $request->get('query', '');
 
             $products = WholesalerProduct::where('wholesaler_id', $wholesaler->id)
                 ->where('status', 'active')
                 ->with(['category', 'brand'])
                 ->where(function ($q) use ($query) {
-                    $q->where('name', 'like', "%{$query}%")
-                        ->orWhere('description', 'like', "%{$query}%");
+                    $q->where('code', 'like', "%{$query}%")
+                        ->orWhere('name', 'like', "%{$query}%");
                 })
                 ->paginate(12);
 
-            return view('wholesaler.shop.shop', compact('shop', 'products'))->with('searchQuery', $query);
+            $shop = WholesalerShop::where('wholesaler_id', $wholesaler->id)->first();
+            $nextProductCode = $this->generateNextProductCode();
+
+            return view('wholesaler.shop.shop', compact('shop', 'products', 'nextProductCode'));
 
         } catch (\Exception $e) {
-            \Log::error('Search error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Search error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Search error occurred');
         }
     }
 
-
-// WholesalerOrderController.php - Add missing method
-// In WholesalerOrderController, add this after the index() method:
-
     /**
-     * Calculate total revenue for completed orders
+     * Generate next available product code
      */
-    private function calculateTotalRevenue($wholesalerId)
+    private function generateNextProductCode()
     {
-        return WholesalerOrder::where('wholesaler_id', $wholesalerId)
-            ->where('status', 'completed')
-            ->sum('total_amount');
+        $prefix = 'WS/ITM/';
+        $lastProduct = WholesalerProduct::where('code', 'LIKE', $prefix . '%')
+            ->orderBy('code', 'desc')
+            ->first();
+
+        if ($lastProduct) {
+            $lastNumber = (int) str_replace($prefix, '', $lastProduct->code);
+            $newNumber = $lastNumber + 1;
+        } else {
+            $newNumber = 1;
+        }
+
+        return $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }
 }
