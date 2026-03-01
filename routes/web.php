@@ -3,7 +3,6 @@
 use App\Exports\OrdersExport;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BrandController;
-use App\Http\Controllers\CallController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Employee\EmployeeWholesalerOrderController;
 use App\Http\Controllers\EmployeeController;
@@ -11,7 +10,9 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\Seller\CallController;
 use App\Http\Controllers\Seller\SellerBrandController;
+use App\Http\Controllers\Seller\SellerCallController;
 use App\Http\Controllers\Seller\SellerCategoryController;
 use App\Http\Controllers\Seller\SellerOrderController;
 use App\Http\Controllers\Seller\SellerPaymentController;
@@ -121,7 +122,7 @@ Route::middleware('auth:seller')->group(function(){
         // Shop Routes
         Route::prefix('shop')->name('seller.shop.')->group(function () {
             Route::get('/', [SellerShopController::class, 'index'])->name('seller.index'); // Fixed: changed from seller.index to index
-            Route::get('/product/{code}', [SellerShopController::class, 'showProduct'])->name('product.show');
+            Route::get('/product/view/{product}', [\App\Http\Controllers\Seller\SellerShopController::class, 'showProduct'])->name('product.show');
             Route::get('/product/{code}/details', [SellerShopController::class, 'getProductDetails'])->name('product.details');
             Route::get('/product/find/{code}', [SellerShopController::class, 'findByCode'])->name('product.find'); // FIXED: This route was missing
             Route::post('/product/copy/{code}', [SellerShopController::class, 'copyProductCode'])->name('product.copy');
@@ -147,8 +148,14 @@ Route::middleware('auth:seller')->group(function(){
             Route::put('update/{id}', [SellerOrderController::class, 'update'])->name('order.update');
             Route::delete('destroy/{id}', [SellerOrderController::class, 'destroy'])->name('order.destroy');
 
-            // Product details for order form - Using {code} (FIXED: Match the controller method)
-            Route::get('product/{code}/details', [SellerOrderController::class, 'getProductDetails'])->name('product.details');
+            // Product details for order form
+            Route::get('product/{code}/details', [SellerOrderController::class, 'getProductDetails'])
+                ->name('product.details')
+                ->where('code', '.*');
+
+            // CSV Upload routes
+            Route::get('csv-upload', [SellerOrderController::class, 'csvUploadPage'])->name('order.csv-upload');
+            Route::post('csv-insert', [SellerOrderController::class, 'csvInsert'])->name('order.csv-insert');
         });
 
         Route::prefix('product')->group(function () {
@@ -161,33 +168,35 @@ Route::middleware('auth:seller')->group(function(){
             Route::get('/history',[SellerPaymentController::class,'payment_history'])->name('seller.payment_history');
         });
 
-        Route::prefix('call')->group(function (){
-            Route::get('/',[CallController::class,'index'])->name('call.index');
-            Route::get('/view/{id}',[CallController::class,'call_conform_form'])->name('call.view');
-            Route::post('/',[CallController::class,'store'])->name('call.store');
-            Route::get('/conform_call_list',[CallController::class,'conform_call_list'])->name('call.conform');
-            Route::get('/reject_call_list',[CallController::class,'reject_call_list'])->name('call.reject');
-            Route::get('/not_answer_call_list',[CallController::class,'not_answer_call_list'])->name('call.not_answer_call_list');
-            Route::get('/other_call_list',[CallController::class,'other_call_list'])->name('call.other_call_list');
-            Route::get('/export-orders', function () {
-                $seller = Auth::user();
-                $orders = Order::where('seller_no', $seller->code)
-                    ->where('status', 'Conform')
-                    ->where('download_status', 0)
-                    ->get();
+        //seller call
+        Route::prefix('call')->name('call.')->group(function () {
+            // List views
+            Route::get('/', [SellerCallController::class, 'index'])->name('index');
+            Route::get('/conform_call_list', [SellerCallController::class, 'conformCallList'])->name('conform');
+            Route::get('/reject_call_list', [SellerCallController::class, 'rejectCallList'])->name('reject');
+            Route::get('/not_answer_call_list', [SellerCallController::class, 'notAnswerCallList'])->name('not_answer_call_list');
+            Route::get('/other_call_list', [SellerCallController::class, 'otherCallList'])->name('other_call_list');
 
-                if ($orders->isEmpty()) {
-                    return back()->with('error', 'No orders to export.');
-                }
+            // CRUD operations
+            Route::get('/view/{id}', [SellerCallController::class, 'show'])->name('view');
+            Route::get('/edit/{id}', [SellerCallController::class, 'edit'])->name('edit');
+            Route::put('/update/{id}', [SellerCallController::class, 'update'])->name('update');
+            Route::delete('/destroy/{id}', [SellerCallController::class, 'destroy'])->name('destroy');
+            Route::get('/print/{id}', [SellerCallController::class, 'print'])->name('print');
 
-                $orderIds = $orders->pluck('id');
-                Order::whereIn('id', $orderIds)->update(['download_status' => 1]);
-                $date = Carbon::now()->format('Y-m-d');
-                $fileName = 'conform_orders_' . $date . '.xlsx';
-                return Excel::download(new OrdersExport($orders), $fileName);
-            })->name('orders.export');
+            // Bulk operations
+            Route::post('/bulk-status', [SellerCallController::class, 'bulkUpdateStatus'])->name('bulk_status');
+            Route::get('/export-calls', [SellerCallController::class, 'export'])->name('export');
+            Route::get('/statistics', [SellerCallController::class, 'statistics'])->name('statistics');
+
+            // CSV upload
+            Route::get('/csv-upload', [SellerCallController::class, 'csvUploadPage'])->name('csv_upload');
+            Route::post('/csv-insert', [SellerCallController::class, 'csvInsert'])->name('csv_insert');
+
+            // Additional routes
+            Route::get('/seller-products', [SellerCallController::class, 'getSellerProducts'])->name('seller_products');
+            Route::get('/csrf-refresh', [SellerCallController::class, 'csrfRefresh'])->name('csrf_refresh');
         });
-
         // Seller Product Routes - UPDATED
         Route::prefix('product')->name('seller.product.')->group(function (){
             Route::get('/', [SellerProductController::class, 'index'])->name('index');
@@ -250,6 +259,12 @@ Route::prefix('employee')->middleware('auth:employee')->group(function(){
         Route::post('/price-update', [EmployeeController::class, 'updateProductPrice'])->name('price-update');
         Route::post('/bulk-price-update', [EmployeeController::class, 'bulkPriceUpdate'])->name('bulk-price-update');
 
+        // Seller Management (Existing)
+        Route::prefix('seller')->name('seller.')->group(function() {
+            Route::get('/orders', [EmployeeController::class, 'sellerOrders'])->name('employee.seller.orders');
+            Route::post('/orders/status/update/{id}', [EmployeeController::class, 'updateOrderStatus'])->name('orders.status-update');
+            Route::get('/orders/view/{id}', [EmployeeController::class, 'viewOrder'])->name('order-view');
+        });
         // Print route
         Route::get('/print/{id}', [EmployeeWholesalerOrderController::class, 'printDeliveryLabel'])->name('print.out');
     });
