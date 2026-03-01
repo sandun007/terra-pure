@@ -187,6 +187,54 @@ class Curfoxapiservice
         return $businesses[0] ?? null;
     }
 
+    /**
+     * Create a new business via Curfox API.
+     *
+     * POST /api/public/merchant/business
+     *
+     * Payload shape:
+     * {
+     *   "business_name": "...",
+     *   "business_bank_detail": { account_name, account_number, bank_name, branch_name },
+     *   "business_address": { address_line_1, address_line_2, city_id, phone, postal_code, type, is_default }
+     * }
+     *
+     * Returns the full response array (data key contains created business).
+     */
+    public function createBusiness(array $payload): array
+    {
+        $response = $this->authenticatedPost('/business', $payload);
+
+        if ($response->status() === 401) {
+            $this->refreshToken();
+            $response = $this->authenticatedPost('/business', $payload);
+        }
+
+        if (! $response->successful()) {
+            Log::error('Curfox create business failed', [
+                'payload'  => $payload,
+                'status'   => $response->status(),
+                'response' => $response->json(),
+            ]);
+
+            $body    = $response->json();
+            $message = $body['message'] ?? 'Curfox business creation failed';
+
+            if (! empty($body['errors'])) {
+                $flat = [];
+                array_walk_recursive($body['errors'], function ($v) use (&$flat) { $flat[] = $v; });
+                $message .= ': ' . implode('; ', $flat);
+            }
+
+            throw new \RuntimeException($message, $response->status());
+        }
+
+        // Invalidate business cache so getBusinesses() picks up the new one
+        Cache::forget(self::BIZ_CACHE);
+
+        return $response->json();
+    }
+
     // ── Order Creation ────────────────────────────────────────────────────
 
     public function createOrders(array $generalData, array $ordersData): array
@@ -235,12 +283,6 @@ class Curfoxapiservice
         }
 
         if (! $response->successful()) {
-            Log::error('Curfox create single order failed', [
-                'payload'  => $payload,
-                'status'   => $response->status(),
-                'response' => $response->json(),
-            ]);
-
             $body    = $response->json();
             $message = $body['message'] ?? 'Curfox order creation failed';
 
@@ -298,10 +340,6 @@ class Curfoxapiservice
 
     // ── Tracking ──────────────────────────────────────────────────────────
 
-    /**
-     * Fetch live tracking history for a waybill.
-     * Curfox uses GET with a JSON body for this endpoint.
-     */
     public function getTrackingInfo(string $waybillNumber): array
     {
         $payload = json_encode(['waybill_number' => $waybillNumber]);
@@ -318,12 +356,6 @@ class Curfoxapiservice
         }
 
         if (! $response->successful()) {
-            Log::warning('Curfox tracking-info failed', [
-                'waybill' => $waybillNumber,
-                'status'  => $response->status(),
-                'body'    => $response->body(),
-            ]);
-
             $body    = $response->json();
             $message = $body['message'] ?? "Tracking fetch failed (HTTP {$response->status()})";
             throw new \RuntimeException($message, $response->status());

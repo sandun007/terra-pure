@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Seller;
 use App\Http\Controllers\Controller;
 use App\Models\SellerOrder;
 use App\Models\SellerProduct;
+use App\Models\Saler;
+use App\Models\SelfSellerDeliveryCall;
 use App\Services\Curfoxapiservice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,64 +18,9 @@ use Throwable;
 
 class SellerOrderController extends Controller
 {
-
-    // Add this method to SellerOrderController
-    private function createPendingCallFromOrder($order, $user, $product)
-    {
-        try {
-            // Generate call number
-            $callNumber = SellerCall::generateCallNumber();
-
-            // Create the pending call
-            $call = SellerCall::create([
-                'seller_id'              => $user->id,
-                'product_id'             => $product->id,
-                'order_code'             => $order->order_number,
-                'call_number'            => $callNumber,
-                'date'                   => now()->toDateString(),
-                'customer_name'          => $order->customer_name,
-                'customer_phone_01'      => $order->customer_phone,
-                'customer_phone_02'      => null, // You might want to add this to orders table
-                'customer_address'       => $order->customer_address,
-                'city'                   => $order->destination_city_name,
-                'district'               => $order->district,
-                'destination_city_id'    => $order->destination_city_id,
-                'destination_state_name' => $order->destination_state_name,
-                'item_code'              => $product->code,
-                'item_name'              => $product->name,
-                'qty'                    => $order->quantity,
-                'price'                  => $product->display_price,
-                'total'                  => $order->total_amount,
-                'status'                 => 'Pending', // Default status
-                'status_date'            => now(),
-                'remark'                 => $order->remark ?? 'Auto-generated from order',
-                'platform'               => $order->platform ?? 'manual',
-                'download_status'        => false,
-            ]);
-
-            Log::info('Pending call auto-created from order', [
-                'order_id' => $order->id,
-                'call_id' => $call->id,
-                'order_number' => $order->order_number
-            ]);
-
-            return $call;
-
-        } catch (Exception $e) {
-            Log::error('Failed to create pending call from order', [
-                'order_id' => $order->id ?? null,
-                'error' => $e->getMessage()
-            ]);
-            // Don't throw - we don't want to fail the order if call creation fails
-            return null;
-        }
-    }
-
     public function __construct(private Curfoxapiservice $curfox) {}
 
-    // ──────────────────────────────────────────────────────────────────────
-    // ORDER ID GENERATOR (controller-level)
-    // ──────────────────────────────────────────────────────────────────────
+    // ── ORDER ID GENERATOR ─────────────────────────────────────────────────
     public static function generateOrderId(): string
     {
         $prefix = 'ORD/';
@@ -111,70 +58,43 @@ class SellerOrderController extends Controller
         }
     }
 
-    // ──────────────────────────────────────────────────────────────────────
-    // CITY RESOLVER — match city name string → {id, city_name, state_name}
-    // Used by bulk import to auto-resolve typed city names.
-    // ──────────────────────────────────────────────────────────────────────
+    // ── CITY RESOLVER ──────────────────────────────────────────────────────
     private function resolveCityByName(string $nameInput): ?array
     {
         if (empty(trim($nameInput))) return null;
 
         try {
-            $all = $this->curfox->getStatesWithCities();
+            $all    = $this->curfox->getStatesWithCities();
             $needle = strtolower(trim($nameInput));
-
-            $exact   = null;
-            $partial = null;
+            $exact  = null;
+            $partial= null;
 
             foreach ($all as $state) {
                 foreach ($state['cities'] ?? [] as $city) {
                     if (!($city['is_active'] ?? true)) continue;
-
                     $cityLower = strtolower($city['name']);
-
                     if ($cityLower === $needle) {
-                        $exact = [
-                            'id'         => $city['id'],
-                            'city_name'  => $city['name'],
-                            'state_name' => $state['name'],
-                        ];
+                        $exact = ['id' => $city['id'], 'city_name' => $city['name'], 'state_name' => $state['name']];
                         break 2;
                     }
-
                     if ($partial === null && str_contains($cityLower, $needle)) {
-                        $partial = [
-                            'id'         => $city['id'],
-                            'city_name'  => $city['name'],
-                            'state_name' => $state['name'],
-                        ];
+                        $partial = ['id' => $city['id'], 'city_name' => $city['name'], 'state_name' => $state['name']];
                     }
                 }
             }
 
             return $exact ?? $partial;
-
         } catch (Exception $e) {
             Log::warning('resolveCityByName failed: ' . $e->getMessage());
             return null;
         }
     }
 
-    // ──────────────────────────────────────────────────────────────────────
-    // RESOLVE CITY (id or name) → canonical city info
-    // Returns ['id','city_name','state_name'] or null
-    // ──────────────────────────────────────────────────────────────────────
     private function resolveCity(?int $cityId, ?string $cityName, ?string $stateName): ?array
     {
-        // If we already have complete valid data, skip API
         if ($cityId && $cityName && $stateName) {
-            return [
-                'id'         => $cityId,
-                'city_name'  => $cityName,
-                'state_name' => $stateName,
-            ];
+            return ['id' => $cityId, 'city_name' => $cityName, 'state_name' => $stateName];
         }
-
-        // Lookup by ID first
         if ($cityId) {
             try {
                 $info = $this->curfox->findCityById($cityId);
@@ -183,26 +103,17 @@ class SellerOrderController extends Controller
                 Log::warning('Curfox city lookup by ID failed: ' . $e->getMessage());
             }
         }
-
-        // Fallback: resolve by name
-        if ($cityName) {
-            return $this->resolveCityByName($cityName);
-        }
-
+        if ($cityName) return $this->resolveCityByName($cityName);
         return null;
     }
 
-    // ──────────────────────────────────────────────────────────────────────
-    // NEW ORDER PAGE
-    // ──────────────────────────────────────────────────────────────────────
+    // ── NEW ORDER PAGE ─────────────────────────────────────────────────────
     public function index(Request $request)
     {
         $user = Auth::user();
 
         try {
-            $code = Schema::hasTable('seller_orders')
-                ? self::generateOrderId()
-                : 'ORD/00001';
+            $code = Schema::hasTable('seller_orders') ? self::generateOrderId() : 'ORD/00001';
         } catch (Exception $e) {
             $code = 'ORD/00001';
             Log::error('Error generating order ID: ' . $e->getMessage());
@@ -211,7 +122,7 @@ class SellerOrderController extends Controller
         $import = $user->cal_deposit ?? $user->deposit ?? 0;
 
         $statesWithCities = [];
-        $apiError         = null;
+        $apiError = null;
         try {
             $statesWithCities = $this->curfox->getStatesWithCities();
         } catch (Exception $e) {
@@ -237,49 +148,42 @@ class SellerOrderController extends Controller
         ));
     }
 
-    // ──────────────────────────────────────────────────────────────────────
-    // API: cities JSON for JS autocomplete
-    // ──────────────────────────────────────────────────────────────────────
+    // ── CITIES JSON ────────────────────────────────────────────────────────
     public function citiesJson()
     {
         try {
             $cities = $this->curfox->getAllCities();
             return response()->json(['success' => true, 'data' => $cities]);
         } catch (Exception $e) {
-            Log::error('Curfox cities JSON error: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
-    // ──────────────────────────────────────────────────────────────────────
-    // STORE SINGLE ORDER
-    // ──────────────────────────────────────────────────────────────────────
+    // ── STORE SINGLE ORDER ─────────────────────────────────────────────────
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'date'               => 'required|date',
-            'platform'           => 'nullable|string',
-            'product_id'         => 'required|exists:seller_products,id',
-            'product_code'       => 'required|string',
-            'product_name'       => 'required|string',
-            'product_price'      => 'required|numeric|min:0',
-            'quantity'           => 'required|integer|min:1',
-            'customer_name'      => 'required|string|max:255',
-            'customer_phone'     => 'required|string|max:20',
-            'customer_address'   => 'nullable|string',
-
+            'date'                   => 'required|date',
+            'platform'               => 'nullable|string',
+            'product_id'             => 'required|exists:seller_products,id',
+            'product_code'           => 'required|string',
+            'product_name'           => 'required|string',
+            'product_price'          => 'required|numeric|min:0',
+            'quantity'               => 'required|integer|min:1',
+            'customer_name'          => 'required|string|max:255',
+            'customer_phone'         => 'required|string|max:20',
+            'customer_address'       => 'nullable|string',
             'destination_city_id'    => 'nullable|integer',
             'destination_city_name'  => 'nullable|string|max:150',
             'destination_state_name' => 'nullable|string|max:150',
             'district'               => 'nullable|string|max:150',
-
             'call_status'            => 'nullable|string|max:50',
             'remark'                 => 'nullable|string',
             'payment_method'         => 'required|string',
         ]);
 
         $user = Auth::user();
-        if (! $user) {
+        if (!$user) {
             return $request->expectsJson()
                 ? response()->json(['success' => false, 'message' => 'Please login to continue.'], 401)
                 : redirect()->route('login')->with('error', 'Please login to continue.');
@@ -314,11 +218,7 @@ class SellerOrderController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error('Error creating order', [
-                'user_id'    => $user->id ?? null,
-                'product_id' => $request->product_id,
-                'message'    => $e->getMessage(),
-            ]);
+            Log::error('Error creating order', ['user_id' => $user->id ?? null, 'message' => $e->getMessage()]);
 
             return $request->expectsJson()
                 ? response()->json(['success' => false, 'message' => 'Error creating order: ' . $e->getMessage()], 500)
@@ -339,7 +239,6 @@ class SellerOrderController extends Controller
         $productPrice = (float) $request->product_price;
         $totalAmount  = $productPrice * $quantity;
 
-        // ── Resolve city ──
         $resolved  = $this->resolveCity(
             $request->destination_city_id ? (int) $request->destination_city_id : null,
             $request->destination_city_name ?? $request->district,
@@ -351,40 +250,33 @@ class SellerOrderController extends Controller
         $stateName = $resolved['state_name'] ?? ($request->destination_state_name ?? '');
 
         if (empty($cityName)) {
-            throw new Exception('Delivery city is required and could not be resolved. Please select a valid city from the dropdown.');
+            throw new Exception('Delivery city is required and could not be resolved.');
         }
 
         $order = SellerOrder::create([
             'seller_id'              => $user->id,
             'order_id'               => $orderId,
             'order_number'           => $orderId,
-
             'product_id'             => $request->product_id,
             'product_name'           => $request->product_name,
             'product_code'           => $request->product_code,
             'product_price'          => $productPrice,
             'product_image'          => $request->product_image,
-
             'customer_name'          => $request->customer_name,
             'customer_phone'         => $request->customer_phone,
             'customer_address'       => $request->customer_address,
-
             'district'               => $cityName,
             'destination_city_id'    => $cityId,
             'destination_city_name'  => $cityName,
             'destination_state_name' => $stateName,
-
             'platform'               => $request->platform ?? 'manual',
             'call_status'            => $request->call_status ?? 'Pending Call',
             'remark'                 => $request->remark,
-
             'order_date'             => $request->date,
             'status'                 => 'pending',
-
             'quantity'               => $quantity,
             'subtotal'               => $totalAmount,
             'total_amount'           => $totalAmount,
-
             'payment_method'         => $request->payment_method,
             'payment_status'         => 'pending',
         ]);
@@ -392,183 +284,125 @@ class SellerOrderController extends Controller
         $this->deductDeposit($user);
         $product->decrement('qty', $quantity);
 
-        // ── NEW: Auto-create pending call ──
-        $this->createPendingCallFromOrder($order, $user, $product);
-        // ───────────────────────────────────
-
         return ['success' => true, 'order' => $order];
     }
 
-    // ──────────────────────────────────────────────────────────────────────
-    // ✅ BULK STORE — CSV Import with city auto-resolution + validation
-    // ──────────────────────────────────────────────────────────────────────
+    // ── BULK STORE ─────────────────────────────────────────────────────────
     public function bulkStore(Request $request)
     {
-        // Accept leads as JSON string (FormData)
         if (is_string($request->input('leads'))) {
             $decoded = json_decode($request->input('leads'), true);
             $request->merge(['leads' => is_array($decoded) ? $decoded : []]);
         }
 
         $request->validate([
-            'product_code'                    => 'required|string',
-            'leads'                           => 'required|array|min:1',
-            'leads.*.customer_name'           => 'required|string|max:255',
-            'leads.*.customer_phone'          => 'required|string|max:20',
-            'leads.*.customer_address'        => 'nullable|string',
-            'leads.*.district'                => 'nullable|string|max:150',
-            'leads.*.destination_city_id'     => 'nullable|integer',
-            'leads.*.destination_city_name'   => 'nullable|string|max:150',
-            'leads.*.destination_state_name'  => 'nullable|string|max:150',
-            'leads.*.platform'                => 'nullable|string|max:50',
-            'leads.*.payment_method'          => 'nullable|string|max:50',
-            'leads.*.remark'                  => 'nullable|string',
-            'default_platform'                => 'nullable|string|max:50',
-            'default_payment_method'          => 'nullable|string|max:50',
-            'default_call_status'             => 'nullable|string|max:50',
-            'date'                            => 'nullable|date',
+            'product_code'                   => 'required|string',
+            'leads'                          => 'required|array|min:1',
+            'leads.*.customer_name'          => 'required|string|max:255',
+            'leads.*.customer_phone'         => 'required|string|max:20',
+            'leads.*.customer_address'       => 'nullable|string',
+            'leads.*.district'               => 'nullable|string|max:150',
+            'leads.*.destination_city_id'    => 'nullable|integer',
+            'leads.*.destination_city_name'  => 'nullable|string|max:150',
+            'leads.*.destination_state_name' => 'nullable|string|max:150',
+            'leads.*.platform'               => 'nullable|string|max:50',
+            'leads.*.payment_method'         => 'nullable|string|max:50',
+            'leads.*.remark'                 => 'nullable|string',
+            'default_platform'               => 'nullable|string|max:50',
+            'default_payment_method'         => 'nullable|string|max:50',
+            'default_call_status'            => 'nullable|string|max:50',
+            'date'                           => 'nullable|date',
         ]);
 
         $user = Auth::user();
-        if (! $user) return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        if (!$user) return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
 
         $product = SellerProduct::where('seller_id', $user->id)
             ->where('code', $request->product_code)
             ->first();
 
-        if (! $product) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Product not found for code: ' . $request->product_code,
-            ], 404);
+        if (!$product) {
+            return response()->json(['success' => false, 'message' => 'Product not found for code: ' . $request->product_code], 404);
         }
 
         $leads = $request->leads;
         $count = count($leads);
 
-        // ── Deposit check ──────────────────────────────────────────────
         $costPerOrder     = (float) ($user->cost ?? 0);
         $need             = $costPerOrder * $count;
         $availableDeposit = $user->cal_deposit ?? $user->deposit ?? 0;
 
         if ($costPerOrder > 0 && $availableDeposit < $need) {
-            return response()->json([
-                'success' => false,
-                'message' => "Insufficient deposit. Need Rs. {$need} for {$count} orders (Rs. {$costPerOrder} each).",
-            ], 400);
+            return response()->json(['success' => false, 'message' => "Insufficient deposit. Need Rs. {$need} for {$count} orders."], 400);
         }
 
-        // ── Stock check ────────────────────────────────────────────────
         if ((int)$product->qty < $count) {
-            return response()->json([
-                'success' => false,
-                'message' => "Insufficient stock. Available: {$product->qty}, Required: {$count}",
-            ], 400);
+            return response()->json(['success' => false, 'message' => "Insufficient stock. Available: {$product->qty}, Required: {$count}"], 400);
         }
 
-        // ── Pre-resolve all city names (bulk cache, avoids N API calls) ─
-        // Build city lookup map from Curfox once
-        $cityLookupMap = [];   // lowercase_name => {id, city_name, state_name}
-        $idLookupMap   = [];   // id => {id, city_name, state_name}
-
+        // Build city lookup maps
+        $cityLookupMap = [];
+        $idLookupMap   = [];
         try {
             $statesWithCities = $this->curfox->getStatesWithCities();
             foreach ($statesWithCities as $state) {
                 foreach ($state['cities'] ?? [] as $city) {
                     if (!($city['is_active'] ?? true)) continue;
-                    $entry = [
-                        'id'         => $city['id'],
-                        'city_name'  => $city['name'],
-                        'state_name' => $state['name'],
-                    ];
+                    $entry = ['id' => $city['id'], 'city_name' => $city['name'], 'state_name' => $state['name']];
                     $cityLookupMap[strtolower(trim($city['name']))] = $entry;
                     $idLookupMap[$city['id']] = $entry;
                 }
             }
         } catch (Exception $e) {
-            Log::warning('Bulk: Curfox city list load failed — city validation will be skipped: ' . $e->getMessage());
+            Log::warning('Bulk: Curfox city list load failed: ' . $e->getMessage());
         }
 
-        /**
-         * Resolve a single lead's city fields using the pre-loaded map.
-         * Returns ['id','city_name','state_name'] or null.
-         */
         $quickResolve = function (array $lead) use ($cityLookupMap, $idLookupMap): ?array {
-            $cityId    = isset($lead['destination_city_id'])   ? (int) $lead['destination_city_id']   : null;
+            $cityId    = isset($lead['destination_city_id']) ? (int) $lead['destination_city_id'] : null;
             $cityName  = $lead['destination_city_name'] ?? ($lead['district'] ?? null);
             $stateName = $lead['destination_state_name'] ?? null;
 
-            // All three already provided
             if ($cityId && $cityName && $stateName) {
-                // Verify ID exists in lookup
-                if (isset($idLookupMap[$cityId])) {
-                    return $idLookupMap[$cityId];
-                }
-                // Fallback: accept as-is (when API list not loaded)
-                return ['id' => $cityId, 'city_name' => $cityName, 'state_name' => $stateName];
+                return isset($idLookupMap[$cityId]) ? $idLookupMap[$cityId] : ['id' => $cityId, 'city_name' => $cityName, 'state_name' => $stateName];
             }
-
-            // Resolve by ID
-            if ($cityId && isset($idLookupMap[$cityId])) {
-                return $idLookupMap[$cityId];
-            }
-
-            // Resolve by name (exact)
+            if ($cityId && isset($idLookupMap[$cityId])) return $idLookupMap[$cityId];
             if ($cityName) {
                 $needle = strtolower(trim($cityName));
-                if (isset($cityLookupMap[$needle])) {
-                    return $cityLookupMap[$needle];
-                }
-                // Partial match
+                if (isset($cityLookupMap[$needle])) return $cityLookupMap[$needle];
                 foreach ($cityLookupMap as $key => $entry) {
-                    if (str_contains($key, $needle) || str_contains($needle, $key)) {
-                        return $entry;
-                    }
+                    if (str_contains($key, $needle) || str_contains($needle, $key)) return $entry;
                 }
             }
-
             return null;
         };
 
-        // ── Validate all rows upfront and collect city errors ───────────
         $validationErrors = [];
         foreach ($leads as $i => $lead) {
-            $resolved = $quickResolve($lead);
             $cityName = $lead['destination_city_name'] ?? ($lead['district'] ?? null);
-
-            if (!empty($cityName) && !$resolved) {
+            if (!empty($cityName) && !$quickResolve($lead)) {
                 $validationErrors[] = [
-                    'row'     => $i + 1,
-                    'name'    => $lead['customer_name'] ?? '-',
-                    'city'    => $cityName,
-                    'message' => "City \"{$cityName}\" not found in Curfox delivery network.",
+                    'row' => $i + 1, 'name' => $lead['customer_name'] ?? '-',
+                    'city' => $cityName, 'message' => "City \"{$cityName}\" not found in Curfox delivery network.",
                 ];
             }
         }
 
         if (!empty($validationErrors)) {
             return response()->json([
-                'success'           => false,
-                'message'           => count($validationErrors) . ' rows have invalid city names. Please fix and re-upload.',
-                'city_errors'       => $validationErrors,
-                'city_errors_count' => count($validationErrors),
+                'success' => false, 'message' => count($validationErrors) . ' rows have invalid city names.',
+                'city_errors' => $validationErrors, 'city_errors_count' => count($validationErrors),
             ], 422);
         }
 
-        // ── Process imports ────────────────────────────────────────────
         $date              = $request->date ?? now()->toDateString();
         $defaultPlatform   = $request->default_platform ?? 'fb';
         $defaultPayment    = $request->default_payment_method ?? 'cash';
         $defaultCallStatus = $request->default_call_status ?? 'Pending Call';
 
-        $successCount = 0;
-        $errorCount   = 0;
-        $errors       = [];
+        $successCount = 0; $errorCount = 0; $errors = [];
 
         try {
             DB::beginTransaction();
-
-            // Lock product row
             $product = SellerProduct::where('id', $product->id)->lockForUpdate()->first();
 
             foreach ($leads as $i => $lead) {
@@ -577,56 +411,44 @@ class SellerOrderController extends Controller
 
                     $orderId  = self::generateOrderId();
                     $resolved = $quickResolve($lead);
-
-                    // City is required — if still null after resolve, use fallback text or fail
-                    $rawCity = $lead['destination_city_name'] ?? ($lead['district'] ?? null);
+                    $rawCity  = $lead['destination_city_name'] ?? ($lead['district'] ?? null);
 
                     if ($resolved) {
                         $finalCityId    = $resolved['id'];
                         $finalCityName  = $resolved['city_name'];
                         $finalStateName = $resolved['state_name'];
                     } elseif ($rawCity) {
-                        // Non-Curfox city or API list not loaded — store raw value (no city_id)
                         $finalCityId    = null;
                         $finalCityName  = trim($rawCity);
                         $finalStateName = $lead['destination_state_name'] ?? '';
                     } else {
-                        // No city at all — skip row
                         throw new Exception('Delivery city is required but was not provided.');
                     }
 
                     SellerOrder::create([
-                        'seller_id'   => $user->id,
-                        'order_id'    => $orderId,
+                        'seller_id'    => $user->id,
+                        'order_id'     => $orderId,
                         'order_number' => $orderId,
-
-                        'product_id'    => $product->id,
-                        'product_name'  => $product->name,
-                        'product_code'  => $product->code,
-                        'product_price' => (float) $product->display_price,
-                        'product_image' => $product->image,
-
+                        'product_id'   => $product->id,
+                        'product_name' => $product->name,
+                        'product_code' => $product->code,
+                        'product_price'=> (float) $product->display_price,
+                        'product_image'=> $product->image,
                         'customer_name'    => $lead['customer_name'],
                         'customer_phone'   => $lead['customer_phone'],
                         'customer_address' => $lead['customer_address'] ?? null,
-
-                        // ✅ All three are guaranteed non-null
                         'district'               => $finalCityName,
                         'destination_city_id'    => $finalCityId,
                         'destination_city_name'  => $finalCityName,
                         'destination_state_name' => $finalStateName,
-
-                        'platform'    => $lead['platform']        ?? $defaultPlatform,
+                        'platform'    => $lead['platform']  ?? $defaultPlatform,
                         'call_status' => $defaultCallStatus,
-                        'remark'      => $lead['remark']          ?? null,
-
-                        'order_date' => $date,
-                        'status'     => 'pending',
-
-                        'quantity'     => 1,
-                        'subtotal'     => (float) $product->display_price,
-                        'total_amount' => (float) $product->display_price,
-
+                        'remark'      => $lead['remark']    ?? null,
+                        'order_date'  => $date,
+                        'status'      => 'pending',
+                        'quantity'    => 1,
+                        'subtotal'    => (float) $product->display_price,
+                        'total_amount'=> (float) $product->display_price,
                         'payment_method' => $lead['payment_method'] ?? $defaultPayment,
                         'payment_status' => 'pending',
                     ]);
@@ -654,17 +476,11 @@ class SellerOrderController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Bulk store error: ' . $e->getMessage(),
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'Bulk store error: ' . $e->getMessage()], 500);
         }
     }
 
-    // ──────────────────────────────────────────────────────────────────────
-    // ✅ BULK VALIDATE (AJAX) — pre-check cities before import
-    // Called by JS after CSV parse; returns per-row city status
-    // ──────────────────────────────────────────────────────────────────────
+    // ── BULK VALIDATE ──────────────────────────────────────────────────────
     public function bulkValidate(Request $request)
     {
         if (is_string($request->input('leads'))) {
@@ -672,29 +488,20 @@ class SellerOrderController extends Controller
             $request->merge(['leads' => is_array($decoded) ? $decoded : []]);
         }
 
-        $request->validate([
-            'leads'            => 'required|array|min:1',
-            'leads.*.district' => 'nullable|string',
-        ]);
+        $request->validate(['leads' => 'required|array|min:1', 'leads.*.district' => 'nullable|string']);
 
         try {
             $statesWithCities = $this->curfox->getStatesWithCities();
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Could not load city list from Curfox: ' . $e->getMessage(),
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'Could not load city list: ' . $e->getMessage()], 500);
         }
 
-        // Build lookup
         $cityLookupMap = [];
         foreach ($statesWithCities as $state) {
             foreach ($state['cities'] ?? [] as $city) {
                 if (!($city['is_active'] ?? true)) continue;
                 $cityLookupMap[strtolower(trim($city['name']))] = [
-                    'id'         => $city['id'],
-                    'city_name'  => $city['name'],
-                    'state_name' => $state['name'],
+                    'id' => $city['id'], 'city_name' => $city['name'], 'state_name' => $state['name'],
                 ];
             }
         }
@@ -705,22 +512,14 @@ class SellerOrderController extends Controller
             $needle  = strtolower(trim($rawCity));
 
             if (empty($needle)) {
-                $results[] = [
-                    'row'    => $i + 1,
-                    'input'  => '',
-                    'status' => 'missing',
-                    'resolved' => null,
-                ];
+                $results[] = ['row' => $i + 1, 'input' => '', 'status' => 'missing', 'resolved' => null];
                 continue;
             }
 
             $resolved = null;
-
-            // Exact
             if (isset($cityLookupMap[$needle])) {
                 $resolved = $cityLookupMap[$needle];
             } else {
-                // Partial
                 foreach ($cityLookupMap as $key => $entry) {
                     if (str_contains($key, $needle) || str_contains($needle, $key)) {
                         $resolved = $entry;
@@ -729,12 +528,7 @@ class SellerOrderController extends Controller
                 }
             }
 
-            $results[] = [
-                'row'      => $i + 1,
-                'input'    => $rawCity,
-                'status'   => $resolved ? 'ok' : 'invalid',
-                'resolved' => $resolved,
-            ];
+            $results[] = ['row' => $i + 1, 'input' => $rawCity, 'status' => $resolved ? 'ok' : 'invalid', 'resolved' => $resolved];
         }
 
         $invalid = array_filter($results, fn($r) => $r['status'] === 'invalid');
@@ -750,31 +544,20 @@ class SellerOrderController extends Controller
         ]);
     }
 
-    // ──────────────────────────────────────────────────────────────────────
-    // ✅ CURFOX DISPATCH — push a pending order to Curfox API
-    // Matches: POST /api/public/merchant/order/single
-    // ──────────────────────────────────────────────────────────────────────
+    // ── CURFOX DISPATCH ────────────────────────────────────────────────────
     public function dispatchToCurfox(Request $request, $id)
     {
-        if (! Schema::hasTable('seller_orders')) abort(404);
+        if (!Schema::hasTable('seller_orders')) abort(404);
 
         $user  = Auth::user();
         $order = SellerOrder::where('seller_id', $user->id)->findOrFail($id);
 
-        // Must have city info
         if (empty($order->destination_city_name) || empty($order->destination_state_name)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order is missing destination city or state. Please update the order before dispatching.',
-            ], 422);
+            return response()->json(['success' => false, 'message' => 'Order is missing destination city or state.'], 422);
         }
 
-        // Build Curfox payload matching the API spec
         try {
-            $merchantBusinessId = $user->curfox_business_id
-                ?? config('services.curfox.merchant_business_id');
-
-            // Origin — from seller profile or config
+            $merchantBusinessId = $user->curfox_business_id ?? config('services.curfox.merchant_business_id');
             $originCity  = $user->origin_city_name  ?? config('services.curfox.origin_city_name',  'Colombo');
             $originState = $user->origin_state_name ?? config('services.curfox.origin_state_name', 'Colombo');
 
@@ -784,77 +567,48 @@ class SellerOrderController extends Controller
                     'origin_city_name'     => $originCity,
                     'origin_state_name'    => $originState,
                 ],
-                'order_data' => [
-                    [
-                        'order_no'                 => $order->order_number,
-                        'customer_name'            => $order->customer_name,
-                        'customer_address'         => $order->customer_address ?? $order->district ?? '',
-                        'customer_phone'           => $order->customer_phone,
-                        'customer_secondary_phone' => $order->customer_phone_2 ?? null,
-                        'destination_city_name'    => $order->destination_city_name,
-                        'destination_state_name'   => $order->destination_state_name,
-                        'cod'                      => (int) $order->total_amount,
-                        'description'              => $order->product_name ?? '',
-                        'weight'                   => (float) ($order->weight ?? 1),
-                        'remark'                   => $order->remark ?? '',
-                    ],
-                ],
+                'order_data' => [[
+                    'order_no'              => $order->order_number,
+                    'customer_name'         => $order->customer_name,
+                    'customer_address'      => $order->customer_address ?? $order->district ?? '',
+                    'customer_phone'        => $order->customer_phone,
+                    'destination_city_name' => $order->destination_city_name,
+                    'destination_state_name'=> $order->destination_state_name,
+                    'cod'                   => (int) $order->total_amount,
+                    'description'           => $order->product_name ?? '',
+                    'weight'                => (float) ($order->weight ?? 1),
+                    'remark'                => $order->remark ?? '',
+                ]],
             ];
 
-            // Call Curfox service
             $response = $this->curfox->createOrder($payload);
+            $waybill  = $response['data'][0] ?? null;
 
-            // Store waybill
-            $waybill = $response['data'][0] ?? null;
             if ($waybill) {
-                $order->update([
-                    'curfox_waybill'       => $waybill,
-                    'curfox_dispatched_at' => now(),
-                ]);
+                $order->update(['curfox_waybill' => $waybill, 'curfox_dispatched_at' => now()]);
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Order dispatched to Curfox successfully.',
-                'waybill' => $waybill,
-                'data'    => $response,
-            ]);
+            return response()->json(['success' => true, 'message' => 'Dispatched successfully.', 'waybill' => $waybill, 'data' => $response]);
 
         } catch (Exception $e) {
-            Log::error('Curfox dispatch failed', [
-                'order_id' => $id,
-                'message'  => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Curfox dispatch failed: ' . $e->getMessage(),
-            ], 500);
+            Log::error('Curfox dispatch failed', ['order_id' => $id, 'message' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Curfox dispatch failed: ' . $e->getMessage()], 500);
         }
     }
 
-    // ──────────────────────────────────────────────────────────────────────
-    // PRODUCT DETAILS (AJAX)
-    // ──────────────────────────────────────────────────────────────────────
+    // ── PRODUCT DETAILS AJAX ───────────────────────────────────────────────
     public function getProductDetails($code)
     {
         try {
             $seller = Auth::user();
-            if (! $seller) return response()->json(['success' => false, 'message' => 'User not authenticated'], 401);
-
-            $decodedCode = urldecode($code);
+            if (!$seller) return response()->json(['success' => false, 'message' => 'User not authenticated'], 401);
 
             $product = SellerProduct::where('seller_id', $seller->id)
-                ->where('code', $decodedCode)
+                ->where('code', urldecode($code))
                 ->with('category')
                 ->first();
 
-            if (! $product) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Product not found with code: ' . $decodedCode,
-                ], 404);
-            }
+            if (!$product) return response()->json(['success' => false, 'message' => 'Product not found'], 404);
 
             return response()->json([
                 'success' => true,
@@ -872,16 +626,12 @@ class SellerOrderController extends Controller
                     'image'         => $product->image ? asset('storage/' . $product->image) : null,
                 ],
             ]);
-
         } catch (Exception $e) {
-            Log::error('Get product details error', ['code' => $code, 'error' => $e->getMessage()]);
             return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
         }
     }
 
-    // ──────────────────────────────────────────────────────────────────────
-    // LIST PAGES
-    // ──────────────────────────────────────────────────────────────────────
+    // ── LIST PAGES ─────────────────────────────────────────────────────────
     public function pendingOrder()
     {
         $user   = Auth::user();
@@ -956,7 +706,7 @@ class SellerOrderController extends Controller
 
     public function show($id)
     {
-        if (! Schema::hasTable('seller_orders')) abort(404);
+        if (!Schema::hasTable('seller_orders')) abort(404);
 
         $order = SellerOrder::where('seller_id', Auth::id())
             ->with('product')
@@ -965,9 +715,15 @@ class SellerOrderController extends Controller
         return view('seller.order.order-show', compact('order'));
     }
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // UPDATE — THE KEY FIX IS HERE
+    // When complete + Confirmed:
+    //   → system_seller:  create EmployeeDeliveryCall  (unchanged)
+    //   → self_seller:    create SelfSellerDeliveryCall (NEW)
+    // ═══════════════════════════════════════════════════════════════════════
     public function update(Request $request, $id)
     {
-        if (! Schema::hasTable('seller_orders')) {
+        if (!Schema::hasTable('seller_orders')) {
             return redirect()->back()->with('error', 'Orders table not found');
         }
 
@@ -1004,23 +760,35 @@ class SellerOrderController extends Controller
 
         $order->update($data);
 
-        // ── Auto-create EmployeeDeliveryCall when Complete + Confirmed ──
+        // ══════════════════════════════════════════════════════════════════
+        // Route confirmed+complete orders to the correct delivery table
+        // based on the seller's type.
+        // ══════════════════════════════════════════════════════════════════
         if ($request->status === 'complete' && $request->call_status === 'Confirmed') {
+
+            /** @var Saler $seller */
+            $seller  = Saler::find($order->seller_id);
             $product = SellerProduct::find($order->product_id);
-            $this->createEmployeeDeliveryCall($order, $product);
+
+            if ($seller && $seller->type === 'self_seller') {
+                // ── Self-seller → their own delivery table ─────────────
+                $this->createSelfSellerDeliveryCall($order, $seller, $product);
+            } else {
+                // ── System-seller (or no type set) → employee table ────
+                $this->createEmployeeDeliveryCall($order, $product);
+            }
         }
-        // ───────────────────────────────────────────────────────────────
 
         return redirect()->back()->with('success', 'Order updated successfully!');
     }
 
+    // ── Creates a delivery call in EmployeeDeliveryCall (system_seller) ──
     private function createEmployeeDeliveryCall(SellerOrder $order, ?SellerProduct $product): void
     {
         try {
-            // Avoid duplicate delivery calls for the same order
             $exists = \App\Models\EmployeeDeliveryCall::where('order_code', $order->order_number)->exists();
             if ($exists) {
-                Log::info('EmployeeDeliveryCall already exists for order', ['order_number' => $order->order_number]);
+                Log::info('EmployeeDeliveryCall already exists', ['order_number' => $order->order_number]);
                 return;
             }
 
@@ -1028,7 +796,7 @@ class SellerOrderController extends Controller
                 'seller_id'              => $order->seller_id,
                 'product_id'             => $order->product_id,
                 'order_code'             => $order->order_number,
-                'call_number'            => $order->order_number, // reuse order number as call ref
+                'call_number'            => $order->order_number,
                 'date'                   => now()->toDateString(),
                 'status_date'            => now(),
                 'customer_name'          => $order->customer_name,
@@ -1044,29 +812,78 @@ class SellerOrderController extends Controller
                 'qty'                    => $order->quantity,
                 'price'                  => $order->product_price,
                 'total'                  => $order->total_amount,
-                'status'                 => 'Pending',   // starts at Pending in delivery flow
+                'status'                 => 'Pending',
                 'remark'                 => $order->remark ?? 'Auto-created from confirmed order',
                 'platform'               => $order->platform ?? 'manual',
                 'download_status'        => false,
             ]);
 
-            Log::info('EmployeeDeliveryCall auto-created from confirmed order', [
-                'order_id'     => $order->id,
-                'order_number' => $order->order_number,
-            ]);
+            Log::info('EmployeeDeliveryCall auto-created', ['order_number' => $order->order_number]);
 
         } catch (\Exception $e) {
             Log::error('Failed to auto-create EmployeeDeliveryCall', [
                 'order_id' => $order->id ?? null,
                 'error'    => $e->getMessage(),
             ]);
-            // Non-fatal — order update already succeeded
+        }
+    }
+
+    // ── Creates a delivery call in SelfSellerDeliveryCall (self_seller) ──
+    private function createSelfSellerDeliveryCall(SellerOrder $order, Saler $seller, ?SellerProduct $product): void
+    {
+        try {
+            // Avoid duplicates
+            $exists = SelfSellerDeliveryCall::where('order_code', $order->order_number)
+                ->where('seller_id', $seller->id)
+                ->exists();
+
+            if ($exists) {
+                Log::info('SelfSellerDeliveryCall already exists', ['order_number' => $order->order_number]);
+                return;
+            }
+
+            SelfSellerDeliveryCall::create([
+                'seller_id'              => $seller->id,
+                'product_id'             => $order->product_id,
+                'order_code'             => $order->order_number,
+                'call_number'            => SelfSellerDeliveryCall::generateCallNumber($seller->id),
+                'date'                   => now()->toDateString(),
+                'status_date'            => now(),
+                'customer_name'          => $order->customer_name,
+                'customer_phone_01'      => $order->customer_phone,
+                'customer_phone_02'      => null,
+                'customer_address'       => $order->customer_address,
+                'city'                   => $order->destination_city_name,
+                'district'               => $order->district,
+                'destination_city_id'    => $order->destination_city_id,
+                'destination_state_name' => $order->destination_state_name,
+                'item_code'              => $order->product_code,
+                'item_name'              => $order->product_name,
+                'qty'                    => $order->quantity,
+                'price'                  => $order->product_price,
+                'total'                  => $order->total_amount,
+                'status'                 => 'Pending',
+                'remark'                 => $order->remark ?? 'Auto-created from confirmed order',
+                'platform'               => $order->platform ?? 'manual',
+                'download_status'        => false,
+            ]);
+
+            Log::info('SelfSellerDeliveryCall auto-created', [
+                'seller_id'    => $seller->id,
+                'order_number' => $order->order_number,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to auto-create SelfSellerDeliveryCall', [
+                'order_id' => $order->id ?? null,
+                'error'    => $e->getMessage(),
+            ]);
         }
     }
 
     public function destroy($id)
     {
-        if (! Schema::hasTable('seller_orders')) {
+        if (!Schema::hasTable('seller_orders')) {
             return redirect()->back()->with('error', 'Orders table not found');
         }
 
@@ -1100,33 +917,24 @@ class SellerOrderController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error('Error deleting order', ['order_id' => $id, 'error' => $e->getMessage()]);
             return redirect()->back()->with('error', 'Error deleting order: ' . $e->getMessage());
         }
     }
 
-    // ──────────────────────────────────────────────────────────────────────
-    // HELPERS
-    // ──────────────────────────────────────────────────────────────────────
+    // ── DEPOSIT DEDUCTION HELPER ──────────────────────────────────────────
     private function deductDeposit($user): void
     {
         $cost = $user->cost ?? 0;
         if ($cost <= 0) return;
 
-        if (isset($user->cal_deposit)) {
-            $user->decrement('cal_deposit', $cost);
-        } elseif (isset($user->deposit)) {
-            $user->decrement('deposit', $cost);
-        } else {
-            try {
+        try {
+            if (isset($user->cal_deposit)) {
                 $user->decrement('cal_deposit', $cost);
-            } catch (Exception $e) {
-                try {
-                    $user->decrement('deposit', $cost);
-                } catch (Exception $e2) {
-                    Log::warning('Could not decrement deposit', ['user_id' => $user->id]);
-                }
+            } elseif (isset($user->deposit)) {
+                $user->decrement('deposit', $cost);
             }
+        } catch (Exception $e) {
+            Log::warning('Could not decrement deposit', ['user_id' => $user->id]);
         }
     }
 }
