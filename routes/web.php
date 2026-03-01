@@ -45,7 +45,6 @@ Route::post('/',[LoginController::class,'loginCheck'])->name('login.check');
 
 
 
-
 // ========== ADMIN ROUTES ==========
 Route::middleware('auth:admin')->group(function(){
     Route::prefix('admin')->group(function () {
@@ -127,10 +126,10 @@ Route::middleware('auth:seller')->group(function(){
 
         // Shop Routes
         Route::prefix('shop')->name('seller.shop.')->group(function () {
-            Route::get('/', [SellerShopController::class, 'index'])->name('seller.index'); // Fixed: changed from seller.index to index
+            Route::get('/', [SellerShopController::class, 'index'])->name('seller.index');
             Route::get('/product/view/{product}', [\App\Http\Controllers\Seller\SellerShopController::class, 'showProduct'])->name('product.show');
             Route::get('/product/{code}/details', [SellerShopController::class, 'getProductDetails'])->name('product.details');
-            Route::get('/product/find/{code}', [SellerShopController::class, 'findByCode'])->name('product.find'); // FIXED: This route was missing
+            Route::get('/product/find/{code}', [SellerShopController::class, 'findByCode'])->name('product.find');
             Route::post('/product/copy/{code}', [SellerShopController::class, 'copyProductCode'])->name('product.copy');
             Route::post('/order-now', [SellerShopController::class, 'orderNow'])->name('order.now');
             Route::post('/quick-order', [SellerShopController::class, 'quickOrder'])->name('quick.order');
@@ -142,6 +141,7 @@ Route::middleware('auth:seller')->group(function(){
         Route::prefix('order')->name('seller.')->group(function () {
             Route::get('new-order', [SellerOrderController::class, 'index'])->name('new-order');
             Route::post('store', [SellerOrderController::class, 'store'])->name('order.store');
+            Route::get('cities/json', [SellerOrderController::class, 'citiesJson'])->name('order.cities.json');
 
             // Order list views
             Route::get('pending-order', [SellerOrderController::class, 'pendingOrder'])->name('pending-order');
@@ -174,7 +174,7 @@ Route::middleware('auth:seller')->group(function(){
             Route::get('/history',[SellerPaymentController::class,'payment_history'])->name('seller.payment_history');
         });
 
-        //seller call
+        // Seller Call Routes
         Route::prefix('call')->name('call.')->group(function () {
             // List views
             Route::get('/', [SellerCallController::class, 'index'])->name('index');
@@ -202,12 +202,19 @@ Route::middleware('auth:seller')->group(function(){
             // Additional routes
             Route::get('/seller-products', [SellerCallController::class, 'getSellerProducts'])->name('seller_products');
             Route::get('/csrf-refresh', [SellerCallController::class, 'csrfRefresh'])->name('csrf_refresh');
+
+            // ── Curfox / delivery confirm routes ─────────────────────────
+            Route::post('/{id}/confirm', [SellerCallController::class, 'confirmCall'])->name('confirm');
+            Route::post('/bulk-confirm', [SellerCallController::class, 'bulkConfirmCalls'])->name('bulk_confirm');
+            Route::get('/curfox-cities', [SellerCallController::class, 'curfoxCitiesJson'])->name('curfox_cities');
+            // ─────────────────────────────────────────────────────────────
         });
-        // Seller Product Routes - UPDATED
+
+        // Seller Product Routes
         Route::prefix('product')->name('seller.product.')->group(function (){
             Route::get('/', [SellerProductController::class, 'index'])->name('index');
             Route::get('/create', [SellerProductController::class, 'create'])->name('create');
-            Route::post('/', [SellerProductController::class, 'store'])->name('store'); // Fixed
+            Route::post('/', [SellerProductController::class, 'store'])->name('store');
             Route::get('/{id}', [SellerProductController::class, 'show'])->name('show');
             Route::get('/{id}/edit', [SellerProductController::class, 'edit'])->name('edit');
             Route::put('/{id}', [SellerProductController::class, 'update'])->name('update');
@@ -235,8 +242,6 @@ Route::middleware('auth:seller')->group(function(){
             Route::get('/{id}/edit', [SellerCategoryController::class, 'edit'])->name('edit');
             Route::put('/{id}', [SellerCategoryController::class, 'update'])->name('update');
             Route::delete('/{id}', [SellerCategoryController::class, 'destroy'])->name('destroy');
-
-            // Add this if you want toggle functionality
             Route::patch('/{id}/toggle-status', [SellerCategoryController::class, 'toggleStatus'])->name('toggle-status');
         });
 
