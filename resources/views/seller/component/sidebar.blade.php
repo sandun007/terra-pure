@@ -274,19 +274,7 @@
                 </a>
             </li>
 
-            <li>
-                <a href="{{ route('seller.order.csv-upload') }}"
-                   class="{{ request()->routeIs('seller.order.csv-upload') ? 'active' : '' }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="17 8 12 3 7 8"></polyline>
-                        <line x1="12" y1="3" x2="12" y2="15"></line>
-                    </svg>
-                    <span>Upload CSV / Leads</span>
-                    <span class="menu-badge-blue">NEW</span>
-                </a>
-            </li>
+
 
             <li>
                 <a href="{{ route('seller.pending-order') }}"
@@ -385,17 +373,7 @@
         </ul>
     </li>
 
-    <!-- CALL MANAGEMENT -->
-    <li class="submenu-open">
-        <h6 class="submenu-hdr">Call Management</h6>
-        <ul>
-            <li><a href="{{ route('call.index') }}" class="{{ request()->routeIs('call.index') ? 'active' : '' }}"><span>Pending Call List</span></a></li>
-            <li><a href="{{ route('call.conform') }}" class="{{ request()->routeIs('call.conform') ? 'active' : '' }}"><span>Conform Call List</span></a></li>
-            <li><a href="{{ route('call.reject') }}" class="{{ request()->routeIs('call.reject') ? 'active' : '' }}"><span>Reject Call List</span></a></li>
-            <li><a href="{{ route('call.not_answer_call_list') }}" class="{{ request()->routeIs('call.not_answer_call_list') ? 'active' : '' }}"><span>Not Answer List</span></a></li>
-            <li><a href="{{ route('call.other_call_list') }}" class="{{ request()->routeIs('call.other_call_list') ? 'active' : '' }}"><span>Other Call List</span></a></li>
-        </ul>
-    </li>
+
 
     <!-- SALES -->
     <li class="submenu-open">

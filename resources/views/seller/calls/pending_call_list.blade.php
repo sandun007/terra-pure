@@ -55,12 +55,11 @@
             </div>
         </div>
         <div class="d-flex flex-wrap gap-2 mt-3">
-            <a href="{{ route('call.index') }}"              class="nav-btn active"><i class="fas fa-clock"></i> Pending <span class="badge bg-warning text-dark ms-1">{{ $callsCount }}</span></a>
-            <a href="{{ route('call.conform') }}"            class="nav-btn"><i class="fas fa-check-circle"></i> Confirmed</a>
-            <a href="{{ route('call.reject') }}"             class="nav-btn"><i class="fas fa-times-circle"></i> Rejected</a>
-            <a href="{{ route('call.not_answer_call_list') }}"class="nav-btn"><i class="fas fa-phone-slash"></i> Not Answered</a>
-            <a href="{{ route('call.other_call_list') }}"    class="nav-btn"><i class="fas fa-ellipsis-h"></i> Other</a>
-            {{-- Shortcut to employee delivery queue --}}
+            <a href="{{ route('call.index') }}"               class="nav-btn active"><i class="fas fa-clock"></i> Pending <span class="badge bg-warning text-dark ms-1">{{ $callsCount }}</span></a>
+            <a href="{{ route('call.conform') }}"             class="nav-btn"><i class="fas fa-check-circle"></i> Confirmed</a>
+            <a href="{{ route('call.reject') }}"              class="nav-btn"><i class="fas fa-times-circle"></i> Rejected</a>
+            <a href="{{ route('call.not_answer_call_list') }}" class="nav-btn"><i class="fas fa-phone-slash"></i> Not Answered</a>
+            <a href="{{ route('call.other_call_list') }}"     class="nav-btn"><i class="fas fa-ellipsis-h"></i> Other</a>
             <a href="{{ route('employee.delivery_calls.pending') }}" class="nav-btn" style="background:rgba(16,185,129,.3)">
                 <i class="fas fa-truck"></i> Delivery Queue
             </a>
@@ -206,7 +205,11 @@
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        const CONFIRM_URL = '{{ route("call.confirm", ["id" => "__ID__"]) }}';
+        {{-- ── FIX #11: pass the real route and replace the literal placeholder in JS,
+             not in PHP. route('call.confirm', ['id' => '__ID__']) would URL-encode
+             the double-underscores in some Laravel versions, producing a broken URL.
+             Instead, generate the base URL without the id and append it in JS. ── --}}
+        const CONFIRM_BASE_URL = '{{ url("/seller/calls") }}';
         const BULK_CONFIRM_URL = '{{ route("call.bulk_confirm") }}';
         const CSRF_TOKEN       = '{{ csrf_token() }}';
 
@@ -221,7 +224,7 @@
 
             $('#searchInput').on('keyup', function () { table.search(this.value).draw(); });
 
-            // Date filter (col 4)
+            // Date filter on col 4
             $.fn.dataTable.ext.search.push(function (settings, data) {
                 if (settings.nTable.id !== 'callsTable') return true;
                 const min = $('#dateFrom').val(), max = $('#dateTo').val();
@@ -257,11 +260,15 @@
             $(document).on('change', '.call-checkbox', syncSelectAll);
         });
 
-        // ── Single Confirm ───────────────────────────────────────────────────
+        // ── Single Confirm ────────────────────────────────────────────────
         $(document).on('click', '.confirm-btn', function () {
             const id   = $(this).data('id');
             const name = $(this).data('name');
             const city = $(this).data('city');
+
+            // ── FIX #11 cont.: build confirm URL safely in JS ──
+            const confirmUrl = CONFIRM_BASE_URL + '/' + id + '/confirm';
+
             Swal.fire({
                 title: 'Confirm Call?',
                 html: `<p>Customer: <strong>${name}</strong></p><p>City: <strong>${city}</strong></p><p style="color:#64748b;font-size:13px">This will create a delivery call and send it to the employee delivery queue.</p>`,
@@ -272,20 +279,27 @@
                 confirmButtonText: '<i class="fas fa-check-double me-1"></i>Confirm & Send',
                 showLoaderOnConfirm: true,
                 preConfirm: () => {
-                    return fetch(CONFIRM_URL.replace('__ID__', id), {
+                    return fetch(confirmUrl, {
                         method: 'POST',
-                        headers: { 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json', 'Content-Type': 'application/json' }
-                    }).then(r => r.json()).catch(err => Swal.showValidationMessage('Error: ' + err.message));
+                        headers: {
+                            'X-CSRF-TOKEN': CSRF_TOKEN,
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                        .then(r => r.json())
+                        .catch(err => Swal.showValidationMessage('Error: ' + err.message));
                 },
                 allowOutsideClick: () => !Swal.isLoading()
             }).then(result => {
                 if (result.isConfirmed && result.value?.success) {
-                    // Remove row from table
                     $(`#row-${id}`).fadeOut(400, function () { $(this).remove(); });
                     Swal.fire({
-                        icon: 'success', title: 'Confirmed!',
+                        icon: 'success',
+                        title: 'Confirmed!',
                         html: `<p>${result.value.message}</p><a href="{{ route('employee.delivery_calls.pending') }}" class="btn btn-primary btn-sm mt-2"><i class="fas fa-truck me-1"></i>View Delivery Queue</a>`,
-                        showConfirmButton: true, confirmButtonText: 'OK'
+                        showConfirmButton: true,
+                        confirmButtonText: 'OK'
                     });
                 } else if (result.value && !result.value.success) {
                     Swal.fire({ icon: 'error', title: 'Failed', text: result.value.message });
@@ -293,7 +307,7 @@
             });
         });
 
-        // ── Bulk Action ──────────────────────────────────────────────────────
+        // ── Bulk Action ───────────────────────────────────────────────────
         function bulkAction(type) {
             const ids = [];
             $('.call-checkbox:checked').each(function () { ids.push($(this).val()); });
@@ -314,25 +328,35 @@
                     preConfirm: () => {
                         return fetch(BULK_CONFIRM_URL, {
                             method: 'POST',
-                            headers: { 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                            headers: {
+                                'X-CSRF-TOKEN': CSRF_TOKEN,
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
                             body: JSON.stringify({ call_ids: ids })
-                        }).then(r => r.json()).catch(err => Swal.showValidationMessage('Error: ' + err.message));
+                        })
+                            .then(r => r.json())
+                            .catch(err => Swal.showValidationMessage('Error: ' + err.message));
                     },
                     allowOutsideClick: () => !Swal.isLoading()
                 }).then(result => {
                     if (result.isConfirmed && result.value?.success) {
                         Swal.fire({
-                            icon: 'success', title: 'Done!',
+                            icon: 'success',
+                            title: 'Done!',
                             text: result.value.message,
                             showConfirmButton: true
                         }).then(() => window.location.reload());
                     }
                 });
+
             } else if (type === 'reject') {
                 Swal.fire({
                     title: `Reject ${ids.length} call(s)?`,
-                    icon: 'warning', showCancelButton: true,
-                    confirmButtonColor: '#ef4444', confirmButtonText: 'Yes, Reject'
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    confirmButtonText: 'Yes, Reject'
                 }).then(r => {
                     if (r.isConfirmed) {
                         $.ajax({
@@ -340,8 +364,12 @@
                             type: 'POST',
                             data: { _token: CSRF_TOKEN, call_ids: ids, status: 'Reject' },
                             success: res => {
-                                if (res.success) Swal.fire({ icon:'success', title:'Done!', text:res.message, timer:2000 }).then(() => location.reload());
-                                else Swal.fire({ icon:'error', title:'Error!', text:res.message });
+                                if (res.success) {
+                                    Swal.fire({ icon:'success', title:'Done!', text:res.message, timer:2000 })
+                                        .then(() => location.reload());
+                                } else {
+                                    Swal.fire({ icon:'error', title:'Error!', text:res.message });
+                                }
                             }
                         });
                     }
@@ -352,9 +380,12 @@
         function confirmDelete(event, form) {
             event.preventDefault();
             Swal.fire({
-                title: 'Delete?', text: 'This call will be permanently deleted.',
-                icon: 'warning', showCancelButton: true,
-                confirmButtonColor: '#d33', confirmButtonText: 'Delete'
+                title: 'Delete?',
+                text: 'This call will be permanently deleted.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Delete'
             }).then(r => { if (r.isConfirmed) form.submit(); });
             return false;
         }

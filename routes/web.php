@@ -37,6 +37,39 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
+use App\Services\Curfoxapiservice;
+
+
+Route::middleware('auth:seller')->get('/seller/debug/curfox', function (Curfoxapiservice $curfox) {
+    $tokenOk = false;
+    $statesCount = 0;
+    $citiesCount = 0;
+
+    try {
+        $token = $curfox->getToken();
+        $tokenOk = !empty($token);
+
+        $states = $curfox->getStatesWithCities();
+        $statesCount = count($states);
+
+        $cities = $curfox->getAllCities();
+        $citiesCount = count($cities);
+
+        return response()->json([
+            'success' => true,
+            'token_ok' => $tokenOk,
+            'states_count' => $statesCount,
+            'cities_count' => $citiesCount,
+            'sample_state' => $states[0]['name'] ?? null,
+            'sample_city' => $cities[0]['name'] ?? null,
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage(),
+        ], 500);
+    }
+});
 
 
 Route::get('/', [PageController::class, 'login'])->name('login');
@@ -137,10 +170,16 @@ Route::middleware('auth:seller')->group(function(){
             Route::get('/redirect-to-order', [SellerShopController::class, 'redirectToNewOrder'])->name('redirect.order');
         });
 
+
         // Seller Order Routes
         Route::prefix('order')->name('seller.')->group(function () {
             Route::get('new-order', [SellerOrderController::class, 'index'])->name('new-order');
             Route::post('store', [SellerOrderController::class, 'store'])->name('order.store');
+
+            // ✅ bulk store for same page CSV import
+            Route::post('bulk-store', [SellerOrderController::class, 'bulkStore'])->name('order.bulk-store');
+            Route::post('bulk-validate', [SellerOrderController::class, 'bulkValidate'])->name('order.bulk-validate');
+            Route::post('{id}/dispatch', [SellerOrderController::class, 'dispatchToCurfox'])->name('order.dispatch');
             Route::get('cities/json', [SellerOrderController::class, 'citiesJson'])->name('order.cities.json');
 
             // Order list views
@@ -158,10 +197,6 @@ Route::middleware('auth:seller')->group(function(){
             Route::get('product/{code}/details', [SellerOrderController::class, 'getProductDetails'])
                 ->name('product.details')
                 ->where('code', '.*');
-
-            // CSV Upload routes
-            Route::get('csv-upload', [SellerOrderController::class, 'csvUploadPage'])->name('order.csv-upload');
-            Route::post('csv-insert', [SellerOrderController::class, 'csvInsert'])->name('order.csv-insert');
         });
 
         Route::prefix('product')->group(function () {
@@ -252,22 +287,25 @@ Route::middleware('auth:seller')->group(function(){
 // ========== EMPLOYEE ROUTES ==========
 Route::prefix('employee')->middleware('auth:employee')->group(function(){
 
+    // Delivery Calls
     Route::prefix('delivery-calls')->name('employee.delivery_calls.')->group(function () {
-        Route::get('/', [EmployeeDeliveryCallController::class, 'index'])->name('index');
+        Route::get('/',            [EmployeeDeliveryCallController::class, 'index'])->name('index');
+        Route::get('/pending',     [EmployeeDeliveryCallController::class, 'pending'])->name('pending');
+        Route::get('/packing',     [EmployeeDeliveryCallController::class, 'packing'])->name('packing');
+        Route::get('/packed',      [EmployeeDeliveryCallController::class, 'packed'])->name('packed');
+        Route::get('/givedriver',  [EmployeeDeliveryCallController::class, 'givedriver'])->name('givedriver');
+        Route::get('/{id}',        [EmployeeDeliveryCallController::class, 'show'])->name('show');
 
-        Route::get('/pending', [EmployeeDeliveryCallController::class, 'pending'])->name('pending');
-        Route::get('/packing', [EmployeeDeliveryCallController::class, 'packing'])->name('packing');
-        Route::get('/packed', [EmployeeDeliveryCallController::class, 'packed'])->name('packed');
-        Route::get('/givedriver', [EmployeeDeliveryCallController::class, 'givedriver'])->name('givedriver');
+        // Business selector
+        Route::post('/set-business', [EmployeeDeliveryCallController::class, 'setBusiness'])->name('set_business');
 
-        // view details
-        Route::get('/view/{id}', [EmployeeDeliveryCallController::class, 'show'])->name('view');
+        // Status transitions
+        Route::post('/{id}/status',  [EmployeeDeliveryCallController::class, 'updateStatus'])->name('update_status');
+        Route::post('/bulk-status',  [EmployeeDeliveryCallController::class, 'bulkUpdateStatus'])->name('bulk_status');
 
-        // single next status
-        Route::put('/{id}/status', [EmployeeDeliveryCallController::class, 'updateStatus'])->name('status.update');
-
-        // bulk next status
-        Route::put('/bulk/status', [EmployeeDeliveryCallController::class, 'bulkUpdateStatus'])->name('bulk.status');
+        // Origin updates
+        Route::patch('/{id}/origin', [EmployeeDeliveryCallController::class, 'updateOrigin'])->name('update_origin');
+        Route::patch('/bulk-origin', [EmployeeDeliveryCallController::class, 'bulkUpdateOrigin'])->name('bulk_origin');
     });
 
 
@@ -293,6 +331,9 @@ Route::prefix('employee')->middleware('auth:employee')->group(function(){
         // Seller Management (Existing)
         Route::prefix('seller')->name('seller.')->group(function() {
             Route::get('/orders', [EmployeeController::class, 'sellerOrders'])->name('employee.seller.orders');
+            Route::prefix('order')->name('order.')->group(function () {
+                Route::post('/bulk-store', [SellerOrderController::class, 'bulkStore'])->name('bulk-store');
+            });
             Route::post('/orders/status/update/{id}', [EmployeeController::class, 'updateOrderStatus'])->name('orders.status-update');
             Route::get('/orders/view/{id}', [EmployeeController::class, 'viewOrder'])->name('order-view');
         });

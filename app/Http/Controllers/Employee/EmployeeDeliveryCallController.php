@@ -11,10 +11,6 @@ use Illuminate\Support\Facades\Log;
 
 class EmployeeDeliveryCallController extends Controller
 {
-    /**
-     * Status flow: each key advances to its value.
-     * null = final stage.
-     */
     private const FLOW = [
         'Pending'    => 'packing',
         'packing'    => 'packed',
@@ -22,23 +18,12 @@ class EmployeeDeliveryCallController extends Controller
         'givedriver' => null,
     ];
 
-    /**
-     * Merchant business ID for the Curfox API.
-     * Adjust to match your actual business_id from the merchant portal.
-     */
-    private const MERCHANT_BUSINESS_ID = '7809';
-
-    /**
-     * Origin warehouse city (must be a valid city name in Curfox /state API).
-     */
-    private const ORIGIN_CITY_NAME  = 'Colombo 01';
-    private const ORIGIN_STATE_NAME = 'Colombo';
+    // Fallback merchant business ID if API call fails and no session value
+    private const DEFAULT_MERCHANT_BUSINESS_ID = '7809';
 
     public function __construct(private Curfoxapiservice $curfox) {}
 
-    // ──────────────────────────────────────────────────────────────────────
-    //  PAGES
-    // ──────────────────────────────────────────────────────────────────────
+    // ── Status pages ──────────────────────────────────────────────────────
 
     public function index()
     {
@@ -60,20 +45,52 @@ class EmployeeDeliveryCallController extends Controller
 
         if ($q !== '') {
             $callsQuery->where(function ($qq) use ($q) {
-                $qq->where('order_code',        'like', "%{$q}%")
-                    ->orWhere('call_number',      'like', "%{$q}%")
-                    ->orWhere('customer_name',    'like', "%{$q}%")
-                    ->orWhere('customer_phone_01','like', "%{$q}%")
-                    ->orWhere('item_name',        'like', "%{$q}%")
-                    ->orWhere('city',             'like', "%{$q}%")
-                    ->orWhere('district',         'like', "%{$q}%");
+                $qq->where('order_code',         'like', "%{$q}%")
+                    ->orWhere('call_number',       'like', "%{$q}%")
+                    ->orWhere('customer_name',     'like', "%{$q}%")
+                    ->orWhere('customer_phone_01', 'like', "%{$q}%")
+                    ->orWhere('item_name',         'like', "%{$q}%")
+                    ->orWhere('city',              'like', "%{$q}%")
+                    ->orWhere('district',          'like', "%{$q}%");
             });
         }
 
         $calls      = $callsQuery->paginate(20)->withQueryString();
         $nextStatus = self::FLOW[$status] ?? null;
 
-        return view('employee.delivery_calls.index', compact('calls', 'status', 'nextStatus'));
+        // ── Curfox city list for origin picker ────────────────────────────
+        $curfoxCities = [];
+        try {
+            $curfoxCities = $this->curfox->getAllCities();
+        } catch (\Exception $e) {
+            Log::warning('Could not load Curfox cities for origin picker: ' . $e->getMessage());
+        }
+
+        // ── Curfox business list for merchant_business_id picker ──────────
+        $curfoxBusinesses      = [];
+        $curfoxDefaultBusiness = null;
+        try {
+            $curfoxBusinesses      = $this->curfox->getBusinesses();
+            $curfoxDefaultBusiness = $this->curfox->getDefaultBusiness();
+        } catch (\Exception $e) {
+            Log::warning('Could not load Curfox businesses: ' . $e->getMessage());
+        }
+
+        // Currently selected business ID stored in session
+        $selectedBusinessId = session(
+            'curfox_merchant_business_id',
+            $curfoxDefaultBusiness['id'] ?? self::DEFAULT_MERCHANT_BUSINESS_ID
+        );
+
+        return view('employee.delivery_calls.index', compact(
+            'calls',
+            'status',
+            'nextStatus',
+            'curfoxCities',
+            'curfoxBusinesses',
+            'curfoxDefaultBusiness',
+            'selectedBusinessId'
+        ));
     }
 
     public function show($id)
@@ -82,9 +99,92 @@ class EmployeeDeliveryCallController extends Controller
         return view('employee.delivery_calls.view', compact('call'));
     }
 
-    // ──────────────────────────────────────────────────────────────────────
-    //  SINGLE STATUS UPDATE
-    // ──────────────────────────────────────────────────────────────────────
+    // ── Business selector ─────────────────────────────────────────────────
+
+    /**
+     * POST /employee/delivery-calls/set-business
+     * Stores the chosen merchant_business_id in session so all
+     * subsequent dispatches from this employee use the correct business.
+     */
+    public function setBusiness(Request $request)
+    {
+        $v = $request->validate([
+            'merchant_business_id' => 'required|string|max:50',
+        ]);
+
+        session(['curfox_merchant_business_id' => $v['merchant_business_id']]);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success'              => true,
+                'merchant_business_id' => $v['merchant_business_id'],
+                'message'              => 'Active business updated.',
+            ]);
+        }
+
+        return back()->with('success', 'Active Curfox business updated.');
+    }
+
+    // ── Origin city update ────────────────────────────────────────────────
+
+    /**
+     * PATCH /employee/delivery-calls/{id}/origin
+     * Sets origin_city_id / name / state on a single call.
+     */
+    public function updateOrigin(Request $request, int $id)
+    {
+        $v = $request->validate([
+            'origin_city_id'    => 'required|integer',
+            'origin_city_name'  => 'required|string|max:150',
+            'origin_state_name' => 'required|string|max:150',
+        ]);
+
+        $call = EmployeeDeliveryCall::findOrFail($id);
+        $call->update([
+            'origin_city_id'    => $v['origin_city_id'],
+            'origin_city_name'  => $v['origin_city_name'],
+            'origin_state_name' => $v['origin_state_name'],
+            'curfox_error'      => null,
+        ]);
+
+        return response()->json([
+            'success'           => true,
+            'message'           => "Origin set to {$v['origin_city_name']} ({$v['origin_state_name']}).",
+            'origin_city_id'    => $call->origin_city_id,
+            'origin_city_name'  => $call->origin_city_name,
+            'origin_state_name' => $call->origin_state_name,
+        ]);
+    }
+
+    /**
+     * PATCH /employee/delivery-calls/bulk-origin
+     * Sets the same origin on all selected calls at once.
+     */
+    public function bulkUpdateOrigin(Request $request)
+    {
+        $v = $request->validate([
+            'ids'               => 'required|array|min:1',
+            'ids.*'             => 'integer',
+            'origin_city_id'    => 'required|integer',
+            'origin_city_name'  => 'required|string|max:150',
+            'origin_state_name' => 'required|string|max:150',
+        ]);
+
+        $updated = EmployeeDeliveryCall::whereIn('id', $v['ids'])->update([
+            'origin_city_id'    => $v['origin_city_id'],
+            'origin_city_name'  => $v['origin_city_name'],
+            'origin_state_name' => $v['origin_state_name'],
+            'curfox_error'      => null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Origin updated to {$v['origin_city_name']} for {$updated} call(s).",
+            'updated' => $updated,
+        ]);
+    }
+
+    // ── Status transitions ────────────────────────────────────────────────
 
     public function updateStatus(Request $request, $id)
     {
@@ -99,7 +199,6 @@ class EmployeeDeliveryCallController extends Controller
             return back()->with('error', 'This record is already in final status.');
         }
 
-        // ── If advancing TO givedriver, dispatch to Curfox ────────────────
         if ($next === 'givedriver') {
             try {
                 $waybill = $this->dispatchToCurfox($call);
@@ -108,6 +207,7 @@ class EmployeeDeliveryCallController extends Controller
                     'curfox_waybill'       => $waybill,
                     'curfox_dispatched_at' => now(),
                     'curfox_error'         => null,
+                    'status_date'          => now(),
                 ]);
 
                 if ($request->expectsJson()) {
@@ -120,7 +220,6 @@ class EmployeeDeliveryCallController extends Controller
                 return back()->with('success', "Order dispatched! Waybill: {$waybill}");
 
             } catch (\RuntimeException $e) {
-                // Save the error but do NOT change the status so they can retry
                 $call->update(['curfox_error' => $e->getMessage()]);
                 Log::error('Curfox dispatch failed for call ' . $id, ['error' => $e->getMessage()]);
 
@@ -134,18 +233,13 @@ class EmployeeDeliveryCallController extends Controller
             }
         }
 
-        // ── Normal status advance ─────────────────────────────────────────
-        $call->update(['status' => $next]);
+        $call->update(['status' => $next, 'status_date' => now()]);
 
         if ($request->expectsJson()) {
             return response()->json(['success' => true, 'message' => "{$from} → {$next}"]);
         }
         return back()->with('success', "Status updated: {$from} → {$next}");
     }
-
-    // ──────────────────────────────────────────────────────────────────────
-    //  BULK STATUS UPDATE
-    // ──────────────────────────────────────────────────────────────────────
 
     public function bulkUpdateStatus(Request $request)
     {
@@ -154,13 +248,8 @@ class EmployeeDeliveryCallController extends Controller
             'ids.*' => 'integer',
         ]);
 
-        $ids = $data['ids'];
-
-        // Determine the common "from" status for the selected rows
-        $statuses = EmployeeDeliveryCall::whereIn('id', $ids)
-            ->distinct()
-            ->pluck('status')
-            ->toArray();
+        $ids      = $data['ids'];
+        $statuses = EmployeeDeliveryCall::whereIn('id', $ids)->distinct()->pluck('status')->toArray();
 
         if (count($statuses) !== 1) {
             return response()->json([
@@ -176,16 +265,10 @@ class EmployeeDeliveryCallController extends Controller
             return response()->json(['success' => false, 'message' => 'No next status.'], 400);
         }
 
-        $ok      = 0;
-        $fail    = 0;
-        $details = [];
+        $ok = 0; $fail = 0; $details = [];
 
-        // ── Bulk dispatch to Curfox when advancing to givedriver ──────────
         if ($next === 'givedriver') {
-            $calls = EmployeeDeliveryCall::whereIn('id', $ids)
-                ->where('status', $from)
-                ->get();
-
+            $calls = EmployeeDeliveryCall::whereIn('id', $ids)->where('status', $from)->get();
             foreach ($calls as $call) {
                 try {
                     $waybill = $this->dispatchToCurfox($call);
@@ -194,6 +277,7 @@ class EmployeeDeliveryCallController extends Controller
                         'curfox_waybill'       => $waybill,
                         'curfox_dispatched_at' => now(),
                         'curfox_error'         => null,
+                        'status_date'          => now(),
                     ]);
                     $ok++;
                     $details[] = ['id' => $call->id, 'waybill' => $waybill];
@@ -204,7 +288,6 @@ class EmployeeDeliveryCallController extends Controller
                     Log::error('Bulk Curfox dispatch failed for call ' . $call->id, ['error' => $e->getMessage()]);
                 }
             }
-
             return response()->json([
                 'success' => true,
                 'message' => "Dispatched {$ok} orders. {$fail} failed.",
@@ -214,11 +297,10 @@ class EmployeeDeliveryCallController extends Controller
             ]);
         }
 
-        // ── Normal bulk advance ───────────────────────────────────────────
         DB::transaction(function () use ($ids, $from, $next, &$ok) {
             $ok = EmployeeDeliveryCall::whereIn('id', $ids)
                 ->where('status', $from)
-                ->update(['status' => $next]);
+                ->update(['status' => $next, 'status_date' => now()]);
         });
 
         return response()->json([
@@ -228,75 +310,89 @@ class EmployeeDeliveryCallController extends Controller
         ]);
     }
 
-    // ──────────────────────────────────────────────────────────────────────
-    //  CURFOX DISPATCH
-    // ──────────────────────────────────────────────────────────────────────
+    // ── Curfox dispatch ───────────────────────────────────────────────────
 
-    /**
-     * Push a single delivery call to Curfox and return the waybill number.
-     *
-     * @throws \RuntimeException if the API call fails
-     */
     private function dispatchToCurfox(EmployeeDeliveryCall $call): string
     {
-        // Resolve destination city – prefer stored city_id, fall back to name lookup
-        $cityId    = $call->destination_city_id ?? null;
-        $cityName  = null;
-        $stateName = $call->destination_state_name ?? null;
+        // ── merchant_business_id: session → API default → hardcoded fallback ──
+        $merchantBusinessId = session('curfox_merchant_business_id');
 
-        if (! $cityId) {
+        if (! $merchantBusinessId) {
+            try {
+                $default            = $this->curfox->getDefaultBusiness();
+                $merchantBusinessId = $default ? (string) $default['id'] : self::DEFAULT_MERCHANT_BUSINESS_ID;
+            } catch (\Exception $e) {
+                $merchantBusinessId = self::DEFAULT_MERCHANT_BUSINESS_ID;
+                Log::warning('Could not fetch Curfox default business, using fallback: ' . $e->getMessage());
+            }
+        }
+
+        // ── Destination ───────────────────────────────────────────────────
+        $destCityId    = $call->destination_city_id ?? null;
+        $destCityName  = null;
+        $destStateName = $call->destination_state_name ?? null;
+
+        if (! $destCityId) {
             $searchTerm = $call->city ?: $call->district;
             if ($searchTerm) {
                 $info = $this->curfox->findCityByName($searchTerm);
                 if ($info) {
-                    $cityId    = $info['city_id'];
-                    $cityName  = $info['city_name'];
-                    $stateName = $info['state_name'];
+                    $destCityId    = (int) $info['city_id'];
+                    $destCityName  = $info['city_name'];
+                    $destStateName = $info['state_name'];
                 }
             }
         }
 
-        if (! $cityId && ! $cityName) {
+        if (! $destCityId && ! $destCityName) {
             throw new \RuntimeException(
-                "Cannot determine destination city for call #{$call->id}. " .
-                "Please set a valid city before dispatching."
+                "Cannot determine destination city for call #{$call->id}. Please set a valid city before dispatching."
             );
         }
 
-        // Build order data
+        // ── Origin ────────────────────────────────────────────────────────
+        $originCityId    = $call->effectiveOriginCityId();
+        $originCityName  = $call->effectiveOriginCityName();
+        $originStateName = $call->effectiveOriginStateName();
+
+        // ── Order payload ─────────────────────────────────────────────────
         $orderData = [
-            'order_no'          => $call->order_code ?? $call->call_number,
-            'customer_name'     => $call->customer_name,
-            'customer_address'  => $call->customer_address ?? '',
-            'customer_phone'    => $call->customer_phone_01,
-            'cod'               => (int) round(($call->price ?? 0) * ($call->qty ?? 1)),
-            'weight'            => 1,
-            'description'       => $call->item_name ?? 'Parcel',
-            'remark'            => $call->remark ?? '',
+            'order_no'         => $call->order_code ?? $call->call_number,
+            'customer_name'    => $call->customer_name,
+            'customer_address' => $call->customer_address ?? '',
+            'customer_phone'   => $call->customer_phone_01,
+            'cod'              => (int) round(($call->price ?? 0) * ($call->qty ?? 1)),
+            'weight'           => 1,
+            'description'      => $call->item_name ?? 'Parcel',
+            'remark'           => $call->remark ?? '',
         ];
 
         if ($call->customer_phone_02) {
             $orderData['customer_secondary_phone'] = $call->customer_phone_02;
         }
 
-        if ($cityId) {
-            $orderData['destination_city_id'] = $cityId;
+        if ($destCityId) {
+            $orderData['destination_city_id'] = $destCityId;
         } else {
-            $orderData['destination_city_name']  = $cityName;
-            $orderData['destination_state_name'] = $stateName;
+            $orderData['destination_city_name']  = $destCityName;
+            $orderData['destination_state_name'] = $destStateName;
         }
 
-        $generalData = [
-            'merchant_business_id' => self::MERCHANT_BUSINESS_ID,
-            'origin_city_name'     => self::ORIGIN_CITY_NAME,
-            'origin_state_name'    => self::ORIGIN_STATE_NAME,
-        ];
+        // ── general_data with dynamic merchant_business_id ────────────────
+        $generalData = ['merchant_business_id' => (string) $merchantBusinessId];
 
+        if ($originCityId) {
+            $generalData['origin_city_id'] = $originCityId;
+        } else {
+            $generalData['origin_city_name']  = $originCityName;
+            $generalData['origin_state_name'] = $originStateName;
+        }
+
+        // ── Call API ──────────────────────────────────────────────────────
         $response = $this->curfox->createOrders($generalData, [$orderData]);
 
-        // Extract waybill from response data array
         $waybills = $response['data'] ?? [];
-        $waybill  = is_array($waybills) ? ($waybills[0] ?? null) : $waybills;
+        $waybill  = is_array($waybills) ? ($waybills[0] ?? null) : ($waybills ?: null);
 
         if (! $waybill) {
             throw new \RuntimeException('Curfox returned no waybill. Response: ' . json_encode($response));
