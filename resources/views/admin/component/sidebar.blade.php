@@ -53,6 +53,13 @@
                                     </svg>
                                     <span>Create Product</span>
                                 </a>
+                                <div class="dropdown-menu" aria-labelledby="orderDropdown">
+                                    <a class="dropdown-item" href="{{route('admin.new_order')}}">New Order</a>
+                                    <a class="dropdown-item" href="{{route('admin.complete_order_list')}}">Complete Order</a>
+                                    <a class="dropdown-item" href="{{route('seller.rescheduling-order')}}">Reschedule
+                                        Order</a>
+                                    <a class="dropdown-item" href="{{route('seller.return-order')}}">Return Order</a>
+                                </div>
                             </li>
                             <li><a href="{{route('low-stock')}}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"

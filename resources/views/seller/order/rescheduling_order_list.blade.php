@@ -1,678 +1,1162 @@
 @extends('seller.layout.app')
+
 @push('title')
-    Rescheduling Orders
+    Rescheduling Orders — Dashboard
 @endpush
+
 @push('css')
-    <!-- SweetAlert2 CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <!-- Google Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
 
     <style>
+        /* ─── DESIGN TOKENS ─────────────────────────────────────────────── */
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            --rescheduling-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --ink:        #0a0e1a;
+            --ink-2:      #1e2535;
+            --ink-3:      #3a4460;
+            --muted:      #7f8ea3;
+            --muted-2:    #b0bbc9;
+            --border:     #e4e9f0;
+            --surface:    #ffffff;
+            --bg:         #f3f5fb;
+            --bg-2:       #eaecf7;
+
+            --accent:     #4f46e5;
+            --accent-glow:rgba(79,70,229,0.18);
+            --accent-2:   #7c3aed;
+            --cyan:       #06b6d4;
+            --amber:      #f59e0b;
+            --emerald:    #10b981;
+            --rose:       #f43f5e;
+
+            --radius-sm:  6px;
+            --radius:     12px;
+            --radius-lg:  20px;
+            --radius-xl:  28px;
+
+            --shadow-xs:  0 1px 3px rgba(0,0,0,0.06);
+            --shadow-sm:  0 2px 8px rgba(0,0,0,0.08);
+            --shadow:     0 4px 20px rgba(0,0,0,0.10);
+            --shadow-lg:  0 12px 40px rgba(0,0,0,0.14);
+
+            --transition: 0.22s cubic-bezier(0.4,0,0.2,1);
         }
 
-        .rescheduling-header {
-            background: var(--rescheduling-gradient);
-            color: #333;
+        /* ─── RESET & BASE ───────────────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ─── GRID WRAPPER ───────────────────────────────────────────────── */
+        .rsc-wrapper {
             padding: 2rem;
-            border-radius: 15px;
-            margin-bottom: 2rem;
-            border: 1px solid rgba(0,0,0,0.1);
+            max-width: 1600px;
+            margin: 0 auto;
         }
 
-        .stats-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            transition: transform 0.3s ease;
-            border-left: 4px solid transparent;
+        /* ─── HERO HEADER ────────────────────────────────────────────────── */
+        .rsc-hero {
+            position: relative;
+            border-radius: var(--radius-xl);
+            padding: 2.5rem 2.75rem;
+            background: var(--ink-2);
+            overflow: hidden;
+            margin-bottom: 1.75rem;
+            isolation: isolate;
         }
 
-        .stats-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        /* mesh blobs */
+        .rsc-hero::before,
+        .rsc-hero::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            pointer-events: none;
+            z-index: -1;
+        }
+        .rsc-hero::before {
+            width: 340px; height: 340px;
+            background: radial-gradient(circle, rgba(79,70,229,0.55) 0%, transparent 70%);
+            top: -80px; right: 80px;
+        }
+        .rsc-hero::after {
+            width: 260px; height: 260px;
+            background: radial-gradient(circle, rgba(124,58,237,0.40) 0%, transparent 70%);
+            bottom: -60px; right: -30px;
         }
 
-        .stats-card.rescheduling {
-            border-left-color: #a8edea;
+        .rsc-hero-grid {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 1.5rem;
         }
 
-        .stats-card.amount {
-            border-left-color: #4facfe;
+        .rsc-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Syne', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 0.6rem;
+        }
+        .rsc-eyebrow .dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--amber);
+            animation: pulse-dot 2s infinite;
+        }
+        @keyframes pulse-dot {
+            0%,100% { opacity:1; transform:scale(1); }
+            50%      { opacity:0.5; transform:scale(1.4); }
         }
 
-        .stats-card.upcoming {
-            border-left-color: #fed6e3;
+        .rsc-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(22px, 3vw, 32px);
+            font-weight: 800;
+            color: #fff;
+            margin: 0 0 0.4rem;
+            line-height: 1.2;
         }
 
-        .stats-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
+        .rsc-subtitle {
+            font-size: 14px;
+            color: rgba(255,255,255,0.55);
+            margin: 0;
+        }
+
+        .rsc-hero-count {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .rsc-big-num {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(48px, 6vw, 72px);
+            font-weight: 800;
+            color: #fff;
+            line-height: 1;
+        }
+
+        .rsc-big-label {
+            font-size: 12px;
+            color: rgba(255,255,255,0.45);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+        }
+
+        /* ─── STAT CARDS ─────────────────────────────────────────────────── */
+        .rsc-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem 1.75rem;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-xs);
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            transition: transform var(--transition), box-shadow var(--transition);
+            cursor: default;
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-icon-wrap {
+            flex-shrink: 0;
+            width: 52px; height: 52px;
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 1rem;
         }
+        .stat-icon-wrap .material-icons-round { font-size: 24px; }
+        .stat-icon-wrap.blue   { background: rgba(79,70,229,0.10); color: var(--accent); }
+        .stat-icon-wrap.amber  { background: rgba(245,158,11,0.12); color: var(--amber); }
+        .stat-icon-wrap.emerald{ background: rgba(16,185,129,0.12); color: var(--emerald); }
 
-        .stats-icon.rescheduling {
-            background: rgba(168, 237, 234, 0.1);
-            color: #2dd4bf;
-        }
-
-        .stats-icon.amount {
-            background: rgba(79, 172, 254, 0.1);
-            color: #4facfe;
-        }
-
-        .stats-icon.upcoming {
-            background: rgba(254, 214, 227, 0.1);
-            color: #f472b6;
-        }
-
-        .nav-tabs {
-            border-bottom: 2px solid #e9ecef;
-        }
-
-        .nav-tabs .nav-link {
-            border: none;
+        .stat-body { flex: 1; min-width: 0; }
+        .stat-label {
+            font-size: 12px;
             font-weight: 600;
-            color: #6c757d;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px 8px 0 0;
-            margin-right: 5px;
-            transition: all 0.3s ease;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            font-family: 'Syne', sans-serif;
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--ink);
+            line-height: 1.1;
+        }
+        .stat-sub {
+            font-size: 11px;
+            color: var(--muted-2);
+            margin-top: 2px;
         }
 
-        .nav-tabs .nav-link:hover {
-            background: rgba(168, 237, 234, 0.1);
+        /* ─── TABS ───────────────────────────────────────────────────────── */
+        .rsc-tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 5px;
+            margin-bottom: 1.75rem;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: none;
+            box-shadow: var(--shadow-xs);
         }
+        .rsc-tabs::-webkit-scrollbar { display: none; }
 
-        .nav-tabs .nav-link.active {
-            background: var(--info-gradient);
-            color: white;
-            border: none;
-        }
-
-        .badge-rescheduling {
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            color: #333;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
+        .rsc-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 18px;
+            border-radius: var(--radius);
+            font-size: 13px;
             font-weight: 600;
-            font-size: 0.75rem;
+            color: var(--muted);
+            text-decoration: none;
+            transition: background var(--transition), color var(--transition);
+            white-space: nowrap;
+        }
+        .rsc-tab:hover {
+            background: var(--bg);
+            color: var(--ink);
+        }
+        .rsc-tab.active {
+            background: var(--ink-2);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(10,14,26,0.22);
+        }
+        .rsc-tab .material-icons-round { font-size: 17px; }
+        .rsc-tab .tab-badge {
+            background: var(--accent);
+            color: #fff;
+            border-radius: 100px;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 1px 7px;
+            line-height: 18px;
+        }
+        .rsc-tab.active .tab-badge { background: rgba(255,255,255,0.25); }
+
+        /* ─── MAIN TABLE CARD ────────────────────────────────────────────── */
+        .rsc-card {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
         }
 
-        .badge-date {
-            background: rgba(79, 172, 254, 0.1);
-            color: #4facfe;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 500;
+        .rsc-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.4rem 1.75rem;
+            border-bottom: 1px solid var(--border);
+            gap: 1rem;
+            flex-wrap: wrap;
         }
 
-        .action-btn {
-            padding: 0.5rem 1rem;
+        .rsc-card-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--ink);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+        }
+        .rsc-card-title .material-icons-round {
+            font-size: 20px;
+            color: var(--accent);
+        }
+
+        .rsc-header-actions { display: flex; gap: 8px; align-items: center; }
+
+        .btn-ghost {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: transparent;
+            color: var(--ink-3);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+            text-decoration: none;
+        }
+        .btn-ghost:hover { background: var(--bg); border-color: var(--ink-3); color: var(--ink); }
+        .btn-ghost .material-icons-round { font-size: 16px; }
+
+        .btn-accent {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 18px;
+            border-radius: var(--radius);
+            background: var(--accent);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition);
+            text-decoration: none;
+        }
+        .btn-accent:hover { background: #4338ca; transform: translateY(-1px); box-shadow: 0 4px 14px var(--accent-glow); color: #fff; }
+        .btn-accent .material-icons-round { font-size: 16px; }
+
+        /* ─── DATATABLE WRAPPER ──────────────────────────────────────────── */
+        .dt-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.75rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .dt-controls-left, .dt-controls-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dt-search-wrap {
+            position: relative;
+        }
+        .dt-search-wrap .material-icons-round {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: var(--muted);
+            pointer-events: none;
+        }
+        .dt-search-wrap input {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 8px 12px 8px 36px;
+            font-size: 13px;
+            color: var(--ink);
+            width: 220px;
+            transition: all var(--transition);
+            background: var(--bg);
+            font-family: inherit;
+        }
+        .dt-search-wrap input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+            background: var(--surface);
+        }
+
+        .dt-length-select {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+        .dt-length-select select {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 6px 10px;
+            font-size: 13px;
+            background: var(--bg);
+            cursor: pointer;
+            font-family: inherit;
+            color: var(--ink);
+        }
+
+        /* ─── TABLE ──────────────────────────────────────────────────────── */
+        .rsc-table-wrap { overflow-x: auto; }
+
+        table.rsc-table {
+            width: 100% !important;
+            border-collapse: collapse;
+        }
+
+        table.rsc-table thead tr {
+            background: var(--bg);
+        }
+        table.rsc-table thead th {
+            padding: 12px 16px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+        }
+        table.rsc-table thead th:hover { color: var(--ink); }
+        table.rsc-table thead th.sorting::after,
+        table.rsc-table thead th.sorting_asc::after,
+        table.rsc-table thead th.sorting_desc::after {
+            font-family: 'Material Icons Round';
+            font-size: 14px;
+            margin-left: 4px;
+            vertical-align: middle;
+        }
+
+        table.rsc-table tbody td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+            font-size: 13.5px;
+        }
+        table.rsc-table tbody tr:last-child td { border-bottom: none; }
+        table.rsc-table tbody tr {
+            transition: background var(--transition);
+        }
+        table.rsc-table tbody tr:hover {
+            background: #f7f8ff;
+        }
+
+        /* ─── TABLE CELLS ────────────────────────────────────────────────── */
+
+        /* Order ID */
+        .order-id {
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 0.02em;
+        }
+
+        /* Product */
+        .product-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .product-img {
+            width: 42px; height: 42px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            flex-shrink: 0;
+        }
+        .product-no-img {
+            width: 42px; height: 42px;
+            border-radius: 10px;
+            background: var(--bg-2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .product-no-img .material-icons-round { font-size: 20px; color: var(--muted-2); }
+        .product-name {
+            font-weight: 600;
+            color: var(--ink);
+            font-size: 13px;
+            max-width: 160px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+        }
+        .product-sku {
+            font-size: 11px;
+            color: var(--muted-2);
+            font-family: monospace;
+            margin-top: 2px;
+        }
+
+        /* Customer */
+        .customer-name { font-weight: 600; color: var(--ink); line-height: 1.3; }
+        .customer-meta { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+
+        /* Quantity pill */
+        .qty-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px; height: 32px;
             border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.3s ease;
+            background: var(--bg-2);
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--ink-2);
+            font-family: 'Syne', sans-serif;
+        }
+
+        /* Date cell */
+        .date-primary { font-size: 13px; font-weight: 500; color: var(--ink); }
+        .date-sub     { font-size: 11px; color: var(--muted-2); margin-top: 2px; }
+
+        /* Reschedule date pill */
+        .resched-date {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--ink);
+            line-height: 1.3;
+        }
+        .date-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 5px;
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .date-tag .material-icons-round { font-size: 12px; }
+        .date-tag.upcoming { background: rgba(6,182,212,0.12); color: #0891b2; }
+        .date-tag.today    { background: rgba(245,158,11,0.15); color: #b45309; }
+        .date-tag.overdue  { background: rgba(244,63,94,0.12);  color: #be123c; }
+
+        /* Status badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .status-badge::before {
+            content: '';
+            width: 6px; height: 6px;
+            border-radius: 50%;
+        }
+        .status-badge.rescheduled {
+            background: rgba(79,70,229,0.10);
+            color: var(--accent);
+        }
+        .status-badge.rescheduled::before { background: var(--accent); }
+
+        /* Amount */
+        .amount-val {
+            font-family: 'Syne', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--ink);
+        }
+        .amount-cur { font-size: 11px; color: var(--muted); font-weight: 500; }
+
+        /* Action buttons */
+        .action-wrap { display: flex; gap: 6px; }
+        .act-btn {
+            width: 34px; height: 34px;
+            border-radius: 9px;
             border: none;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-size: 0;
         }
+        .act-btn .material-icons-round { font-size: 17px; }
+        .act-btn.view   { background: rgba(79,70,229,0.10); color: var(--accent); }
+        .act-btn.edit   { background: rgba(245,158,11,0.12); color: var(--amber); }
+        .act-btn:hover  { transform: translateY(-2px); box-shadow: var(--shadow); }
+        .act-btn.view:hover { background: var(--accent); color: #fff; }
+        .act-btn.edit:hover { background: var(--amber); color: #fff; }
 
-        .action-btn.view {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
+        /* ─── DATATABLE PAGINATION ───────────────────────────────────────── */
+        .dt-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.75rem;
+            border-top: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 1rem;
         }
+        .dt-info { font-size: 12.5px; color: var(--muted); }
 
-        .action-btn.reschedule {
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            color: #333;
-        }
-
-        .action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        .dataTables_wrapper {
-            padding: 0;
-        }
-
-        .table-responsive {
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        table.dataTable {
-            margin: 0 !important;
-            border-collapse: collapse !important;
-        }
-
-        table.dataTable thead th {
-            background: #f8f9fa;
-            border-bottom: 2px solid #e9ecef;
-            padding: 1rem;
-            font-weight: 600;
-            color: #495057;
-        }
-
-        table.dataTable tbody td {
-            padding: 1rem;
-            vertical-align: middle;
-            border-bottom: 1px solid #e9ecef;
-        }
-
-        table.dataTable tbody tr {
-            transition: background-color 0.3s ease;
-        }
-
-        table.dataTable tbody tr:hover {
-            background-color: rgba(168, 237, 234, 0.05);
-        }
-
-        .remark-tooltip {
-            cursor: help;
-            position: relative;
-        }
-
-        .remark-content {
-            max-width: 200px;
-            white-space: normal;
-            word-wrap: break-word;
-        }
-
-        /* Date status indicators */
-        .date-indicator {
+        .dataTables_paginate .paginate_button {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 500;
+            justify-content: center;
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--border) !important;
+            background: transparent !important;
+            color: var(--ink-3) !important;
+            font-size: 13px !important;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+            margin: 0 2px;
+        }
+        .dataTables_paginate .paginate_button:hover:not(.disabled) {
+            background: var(--accent) !important;
+            border-color: var(--accent) !important;
+            color: #fff !important;
+        }
+        .dataTables_paginate .paginate_button.current {
+            background: var(--ink-2) !important;
+            border-color: var(--ink-2) !important;
+            color: #fff !important;
+        }
+        .dataTables_paginate .paginate_button.disabled {
+            opacity: 0.35 !important;
+            cursor: not-allowed !important;
         }
 
-        .date-upcoming {
-            background: rgba(168, 237, 234, 0.2);
-            color: #0d9488;
+        /* ─── EMPTY STATE ────────────────────────────────────────────────── */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 20px;
+            text-align: center;
+        }
+        .empty-icon-wrap {
+            width: 90px; height: 90px;
+            background: var(--bg-2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+        .empty-icon-wrap .material-icons-round { font-size: 40px; color: var(--muted-2); }
+        .empty-state h5 {
+            font-family: 'Syne', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--ink);
+            margin-bottom: 8px;
+        }
+        .empty-state p { color: var(--muted); font-size: 14px; max-width: 300px; }
+
+        /* ─── MODAL ──────────────────────────────────────────────────────── */
+        .modal-content {
+            border: none;
+            border-radius: var(--radius-xl);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+            overflow: hidden;
+        }
+        .modal-header {
+            background: var(--ink-2);
+            padding: 1.4rem 1.75rem;
+            border-bottom: none;
+        }
+        .modal-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 17px;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+        }
+        .modal-header .btn-close { filter: invert(1); opacity: 0.6; }
+        .modal-header .btn-close:hover { opacity: 1; }
+
+        .modal-body { padding: 1.75rem; }
+        .modal-footer { padding: 1rem 1.75rem; border-top: 1px solid var(--border); gap: 8px; }
+
+        .form-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            margin-bottom: 6px;
+        }
+        .form-control, .form-select {
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 10px 14px;
+            font-size: 13.5px;
+            color: var(--ink);
+            font-family: inherit;
+            transition: all var(--transition);
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+            outline: none;
         }
 
-        .date-overdue {
-            background: rgba(254, 202, 202, 0.2);
-            color: #dc2626;
+        .btn-secondary {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--ink-3);
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all var(--transition);
         }
+        .btn-secondary:hover { background: var(--border); }
 
-        .date-today {
-            background: rgba(254, 249, 195, 0.2);
-            color: #ca8a04;
+        .btn-primary {
+            background: var(--accent);
+            border: none;
+            color: #fff;
+            padding: 10px 22px;
+            border-radius: var(--radius);
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all var(--transition);
         }
+        .btn-primary:hover { background: #4338ca; box-shadow: 0 4px 14px var(--accent-glow); }
 
-        /* Calendar icon animation */
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
+        /* status color strips in modal select */
+        .status-indicator {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+            flex-wrap: wrap;
         }
-
-        .calendar-pulse {
-            animation: pulse 2s infinite;
+        .si-chip {
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-weight: 600;
+            border: 1px solid;
         }
+        .si-chip.pending  { background:#fef9c3; color:#854d0e; border-color:#fde047; }
+        .si-chip.complete { background:#d1fae5; color:#065f46; border-color:#6ee7b7; }
+        .si-chip.return   { background:#fee2e2; color:#991b1b; border-color:#fca5a5; }
+        .si-chip.resched  { background:#e0e7ff; color:#3730a3; border-color:#a5b4fc; }
 
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .rescheduling-header {
-                padding: 1.5rem;
-                text-align: center;
-            }
-
-            .stats-card {
-                margin-bottom: 1rem;
-            }
-
-            .nav-tabs .nav-link {
-                padding: 0.5rem 1rem;
-                font-size: 0.9rem;
-                margin-bottom: 5px;
-            }
-
-            .action-buttons {
-                display: flex;
-                flex-direction: column;
-                gap: 5px;
-            }
-
-            .action-btn {
-                width: 100%;
-                justify-content: center;
-            }
-
-            table.dataTable thead th,
-            table.dataTable tbody td {
-                padding: 0.75rem 0.5rem;
-                font-size: 0.85rem;
-            }
-
-            .date-indicator {
-                font-size: 0.7rem;
-                padding: 0.2rem 0.5rem;
-            }
+        /* ─── RESPONSIVE ─────────────────────────────────────────────────── */
+        @media (max-width: 991px) {
+            .rsc-wrapper { padding: 1rem; }
+            .rsc-stats   { grid-template-columns: repeat(2, 1fr); }
+            .rsc-hero    { padding: 1.75rem; }
+            .rsc-hero-grid { grid-template-columns: 1fr; }
+            .rsc-hero-count { align-items: flex-start; flex-direction: row; align-items: center; gap: 10px; }
+            .rsc-big-num { font-size: 36px; }
         }
 
         @media (max-width: 576px) {
-            .rescheduling-header h1 {
-                font-size: 1.5rem;
-            }
+            .rsc-stats { grid-template-columns: 1fr; }
+            .dt-controls { flex-direction: column; align-items: flex-start; }
+            .dt-search-wrap input { width: 180px; }
+        }
 
-            .stats-card {
-                padding: 1rem;
-            }
+        /* ─── ENTRY ANIMATION ────────────────────────────────────────────── */
+        @keyframes fadeUp {
+            from { opacity:0; transform:translateY(16px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+        .rsc-hero   { animation: fadeUp 0.4s ease both; }
+        .rsc-stats  { animation: fadeUp 0.4s 0.08s ease both; }
+        .rsc-tabs   { animation: fadeUp 0.4s 0.14s ease both; }
+        .rsc-card   { animation: fadeUp 0.4s 0.20s ease both; }
 
-            .stats-icon {
-                width: 50px;
-                height: 50px;
-            }
-
-            .table-responsive {
-                margin: 0 -15px;
-                width: calc(100% + 30px);
-            }
+        /* DataTables default info/length — hide default, use custom */
+        .dataTables_info,
+        .dataTables_length,
+        .dataTables_filter,
+        .dataTables_paginate {
+            display: none !important; /* We build our own controls */
         }
     </style>
 @endpush
 
 @section('content')
-    <div class="container-fluid px-3 px-md-4 px-lg-5 py-4">
-        <!-- Header Section -->
-        <div class="rescheduling-header">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <h1 class="h2 mb-3 fw-bold">
-                        <span class="material-icons-round me-2 calendar-pulse">schedule</span>
-                        Rescheduling Orders
-                    </h1>
-                    <p class="mb-0 opacity-75">Orders that require rescheduling of delivery dates</p>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <div class="d-inline-block bg-white bg-opacity-50 rounded-pill px-4 py-2">
-                        <span class="fw-bold">{{ $count }}</span> Orders Rescheduled
+    <div class="rsc-wrapper">
+
+        {{-- ── HERO HEADER ─────────────────────────────────────────────────── --}}
+        <div class="rsc-hero">
+            <div class="rsc-hero-grid">
+                <div>
+                    <div class="rsc-eyebrow">
+                        <span class="dot"></span>
+                        Delivery Management
                     </div>
+                    <h1 class="rsc-title">Rescheduling Orders</h1>
+                    <p class="rsc-subtitle">Track and manage all orders that require a new delivery date</p>
+                </div>
+                <div class="rsc-hero-count">
+                    <span class="rsc-big-num">{{ str_pad($count, 2, '0', STR_PAD_LEFT) }}</span>
+                    <span class="rsc-big-label">{{ $count === 1 ? 'Order' : 'Orders' }}</span>
                 </div>
             </div>
         </div>
 
-        <!-- Stats Cards -->
-        <div class="row g-4 mb-4">
-            <div class="col-md-4">
-                <div class="stats-card rescheduling">
-                    <div class="stats-icon rescheduling">
-                        <span class="material-icons-round" style="font-size: 2rem">schedule</span>
-                    </div>
-                    <h4 class="fw-bold mb-2">Rescheduled Orders</h4>
-                    <div class="d-flex align-items-center">
-                        <span class="material-icons-round text-teal me-2">trending_up</span>
-                        <h3 class="mb-0 fw-bold">{{ $count }}</h3>
-                    </div>
+        {{-- ── STAT CARDS ──────────────────────────────────────────────────── --}}
+        <div class="rsc-stats">
+            <div class="stat-card">
+                <div class="stat-icon-wrap blue">
+                    <span class="material-icons-round">schedule</span>
+                </div>
+                <div class="stat-body">
+                    <div class="stat-label">Rescheduled</div>
+                    <div class="stat-value">{{ $count }}</div>
+                    <div class="stat-sub">Active reschedule requests</div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="stats-card amount">
-                    <div class="stats-icon amount">
-                        <span class="material-icons-round" style="font-size: 2rem">pending_actions</span>
-                    </div>
-                    <h4 class="fw-bold mb-2">Pending Amount</h4>
-                    <div class="d-flex align-items-center">
-                        <span class="material-icons-round text-blue me-2">trending_up</span>
-                        <h3 class="mb-0 fw-bold">
-                            Rs. {{ number_format($orders->sum('total_amount'), 2) }}
-                        </h3>
-                    </div>
+            <div class="stat-card">
+                <div class="stat-icon-wrap amber">
+                    <span class="material-icons-round">payments</span>
+                </div>
+                <div class="stat-body">
+                    <div class="stat-label">Pending Value</div>
+                    <div class="stat-value">Rs. {{ number_format($orders->sum('total_amount'), 0) }}</div>
+                    <div class="stat-sub">Total order amount</div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="stats-card upcoming">
-                    <div class="stats-icon upcoming">
-                        <span class="material-icons-round" style="font-size: 2rem">event_upcoming</span>
-                    </div>
-                    <h4 class="fw-bold mb-2">Upcoming Reschedules</h4>
-                    <div class="d-flex align-items-center">
-                        <span class="material-icons-round text-pink me-2">notification_important</span>
-                        <h3 class="mb-0 fw-bold">
-                            {{ $upcomingCount ?? '0' }}
-                        </h3>
-                    </div>
+            <div class="stat-card">
+                <div class="stat-icon-wrap emerald">
+                    <span class="material-icons-round">event_upcoming</span>
+                </div>
+                <div class="stat-body">
+                    <div class="stat-label">Upcoming</div>
+                    <div class="stat-value">{{ $upcomingCount ?? 0 }}</div>
+                    <div class="stat-sub">Scheduled for future dates</div>
                 </div>
             </div>
         </div>
 
-        <!-- Navigation Tabs -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card border-0 shadow-sm rounded-3">
-                    <div class="card-body p-4">
-                        <ul class="nav nav-tabs nav-tabs-bordered" id="orderTabs" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <a href="{{ route('seller.pending-order') }}"
-                                   class="nav-link d-flex align-items-center">
-                                    <span class="material-icons-round me-2">pending_actions</span>
-                                    Pending Orders
-                                </a>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <a href="{{ route('seller.complete-order') }}"
-                                   class="nav-link d-flex align-items-center">
-                                    <span class="material-icons-round me-2">check_circle</span>
-                                    Complete Orders
-                                </a>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <a href="{{ route('seller.return-order') }}"
-                                   class="nav-link d-flex align-items-center">
-                                    <span class="material-icons-round me-2">assignment_return</span>
-                                    Return Orders
-                                </a>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <a href="{{ route('seller.rescheduling-order') }}"
-                                   class="nav-link active d-flex align-items-center">
-                                    <span class="material-icons-round me-2">schedule</span>
-                                    Rescheduling
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+        {{-- ── NAV TABS ─────────────────────────────────────────────────────── --}}
+        <div class="rsc-tabs">
+            <a href="{{ route('seller.pending-order') }}" class="rsc-tab">
+                <span class="material-icons-round">pending_actions</span>
+                Pending
+            </a>
+            <a href="{{ route('seller.complete-order') }}" class="rsc-tab">
+                <span class="material-icons-round">check_circle</span>
+                Completed
+            </a>
+            <a href="{{ route('seller.return-order') }}" class="rsc-tab">
+                <span class="material-icons-round">assignment_return</span>
+                Returns
+            </a>
+            <a href="{{ route('seller.rescheduling-order') }}" class="rsc-tab active">
+                <span class="material-icons-round">schedule</span>
+                Rescheduling
+                @if($count > 0)
+                    <span class="tab-badge">{{ $count }}</span>
+                @endif
+            </a>
         </div>
 
-        <!-- Orders Table -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card border-0 shadow-lg rounded-3">
-                    <div class="card-header bg-white border-0 py-4">
-                        <div class="row align-items-center">
-                            <div class="col-md-6">
-                                <h3 class="h5 mb-0 fw-bold">
-                                    <span class="material-icons-round me-2">calendar_today</span>
-                                    Rescheduled Orders List
-                                </h3>
-                            </div>
-                            <div class="col-md-6 text-md-end">
-                                <button class="btn btn-light me-2" onclick="refreshPage()">
-                                    <span class="material-icons-round me-2">refresh</span>
-                                    Refresh
-                                </button>
-                                <button class="btn btn-outline-info" onclick="exportReschedules()">
-                                    <span class="material-icons-round me-2">download</span>
-                                    Export
-                                </button>
-                            </div>
+        {{-- ── TABLE CARD ───────────────────────────────────────────────────── --}}
+        <div class="rsc-card">
+            <div class="rsc-card-header">
+                <h3 class="rsc-card-title">
+                    <span class="material-icons-round">calendar_month</span>
+                    Rescheduled Orders
+                </h3>
+                <div class="rsc-header-actions">
+                    <button class="btn-ghost" onclick="window.location.reload()">
+                        <span class="material-icons-round">refresh</span>
+                        Refresh
+                    </button>
+                    <a href="{{ route('seller.pending-order') }}" class="btn-accent">
+                        <span class="material-icons-round">add_circle</span>
+                        View All
+                    </a>
+                </div>
+            </div>
+
+            @if($count > 0)
+
+                {{-- Custom DataTable Controls --}}
+                <div class="dt-controls">
+                    <div class="dt-controls-left">
+                        <div class="dt-length-select">
+                            Show
+                            <select id="customLength">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                            entries
                         </div>
                     </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table id="order-table" class="table table-hover w-100">
-                                <thead>
-                                <tr>
-                                    <th>Order No</th>
-                                    <th>Order Date</th>
-                                    <th>Original Delivery</th>
-                                    <th>Rescheduled Date</th>
-                                    <th>Customer</th>
-                                    <th>Phone</th>
-                                    <th>District</th>
-                                    <th>Remark</th>
-                                    <th>Total Amount</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                @foreach($orders as $order)
-                                    @php
-                                        $rescheduleDate = $order->rescheduling_date;
-                                        $today = \Carbon\Carbon::today();
-                                        $dateClass = 'date-upcoming';
-                                        $dateStatus = 'Upcoming';
-
-                                        if ($rescheduleDate) {
-                                            if ($rescheduleDate->isPast()) {
-                                                $dateClass = 'date-overdue';
-                                                $dateStatus = 'Overdue';
-                                            } elseif ($rescheduleDate->isToday()) {
-                                                $dateClass = 'date-today';
-                                                $dateStatus = 'Today';
-                                            }
-                                        }
-                                    @endphp
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                    <span class="material-icons-round text-info me-2">
-                                                        schedule
-                                                    </span>
-                                                <strong>{{ $order->order_id }}</strong>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                    <span class="material-icons-round text-secondary me-2">
-                                                        calendar_month
-                                                    </span>
-                                                {{ $order->order_date->format('Y.m.d') }}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                    <span class="material-icons-round text-warning me-2">
-                                                        event_busy
-                                                    </span>
-                                                {{ $order->delivery_date ? $order->delivery_date->format('Y.m.d') : 'N/A' }}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                    <span class="material-icons-round text-primary me-2">
-                                                        event_available
-                                                    </span>
-                                                @if($order->rescheduling_date)
-                                                    <div>
-                                                        <div>{{ $order->rescheduling_date->format('Y.m.d') }}</div>
-                                                        <div class="date-indicator {{ $dateClass }}">
-                                                                <span class="material-icons-round" style="font-size: 1rem">
-                                                                    {{ $dateClass === 'date-today' ? 'notification_important' :
-                                                                       ($dateClass === 'date-overdue' ? 'warning' : 'notifications') }}
-                                                                </span>
-                                                            {{ $dateStatus }}
-                                                        </div>
-                                                    </div>
-                                                @else
-                                                    N/A
-                                                @endif
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                    <span class="material-icons-round text-success me-2">
-                                                        person
-                                                    </span>
-                                                <span class="text-truncate" style="max-width: 120px">
-                                                        {{ $order->customer_name }}
-                                                    </span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                    <span class="material-icons-round text-secondary me-2">
-                                                        phone
-                                                    </span>
-                                                {{ $order->customer_phone ?? 'N/A' }}
-                                            </div>
-                                        </td>
-                                        <td>
-                                                <span class="badge bg-light text-dark">
-                                                    {{ $order->district ?? 'N/A' }}
-                                                </span>
-                                        </td>
-                                        <td>
-                                            @if($order->remark)
-                                                <div class="remark-tooltip" data-bs-toggle="tooltip"
-                                                     data-bs-placement="top"
-                                                     title="{{ $order->remark }}">
-                                                    <div class="remark-content">
-                                                            <span class="material-icons-round text-info me-1" style="font-size: 1rem">
-                                                                notes
-                                                            </span>
-                                                        {{ Str::limit($order->remark, 30) }}
-                                                    </div>
-                                                </div>
-                                            @else
-                                                <span class="text-muted">N/A</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                    <span class="material-icons-round text-warning me-2">
-                                                        payments
-                                                    </span>
-                                                <strong class="text-warning">
-                                                    Rs. {{ number_format($order->total_amount, 2) }}
-                                                </strong>
-                                            </div>
-                                        </td>
-                                        <td>
-                                                <span class="badge-rescheduling">
-                                                    Rescheduled
-                                                </span>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex gap-2 action-buttons">
-                                                <button class="action-btn view"
-                                                        onclick="viewOrder({{ $order->id }})">
-                                                    <span class="material-icons-round">visibility</span>
-                                                    View
-                                                </button>
-                                                <button class="action-btn reschedule"
-                                                        onclick="updateReschedule({{ $order->id }}, '{{ $order->order_id }}')">
-                                                    <span class="material-icons-round">edit_calendar</span>
-                                                    Update
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="card-footer bg-white border-0 py-3">
-                        <div class="row align-items-center">
-                            <div class="col-md-6">
-                                <div class="text-muted">
-                                    Showing {{ $orders->count() }} of {{ $count }} rescheduled orders
-                                </div>
-                            </div>
-                            <div class="col-md-6 text-md-end">
-                                <div class="btn-group">
-                                    <button class="btn btn-light" onclick="printReschedules()">
-                                        <span class="material-icons-round me-2">print</span>
-                                        Print
-                                    </button>
-                                    <button class="btn btn-outline-info" onclick="sendReminders()">
-                                        <span class="material-icons-round me-2">notifications</span>
-                                        Send Reminders
-                                    </button>
-                                </div>
-                            </div>
+                    <div class="dt-controls-right">
+                        <div class="dt-search-wrap">
+                            <span class="material-icons-round">search</span>
+                            <input type="text" id="customSearch" placeholder="Search orders…">
                         </div>
                     </div>
                 </div>
-            </div>
+
+                <div class="rsc-table-wrap">
+                    <table id="ordersTable" class="rsc-table table">
+                        <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Product</th>
+                            <th>Customer</th>
+                            <th>Qty</th>
+                            <th>Order Date</th>
+                            <th>Original Delivery</th>
+                            <th>Rescheduled Date</th>
+                            <th>Status</th>
+                            <th>Amount</th>
+                            <th style="width:90px;">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach($orders as $order)
+                            @php
+                                $rescheduleDate = $order->rescheduling_date ? \Carbon\Carbon::parse($order->rescheduling_date) : null;
+                                $dateClass  = 'upcoming';
+                                $dateLabel  = 'Upcoming';
+                                $dateIcon   = 'event';
+                                if ($rescheduleDate) {
+                                    if ($rescheduleDate->isToday()) {
+                                        $dateClass = 'today'; $dateLabel = 'Today'; $dateIcon = 'notifications_active';
+                                    } elseif ($rescheduleDate->isPast()) {
+                                        $dateClass = 'overdue'; $dateLabel = 'Overdue'; $dateIcon = 'warning';
+                                    }
+                                }
+                            @endphp
+                            <tr>
+                                {{-- Order ID --}}
+                                <td>
+                                    <span class="order-id">{{ $order->order_number }}</span>
+                                </td>
+
+                                {{-- Product --}}
+                                <td>
+                                    <div class="product-cell">
+                                        @if($order->product_image)
+                                            <img src="{{ asset('storage/' . $order->product_image) }}"
+                                                 alt="{{ $order->product_name }}"
+                                                 class="product-img"
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="product-no-img" style="display:none;">
+                                                <span class="material-icons-round">inventory_2</span>
+                                            </div>
+                                        @else
+                                            <div class="product-no-img">
+                                                <span class="material-icons-round">inventory_2</span>
+                                            </div>
+                                        @endif
+                                        <div>
+                                            <div class="product-name" title="{{ $order->product_name }}">{{ $order->product_name }}</div>
+                                            <div class="product-sku">{{ $order->product_code }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                {{-- Customer --}}
+                                <td>
+                                    <div class="customer-name">{{ $order->customer_name }}</div>
+                                    <div class="customer-meta">{{ $order->customer_phone }}</div>
+                                    @if($order->district)
+                                        <div class="customer-meta">
+                                            <span class="material-icons-round" style="font-size:11px;vertical-align:middle;">location_on</span>
+                                            {{ $order->district }}
+                                        </div>
+                                    @endif
+                                </td>
+
+                                {{-- Qty --}}
+                                <td><span class="qty-pill">{{ $order->quantity }}</span></td>
+
+                                {{-- Order Date --}}
+                                <td>
+                                    <div class="date-primary">
+                                        {{ $order->order_date ? \Carbon\Carbon::parse($order->order_date)->format('d M Y') : '—' }}
+                                    </div>
+                                    @if($order->order_date)
+                                        <div class="date-sub">
+                                            {{ \Carbon\Carbon::parse($order->order_date)->diffForHumans() }}
+                                        </div>
+                                    @endif
+                                </td>
+
+                                {{-- Original Delivery --}}
+                                <td>
+                                    <div class="date-primary">
+                                        {{ $order->delivery_date ? \Carbon\Carbon::parse($order->delivery_date)->format('d M Y') : '—' }}
+                                    </div>
+                                </td>
+
+                                {{-- Rescheduled Date --}}
+                                <td>
+                                    @if($order->rescheduling_date)
+                                        <div class="resched-date">
+                                            {{ \Carbon\Carbon::parse($order->rescheduling_date)->format('d M Y') }}
+                                        </div>
+                                        <div>
+                                        <span class="date-tag {{ $dateClass }}">
+                                            <span class="material-icons-round">{{ $dateIcon }}</span>
+                                            {{ $dateLabel }}
+                                        </span>
+                                        </div>
+                                    @else
+                                        <span style="color:var(--muted-2);">—</span>
+                                    @endif
+                                </td>
+
+                                {{-- Status --}}
+                                <td>
+                                    <span class="status-badge rescheduled">Rescheduled</span>
+                                </td>
+
+                                {{-- Amount --}}
+                                <td>
+                                    <div class="amount-cur">LKR</div>
+                                    <div class="amount-val">{{ number_format($order->total_amount, 2) }}</div>
+                                </td>
+
+                                {{-- Actions --}}
+                                <td>
+                                    <div class="action-wrap">
+                                        <button class="act-btn view"
+                                                onclick="viewOrder({{ $order->id }})"
+                                                title="View Details">
+                                            <span class="material-icons-round">visibility</span>
+                                        </button>
+                                        <button class="act-btn edit"
+                                                onclick="editOrder({{ $order->id }})"
+                                                title="Update Status">
+                                            <span class="material-icons-round">edit</span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                {{-- Custom Footer / Pagination --}}
+                <div class="dt-footer">
+                    <div class="dt-info" id="customInfo"></div>
+                    <div id="customPaginate"></div>
+                </div>
+
+            @else
+                <div class="empty-state">
+                    <div class="empty-icon-wrap">
+                        <span class="material-icons-round">inbox</span>
+                    </div>
+                    <h5>No Rescheduled Orders</h5>
+                    <p>There are no orders awaiting rescheduling at the moment.</p>
+                    <a href="{{ route('seller.pending-order') }}" class="btn-accent mt-3">
+                        <span class="material-icons-round">pending_actions</span>
+                        View Pending Orders
+                    </a>
+                </div>
+            @endif
         </div>
+
     </div>
 
-    <!-- Update Reschedule Modal -->
-    <div class="modal fade" id="updateRescheduleModal" tabindex="-1" aria-hidden="true">
+    {{-- ── UPDATE MODAL ─────────────────────────────────────────────────────── --}}
+    <div class="modal fade" id="updateModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header" style="background: var(--rescheduling-gradient);">
-                    <h5 class="modal-title fw-bold">
-                        <span class="material-icons-round me-2">edit_calendar</span>
-                        Update Reschedule Date
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <span class="material-icons-round">edit_calendar</span>
+                        Update Order Status
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form id="updateRescheduleForm" method="POST">
+                <form id="updateForm" method="POST">
                     @csrf
                     @method('PUT')
                     <div class="modal-body">
-                        <div class="text-center mb-4">
-                            <h6 id="rescheduleOrderTitle" class="fw-semibold"></h6>
-                            <p class="text-muted small">Update the rescheduled delivery date</p>
-                        </div>
 
-                        <div class="mb-4">
-                            <div class="alert alert-info">
-                                <div class="d-flex align-items-center">
-                                    <span class="material-icons-round me-2">info</span>
-                                    <div>
-                                        <small>This order is currently marked as rescheduled. Update the new delivery date below.</small>
-                                    </div>
-                                </div>
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select" required>
+                                <option value="pending">Pending</option>
+                                <option value="complete">Complete</option>
+                                <option value="return">Return</option>
+                                <option value="rescheduling" selected>Rescheduling</option>
+                            </select>
+                            <div class="status-indicator">
+                                <span class="si-chip pending">Pending</span>
+                                <span class="si-chip complete">Complete</span>
+                                <span class="si-chip return">Return</span>
+                                <span class="si-chip resched">Rescheduling</span>
                             </div>
                         </div>
 
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold">
-                                <span class="material-icons-round me-2 text-primary">calendar_today</span>
-                                New Rescheduled Date *
-                            </label>
-                            <input type="date" name="rescheduling_date" id="rescheduleDate"
-                                   class="form-control" required
-                                   min="{{ date('Y-m-d') }}"
-                                   value="{{ date('Y-m-d', strtotime('+7 days')) }}">
-                            <small class="text-muted">Select the new delivery date</small>
+                        <div class="mb-3">
+                            <label class="form-label">Call Status</label>
+                            <select name="call_status" class="form-select">
+                                <option value="Pending Call">Pending Call</option>
+                                <option value="Called">Called</option>
+                                <option value="Confirmed">Confirmed</option>
+                                <option value="Not Answered">Not Answered</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
                         </div>
 
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold">
-                                <span class="material-icons-round me-2 text-secondary">notes</span>
-                                Update Reason
-                            </label>
-                            <textarea name="remark" id="rescheduleRemark" class="form-control" rows="3"
-                                      placeholder="Explain the reason for rescheduling update..."></textarea>
+                        <div class="mb-3">
+                            <label class="form-label">New Rescheduling Date</label>
+                            <input type="date" name="rescheduling_date" class="form-control"
+                                   value="{{ date('Y-m-d') }}"
+                                   min="{{ date('Y-m-d') }}">
                         </div>
 
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="notifyCustomer">
-                            <label class="form-check-label" for="notifyCustomer">
-                                <span class="material-icons-round me-1" style="font-size: 1rem">notifications</span>
-                                Notify customer about date change
-                            </label>
+                        <div class="mb-3">
+                            <label class="form-label">Remark / Notes</label>
+                            <textarea name="remark" class="form-control" rows="3"
+                                      placeholder="Add notes about this reschedule…"></textarea>
                         </div>
+
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                            <span class="material-icons-round me-1">close</span>
-                            Cancel
-                        </button>
-                        <button type="submit" class="btn btn-info">
-                            <span class="material-icons-round me-1">update</span>
-                            Update Date
+                        <button type="button" class="btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn-primary">
+                            <span class="material-icons-round" style="font-size:16px;vertical-align:middle;margin-right:4px;">save</span>
+                            Save Changes
                         </button>
                     </div>
                 </form>
@@ -681,324 +1165,151 @@
     </div>
 @endsection
 
+
 @push('script')
-    <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // Initialize DataTable
         $(document).ready(function () {
-            const table = $('#order-table').DataTable({
-                order: [[3, 'asc']], // Sort by rescheduling date ascending
+            @if($count > 0)
+
+            /* ── Init DataTable ── */
+            const dt = $('#ordersTable').DataTable({
+                order: [[6, 'asc']],
                 pageLength: 10,
                 responsive: true,
-                dom: '<"row"<"col-md-6"l><"col-md-6"f>>rt<"row"<"col-md-6"i><"col-md-6"p>>',
-                language: {
-                    search: '<span class="material-icons-round">search</span>',
-                    searchPlaceholder: 'Search reschedules...',
-                    lengthMenu: 'Show _MENU_ entries',
-                    info: 'Showing _START_ to _END_ of _TOTAL_ reschedules',
-                    infoEmpty: 'No rescheduled orders available',
-                    zeroRecords: 'No matching reschedules found',
-                    paginate: {
-                        first: '<span class="material-icons-round">first_page</span>',
-                        last: '<span class="material-icons-round">last_page</span>',
-                        next: '<span class="material-icons-round">chevron_right</span>',
-                        previous: '<span class="material-icons-round">chevron_left</span>'
-                    }
-                },
                 columnDefs: [
-                    { responsivePriority: 1, targets: 3 }, // Reschedule Date
-                    { responsivePriority: 2, targets: -1 }, // Actions
-                    { responsivePriority: 3, targets: 4 }, // Customer
-                    { responsivePriority: 4, targets: 0 }, // Order No
-                    { orderable: false, targets: [7, -1] } // Remark and Actions
-                ]
+                    { orderable: false, targets: [1, 9] }
+                ],
+                drawCallback: function () {
+                    const api  = this.api();
+                    const info = api.page.info();
+                    const from = info.recordsDisplay === 0 ? 0 : info.start + 1;
+                    const to   = Math.min(info.end, info.recordsDisplay);
+                    const total = info.recordsTotal;
+
+                    /* Info text */
+                    $('#customInfo').text(
+                        `Showing ${from}–${to} of ${info.recordsDisplay} orders` +
+                        (info.recordsDisplay < total ? ` (filtered from ${total})` : '')
+                    );
+
+                    /* Pagination buttons */
+                    buildPagination(api, info);
+                }
             });
 
-            // Initialize tooltips
-            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
+            /* ── Custom search ── */
+            $('#customSearch').on('input', function () {
+                dt.search(this.value).draw();
             });
+
+            /* ── Custom length ── */
+            $('#customLength').on('change', function () {
+                dt.page.len(parseInt(this.value)).draw();
+            });
+
+            /* ── Build pagination ── */
+            function buildPagination(api, info) {
+                const $pg = $('#customPaginate').empty();
+                if (info.pages <= 1) return;
+
+                function btn(label, page, disabled, current) {
+                    const $b = $('<button>')
+                        .addClass('paginate_button' + (disabled ? ' disabled' : '') + (current ? ' current' : ''))
+                        .html(label);
+                    if (!disabled && !current) {
+                        $b.on('click', function () { api.page(page).draw('page'); });
+                    }
+                    $pg.append($b);
+                }
+
+                /* Prev */
+                btn('<span class="material-icons-round" style="font-size:15px;line-height:1;">chevron_left</span>',
+                    info.page - 1, info.page === 0, false);
+
+                /* Pages */
+                const current = info.page;
+                const total   = info.pages;
+                let pages     = [];
+
+                if (total <= 7) {
+                    pages = [...Array(total).keys()];
+                } else {
+                    pages = [0];
+                    if (current > 2) pages.push('...');
+                    const start = Math.max(1, current - 1);
+                    const end   = Math.min(total - 2, current + 1);
+                    for (let i = start; i <= end; i++) pages.push(i);
+                    if (current < total - 3) pages.push('...');
+                    pages.push(total - 1);
+                }
+
+                pages.forEach(p => {
+                    if (p === '...') {
+                        $('<span>').css({ padding:'0 4px', color:'var(--muted-2)', lineHeight:'32px' }).text('…').appendTo($pg);
+                    } else {
+                        btn(p + 1, p, false, p === current);
+                    }
+                });
+
+                /* Next */
+                btn('<span class="material-icons-round" style="font-size:15px;line-height:1;">chevron_right</span>',
+                    info.page + 1, info.page === total - 1, false);
+            }
+
+            @endif
+
+            /* ── Flash alerts ── */
+            setTimeout(() => {
+                document.querySelectorAll('.alert').forEach(el => {
+                    el.style.transition = 'opacity 0.4s';
+                    el.style.opacity = '0';
+                    setTimeout(() => el.remove(), 400);
+                });
+            }, 4000);
         });
 
-        // Refresh page with confirmation
-        function refreshPage() {
-            Swal.fire({
-                title: 'Refresh Reschedules?',
-                text: 'This will reload all rescheduling orders data.',
-                icon: 'info',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, Refresh',
-                cancelButtonText: 'Cancel',
-                customClass: {
-                    confirmButton: 'btn btn-info',
-                    cancelButton: 'btn btn-outline-secondary'
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.reload();
-                }
-            });
+        /* ── Order Actions ── */
+        function viewOrder(id) {
+            window.location.href = `/seller/order/show/${id}`;
         }
 
-        // View order details
-        function viewOrder(orderId) {
-            window.location.href = `/seller/order/${orderId}`;
-        }
-
-        // Update reschedule date
-        function updateReschedule(orderId, orderNumber) {
-            // Set form action
-            $('#updateRescheduleForm').attr('action', `/seller/order/${orderId}`);
-
-            // Set order title
-            $('#rescheduleOrderTitle').text(`Update Reschedule - Order #${orderNumber}`);
-
-            // Show modal
-            const modal = new bootstrap.Modal(document.getElementById('updateRescheduleModal'));
+        function editOrder(id) {
+            $('#updateForm').attr('action', `/seller/order/update/${id}`);
+            const modal = new bootstrap.Modal(document.getElementById('updateModal'));
             modal.show();
         }
 
-        // Export reschedules
-        function exportReschedules() {
-            Swal.fire({
-                title: 'Export Reschedules',
-                html: `<div class="text-start">
-                          <p>Select export format for rescheduled orders:</p>
-                          <div class="form-check mb-3">
-                              <input class="form-check-input" type="radio" name="exportFormat" id="excelFormat" value="excel" checked>
-                              <label class="form-check-label d-flex align-items-center" for="excelFormat">
-                                  <span class="material-icons-round me-2 text-success">description</span>
-                                  Excel (.xlsx)
-                              </label>
-                          </div>
-                          <div class="form-check mb-3">
-                              <input class="form-check-input" type="radio" name="exportFormat" id="csvFormat" value="csv">
-                              <label class="form-check-label d-flex align-items-center" for="csvFormat">
-                                  <span class="material-icons-round me-2 text-info">table_chart</span>
-                                  CSV (.csv)
-                              </label>
-                          </div>
-                          <div class="form-check">
-                              <input class="form-check-input" type="radio" name="exportFormat" id="pdfFormat" value="pdf">
-                              <label class="form-check-label d-flex align-items-center" for="pdfFormat">
-                                  <span class="material-icons-round me-2 text-danger">picture_as_pdf</span>
-                                  PDF (.pdf)
-                              </label>
-                          </div>
-                          <div class="mt-3">
-                              <div class="form-check">
-                                  <input class="form-check-input" type="checkbox" id="includeOverdue" checked>
-                                  <label class="form-check-label" for="includeOverdue">
-                                      Include overdue reschedules
-                                  </label>
-                              </div>
-                          </div>
-                       </div>`,
-                showCancelButton: true,
-                confirmButtonText: 'Export',
-                cancelButtonText: 'Cancel',
-                customClass: {
-                    confirmButton: 'btn btn-info',
-                    cancelButton: 'btn btn-outline-secondary'
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    const format = document.querySelector('input[name="exportFormat"]:checked').value;
-                    const includeOverdue = document.getElementById('includeOverdue').checked;
-
-                    Swal.fire({
-                        title: 'Exporting...',
-                        html: `Preparing reschedules export (${format.toUpperCase()})...`,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                        timer: 2000,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
-                }
-            });
-        }
-
-        // Print reschedules
-        function printReschedules() {
-            Swal.fire({
-                title: 'Print Reschedules',
-                html: `<div class="text-start">
-                          <p>Configure print settings for rescheduled orders:</p>
-                          <div class="form-check mb-3">
-                              <input class="form-check-input" type="checkbox" id="printWithDates" checked>
-                              <label class="form-check-label" for="printWithDates">
-                                  Include date comparisons
-                              </label>
-                          </div>
-                          <div class="form-check mb-3">
-                              <input class="form-check-input" type="checkbox" id="printRemarks" checked>
-                              <label class="form-check-label" for="printRemarks">
-                                  Include remarks
-                              </label>
-                          </div>
-                          <div class="form-check">
-                              <input class="form-check-input" type="checkbox" id="printStatus" checked>
-                              <label class="form-check-label" for="printStatus">
-                                  Include date status
-                              </label>
-                          </div>
-                       </div>`,
-                showCancelButton: true,
-                confirmButtonText: 'Print',
-                cancelButtonText: 'Cancel',
-                customClass: {
-                    confirmButton: 'btn btn-info',
-                    cancelButton: 'btn btn-outline-secondary'
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Implement print logic here
-                    window.print();
-                }
-            });
-        }
-
-        // Send reminders
-        function sendReminders() {
-            Swal.fire({
-                title: 'Send Reminders?',
-                html: `<div class="text-start">
-                          <p>Send reminders for upcoming rescheduled orders:</p>
-                          <div class="alert alert-warning">
-                              <div class="d-flex align-items-center">
-                                  <span class="material-icons-round me-2">warning</span>
-                                  <div>
-                                      <strong>Note:</strong> This will send notifications to customers about their rescheduled delivery dates.
-                                  </div>
-                              </div>
-                          </div>
-                          <div class="form-check mb-3">
-                              <input class="form-check-input" type="checkbox" id="remindOverdue" checked>
-                              <label class="form-check-label" for="remindOverdue">
-                                  Include overdue reschedules
-                              </label>
-                          </div>
-                          <div class="form-check">
-                              <input class="form-check-input" type="checkbox" id="remindToday" checked>
-                              <label class="form-check-label" for="remindToday">
-                                  Include today's reschedules
-                              </label>
-                          </div>
-                       </div>`,
-                showCancelButton: true,
-                confirmButtonText: 'Send Reminders',
-                cancelButtonText: 'Cancel',
-                customClass: {
-                    confirmButton: 'btn btn-warning',
-                    cancelButton: 'btn btn-outline-secondary'
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        title: 'Sending...',
-                        html: 'Sending reminders to customers...',
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                        timer: 3000,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    }).then(() => {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Reminders Sent!',
-                            text: 'Customer reminders have been sent successfully.',
-                            confirmButtonText: 'OK'
-                        });
-                    });
-                }
-            });
-        }
-
-        // Form submission handler for reschedule update
-        document.getElementById('updateRescheduleForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const newDate = document.getElementById('rescheduleDate').value;
-            const notify = document.getElementById('notifyCustomer').checked;
-            const orderTitle = document.getElementById('rescheduleOrderTitle').textContent;
-
-            Swal.fire({
-                title: 'Update Reschedule?',
-                html: `<div class="text-start">
-                          <p>Update rescheduled date to <strong>${newDate}</strong>?</p>
-                          <div class="alert alert-info mt-3">
-                              <div class="d-flex align-items-center">
-                                  <span class="material-icons-round me-2">info</span>
-                                  <div>
-                                      ${notify ? 'Customer will be notified about this change.' : 'Customer will NOT be notified.'}
-                                  </div>
-                              </div>
-                          </div>
-                       </div>`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, Update',
-                cancelButtonText: 'Cancel',
-                customClass: {
-                    confirmButton: 'btn btn-info',
-                    cancelButton: 'btn btn-outline-secondary'
-                },
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Show loading state
-                    Swal.fire({
-                        title: 'Updating...',
-                        text: 'Please wait while we update the reschedule date',
-                        showConfirmButton: false,
-                        allowOutsideClick: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
-
-                    // Submit the form
-                    this.submit();
-                }
-            });
+        /* ── SweetAlert2 Flash Messages ── */
+        @if(session('success'))
+        Swal.fire({
+            icon: 'success',
+            title: 'Done!',
+            text: '{{ session('success') }}',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3500,
+            timerProgressBar: true,
         });
-
-        // Auto-hide alerts after 5 seconds
-        setTimeout(() => {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                const bsAlert = new bootstrap.Alert(alert);
-                bsAlert.close();
-            });
-        }, 5000);
-
-        // Highlight upcoming reschedules
-        function highlightUpcomingReschedules() {
-            const today = new Date().toISOString().split('T')[0];
-            const dateCells = document.querySelectorAll('td:has(.date-indicator)');
-
-            dateCells.forEach(cell => {
-                const dateText = cell.querySelector('.date-indicator').textContent;
-                if (dateText.includes('Today') || dateText.includes('Overdue')) {
-                    cell.closest('tr').classList.add('table-warning');
-                }
-            });
-        }
-
-        // Initialize highlighting
-        highlightUpcomingReschedules();
+        @endif
+        @if(session('error'))
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops!',
+            text: '{{ session('error') }}',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true,
+        });
+        @endif
     </script>
 @endpush

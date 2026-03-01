@@ -90,6 +90,7 @@ class SellerProductController extends Controller
 
     /**
      * Store a newly created product
+     * FIXED: seller_code cast to string, removed manual sku, fixed type handling
      */
     public function store(Request $request)
     {
@@ -98,35 +99,39 @@ class SellerProductController extends Controller
         try {
             $seller = Auth::guard('seller')->user();
 
-            // Use 'img' for validation (matching form field name)
             $validator = Validator::make($request->all(), [
-                'code' => 'required|string|unique:seller_products,code',
-                'name' => 'required|string|max:255',
-                'description' => 'nullable|string',
-                'stock_price' => 'required|numeric|min:0',
-                'display_price' => 'required|numeric|min:0',
-                'discount' => 'nullable|numeric|min:0|max:100',
+                'code'           => 'required|string|unique:seller_products,code',
+                'name'           => 'required|string|max:255',
+                'description'    => 'nullable|string',
+                'stock_price'    => 'required|numeric|min:0',
+                'display_price'  => 'required|numeric|min:0',
+                'discount'       => 'nullable|numeric|min:0|max:100',
                 'packaging_cost' => 'nullable|numeric|min:0',
-                'qty' => 'required|integer|min:0',
-                'min_qty' => 'required|integer|min:1',
-                'category_id' => 'nullable|exists:seller_categories,id',
-                'brand_id' => 'nullable|exists:seller_brands,id',
-                'features' => 'nullable|string|max:2000',
-                'barcode' => 'nullable|string|max:255|unique:seller_products,barcode',
-                'type' => 'required|in:physical,digital',
-                'img' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+                'qty'            => 'required|integer|min:0',
+                'min_qty'        => 'required|integer|min:1',
+                'category_id'    => 'nullable|exists:seller_categories,id',
+                'brand_id'       => 'nullable|exists:seller_brands,id',
+                'features'       => 'nullable|string|max:2000',
+                'barcode'        => 'nullable|string|max:255|unique:seller_products,barcode',
+                'type'           => 'required|in:physical,digital',
+                'img'            => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             ], [
                 'img.required' => 'Product image is required',
-                'img.image' => 'File must be an image',
-                'img.mimes' => 'Only JPG, PNG, GIF, and WEBP images are allowed',
-                'img.max' => 'Image size must not exceed 2MB',
+                'img.image'    => 'File must be an image',
+                'img.mimes'    => 'Only JPG, PNG, GIF, and WEBP images are allowed',
+                'img.max'      => 'Image size must not exceed 2MB',
                 'features.max' => 'Features text is too long (maximum 2000 characters)',
-                'code.unique' => 'This product code is already in use',
+                'code.unique'  => 'This product code is already in use',
+                'type.in'      => 'Product type must be either physical or digital',
             ]);
 
-            // Additional validation
+            // Additional cross-field validation
             $validator->after(function ($validator) use ($request) {
-                if ($request->display_price < $request->stock_price) {
+                if (
+                    $request->filled('display_price') &&
+                    $request->filled('stock_price') &&
+                    (float) $request->display_price < (float) $request->stock_price
+                ) {
                     $validator->errors()->add('display_price', 'Display price cannot be lower than stock price.');
                 }
             });
@@ -134,53 +139,57 @@ class SellerProductController extends Controller
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
-                    'errors' => $validator->errors(),
-                    'message' => 'Please fix validation errors.'
+                    'errors'  => $validator->errors(),
+                    'message' => 'Please fix the validation errors and try again.',
                 ], 422);
             }
 
             $validatedData = $validator->validated();
 
-            // Handle image upload using 'img'
+            // ── Image Upload ─────────────────────────────────────────────
             $imagePath = null;
             if ($request->hasFile('img')) {
-                $image = $request->file('img');
-                $filename = 'product_' . time() . '_' . Str::slug($validatedData['name']) . '.' . $image->getClientOriginalExtension();
-
-                // Store in public/seller/products directory
+                $image     = $request->file('img');
+                $filename  = 'product_' . time() . '_' . Str::slug($validatedData['name'])
+                    . '.' . $image->getClientOriginalExtension();
                 $directory = 'seller/products';
                 $imagePath = $image->storeAs($directory, $filename, 'public');
 
                 if (!$imagePath) {
-                    throw new \Exception('Failed to upload image.');
+                    throw new \Exception('Failed to upload image. Please try again.');
                 }
             }
 
-            // Create product
+            // ── Build Product Data ────────────────────────────────────────
+            // FIX 1: seller_code cast to (string) — prevents int/varchar mismatch
+            // FIX 2: type is guaranteed 'physical' or 'digital' via validation
+            // FIX 3: sku is NOT set here — Model boot() auto-generates it safely
             $productData = [
-                'seller_id' => $seller->id,
-                'seller_code' => $seller->code,
-                'code' => $validatedData['code'],
-                'name' => $validatedData['name'],
-                'slug' => Str::slug($validatedData['name']),
-                'description' => $validatedData['description'] ?? null,
-                'stock_price' => $validatedData['stock_price'],
-                'display_price' => $validatedData['display_price'],
-                'discount' => $validatedData['discount'] ?? 0,
-                'packaging_cost' => $validatedData['packaging_cost'] ?? 0,
-                'qty' => $validatedData['qty'],
-                'min_qty' => $validatedData['min_qty'],
-                'category_id' => $validatedData['category_id'] ?? null,
-                'brand_id' => $validatedData['brand_id'] ?? null,
-                'features' => isset($validatedData['features']) ?
-                    substr($validatedData['features'], 0, 2000) : null,
-                'barcode' => $validatedData['barcode'] ?? null,
-                'type' => $validatedData['type'],
-                'add_by' => 'seller',
-                'update_by' => 'seller',
-                'status' => 'active',
-                'cancel' => false,
-                'image' => $imagePath,
+                'seller_id'      => (int)    $seller->id,
+                'seller_code'    => (string) $seller->code,          // ← FIXED: was raw int
+                'code'           => $validatedData['code'],
+                'name'           => $validatedData['name'],
+                'slug'           => Str::slug($validatedData['name']),
+                'description'    => $validatedData['description']    ?? null,
+                'stock_price'    => (float)  $validatedData['stock_price'],
+                'display_price'  => (float)  $validatedData['display_price'],
+                'discount'       => (float) ($validatedData['discount']       ?? 0),
+                'packaging_cost' => (float) ($validatedData['packaging_cost'] ?? 0),
+                'qty'            => (int)    $validatedData['qty'],
+                'min_qty'        => (int)    $validatedData['min_qty'],
+                'category_id'    => $validatedData['category_id'] ?? null,
+                'brand_id'       => $validatedData['brand_id']    ?? null,
+                'features'       => isset($validatedData['features'])
+                    ? substr($validatedData['features'], 0, 2000)
+                    : null,
+                'barcode'        => $validatedData['barcode'] ?? null,
+                'type'           => $validatedData['type'],           // ← 'physical' | 'digital'
+                'add_by'         => 'seller',
+                'update_by'      => 'seller',
+                'status'         => 'active',
+                'cancel'         => false,
+                'image'          => $imagePath,
+                // 'sku' intentionally omitted — auto-generated by Model boot()
             ];
 
             $product = SellerProduct::create($productData);
@@ -188,29 +197,32 @@ class SellerProductController extends Controller
             DB::commit();
 
             return response()->json([
-                'success' => true,
-                'message' => 'Product created successfully!',
-                'product' => [
-                    'id' => $product->id,
+                'success'  => true,
+                'message'  => 'Product "' . $product->name . '" created successfully!',
+                'product'  => [
+                    'id'   => $product->id,
                     'code' => $product->code,
-                    'name' => $product->name
+                    'name' => $product->name,
                 ],
-                'redirect' => route('seller.product.index')
+                'redirect' => route('seller.product.index'),
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
 
-            // Clean up uploaded image if exists
+            // Clean up uploaded image on failure
             if (isset($imagePath) && $imagePath) {
                 Storage::disk('public')->delete($imagePath);
             }
 
-            Log::error('Product creation error: ' . $e->getMessage());
+            Log::error('Product creation error: ' . $e->getMessage(), [
+                'seller_id' => Auth::guard('seller')->id(),
+                'trace'     => $e->getTraceAsString(),
+            ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error creating product: ' . $e->getMessage()
+                'message' => 'Error creating product: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -256,26 +268,28 @@ class SellerProductController extends Controller
                 ->findOrFail($id);
 
             $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
-                'description' => 'nullable|string',
-                'stock_price' => 'required|numeric|min:0',
-                'display_price' => 'required|numeric|min:0',
-                'discount' => 'nullable|numeric|min:0|max:100',
+                'name'           => 'required|string|max:255',
+                'description'    => 'nullable|string',
+                'stock_price'    => 'required|numeric|min:0',
+                'display_price'  => 'required|numeric|min:0',
+                'discount'       => 'nullable|numeric|min:0|max:100',
                 'packaging_cost' => 'nullable|numeric|min:0',
-                'qty' => 'required|integer|min:0',
-                'min_qty' => 'required|integer|min:1',
-                'category_id' => 'nullable|exists:seller_categories,id',
-                'brand_id' => 'nullable|exists:seller_brands,id',
-                'features' => 'nullable|string|max:2000',
-                'barcode' => 'nullable|string|max:255|unique:seller_products,barcode,' . $id,
-                'type' => 'required|in:physical,digital',
-                'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+                'qty'            => 'required|integer|min:0',
+                'min_qty'        => 'required|integer|min:1',
+                'category_id'    => 'nullable|exists:seller_categories,id',
+                'brand_id'       => 'nullable|exists:seller_brands,id',
+                'features'       => 'nullable|string|max:2000',
+                'barcode'        => 'nullable|string|max:255|unique:seller_products,barcode,' . $id,
+                'type'           => 'required|in:physical,digital',
+                'img'            => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            ], [
+                'type.in' => 'Product type must be either physical or digital',
             ]);
 
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
-                    'errors' => $validator->errors()
+                    'errors'  => $validator->errors(),
                 ], 422);
             }
 
@@ -288,42 +302,41 @@ class SellerProductController extends Controller
                     Storage::disk('public')->delete($product->image);
                 }
 
-                $image = $request->file('img');
-                $filename = 'product_' . time() . '_' . Str::slug($validatedData['name']) . '.' . $image->getClientOriginalExtension();
+                $image     = $request->file('img');
+                $filename  = 'product_' . time() . '_' . Str::slug($validatedData['name'])
+                    . '.' . $image->getClientOriginalExtension();
                 $directory = 'seller/products';
                 $imagePath = $image->storeAs($directory, $filename, 'public');
 
                 $product->image = $imagePath;
             }
 
-            // Update product data
-            $updateData = [
-                'name' => $validatedData['name'],
-                'slug' => Str::slug($validatedData['name']),
-                'description' => $validatedData['description'] ?? null,
-                'stock_price' => $validatedData['stock_price'],
-                'display_price' => $validatedData['display_price'],
-                'discount' => $validatedData['discount'] ?? 0,
-                'packaging_cost' => $validatedData['packaging_cost'] ?? 0,
-                'qty' => $validatedData['qty'],
-                'min_qty' => $validatedData['min_qty'],
-                'category_id' => $validatedData['category_id'] ?? null,
-                'brand_id' => $validatedData['brand_id'] ?? null,
-                'features' => isset($validatedData['features']) ?
-                    substr($validatedData['features'], 0, 2000) : null,
-                'barcode' => $validatedData['barcode'] ?? null,
-                'type' => $validatedData['type'],
-                'update_by' => 'seller',
-            ];
-
-            $product->update($updateData);
+            $product->update([
+                'name'           => $validatedData['name'],
+                'slug'           => Str::slug($validatedData['name']),
+                'description'    => $validatedData['description']    ?? null,
+                'stock_price'    => (float)  $validatedData['stock_price'],
+                'display_price'  => (float)  $validatedData['display_price'],
+                'discount'       => (float) ($validatedData['discount']       ?? 0),
+                'packaging_cost' => (float) ($validatedData['packaging_cost'] ?? 0),
+                'qty'            => (int)    $validatedData['qty'],
+                'min_qty'        => (int)    $validatedData['min_qty'],
+                'category_id'    => $validatedData['category_id'] ?? null,
+                'brand_id'       => $validatedData['brand_id']    ?? null,
+                'features'       => isset($validatedData['features'])
+                    ? substr($validatedData['features'], 0, 2000)
+                    : null,
+                'barcode'        => $validatedData['barcode'] ?? null,
+                'type'           => $validatedData['type'],
+                'update_by'      => 'seller',
+            ]);
 
             DB::commit();
 
             return response()->json([
-                'success' => true,
-                'message' => 'Product updated successfully!',
-                'redirect' => route('seller.product.index')
+                'success'  => true,
+                'message'  => 'Product updated successfully!',
+                'redirect' => route('seller.product.index'),
             ]);
 
         } catch (\Exception $e) {
@@ -332,13 +345,13 @@ class SellerProductController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error updating product: ' . $e->getMessage()
+                'message' => 'Error updating product: ' . $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Remove the specified product - PERMANENTLY DELETE FROM DATABASE
+     * Permanently delete a product from the database
      */
     public function destroy($id)
     {
@@ -347,18 +360,14 @@ class SellerProductController extends Controller
         try {
             $seller = Auth::guard('seller')->user();
 
-            // Include soft deleted products in the query
             $product = SellerProduct::withTrashed()
                 ->where('seller_id', $seller->id)
                 ->findOrFail($id);
 
-            // Store image path before deletion
             $imagePath = $product->image;
 
-            // PERMANENTLY delete from database (not soft delete)
             $product->forceDelete();
 
-            // Delete image after successful database deletion
             if ($imagePath && Storage::disk('public')->exists($imagePath)) {
                 Storage::disk('public')->delete($imagePath);
             }
@@ -367,19 +376,18 @@ class SellerProductController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Product permanently deleted successfully!'
+                'message' => 'Product permanently deleted successfully!',
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Product deletion error: ' . $e->getMessage(), [
                 'product_id' => $id,
-                'seller_id' => $seller->id ?? null
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error deleting product: ' . $e->getMessage()
+                'message' => 'Error deleting product: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -390,23 +398,19 @@ class SellerProductController extends Controller
     public function trash($id)
     {
         try {
-            $seller = Auth::guard('seller')->user();
-
-            $product = SellerProduct::where('seller_id', $seller->id)
-                ->findOrFail($id);
-
-            // Soft delete (keeps in database with deleted_at timestamp)
+            $seller  = Auth::guard('seller')->user();
+            $product = SellerProduct::where('seller_id', $seller->id)->findOrFail($id);
             $product->delete();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Product moved to trash successfully!'
+                'message' => 'Product moved to trash successfully!',
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error moving product to trash: ' . $e->getMessage()
+                'message' => 'Error moving product to trash: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -427,13 +431,13 @@ class SellerProductController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Product restored successfully!'
+                'message' => 'Product restored successfully!',
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error restoring product: ' . $e->getMessage()
+                'message' => 'Error restoring product: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -466,22 +470,19 @@ class SellerProductController extends Controller
     public function updateStatus(Request $request, $id)
     {
         try {
-            $seller = Auth::guard('seller')->user();
-
-            $product = SellerProduct::where('seller_id', $seller->id)
-                ->findOrFail($id);
-
+            $seller  = Auth::guard('seller')->user();
+            $product = SellerProduct::where('seller_id', $seller->id)->findOrFail($id);
             $product->update(['status' => $request->status]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Product status updated successfully!'
+                'message' => 'Product status updated successfully!',
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error updating status: ' . $e->getMessage()
+                'message' => 'Error updating status: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -489,28 +490,24 @@ class SellerProductController extends Controller
     /**
      * Generate unique product code in format DX/ITM/0001
      */
-    private function generateProductCode()
+    private function generateProductCode(): string
     {
         $prefix = 'DX/ITM/';
 
-        // Get the last product code
         $lastProduct = SellerProduct::where('code', 'LIKE', $prefix . '%')
             ->orderBy('code', 'desc')
             ->first();
 
         if ($lastProduct) {
-            // Extract the number from the last code (e.g., DX/ITM/0001 -> 1)
             $lastNumber = (int) str_replace($prefix, '', $lastProduct->code);
-            $newNumber = $lastNumber + 1;
+            $newNumber  = $lastNumber + 1;
         } else {
-            // First product
             $newNumber = 1;
         }
 
-        // Format with leading zeros (4 digits)
         $code = $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
 
-        // Check if code exists (safety check)
+        // Safety: ensure uniqueness
         while (SellerProduct::where('code', $code)->exists()) {
             $newNumber++;
             $code = $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
@@ -525,16 +522,14 @@ class SellerProductController extends Controller
     public function getNextProductCode()
     {
         try {
-            $code = $this->generateProductCode();
-
             return response()->json([
                 'success' => true,
-                'code' => $code
+                'code'    => $this->generateProductCode(),
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error generating product code: ' . $e->getMessage()
+                'message' => 'Error generating product code: ' . $e->getMessage(),
             ], 500);
         }
     }

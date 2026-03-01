@@ -543,13 +543,13 @@
                     </div>
                 </div>
 
-                <!-- Recent Orders Section -->
-                <div class="dashboard-section">
-                    <div class="section-header">
-                        <h3 class="section-title">Recent Orders</h3>
-                        <a href="{{ route('seller.employee.seller.orders') }}" class="view-all-link">
-                            View All <i class="fas fa-arrow-right"></i>
-                        </a>
+{{--                <!-- Recent Orders Section -->--}}
+{{--                <div class="dashboard-section">--}}
+{{--                    <div class="section-header">--}}
+{{--                        <h3 class="section-title">Recent Orders</h3>--}}
+{{--                        <a href="{{ route('em') }}" class="view-all-link">--}}
+{{--                            View All <i class="fas fa-arrow-right"></i>--}}
+{{--                        </a>--}}
                     </div>
 
                     <div class="table-responsive">
