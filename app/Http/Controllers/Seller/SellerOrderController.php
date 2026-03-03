@@ -686,6 +686,7 @@ class SellerOrderController extends Controller
     }
 
     // Update Order (includes auto-creation of delivery calls)
+    // Update Order (separate order status from call status)
     public function update(Request $request, $id)
     {
         $order = SellerOrder::where('seller_id', Auth::id())->findOrFail($id);
@@ -706,50 +707,74 @@ class SellerOrderController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        // If trying to confirm the order, ensure address exists
-        if ($request->call_status === 'Confirmed' && empty($order->customer_address)) {
-            $errorMsg = 'Customer address is required before confirming order. Please update the order with a valid address.';
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $errorMsg
-                ], 422);
+        $data = [];
+
+        // Handle ORDER STATUS changes (only from Order Management)
+        if ($request->has('status')) {
+            // Validate that order status can only be changed from pending
+            if ($order->status !== 'pending' && $request->status !== $order->status) {
+                $errorMsg = 'Only pending orders can have their status changed.';
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $errorMsg], 422);
+                }
+                return redirect()->back()->with('error', $errorMsg);
             }
-            return redirect()->back()->with('error', $errorMsg);
+
+            $data['status'] = $request->status;
+
+            // Set status-specific fields
+            if ($request->status === 'complete') {
+                $data['delivery_date'] = $request->delivery_date ?? now();
+                $data['payment_status'] = 'completed';
+            } elseif ($request->status === 'return') {
+                $data['return_date'] = $request->return_date ?? now();
+                $data['payment_status'] = 'refunded';
+            } elseif ($request->status === 'rescheduling') {
+                $data['rescheduling_date'] = $request->rescheduling_date ?? now();
+            } elseif ($request->status === 'cancelled') {
+                $data['payment_status'] = 'cancelled';
+            }
         }
 
-        $data = [];
-        if ($request->has('status')) {
-            $data['status'] = $request->status;
-        }
+        // Handle CALL STATUS changes (from Call Management)
         if ($request->has('call_status')) {
+            // If trying to confirm the order, ensure address exists
+            if ($request->call_status === 'Confirmed' && empty($order->customer_address)) {
+                $errorMsg = 'Customer address is required before confirming order.';
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $errorMsg], 422);
+                }
+                return redirect()->back()->with('error', $errorMsg);
+            }
+
             $data['call_status'] = $request->call_status;
+
+            // If call status becomes Confirmed, auto-create delivery call
+            // but DON'T change order status (order remains pending)
+            if ($request->call_status === 'Confirmed' && $order->status === 'pending') {
+                $this->createDeliveryCall($order);
+            }
         }
+
+        // Handle remark separately
         if ($request->has('remark')) {
             $data['remark'] = $request->remark;
         }
 
-        // Set status-specific fields
-        if ($request->status === 'complete') {
-            $data['delivery_date'] = $request->delivery_date ?? now();
-            $data['payment_status'] = 'completed';
-        } elseif ($request->status === 'return') {
-            $data['return_date'] = $request->return_date ?? now();
-            $data['payment_status'] = 'refunded';
-        } elseif ($request->status === 'rescheduling') {
-            $data['rescheduling_date'] = $request->rescheduling_date ?? now();
-        }
+        // Only update if there are changes
+        if (!empty($data)) {
+            $order->update($data);
 
-        $order->update($data);
-
-        // If call status becomes Confirmed, auto-create delivery call
-        if ($request->call_status === 'Confirmed' && $order->status === 'pending') {
-            $this->createDeliveryCall($order);
+            Log::info('Order updated', [
+                'order_id' => $order->id,
+                'changes' => $data
+            ]);
         }
 
         if ($request->expectsJson()) {
             return response()->json(['success' => true, 'message' => 'Order updated successfully']);
         }
+
         return redirect()->back()->with('success', 'Order updated successfully!');
     }
 
