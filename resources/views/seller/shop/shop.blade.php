@@ -542,7 +542,7 @@
                                     Copy
                                 </button>
 
-                                <a href="{{ route('seller.shop.product.show', $product->id) }}"
+                                <a href="{{ route('seller.shop.product.details', $product->code) }}"
                                    class="act-btn act-view"
                                    title="View product details">
                                     <span class="material-icons-round" style="font-size:16px">visibility</span>
@@ -664,7 +664,7 @@
                         product_stock: stock,
                         quantity: 1
                     });
-                    window.location.href = "{{ route('seller.new-order') }}?" + params.toString();
+                    window.location.href = "{{ route('seller.create.new-order') }}?" + params.toString();
                 } else if (result.isDenied) {
                     copyText(code);
                 }

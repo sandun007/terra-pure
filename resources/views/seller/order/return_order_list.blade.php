@@ -514,25 +514,25 @@
         <div class="mb-4">
             <ul class="nav nav-tabs" role="tablist">
                 <li class="nav-item">
-                    <a href="{{ route('seller.pending-order') }}" class="nav-link">
+                    <a href="{{ route('seller.order.pending') }}" class="nav-link {{ request()->routeIs('seller.order.pending') ? 'active' : '' }}">
                         <span class="material-icons-round me-2" style="font-size: 18px; vertical-align: middle;">pending_actions</span>
                         Pending
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('seller.complete-order') }}" class="nav-link">
+                    <a href="{{ route('seller.order.completed') }}" class="nav-link {{ request()->routeIs('seller.order.completed') ? 'active' : '' }}">
                         <span class="material-icons-round me-2" style="font-size: 18px; vertical-align: middle;">check_circle</span>
                         Complete
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('seller.return-order') }}" class="nav-link active">
+                    <a href="{{ route('seller.order.returned') }}" class="nav-link {{ request()->routeIs('seller.order.returned') ? 'active' : '' }}">
                         <span class="material-icons-round me-2" style="font-size: 18px; vertical-align: middle;">assignment_return</span>
                         Return
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('seller.rescheduling-order') }}" class="nav-link">
+                    <a href="{{ route('seller.order.rescheduled') }}" class="nav-link {{ request()->routeIs('seller.order.rescheduled') ? 'active' : '' }}">
                         <span class="material-icons-round me-2" style="font-size: 18px; vertical-align: middle;">event_repeat</span>
                         Rescheduling
                     </a>
@@ -743,7 +743,7 @@
                             <span class="material-icons-round mb-3" style="font-size: 64px; opacity: 0.3;">inbox</span>
                             <h5>No Returned Orders</h5>
                             <p>You don't have any returned orders at the moment.</p>
-                            <a href="{{ route('seller.pending-order') }}" class="btn btn-primary mt-3">
+                            <a href="{{ route('seller.order.pending') }}" class="btn btn-primary mt-3">
                                 <span class="material-icons-round me-2" style="font-size: 18px;">pending_actions</span>
                                 View Pending Orders
                             </a>

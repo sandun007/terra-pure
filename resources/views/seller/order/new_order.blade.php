@@ -146,7 +146,7 @@
                 Create New Order
             </h1>
             <div class="header-actions">
-                <a href="{{ route('seller.pending-order') }}" class="btn btn-secondary">
+                <a href="{{ route('seller.order.pending') }}" class="btn btn-secondary">
                     <span class="material-icons-round" style="font-size:18px">list_alt</span>View Orders
                 </a>
             </div>
@@ -351,10 +351,7 @@
                     </button>
                 </div>
 
-                {{-- ✅ CSV Bulk Import --}}
-                {{-- ═══════════════════════════════════════════════════════════ --}}
-                {{-- ✅ BULK IMPORT — independent product search + CSV upload       --}}
-                {{-- ═══════════════════════════════════════════════════════════ --}}
+                {{-- CSV Bulk Import --}}
                 <div class="product-search-section" style="margin-top:32px;border-color:#f59e0b">
                     <div class="search-header">
                         <span class="material-icons-round" style="color:var(--warning)">upload_file</span>
@@ -427,7 +424,7 @@
                                 <input type="file" id="csvFile" class="form-control" accept=".csv">
                                 <div class="helper-text">
                                     Required: <b>customer_name</b>, <b>customer_phone</b> |
-                                    Optional: customer_address, <b>city</b>, platform, payment_method, remark
+                                    Optional: customer_address, <b>city</b>, platform, remark
                                 </div>
                             </div>
                             <div class="form-group">
@@ -440,12 +437,6 @@
                                         <option value="website">Website</option>
                                         <option value="phone">Phone</option>
                                         <option value="manual">Manual</option>
-                                    </select>
-                                    <select id="bulkDefaultPayment" class="form-control" style="flex:1;min-width:150px">
-                                        <option value="cash">Payment: Cash on Delivery</option>
-                                        <option value="card">Card Payment</option>
-                                        <option value="bank_transfer">Bank Transfer</option>
-                                        <option value="online">Online Payment</option>
                                     </select>
                                 </div>
                             </div>
@@ -480,7 +471,6 @@
                             <div class="helper-text" style="margin:0">
                                 Preview (first 20 rows) — <b><span id="csvRowCount">0</span> rows</b> loaded
                             </div>
-                            {{-- Confirmed product badge shown in preview header --}}
                             <div id="bulkPreviewProductBadge" style="display:none;padding:4px 12px;background:#d1fae5;color:#065f46;border-radius:999px;font-size:12px;font-weight:700"></div>
                         </div>
                         <div style="overflow:auto;border:1px solid var(--border);border-radius:12px">
@@ -494,7 +484,6 @@
                                     <th style="text-align:left;padding:10px;border-bottom:1px solid var(--border)">Resolved City</th>
                                     <th style="text-align:left;padding:10px;border-bottom:1px solid var(--border)">State</th>
                                     <th style="text-align:left;padding:10px;border-bottom:1px solid var(--border)">Platform</th>
-                                    <th style="text-align:left;padding:10px;border-bottom:1px solid var(--border)">Payment</th>
                                 </tr>
                                 </thead>
                                 <tbody id="csvPreviewBody"></tbody>
@@ -511,10 +500,13 @@
 @push('script')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // ─── URLs ────────────────────────────────────────────────────────────────
-        const CITIES_API_URL   = '{{ route("seller.order.cities.json") }}';
-        const BULK_STORE_URL   = '{{ route("seller.order.bulk-store") }}';
+        // ─── URLs and Constants ──────────────────────────────────────────────────
+        const CITIES_API_URL = '{{ route("seller.order.cities.json") }}';
+        const BULK_STORE_URL = '{{ route("seller.order.bulk-store") }}';
         const BULK_VALIDATE_URL = '{{ route("seller.order.bulk-validate") }}';
+        const PRODUCT_DETAILS_URL = '{{ route("seller.order.product.details", ["code" => "PLACEHOLDER"]) }}';
+        const CSRF_TOKEN = '{{ csrf_token() }}';
+        const PENDING_ORDERS_URL = '{{ route("seller.order.pending") }}';
 
         // ─── City data (server-preloaded) ────────────────────────────────────────
         let CITIES = [];
@@ -551,14 +543,28 @@
         async function loadCitiesFromApi() {
             updateApiStatusBadge('loading', 'Loading cities…');
             try {
-                const res  = await fetch(CITIES_API_URL, { headers: { 'Accept':'application/json', 'X-Requested-With':'XMLHttpRequest' } });
+                const res = await fetch(CITIES_API_URL, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': CSRF_TOKEN
+                    }
+                });
+
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                }
+
                 const json = await res.json();
                 if (json.success && Array.isArray(json.data)) {
                     CITIES = json.data;
                     citiesLoaded = true;
                     updateApiStatusBadge('ok', CITIES.length + ' cities ready');
-                } else throw new Error(json.message || 'Failed');
+                } else {
+                    throw new Error(json.message || 'Failed to load cities');
+                }
             } catch (err) {
+                console.error('City load error:', err);
                 citiesLoaded = false;
                 updateApiStatusBadge('err', 'City load failed');
             }
@@ -587,6 +593,7 @@
             function esc(s) {
                 return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
             }
+
             function highlight(text, q) {
                 if (!q) return esc(text);
                 const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')','gi');
@@ -594,11 +601,16 @@
             }
 
             function openDropdown(matches, query) {
-                currentMatches = matches; activeIndex = -1; dropdown.innerHTML = '';
+                currentMatches = matches;
+                activeIndex = -1;
+                dropdown.innerHTML = '';
+
                 if (!citiesLoaded) {
                     dropdown.innerHTML = '<div class="city-loading"><span class="spinner"></span> Loading cities…</div>';
-                    dropdown.classList.add('open'); return;
+                    dropdown.classList.add('open');
+                    return;
                 }
+
                 if (matches.length === 0) {
                     dropdown.innerHTML = '<div class="city-dropdown-empty">No cities found for "' + esc(query) + '"</div>';
                 } else {
@@ -614,7 +626,8 @@
                             highlight(m.name, query) +
                             '<span class="city-state">' + esc(m.state_name) + '</span>';
                         item.addEventListener('mousedown', function (e) {
-                            e.preventDefault(); selectCity(matches[parseInt(this.dataset.index)]);
+                            e.preventDefault();
+                            selectCity(matches[parseInt(this.dataset.index)]);
                         });
                         frag.appendChild(item);
                     }
@@ -624,8 +637,10 @@
             }
 
             function closeDropdown() {
-                dropdown.classList.remove('open'); dropdown.innerHTML = '';
-                activeIndex = -1; currentMatches = [];
+                dropdown.classList.remove('open');
+                dropdown.innerHTML = '';
+                activeIndex = -1;
+                currentMatches = [];
             }
 
             function selectCity(city) {
@@ -645,11 +660,15 @@
                 document.getElementById('destination_state_name').value = '';
                 clearBtn.classList.remove('visible');
                 helperText.textContent = 'Cities loaded from Curfox delivery API';
-                closeDropdown(); input.focus();
+                closeDropdown();
+                input.focus();
             }
 
             function search(query) {
-                if (!query || query.length < 1) { closeDropdown(); return; }
+                if (!query || query.length < 1) {
+                    closeDropdown();
+                    return;
+                }
                 const q = query.toLowerCase().trim();
                 const exact = [], starts = [], contains = [];
                 for (const city of CITIES) {
@@ -674,9 +693,20 @@
             input.addEventListener('keydown', function (e) {
                 const items = dropdown.querySelectorAll('.city-dropdown-item');
                 if (!dropdown.classList.contains('open')) return;
-                if (e.key === 'ArrowDown') { e.preventDefault(); activeIndex = Math.min(activeIndex+1, items.length-1); items.forEach((el,i) => el.classList.toggle('active',i===activeIndex)); }
-                if (e.key === 'ArrowUp')   { e.preventDefault(); activeIndex = Math.max(activeIndex-1,-1); items.forEach((el,i) => el.classList.toggle('active',i===activeIndex)); }
-                if (e.key === 'Enter')     { e.preventDefault(); if (activeIndex >= 0 && currentMatches[activeIndex]) selectCity(currentMatches[activeIndex]); }
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    activeIndex = Math.min(activeIndex + 1, items.length - 1);
+                    items.forEach((el, i) => el.classList.toggle('active', i === activeIndex));
+                }
+                if (e.key === 'ArrowUp')   {
+                    e.preventDefault();
+                    activeIndex = Math.max(activeIndex - 1, -1);
+                    items.forEach((el, i) => el.classList.toggle('active', i === activeIndex));
+                }
+                if (e.key === 'Enter')     {
+                    e.preventDefault();
+                    if (activeIndex >= 0 && currentMatches[activeIndex]) selectCity(currentMatches[activeIndex]);
+                }
                 if (e.key === 'Escape')    closeDropdown();
             });
 
@@ -689,12 +719,18 @@
 
         document.getElementById('fetchProductBtn').addEventListener('click', function () {
             const code = document.getElementById('searchProductCode').value.trim();
-            if (!code) { Swal.fire({ icon:'error', title:'Missing Code', text:'Please enter a product code', confirmButtonColor:'#4f46e5' }); return; }
+            if (!code) {
+                Swal.fire({ icon: 'error', title: 'Missing Code', text: 'Please enter a product code', confirmButtonColor: '#4f46e5' });
+                return;
+            }
             fetchProductByCode(code);
         });
 
         document.getElementById('searchProductCode').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') { e.preventDefault(); document.getElementById('fetchProductBtn').click(); }
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('fetchProductBtn').click();
+            }
         });
 
         async function fetchProductByCode(productCode) {
@@ -702,27 +738,65 @@
             const orig = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner"></span> Fetching…';
+
             try {
-                const url  = '/seller/order/product/' + encodeURIComponent(productCode) + '/details';
-                const res  = await fetch(url, { headers: { 'X-Requested-With':'XMLHttpRequest', 'Accept':'application/json' } });
+                const url = PRODUCT_DETAILS_URL.replace('PLACEHOLDER', encodeURIComponent(productCode));
+                console.log('Fetching product from:', url);
+
+                const res = await fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': CSRF_TOKEN
+                    }
+                });
+
+                // Check if response is JSON
+                const contentType = res.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await res.text();
+                    console.error('Non-JSON response:', text.substring(0, 200));
+                    throw new Error('Server returned HTML instead of JSON. Please check your route and controller.');
+                }
+
                 const data = await res.json();
-                if (!res.ok) throw new Error(data.message || 'HTTP ' + res.status);
+
+                if (!res.ok) {
+                    throw new Error(data.message || `HTTP ${res.status}: ${res.statusText}`);
+                }
+
                 if (data.success && data.product) {
                     displayProductInfo(data.product);
-                    Swal.fire({ icon:'success', title:'Product Found!', text: data.product.name + ' loaded', timer:2000, showConfirmButton:false });
-                } else throw new Error(data.message || 'Invalid response');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Product Found!',
+                        text: data.product.name + ' loaded',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    throw new Error(data.message || 'Invalid response');
+                }
             } catch (err) {
-                Swal.fire({ icon:'error', title:'Not Found', text: err.message, confirmButtonColor:'#4f46e5' });
+                console.error('Fetch error:', err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Not Found',
+                    text: err.message,
+                    confirmButtonColor: '#4f46e5'
+                });
                 resetForm();
             } finally {
-                btn.disabled = false; btn.innerHTML = orig;
+                btn.disabled = false;
+                btn.innerHTML = orig;
             }
         }
 
         function displayProductInfo(product) {
             currentProductData = product;
             const card = document.getElementById('productInfoCard');
-            card.style.display = 'block'; card.classList.add('show');
+            card.style.display = 'block';
+            card.classList.add('show');
             document.getElementById('resetBtn').style.display = 'inline-flex';
 
             document.getElementById('product_code').value  = product.code;
@@ -733,7 +807,7 @@
 
             document.getElementById('displayProductName').textContent  = product.name;
             document.getElementById('displayProductCode').textContent  = product.code;
-            document.getElementById('displayProductPrice').textContent = (parseFloat(product.display_price)||0).toFixed(2);
+            document.getElementById('displayProductPrice').textContent = (parseFloat(product.display_price) || 0).toFixed(2);
 
             const stock = parseInt(product.qty) || 0;
             document.getElementById('displayProductStock').textContent = stock;
@@ -743,7 +817,7 @@
             if (stock <= 0) {
                 badge.className = 'stock-badge stock-out';
                 badge.innerHTML = '<span class="material-icons-round" style="font-size:14px">cancel</span> Out of Stock';
-            } else if (stock <= (product.min_qty||10)) {
+            } else if (stock <= (product.min_qty || 10)) {
                 badge.className = 'stock-badge stock-low';
                 badge.innerHTML = '<span class="material-icons-round" style="font-size:14px">warning</span> Low Stock';
             } else {
@@ -754,21 +828,44 @@
             const imgEl = document.getElementById('productImagePreview');
             const phEl  = document.getElementById('productImagePlaceholder');
             if (product.image) {
-                imgEl.src = product.image; imgEl.style.display = 'block'; phEl.style.display = 'none';
-                imgEl.onerror = () => { imgEl.style.display='none'; phEl.style.display='flex'; };
-            } else { imgEl.style.display='none'; phEl.style.display='flex'; }
+                imgEl.src = product.image;
+                imgEl.style.display = 'block';
+                phEl.style.display = 'none';
+                imgEl.onerror = () => {
+                    imgEl.style.display = 'none';
+                    phEl.style.display = 'flex';
+                };
+            } else {
+                imgEl.style.display = 'none';
+                phEl.style.display = 'flex';
+            }
 
             const qty = document.getElementById('quantity');
-            if (stock > 0) { qty.max = stock; qty.disabled = false; if (parseInt(qty.value) > stock) qty.value = stock; }
-            else { qty.disabled = true; qty.value = 0; }
+            if (stock > 0) {
+                qty.max = stock;
+                qty.disabled = false;
+                if (parseInt(qty.value) > stock) qty.value = stock;
+            } else {
+                qty.disabled = true;
+                qty.value = 0;
+            }
 
             document.getElementById('submitBtn').disabled = false;
             document.getElementById('printBtn').disabled  = false;
         }
 
         document.getElementById('resetBtn').addEventListener('click', function () {
-            Swal.fire({ title:'Reset Form?', text:'All product and order info will be cleared.', icon:'warning', showCancelButton:true, confirmButtonColor:'#ef4444', cancelButtonColor:'#64748b', confirmButtonText:'Yes, Reset' })
-                .then(r => { if (r.isConfirmed) resetForm(); });
+            Swal.fire({
+                title: 'Reset Form?',
+                text: 'All product and order info will be cleared.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Yes, Reset'
+            }).then(r => {
+                if (r.isConfirmed) resetForm();
+            });
         });
 
         function resetForm() {
@@ -804,7 +901,8 @@
         document.getElementById('submitBtn').addEventListener('click', function (e) {
             e.preventDefault();
             if (!currentProductData || !document.getElementById('product_id').value) {
-                Swal.fire({ icon:'error', title:'No Product', text:'Please fetch a product first.', confirmButtonColor:'#4f46e5' }); return;
+                Swal.fire({ icon: 'error', title: 'No Product', text: 'Please fetch a product first.', confirmButtonColor: '#4f46e5' });
+                return;
             }
 
             const customerName  = document.getElementById('customer_name').value.trim();
@@ -815,31 +913,51 @@
             const quantity      = parseInt(document.getElementById('quantity').value) || 0;
             const stock         = parseInt(currentProductData.qty) || 0;
 
-            if (!customerName)  { Swal.fire({ icon:'error', title:'Missing', text:'Enter customer name.' }); return; }
-            if (!customerPhone) { Swal.fire({ icon:'error', title:'Missing', text:'Enter customer phone.' }); return; }
-            if (!paymentMethod) { Swal.fire({ icon:'error', title:'Missing', text:'Select payment method.' }); return; }
-            if (!districtVal)   { Swal.fire({ icon:'error', title:'Missing', text:'Select a delivery city.' }); return; }
-            if (!cityId)        { Swal.fire({ icon:'error', title:'Invalid City', text:'Please select a city from the dropdown to confirm it is valid.' }); return; }
-            if (quantity <= 0)  { Swal.fire({ icon:'error', title:'Invalid Qty', text:'Enter a valid quantity.' }); return; }
-            if (quantity > stock) { Swal.fire({ icon:'error', title:'Exceeds Stock', text:'Only ' + stock + ' units available.' }); return; }
+            if (!customerName)  { Swal.fire({ icon: 'error', title: 'Missing', text: 'Enter customer name.' }); return; }
+            if (!customerPhone) { Swal.fire({ icon: 'error', title: 'Missing', text: 'Enter customer phone.' }); return; }
+            if (!paymentMethod) { Swal.fire({ icon: 'error', title: 'Missing', text: 'Select payment method.' }); return; }
+            if (!districtVal)   { Swal.fire({ icon: 'error', title: 'Missing', text: 'Select a delivery city.' }); return; }
+            if (!cityId)        { Swal.fire({ icon: 'error', title: 'Invalid City', text: 'Please select a city from the dropdown to confirm it is valid.' }); return; }
+            if (quantity <= 0)  { Swal.fire({ icon: 'error', title: 'Invalid Qty', text: 'Enter a valid quantity.' }); return; }
+            if (quantity > stock) { Swal.fire({ icon: 'error', title: 'Exceeds Stock', text: 'Only ' + stock + ' units available.' }); return; }
 
             Swal.fire({
-                title:'Create Order?', icon:'question', showCancelButton:true,
-                confirmButtonColor:'#10b981', cancelButtonColor:'#64748b', confirmButtonText:'Yes, Create',
+                title: 'Create Order?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Yes, Create',
                 showLoaderOnConfirm: true,
                 preConfirm: () => {
                     const form = document.getElementById('orderForm');
                     return fetch(form.action, {
-                        method:'POST', body:new FormData(form),
-                        headers:{ 'X-Requested-With':'XMLHttpRequest','X-CSRF-TOKEN':'{{ csrf_token() }}','Accept':'application/json' }
-                    }).then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.message||'Error'); }))
-                        .catch(err => Swal.showValidationMessage('Error: ' + err.message));
+                        method: 'POST',
+                        body: new FormData(form),
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': CSRF_TOKEN,
+                            'Accept': 'application/json'
+                        }
+                    }).then(r => {
+                        if (!r.ok) {
+                            return r.json().then(e => { throw new Error(e.message || 'Error'); });
+                        }
+                        return r.json();
+                    }).catch(err => {
+                        Swal.showValidationMessage('Error: ' + err.message);
+                    });
                 },
                 allowOutsideClick: () => !Swal.isLoading()
             }).then(result => {
                 if (result.isConfirmed && result.value && result.value.success) {
-                    Swal.fire({ icon:'success', title:'Order Created!', text:result.value.message, timer:1800, showConfirmButton:false })
-                        .then(() => window.location.href = result.value.redirect_url || '{{ route("seller.pending-order") }}');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Order Created!',
+                        text: result.value.message,
+                        timer: 1800,
+                        showConfirmButton: false
+                    }).then(() => window.location.href = result.value.redirect_url || PENDING_ORDERS_URL);
                 }
             });
         });
@@ -849,13 +967,16 @@
             if (!currentProductData) return;
             const n = document.getElementById('customer_name').value;
             const p = document.getElementById('customer_phone').value;
-            if (!n || !p) { Swal.fire({ icon:'error', title:'Missing Info', text:'Fill customer name and phone.' }); return; }
+            if (!n || !p) {
+                Swal.fire({ icon: 'error', title: 'Missing Info', text: 'Fill customer name and phone.' });
+                return;
+            }
 
             const city  = document.getElementById('district').value;
             const qty   = document.getElementById('quantity').value;
             const state = document.getElementById('destination_state_name').value;
 
-            const pw = window.open('','','height=600,width=800');
+            const pw = window.open('', '', 'height=600,width=800');
             pw.document.write('<html><head><title>Order Print</title><style>body{font-family:Arial;padding:20px}h1{color:#4f46e5}table{width:100%;border-collapse:collapse}td{padding:10px;border-bottom:1px solid #eee}td:first-child{font-weight:bold;width:40%}</style></head><body>');
             pw.document.write('<h1>Order Details</h1><p>Date: ' + new Date().toLocaleDateString() + '</p><table>');
             pw.document.write('<tr><td>Product:</td><td>' + currentProductData.name + '</td></tr>');
@@ -865,32 +986,36 @@
             pw.document.write('<tr><td>Total:</td><td>Rs. ' + (currentProductData.display_price * qty).toFixed(2) + '</td></tr>');
             pw.document.write('<tr><td>Customer:</td><td>' + n + '</td></tr>');
             pw.document.write('<tr><td>Phone:</td><td>' + p + '</td></tr>');
-            if (city) pw.document.write('<tr><td>City:</td><td>' + city + (state ? ', '+state : '') + '</td></tr>');
+            if (city) pw.document.write('<tr><td>City:</td><td>' + city + (state ? ', ' + state : '') + '</td></tr>');
             pw.document.write('</table></body></html>');
-            pw.document.close(); pw.focus();
+            pw.document.close();
+            pw.focus();
             setTimeout(() => { pw.print(); pw.close(); }, 250);
         });
 
-        // ─── CSV Bulk Import — Independent Product ───────────────────────────────
+        // ─── CSV Bulk Import ─────────────────────────────────────────────────────
         let BULK_LEADS = [];
         let BULK_VALIDATED = false;
-        let bulkProductData = null;   // Independently fetched product for bulk import
+        let bulkProductData = null;
 
         function escH(s) {
             return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
         }
 
-        // ── Bulk product fetch ────────────────────────────────────────────────────
+        // Bulk product fetch
         document.getElementById('bulkFetchProductBtn').addEventListener('click', () => bulkFetchProduct());
         document.getElementById('bulkProductCode').addEventListener('keypress', e => {
-            if (e.key === 'Enter') { e.preventDefault(); bulkFetchProduct(); }
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                bulkFetchProduct();
+            }
         });
         document.getElementById('bulkResetProductBtn').addEventListener('click', bulkResetProduct);
 
         async function bulkFetchProduct() {
             const code = document.getElementById('bulkProductCode').value.trim();
             if (!code) {
-                Swal.fire({ icon:'error', title:'Missing Code', text:'Enter a product code first.', confirmButtonColor:'#f59e0b' });
+                Swal.fire({ icon: 'error', title: 'Missing Code', text: 'Enter a product code first.', confirmButtonColor: '#f59e0b' });
                 return;
             }
 
@@ -900,31 +1025,44 @@
             btn.innerHTML = '<span class="spinner" style="border-top-color:#fff"></span> Verifying…';
 
             try {
-                const url  = '/seller/order/product/' + encodeURIComponent(code) + '/details';
-                const res  = await fetch(url, { headers:{ 'X-Requested-With':'XMLHttpRequest','Accept':'application/json' } });
+                const url = PRODUCT_DETAILS_URL.replace('PLACEHOLDER', encodeURIComponent(code));
+                const res = await fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': CSRF_TOKEN
+                    }
+                });
+
+                if (!res.ok) {
+                    const text = await res.text();
+                    console.error('Non-JSON response:', text.substring(0, 200));
+                    throw new Error('Server returned HTML instead of JSON');
+                }
+
                 const data = await res.json();
 
-                if (!res.ok || !data.success || !data.product) {
+                if (!data.success || !data.product) {
                     throw new Error(data.message || 'Product not found');
                 }
 
                 bulkProductData = data.product;
                 showBulkProductCard(data.product);
-
-                // Enable preview button now product is verified
                 document.getElementById('parseCsvBtn').disabled = false;
 
                 Swal.fire({
-                    icon:'success', title:'Product Verified!',
-                    html:`<b>${escH(data.product.name)}</b><br>Code: ${escH(data.product.code)}<br>Stock: <b>${data.product.qty}</b> units`,
-                    timer:2200, showConfirmButton:false
+                    icon: 'success',
+                    title: 'Product Verified!',
+                    html: `<b>${escH(data.product.name)}</b><br>Code: ${escH(data.product.code)}<br>Stock: <b>${data.product.qty}</b> units`,
+                    timer: 2200,
+                    showConfirmButton: false
                 });
             } catch (err) {
                 bulkProductData = null;
                 hideBulkProductCard();
                 document.getElementById('parseCsvBtn').disabled = true;
                 document.getElementById('bulkImportBtn').disabled = true;
-                Swal.fire({ icon:'error', title:'Not Found', text: err.message, confirmButtonColor:'#f59e0b' });
+                Swal.fire({ icon: 'error', title: 'Not Found', text: err.message, confirmButtonColor: '#f59e0b' });
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = orig;
@@ -941,22 +1079,25 @@
             document.getElementById('bulkProductStock').textContent       = p.qty;
             document.getElementById('bulkResetProductBtn').style.display  = 'inline-flex';
 
-            // Stock badge
             const badge = document.getElementById('bulkStockBadge');
             const qty   = parseInt(p.qty) || 0;
             badge.className = 'stock-badge ' + (qty <= 0 ? 'stock-out' : qty <= 10 ? 'stock-low' : 'stock-available');
 
-            // Image
             const img = document.getElementById('bulkProductImg');
             const ph  = document.getElementById('bulkProductImgPh');
             if (p.image) {
-                img.src = p.image; img.style.display = 'block'; ph.style.display = 'none';
-                img.onerror = () => { img.style.display='none'; ph.style.display='flex'; };
+                img.src = p.image;
+                img.style.display = 'block';
+                ph.style.display = 'none';
+                img.onerror = () => {
+                    img.style.display='none';
+                    ph.style.display='flex';
+                };
             } else {
-                img.style.display = 'none'; ph.style.display = 'flex';
+                img.style.display = 'none';
+                ph.style.display = 'flex';
             }
 
-            // Stock warning if fewer units than leads already parsed
             checkBulkStockVsLeads();
         }
 
@@ -972,7 +1113,6 @@
             document.getElementById('bulkProductCode').value = '';
             document.getElementById('parseCsvBtn').disabled  = true;
             document.getElementById('bulkImportBtn').disabled = true;
-            // Reset preview
             document.getElementById('csvPreviewWrap').style.display        = 'none';
             document.getElementById('cityValidationSummary').style.display = 'none';
             BULK_LEADS = [];
@@ -994,17 +1134,18 @@
             }
         }
 
-        // ── CSV Parse & Validate ──────────────────────────────────────────────────
+        // CSV Parse & Validate
         document.getElementById('parseCsvBtn').addEventListener('click', async () => {
             if (!bulkProductData) {
-                Swal.fire({ icon:'error', title:'No Product', text:'Verify a product first (Step 1).' });
+                Swal.fire({ icon: 'error', title: 'No Product', text: 'Verify a product first (Step 1).' });
                 return;
             }
 
             const file = document.getElementById('csvFile').files[0];
-            if (!file) { Swal.fire({ icon:'error', title:'No file', text:'Please select a CSV file.' }); return; }
-
-            const productCode = bulkProductData.code;
+            if (!file) {
+                Swal.fire({ icon: 'error', title: 'No file', text: 'Please select a CSV file.' });
+                return;
+            }
 
             const text = await file.text();
             BULK_LEADS = parseCsvToLeads(text);
@@ -1012,14 +1153,12 @@
             document.getElementById('bulkImportBtn').disabled = true;
 
             if (!BULK_LEADS.length) {
-                Swal.fire({ icon:'error', title:'Empty CSV', text:'No valid rows found. Ensure headers include customer_name and customer_phone.' });
+                Swal.fire({ icon: 'error', title: 'Empty CSV', text: 'No valid rows found. Ensure headers include customer_name and customer_phone.' });
                 return;
             }
 
-            // Stock vs CSV count warning
             checkBulkStockVsLeads();
 
-            // Show badge
             const badge = document.getElementById('bulkPreviewProductBadge');
             badge.style.display = 'inline-flex';
             badge.textContent   = `✓ Product: ${bulkProductData.name} (${bulkProductData.code}) — Stock: ${bulkProductData.qty}`;
@@ -1032,13 +1171,21 @@
             try {
                 const fd = new FormData();
                 fd.append('leads', JSON.stringify(BULK_LEADS));
-                fd.append('_token', '{{ csrf_token() }}');
 
-                const res  = await fetch(BULK_VALIDATE_URL, {
-                    method:'POST',
-                    headers:{ 'X-Requested-With':'XMLHttpRequest','X-CSRF-TOKEN':'{{ csrf_token() }}','Accept':'application/json' },
+                const res = await fetch(BULK_VALIDATE_URL, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': CSRF_TOKEN,
+                        'Accept': 'application/json'
+                    },
                     body: fd
                 });
+
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}`);
+                }
+
                 const json = await res.json();
 
                 if (json.success) {
@@ -1056,22 +1203,21 @@
                     BULK_VALIDATED = true;
                     document.getElementById('bulkImportBtn').disabled = false;
                 } else {
-                    Swal.fire({ icon:'error', title:'Validation Error', text: json.message });
+                    Swal.fire({ icon: 'error', title: 'Validation Error', text: json.message });
                     renderCsvPreview(BULK_LEADS);
                     document.getElementById('bulkImportBtn').disabled = false;
                 }
             } catch (err) {
+                console.error('Validation error:', err);
                 renderCsvPreview(BULK_LEADS);
                 document.getElementById('bulkImportBtn').disabled = false;
-                console.warn('Bulk validate failed:', err);
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = orig;
             }
         });
 
-
-        // ─── RFC-4180 compliant CSV parser ───────────────────────────────────────
+        // RFC-4180 compliant CSV parser
         function parseCSVLine(line) {
             const result = [];
             let cur = '';
@@ -1107,7 +1253,6 @@
             const iCity     = idx('city');
             const iCityName = idx('destination_city_name');
             const iPlatform = idx('platform');
-            const iPayment  = idx('payment_method');
             const iRemark   = idx('remark');
 
             if (iName === -1 || iPhone === -1) return [];
@@ -1125,19 +1270,18 @@
                 leads.push({
                     customer_name,
                     customer_phone,
-                    customer_address:       (iAddr     !== -1 ? (cols[iAddr]     ?? '').trim() : '') || null,
-                    district:               cityValue || null,
-                    destination_city_name:  cityValue || null,
+                    customer_address: (iAddr !== -1 ? (cols[iAddr] ?? '').trim() : '') || null,
+                    district: cityValue || null,
+                    destination_city_name: cityValue || null,
                     destination_state_name: null,
-                    platform:               (iPlatform !== -1 ? (cols[iPlatform] ?? '').trim() : '') || null,
-                    payment_method:         (iPayment  !== -1 ? (cols[iPayment]  ?? '').trim() : '') || null,
-                    remark:                 (iRemark   !== -1 ? (cols[iRemark]   ?? '').trim() : '') || null,
+                    platform: (iPlatform !== -1 ? (cols[iPlatform] ?? '').trim() : '') || null,
+                    remark: (iRemark !== -1 ? (cols[iRemark] ?? '').trim() : '') || null,
                 });
             }
             return leads;
         }
 
-        // ─── Validation summary ───────────────────────────────────────────────────
+        // Validation summary
         function renderValidationSummary(json) {
             const wrap    = document.getElementById('cityValidationSummary');
             const badges  = document.getElementById('valBadges');
@@ -1151,10 +1295,10 @@
             const missingCount = json.missing_count || 0;
 
             badges.innerHTML = `
-        <span class="val-badge val-badge-ok">✓ ${validCount} cities matched</span>
-        ${invalidCount > 0 ? `<span class="val-badge val-badge-err">✕ ${invalidCount} invalid cities</span>` : ''}
-        ${missingCount > 0 ? `<span class="val-badge val-badge-warn">⚠ ${missingCount} missing city</span>` : ''}
-    `;
+                <span class="val-badge val-badge-ok">✓ ${validCount} cities matched</span>
+                ${invalidCount > 0 ? `<span class="val-badge val-badge-err">✕ ${invalidCount} invalid cities</span>` : ''}
+                ${missingCount > 0 ? `<span class="val-badge val-badge-warn">⚠ ${missingCount} missing city</span>` : ''}
+            `;
 
             if (invalidCount > 0) {
                 const invalidRows = json.results.filter(r => r.status === 'invalid');
@@ -1188,7 +1332,7 @@
             renderValidationNote();
         });
 
-        // ─── Preview table renderers ──────────────────────────────────────────────
+        // Preview table renderers
         function renderCsvPreviewWithValidation(leads, validationResults) {
             document.getElementById('csvPreviewWrap').style.display = 'block';
             document.getElementById('csvRowCount').textContent = leads.length;
@@ -1212,8 +1356,8 @@
                 } else if (status === 'invalid') {
                     const rawCity = escH(row.district || '');
                     statusHtml = `
-                <span class="city-status-invalid" id="city-invalid-${i}">✕ Not in Curfox</span>
-                <span class="city-status-ok"      id="city-asis-${i}"    style="display:none">⚠ Save as-is: ${rawCity}</span>`;
+                        <span class="city-status-invalid" id="city-invalid-${i}">✕ Not in Curfox</span>
+                        <span class="city-status-ok" id="city-asis-${i}" style="display:none">⚠ Save as-is: ${rawCity}</span>`;
                 } else if (status === 'missing') {
                     statusHtml = `<span class="city-status-missing">⚠ City missing</span>`;
                 } else {
@@ -1223,15 +1367,14 @@
                 const tr = document.createElement('tr');
                 tr.dataset.cityStatus = status;
                 tr.innerHTML = `
-            <td style="padding:10px;border-bottom:1px solid var(--border)">${i+1}</td>
-            <td style="padding:10px;border-bottom:1px solid var(--border)">${escH(row.customer_name)}</td>
-            <td style="padding:10px;border-bottom:1px solid var(--border)">${escH(row.customer_phone)}</td>
-            <td style="padding:10px;border-bottom:1px solid var(--border)">${escH(row.district || '-')}</td>
-            <td style="padding:10px;border-bottom:1px solid var(--border)">${statusHtml}</td>
-            <td style="padding:10px;border-bottom:1px solid var(--border)">${escH(resolvedState)}</td>
-            <td style="padding:10px;border-bottom:1px solid var(--border)">${escH(row.platform || '-')}</td>
-            <td style="padding:10px;border-bottom:1px solid var(--border)">${escH(row.payment_method || '-')}</td>
-        `;
+                    <td style="padding:10px;border-bottom:1px solid var(--border)">${i+1}</td>
+                    <td style="padding:10px;border-bottom:1px solid var(--border)">${escH(row.customer_name)}</td>
+                    <td style="padding:10px;border-bottom:1px solid var(--border)">${escH(row.customer_phone)}</td>
+                    <td style="padding:10px;border-bottom:1px solid var(--border)">${escH(row.district || '-')}</td>
+                    <td style="padding:10px;border-bottom:1px solid var(--border)">${statusHtml}</td>
+                    <td style="padding:10px;border-bottom:1px solid var(--border)">${escH(resolvedState)}</td>
+                    <td style="padding:10px;border-bottom:1px solid var(--border)">${escH(row.platform || '-')}</td>
+                `;
                 tbody.appendChild(tr);
             }
 
@@ -1260,46 +1403,46 @@
                 const row = leads[i];
                 const tr  = document.createElement('tr');
                 tr.innerHTML = `
-            <td style="padding:10px;border-bottom:1px solid var(--border)">${i+1}</td>
-            <td style="padding:10px;border-bottom:1px solid var(--border)">${escH(row.customer_name)}</td>
-            <td style="padding:10px;border-bottom:1px solid var(--border)">${escH(row.customer_phone)}</td>
-            <td style="padding:10px;border-bottom:1px solid var(--border)">${escH(row.district || '-')}</td>
-            <td style="padding:10px;border-bottom:1px solid var(--border)"><span style="color:var(--mid)">—</span></td>
-            <td style="padding:10px;border-bottom:1px solid var(--border)"><span style="color:var(--mid)">—</span></td>
-            <td style="padding:10px;border-bottom:1px solid var(--border)">${escH(row.platform || '-')}</td>
-            <td style="padding:10px;border-bottom:1px solid var(--border)">${escH(row.payment_method || '-')}</td>
-        `;
+                    <td style="padding:10px;border-bottom:1px solid var(--border)">${i+1}</td>
+                    <td style="padding:10px;border-bottom:1px solid var(--border)">${escH(row.customer_name)}</td>
+                    <td style="padding:10px;border-bottom:1px solid var(--border)">${escH(row.customer_phone)}</td>
+                    <td style="padding:10px;border-bottom:1px solid var(--border)">${escH(row.district || '-')}</td>
+                    <td style="padding:10px;border-bottom:1px solid var(--border)"><span style="color:var(--mid)">—</span></td>
+                    <td style="padding:10px;border-bottom:1px solid var(--border)"><span style="color:var(--mid)">—</span></td>
+                    <td style="padding:10px;border-bottom:1px solid var(--border)">${escH(row.platform || '-')}</td>
+                `;
                 tbody.appendChild(tr);
             }
         }
 
-        // ─── Bulk Import Submit ───────────────────────────────────────────────────
+        // Bulk Import Submit
         document.getElementById('bulkImportBtn').addEventListener('click', async () => {
             if (!bulkProductData) {
-                Swal.fire({ icon:'error', title:'No Product', text:'Verify a product in Step 1 first.' }); return;
+                Swal.fire({ icon: 'error', title: 'No Product', text: 'Verify a product in Step 1 first.' });
+                return;
             }
             if (!BULK_LEADS.length) {
-                Swal.fire({ icon:'error', title:'No Data', text:'Click Preview & Validate first.' }); return;
+                Swal.fire({ icon: 'error', title: 'No Data', text: 'Click Preview & Validate first.' });
+                return;
             }
 
             const productCode      = bulkProductData.code;
             const productName      = bulkProductData.name;
             const productStock     = parseInt(bulkProductData.qty) || 0;
             const default_platform = document.getElementById('bulkDefaultPlatform').value;
-            const default_payment  = document.getElementById('bulkDefaultPayment').value;
             const date             = document.getElementById('order_date').value;
             const allowNonCurfox   = document.getElementById('allowNonCurfoxCity')?.checked ? '1' : '0';
 
             // Final stock check
             if (productStock < BULK_LEADS.length) {
                 const proceed = await Swal.fire({
-                    icon:'warning',
-                    title:'Insufficient Stock',
-                    html:`Stock available: <b>${productStock}</b><br>CSV rows: <b>${BULK_LEADS.length}</b><br><br>Only the first <b>${productStock}</b> orders will succeed. Continue?`,
-                    showCancelButton:true,
-                    confirmButtonText:'Import Anyway',
-                    confirmButtonColor:'#f59e0b',
-                    cancelButtonColor:'#64748b',
+                    icon: 'warning',
+                    title: 'Insufficient Stock',
+                    html: `Stock available: <b>${productStock}</b><br>CSV rows: <b>${BULK_LEADS.length}</b><br><br>Only the first <b>${productStock}</b> orders will succeed. Continue?`,
+                    showCancelButton: true,
+                    confirmButtonText: 'Import Anyway',
+                    confirmButtonColor: '#f59e0b',
+                    cancelButtonColor: '#64748b',
                 });
                 if (!proceed.isConfirmed) return;
             }
@@ -1322,16 +1465,15 @@
             Swal.fire({
                 title: 'Confirm Bulk Import',
                 html: `<div style="text-align:left;line-height:2;font-size:14px">
-            <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;margin-bottom:12px">
-                <div style="font-weight:700;color:#15803d;margin-bottom:4px">📦 Product</div>
-                <div>${escH(productName)}</div>
-                <div style="font-size:12px;color:#64748b">Code: ${escH(productCode)} &nbsp;|&nbsp; Stock: ${productStock} units</div>
-            </div>
-            <p><strong>Orders to create:</strong> ${leadsToSend.length}</p>
-            <p><strong>Default Platform:</strong> ${escH(default_platform)}</p>
-            <p><strong>Default Payment:</strong> ${escH(default_payment)}</p>
-            ${allowNonCurfox === '1' ? '<p style="color:#f59e0b;font-size:12px">⚠ Non-Curfox cities will be saved as-is</p>' : ''}
-        </div>`,
+                    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;margin-bottom:12px">
+                        <div style="font-weight:700;color:#15803d;margin-bottom:4px">📦 Product</div>
+                        <div>${escH(productName)}</div>
+                        <div style="font-size:12px;color:#64748b">Code: ${escH(productCode)} &nbsp;|&nbsp; Stock: ${productStock} units</div>
+                    </div>
+                    <p><strong>Orders to create:</strong> ${leadsToSend.length}</p>
+                    <p><strong>Default Platform:</strong> ${escH(default_platform)}</p>
+                    ${allowNonCurfox === '1' ? '<p style="color:#f59e0b;font-size:12px">⚠ Non-Curfox cities will be saved as-is</p>' : ''}
+                </div>`,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: 'Yes, Import All',
@@ -1341,29 +1483,27 @@
                 preConfirm: async () => {
                     try {
                         const fd = new FormData();
-                        fd.append('product_code',           productCode);
-                        fd.append('default_platform',       default_platform);
-                        fd.append('default_payment_method', default_payment);
-                        fd.append('default_call_status',    'Pending Call');
-                        fd.append('date',                   date);
-                        fd.append('leads',                  JSON.stringify(leadsToSend));
-                        fd.append('allow_non_curfox',       allowNonCurfox);
+                        fd.append('product_code', productCode);
+                        fd.append('default_platform', default_platform);
+                        fd.append('date', date);
+                        fd.append('leads', JSON.stringify(leadsToSend));
+                        fd.append('allow_non_curfox', allowNonCurfox);
 
-                        const res  = await fetch(BULK_STORE_URL, {
-                            method:'POST',
-                            headers:{ 'X-Requested-With':'XMLHttpRequest','X-CSRF-TOKEN':'{{ csrf_token() }}','Accept':'application/json' },
+                        const res = await fetch(BULK_STORE_URL, {
+                            method: 'POST',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': CSRF_TOKEN,
+                                'Accept': 'application/json'
+                            },
                             body: fd
                         });
+
                         const json = await res.json();
 
-                        if (res.status === 422 && json.city_errors) {
-                            const errHtml = json.city_errors.slice(0, 5).map(e =>
-                                `Row ${e.row} (${escH(e.name)}): ${escH(e.city)} — not found`
-                            ).join('<br>');
-                            Swal.showValidationMessage(json.message + '<br><br><small>' + errHtml + '</small>');
-                            return false;
+                        if (!res.ok || !json.success) {
+                            throw new Error(json.message || 'Bulk import failed');
                         }
-                        if (!res.ok || !json.success) throw new Error(json.message || 'Bulk import failed');
                         return json;
                     } catch (e) {
                         Swal.showValidationMessage(e.message);
@@ -1381,10 +1521,9 @@
                                 ? `<div style="text-align:left;margin-top:10px;color:#ef4444;font-size:12px;max-height:120px;overflow-y:auto">${r.value.errors.slice(0,10).map(x => escH(x)).join('<br>')}</div>`
                                 : ''),
                         confirmButtonColor: '#4f46e5'
-                    }).then(() => window.location.href = r.value.redirect_url || '{{ route("seller.pending-order") }}');
+                    }).then(() => window.location.href = r.value.redirect_url || PENDING_ORDERS_URL);
                 }
             });
         });
-
     </script>
 @endpush

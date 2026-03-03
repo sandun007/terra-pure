@@ -865,19 +865,40 @@
 
         {{-- ── NAV TABS ─────────────────────────────────────────────────────── --}}
         <div class="rsc-tabs">
-            <a href="{{ route('seller.pending-order') }}" class="rsc-tab">
+            <a href="{{ route('seller.order.pending') }}" class="rsc-tab {{ request()->routeIs('seller.order.pending') ? 'active' : '' }}">
                 <span class="material-icons-round">pending_actions</span>
                 Pending
+                @php
+                    $pendingCount = \App\Models\SellerOrder::where('seller_id', auth('seller')->id())->where('status', 'pending')->count();
+                @endphp
+                @if($pendingCount > 0)
+                    <span class="tab-badge">{{ $pendingCount }}</span>
+                @endif
             </a>
-            <a href="{{ route('seller.complete-order') }}" class="rsc-tab">
+
+            <a href="{{ route('seller.order.completed') }}" class="rsc-tab {{ request()->routeIs('seller.order.completed') ? 'active' : '' }}">
                 <span class="material-icons-round">check_circle</span>
                 Completed
+                @php
+                    $completedCount = \App\Models\SellerOrder::where('seller_id', auth('seller')->id())->where('status', 'complete')->count();
+                @endphp
+                @if($completedCount > 0)
+                    <span class="tab-badge">{{ $completedCount }}</span>
+                @endif
             </a>
-            <a href="{{ route('seller.return-order') }}" class="rsc-tab">
+
+            <a href="{{ route('seller.order.returned') }}" class="rsc-tab {{ request()->routeIs('seller.order.returned') ? 'active' : '' }}">
                 <span class="material-icons-round">assignment_return</span>
                 Returns
+                @php
+                    $returnedCount = \App\Models\SellerOrder::where('seller_id', auth('seller')->id())->where('status', 'return')->count();
+                @endphp
+                @if($returnedCount > 0)
+                    <span class="tab-badge">{{ $returnedCount }}</span>
+                @endif
             </a>
-            <a href="{{ route('seller.rescheduling-order') }}" class="rsc-tab active">
+
+            <a href="{{ route('seller.order.rescheduled') }}" class="rsc-tab {{ request()->routeIs('seller.order.rescheduled') ? 'active' : '' }}">
                 <span class="material-icons-round">schedule</span>
                 Rescheduling
                 @if($count > 0)
@@ -898,9 +919,9 @@
                         <span class="material-icons-round">refresh</span>
                         Refresh
                     </button>
-                    <a href="{{ route('seller.pending-order') }}" class="btn-accent">
-                        <span class="material-icons-round">add_circle</span>
-                        View All
+                    <a href="{{ route('seller.order.pending') }}" class="btn-accent">
+                        <span class="material-icons-round">visibility</span>
+                        View All Orders
                     </a>
                 </div>
             </div>
@@ -1085,7 +1106,7 @@
                     </div>
                     <h5>No Rescheduled Orders</h5>
                     <p>There are no orders awaiting rescheduling at the moment.</p>
-                    <a href="{{ route('seller.pending-order') }}" class="btn-accent mt-3">
+                    <a href="{{ route('seller.order.pending') }}" class="btn-accent mt-3">
                         <span class="material-icons-round">pending_actions</span>
                         View Pending Orders
                     </a>
