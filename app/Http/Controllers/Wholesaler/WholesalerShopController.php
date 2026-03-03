@@ -90,23 +90,31 @@ class WholesalerShopController extends Controller
     /**
      * Display a single product by code
      */
+    /**
+     * Display a single product by code
+     */
     public function showProduct($code)
     {
         try {
             $wholesaler = Auth::guard('wholesaler')->user();
 
+            // Decode URL-encoded code if necessary
+            $decodedCode = urldecode($code);
+
             // Find product by code
             $product = WholesalerProduct::where('wholesaler_id', $wholesaler->id)
-                ->where('code', $code)
+                ->where('code', $decodedCode)
                 ->with(['category', 'brand'])
                 ->first();
 
             if (!$product) {
-                return redirect()->route('wholesaler.shop.index')->with('error', 'Product not found.');
+                Log::warning('Product not found with code: ' . $decodedCode . ' for wholesaler: ' . $wholesaler->id);
+                return redirect()->route('wholesaler.shop.index')->with('error', 'Product not found with code: ' . $decodedCode);
             }
 
-            // Check if product belongs to wholesaler
+            // Check if product belongs to wholesaler (additional safety)
             if ((int)$product->wholesaler_id !== (int)$wholesaler->id) {
+                Log::warning('Product access denied: Product belongs to different wholesaler');
                 return redirect()->route('wholesaler.shop.index')->with('error', 'Product not found.');
             }
 
@@ -123,7 +131,7 @@ class WholesalerShopController extends Controller
 
         } catch (\Exception $e) {
             Log::error('showProduct error: ' . $e->getMessage());
-            return redirect()->route('wholesaler.shop.index')->with('error', 'Product not found.');
+            return redirect()->route('wholesaler.shop.index')->with('error', 'Error loading product details.');
         }
     }
 

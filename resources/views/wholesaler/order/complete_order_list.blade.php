@@ -5,23 +5,12 @@
 @endpush
 
 @push('css')
-    <!-- SweetAlert2 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <!-- Google Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <!-- DataTables CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
-    <!-- Buttons CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
-
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            --secondary-gradient: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
             --primary: #4f46e5;
-            --primary-dark: #4338ca;
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
@@ -31,326 +20,74 @@
             --border: #e2e8f0;
         }
 
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: #f8fafc;
+        body { font-family: 'DM Sans', sans-serif; background: #f8fafc; }
+
+        .complete-header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white; padding: 2rem; border-radius: 16px; margin-bottom: 2rem;
         }
 
-        /* Header Section */
-        .complete-order-header {
-            background: var(--primary-gradient);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin-bottom: 2rem;
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
-        }
-
-        .complete-order-header h1 {
-            font-size: 28px;
-            font-weight: 800;
-            margin-bottom: 0.5rem;
-        }
-
-        .complete-order-header .order-count {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 8px 20px;
-            border-radius: 999px;
-            display: inline-block;
-            font-weight: 600;
-        }
-
-        /* Stats Cards */
-        .stats-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            transition: all 0.3s ease;
-            border-left: 4px solid transparent;
-        }
-
-        .stats-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-        }
-
-        .stats-card.primary { border-left-color: #667eea; }
-        .stats-card.success { border-left-color: #43e97b; }
-        .stats-card.info { border-left-color: #2575fc; }
-
-        .stats-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1rem;
-            font-size: 28px;
-        }
-
-        .stats-icon.primary {
-            background: rgba(102, 126, 234, 0.1);
-            color: #667eea;
-        }
-
-        .stats-icon.success {
-            background: rgba(67, 233, 123, 0.1);
-            color: #43e97b;
-        }
-
-        .stats-icon.info {
-            background: rgba(41, 117, 252, 0.1);
-            color: #2575fc;
-        }
-
-        /* Navigation Tabs */
         .nav-tabs {
-            border: none;
-            background: white;
-            border-radius: 12px;
-            padding: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: none; background: white; border-radius: 12px; padding: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
-
         .nav-tabs .nav-link {
-            border: none;
-            font-weight: 600;
-            color: var(--mid);
-            padding: 12px 24px;
-            border-radius: 8px;
-            margin-right: 4px;
-            transition: all 0.3s ease;
+            border: none; font-weight: 600; color: var(--mid); padding: 12px 24px;
+            border-radius: 8px; margin-right: 4px; transition: all 0.3s ease;
         }
+        .nav-tabs .nav-link:hover { background: rgba(79, 70, 229, 0.1); color: var(--primary); }
+        .nav-tabs .nav-link.active { background: var(--success); color: white; }
 
-        .nav-tabs .nav-link:hover {
-            background: rgba(79, 70, 229, 0.1);
-            color: var(--primary);
-        }
+        .card { border: none; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
 
-        .nav-tabs .nav-link.active {
-            background: var(--primary-gradient);
-            color: white;
-        }
+        table.dataTable tbody td { padding: 1rem; vertical-align: middle; }
 
-        /* Table Styles */
-        .card {
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
+        .badge-status { padding: 6px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+        .badge-complete { background: #d1fae5; color: #065f46; }
 
-        .card-header {
-            background: white;
-            border-bottom: 1px solid var(--border);
-            padding: 1.5rem;
-        }
-
-        .table-responsive {
-            border-radius: 0 0 16px 16px;
-            overflow: hidden;
-        }
-
-        table.dataTable {
-            border-collapse: collapse !important;
-        }
-
-        table.dataTable thead th {
-            background: #f8fafc;
-            border-bottom: 2px solid var(--border);
-            padding: 1rem;
-            font-weight: 700;
-            color: var(--dark);
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        table.dataTable tbody td {
-            padding: 1rem;
-            vertical-align: middle;
-            border-bottom: 1px solid var(--border);
-        }
-
-        table.dataTable tbody tr:hover {
-            background-color: rgba(79, 70, 229, 0.03);
-        }
-
-        /* Badges */
-        .badge-complete {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 999px;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .badge-platform {
-            background: rgba(79, 70, 229, 0.1);
-            color: var(--primary);
-            padding: 4px 12px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        /* Action Buttons - Matching pending order page */
         .action-btn {
-            width: 36px;
-            height: 36px;
+            width: 36px; height: 36px; border-radius: 8px; border: none;
+            display: inline-flex; align-items: center; justify-content: center;
+            transition: all 0.2s; cursor: pointer;
+        }
+        .action-btn.view { background: var(--primary); color: white; }
+        .action-btn.edit { background: var(--warning); color: white; }
+        .action-btn.print { background: var(--info); color: white; }
+        .action-btn.delete { background: var(--danger); color: white; }
+        .action-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+
+        /* Modal Styles */
+        .modal-content { border-radius: 16px; border: none; }
+        .modal-header { background: var(--success); color: white; border-radius: 16px 16px 0 0; }
+        .modal-header .btn-close { filter: invert(1); }
+        .modal-body { padding: 2rem; }
+        .form-control, .form-select { border-radius: 8px; border: 2px solid var(--border); padding: 0.75rem 1rem; }
+        .form-control:focus, .form-select:focus { border-color: var(--success); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1); }
+        .btn-primary { background: var(--success); border: none; }
+        .btn-primary:hover { background: #059669; }
+
+        .info-note {
+            background: #f0f9ff;
+            border-left: 4px solid var(--info);
+            padding: 10px 15px;
             border-radius: 8px;
-            border: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            cursor: pointer;
-            margin: 0 2px;
+            font-size: 12px;
+            color: #0369a1;
+            margin-bottom: 15px;
         }
-
-        .action-btn.view {
-            background: var(--primary);
-            color: white;
-        }
-
-        .action-btn.edit {
-            background: var(--warning);
-            color: white;
-        }
-
-        .action-btn.delete {
-            background: var(--danger);
-            color: white;
-        }
-
-        .action-btn.print {
-            background: var(--info);
-            color: white;
-        }
-
-        .action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-        /* Action button group */
-        .action-group {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-
-        /* Product cell styling */
-        .product-cell {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .product-image {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            object-fit: cover;
-            border: 2px solid var(--border);
-        }
-
-        .product-details {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .product-name {
-            font-weight: 600;
-            color: var(--dark);
-            margin: 0 0 2px 0;
-            font-size: 13px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .product-code {
-            font-size: 11px;
-            color: var(--mid);
-            font-family: monospace;
-        }
-
-        /* DataTables custom styling */
-        .dataTables_wrapper .dataTables_length,
-        .dataTables_wrapper .dataTables_filter {
-            margin-bottom: 1rem;
-        }
-
-        .dataTables_wrapper .dataTables_filter input {
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            padding: 8px 16px;
-            margin-left: 8px;
-        }
-
-        .dataTables_wrapper .dataTables_filter input:focus {
-            border-color: var(--primary);
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .complete-order-header {
-                padding: 1.5rem;
-                text-align: center;
-            }
-
-            .complete-order-header h1 {
-                font-size: 22px;
-            }
-
-            .stats-card {
-                margin-bottom: 1rem;
-            }
-
-            .nav-tabs .nav-link {
-                padding: 10px 16px;
-                font-size: 13px;
-            }
-
-            .action-group {
-                justify-content: center;
-            }
-
-            .action-btn {
-                width: 32px;
-                height: 32px;
-            }
-
-            table.dataTable thead th,
-            table.dataTable tbody td {
-                padding: 0.75rem 0.5rem;
-                font-size: 0.85rem;
-            }
-        }
+        .info-note i { vertical-align: middle; margin-right: 5px; }
     </style>
 @endpush
 
 @section('content')
     <div class="container-fluid px-3 px-md-4 px-lg-5 py-4">
-        <!-- Header Section -->
-        <div class="complete-order-header">
+        <div class="complete-header">
             <div class="row align-items-center">
                 <div class="col-md-8">
-                    <h1>
-                        <span class="material-icons-round me-2" style="vertical-align: middle; font-size: 32px;">check_circle</span>
-                        Complete Orders
-                    </h1>
-                    <p class="mb-0 opacity-75">Successfully delivered and completed orders</p>
+                    <h1><span class="material-icons-round me-2" style="vertical-align: middle;">check_circle</span>Complete Orders</h1>
+                    <p class="mb-0 opacity-75">Successfully delivered orders</p>
                 </div>
                 <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                    <div class="order-count">
+                    <div class="order-count bg-white bg-opacity-25 rounded-pill d-inline-block px-4 py-2">
                         <span class="material-icons-round me-2" style="vertical-align: middle;">shopping_bag</span>
                         {{ $count }} {{ $count === 1 ? 'Order' : 'Orders' }}
                     </div>
@@ -358,207 +95,85 @@
             </div>
         </div>
 
-        <!-- Stats Cards -->
-        <div class="row g-4 mb-4">
-            <div class="col-md-4">
-                <div class="stats-card primary">
-                    <div class="stats-icon primary">
-                        <span class="material-icons-round">receipt_long</span>
-                    </div>
-                    <h6 class="text-muted mb-1">Total Completed</h6>
-                    <h2 class="fw-bold mb-0">{{ $count }}</h2>
-                    <small class="text-muted">Orders delivered successfully</small>
-                </div>
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                <span class="material-icons-round">check_circle</span>
+                <div class="flex-grow-1">{{ session('success') }}</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
-            <div class="col-md-4">
-                <div class="stats-card success">
-                    <div class="stats-icon success">
-                        <span class="material-icons-round">attach_money</span>
-                    </div>
-                    <h6 class="text-muted mb-1">Total Revenue</h6>
-                    <h2 class="fw-bold mb-0">Rs. {{ number_format($orders->sum('total_amount'), 2) }}</h2>
-                    <small class="text-muted">From completed orders</small>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stats-card info">
-                    <div class="stats-icon info">
-                        <span class="material-icons-round">calendar_today</span>
-                    </div>
-                    <h6 class="text-muted mb-1">Latest Delivery</h6>
-                    <h2 class="fw-bold mb-0">
-                        @if($orders->first())
-                            {{ $orders->first()->delivery_date ? \Carbon\Carbon::parse($orders->first()->delivery_date)->format('M d, Y') : 'N/A' }}
-                        @else
-                            N/A
-                        @endif
-                    </h2>
-                    <small class="text-muted">Most recent completion</small>
-                </div>
-            </div>
-        </div>
+        @endif
 
-        <!-- Navigation Tabs -->
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                <span class="material-icons-round">error</span>
+                <div class="flex-grow-1">{{ session('error') }}</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
         <div class="mb-4">
             <ul class="nav nav-tabs" role="tablist">
-                <li class="nav-item">
-                    <a href="{{ route('wholesaler.order.pending-order') }}" class="nav-link">
-                        <span class="material-icons-round me-2" style="font-size: 18px; vertical-align: middle;">pending_actions</span>
-                        Pending
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('wholesaler.order.complete-order') }}" class="nav-link active">
-                        <span class="material-icons-round me-2" style="font-size: 18px; vertical-align: middle;">check_circle</span>
-                        Complete
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('wholesaler.order.return-order') }}" class="nav-link">
-                        <span class="material-icons-round me-2" style="font-size: 18px; vertical-align: middle;">assignment_return</span>
-                        Return
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('wholesaler.order.rescheduling-order') }}" class="nav-link">
-                        <span class="material-icons-round me-2" style="font-size: 18px; vertical-align: middle;">event_repeat</span>
-                        Rescheduling
-                    </a>
-                </li>
+                <li class="nav-item"><a href="{{ route('wholesaler.order.pending-order') }}" class="nav-link">Pending</a></li>
+                <li class="nav-item"><a href="{{ route('wholesaler.order.complete-order') }}" class="nav-link active">Complete</a></li>
+                <li class="nav-item"><a href="{{ route('wholesaler.order.return-order') }}" class="nav-link">Return</a></li>
+                <li class="nav-item"><a href="{{ route('wholesaler.order.rescheduling-order') }}" class="nav-link">Rescheduling</a></li>
             </ul>
         </div>
 
-        <!-- Orders Table -->
         <div class="card">
-            <div class="card-header">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <h5 class="mb-0 fw-bold">
-                            <span class="material-icons-round me-2" style="vertical-align: middle;">list_alt</span>
-                            Completed Orders List
-                        </h5>
-                    </div>
-                    <div class="col-md-6 text-md-end">
-                        <button class="btn btn-light me-2" onclick="refreshPage()">
-                            <span class="material-icons-round me-2" style="font-size: 18px;">refresh</span>
-                            Refresh
-                        </button>
-                        <button class="btn btn-outline-primary" id="exportBtn">
-                            <span class="material-icons-round me-2" style="font-size: 18px;">download</span>
-                            Export
-                        </button>
-                    </div>
-                </div>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">Completed Orders List</h5>
+                <a href="{{ route('wholesaler.order.new') }}" class="btn btn-primary btn-sm">
+                    <span class="material-icons-round me-1" style="font-size: 16px;">add</span>New Order
+                </a>
             </div>
 
             @if($count > 0)
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table id="ordersTable" class="table table-hover w-100">
+                        <table class="table table-hover" id="ordersTable">
                             <thead>
                             <tr>
-                                <th>Order Number</th>
+                                <th>Order #</th>
                                 <th>Product</th>
                                 <th>Customer</th>
-                                <th>Quantity</th>
+                                <th>Qty</th>
                                 <th>Amount</th>
                                 <th>Order Date</th>
                                 <th>Delivery Date</th>
-                                <th>Platform</th>
                                 <th>Actions</th>
                             </tr>
                             </thead>
                             <tbody>
                             @foreach($orders as $order)
                                 <tr>
+                                    <td><strong>{{ $order->order_number }}</strong></td>
                                     <td>
-                                        <div class="d-flex align-items-center">
-                                            <span class="material-icons-round text-success me-2">receipt</span>
-                                            <strong style="font-family: monospace;">{{ $order->order_number }}</strong>
-                                        </div>
+                                        <div>{{ $order->product_name }}</div>
+                                        <small class="text-muted">{{ $order->product_code }}</small>
                                     </td>
                                     <td>
-                                        <div class="product-cell">
-                                            @if($order->product_image)
-                                                <img src="{{ asset('storage/' . $order->product_image) }}"
-                                                     alt="{{ $order->product_name }}"
-                                                     class="product-image"
-                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                            @endif
-                                            <div class="product-details">
-                                                <div class="product-name" title="{{ $order->product_name }}">
-                                                    {{ $order->product_name }}
-                                                </div>
-                                                <span class="product-code">{{ $order->product_code }}</span>
-                                            </div>
-                                        </div>
+                                        <div>{{ $order->customer_name }}</div>
+                                        <small class="text-muted">{{ $order->customer_phone }}</small>
                                     </td>
+                                    <td>{{ $order->quantity }}</td>
+                                    <td>Rs. {{ number_format($order->total_amount, 2) }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($order->order_date)->format('M d, Y') }}</td>
+                                    <td>{{ $order->delivery_date ? \Carbon\Carbon::parse($order->delivery_date)->format('M d, Y') : '-' }}</td>
                                     <td>
-                                        <div>
-                                            <div class="fw-semibold">{{ $order->customer_name }}</div>
-                                            <small class="text-muted">
-                                                <span class="material-icons-round" style="font-size: 14px;">phone</span>
-                                                {{ $order->customer_phone }}
-                                            </small>
-                                            @if($order->district)
-                                                <br>
-                                                <small class="text-muted">
-                                                    <span class="material-icons-round" style="font-size: 14px;">location_on</span>
-                                                    {{ $order->district }}
-                                                </small>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <span class="material-icons-round text-info me-2">inventory</span>
-                                            <strong>{{ $order->quantity }}</strong>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div>
-                                            <div class="fw-bold text-success">Rs. {{ number_format($order->total_amount, 2) }}</div>
-                                            <small class="text-muted">@ Rs. {{ number_format($order->product_price, 2) }}</small>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <span class="material-icons-round text-secondary me-2">event</span>
-                                            {{ \Carbon\Carbon::parse($order->order_date)->format('M d, Y') }}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <span class="material-icons-round text-success me-2">delivery_dining</span>
-                                            {{ $order->delivery_date ? \Carbon\Carbon::parse($order->delivery_date)->format('M d, Y') : 'N/A' }}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge-platform">
-                                            {{ $order->platform ?? 'Manual' }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-group">
-                                            <!-- View Details Button -->
-                                            <button onclick="viewOrder({{ $order->id }})"
-                                                    class="action-btn view"
-                                                    title="View Order Details">
-                                                <span class="material-icons-round" style="font-size: 18px;">visibility</span>
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ route('wholesaler.order.show', $order->id) }}" class="action-btn view" title="View">
+                                                <span class="material-icons-round">visibility</span>
+                                            </a>
+                                            <button onclick="editOrder({{ $order->id }}, {{ json_encode([
+                                                    'status' => $order->status,
+                                                    'remark' => $order->remark,
+                                                    'delivery_date' => $order->delivery_date
+                                                ]) }})" class="action-btn edit" title="Edit">
+                                                <span class="material-icons-round">edit</span>
                                             </button>
-
-                                            <!-- Print Invoice Button -->
-                                            <button onclick="printInvoice({{ $order->id }})"
-                                                    class="action-btn print"
-                                                    title="Print Invoice">
-                                                <span class="material-icons-round" style="font-size: 18px;">print</span>
-                                            </button>
-
-                                            <!-- Edit/Update Button -->
-                                            <button onclick="editOrder({{ $order->id }})"
-                                                    class="action-btn edit"
-                                                    title="Update Order">
-                                                <span class="material-icons-round" style="font-size: 18px;">edit</span>
+                                            <button onclick="deleteOrder({{ $order->id }}, '{{ $order->order_number }}')" class="action-btn delete" title="Delete">
+                                                <span class="material-icons-round">delete</span>
                                             </button>
                                         </div>
                                     </td>
@@ -569,79 +184,61 @@
                     </div>
                 </div>
             @else
-                <div class="card-body">
-                    <div class="text-center py-5">
-                        <div class="text-muted">
-                            <span class="material-icons-round mb-3" style="font-size: 64px; opacity: 0.3;">inbox</span>
-                            <h5>No Completed Orders</h5>
-                            <p>You don't have any completed orders at the moment.</p>
-                            <a href="{{ route('wholesaler.order.pending-order') }}" class="btn btn-primary mt-3">
-                                <span class="material-icons-round me-2" style="font-size: 18px;">pending_actions</span>
-                                View Pending Orders
-                            </a>
-                        </div>
-                    </div>
+                <div class="card-body text-center py-5">
+                    <span class="material-icons-round" style="font-size: 64px; color: var(--border);">inbox</span>
+                    <h5>No Completed Orders</h5>
+                    <p class="text-muted">You don't have any completed orders yet.</p>
                 </div>
             @endif
-
-            <div class="card-footer bg-white border-0 py-3">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <div class="text-muted">
-                            Showing {{ $orders->count() }} of {{ $count }} completed orders
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
     <!-- Update Order Modal -->
-    <div class="modal fade" id="updateModal" tabindex="-1">
+    <div class="modal fade" id="updateModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header" style="background: var(--primary-gradient); color: white;">
+                <div class="modal-header">
                     <h5 class="modal-title fw-bold">
-                        <span class="material-icons-round me-2" style="vertical-align: middle;">edit</span>
-                        Update Order Status
+                        <span class="material-icons-round me-2">edit</span>
+                        Update Completed Order
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form id="updateForm" method="POST">
+                <form id="updateForm" method="POST" onsubmit="return submitUpdateForm(event)">
                     @csrf
                     @method('PUT')
                     <div class="modal-body">
+                        <div class="info-note">
+                            <i class="material-icons-round" style="font-size: 16px; vertical-align: middle;">info</i>
+                            <strong>Note:</strong> Changing status will move this order to the relevant page.
+                        </div>
+
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Status</label>
+                            <label class="form-label fw-semibold">Order Status <span class="text-danger">*</span></label>
                             <select name="status" id="statusSelect" class="form-select" required>
-                                <option value="pending">Pending</option>
-                                <option value="complete" selected>Complete</option>
-                                <option value="return">Return</option>
-                                <option value="rescheduling">Rescheduling</option>
+                                <option value="complete">✅ Complete</option>
+                                <option value="pending">⏳ Pending</option>
+                                <option value="return">🔄 Return</option>
+                                <option value="rescheduling">📅 Rescheduling</option>
                             </select>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Call Status</label>
-                            <select name="call_status" class="form-select">
-                                <option value="Pending Call">Pending Call</option>
-                                <option value="Called">Called</option>
-                                <option value="Confirmed">Confirmed</option>
-                                <option value="Not Answered">Not Answered</option>
-                                <option value="Cancelled">Cancelled</option>
-                            </select>
-                        </div>
+
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Delivery Date</label>
-                            <input type="date" name="delivery_date" class="form-control" value="{{ date('Y-m-d') }}">
+                            <input type="date" name="delivery_date" id="deliveryDateField" class="form-control">
                         </div>
+
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Remark</label>
-                            <textarea name="remark" class="form-control" rows="3" placeholder="Add notes..."></textarea>
+                            <label class="form-label fw-semibold">Remark / Notes</label>
+                            <textarea name="remark" id="remarkField" class="form-control" rows="3" placeholder="Add notes about this order..."></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Update Order</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <span class="material-icons-round me-1" style="font-size: 16px;">save</span>
+                            Update Order
+                        </button>
                     </div>
                 </form>
             </div>
@@ -653,172 +250,123 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
             @if($count > 0)
-            // Initialize DataTable
             $('#ordersTable').DataTable({
-                order: [[6, 'desc']], // Sort by delivery date descending
-                pageLength: 10,
+                order: [[6, 'desc']],
+                pageLength: 25,
                 responsive: true,
-                autoWidth: false,
-                dom: '<"row"<"col-md-6"l><"col-md-6"f>>rt<"row"<"col-md-6"i><"col-md-6"p>>',
                 language: {
                     search: "_INPUT_",
-                    searchPlaceholder: "Search completed orders...",
+                    searchPlaceholder: "Search orders...",
                     lengthMenu: "Show _MENU_ orders",
                     info: "Showing _START_ to _END_ of _TOTAL_ orders",
-                    infoEmpty: "No orders available",
                     zeroRecords: "No matching orders found",
-                    paginate: {
-                        first: "First",
-                        last: "Last",
-                        next: "Next",
-                        previous: "Previous"
-                    }
-                },
-                columnDefs: [
-                    { orderable: false, targets: [1, 8] }, // Disable sorting on Product and Actions columns
-                    { responsivePriority: 1, targets: 0 }, // Order Number
-                    { responsivePriority: 2, targets: 2 }, // Customer
-                    { responsivePriority: 3, targets: 4 }, // Amount
-                    { responsivePriority: 4, targets: 6 }, // Delivery Date
-                ]
+                }
             });
             @endif
 
-            // Export button functionality
-            $('#exportBtn').on('click', function() {
-                Swal.fire({
-                    title: 'Export Options',
-                    html: `
-                        <div class="text-start">
-                            <div class="mb-3">
-                                <label class="form-label">Export Format:</label>
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="radio" name="exportFormat" id="excel" value="excel" checked>
-                                    <label class="form-check-label d-flex align-items-center" for="excel">
-                                        <span class="material-icons-round me-2 text-success">description</span>
-                                        Excel (.xlsx)
-                                    </label>
-                                </div>
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="radio" name="exportFormat" id="csv" value="csv">
-                                    <label class="form-check-label d-flex align-items-center" for="csv">
-                                        <span class="material-icons-round me-2 text-info">table_chart</span>
-                                        CSV (.csv)
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="exportFormat" id="pdf" value="pdf">
-                                    <label class="form-check-label d-flex align-items-center" for="pdf">
-                                        <span class="material-icons-round me-2 text-danger">picture_as_pdf</span>
-                                        PDF (.pdf)
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    `,
-                    showCancelButton: true,
-                    confirmButtonText: 'Export',
-                    cancelButtonText: 'Cancel',
-                    customClass: {
-                        confirmButton: 'btn btn-primary',
-                        cancelButton: 'btn btn-outline-secondary'
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        const format = document.querySelector('input[name="exportFormat"]:checked').value;
-                        exportData(format);
-                    }
-                });
-            });
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(() => {
+                $('.alert').fadeOut('slow', function() { $(this).remove(); });
+            }, 5000);
         });
 
-        // View Order Details
-        function viewOrder(id) {
-            window.location.href = `/wholesaler/order/show/${id}`;
-        }
-
-        // Print Invoice
-        function printInvoice(id) {
-            window.open(`/wholesaler/order/print/${id}`, '_blank');
-        }
-
-        // Edit/Update Order
-        function editOrder(id) {
-            $('#updateForm').attr('action', `/wholesaler/order/update/${id}`);
+        function editOrder(id, currentData) {
             const modal = new bootstrap.Modal(document.getElementById('updateModal'));
+            document.getElementById('updateForm').action = `/wholesaler/order/update/${id}`;
+
+            // Set form values
+            document.getElementById('statusSelect').value = currentData.status || 'complete';
+            document.getElementById('remarkField').value = currentData.remark || '';
+
+            // Set date field if it exists
+            if (currentData.delivery_date) {
+                document.getElementById('deliveryDateField').value = currentData.delivery_date;
+            } else {
+                // Set default to today if no delivery date
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('deliveryDateField').value = today;
+            }
+
             modal.show();
         }
 
-        // Refresh Page with confirmation
-        function refreshPage() {
-            Swal.fire({
-                title: 'Refresh Page?',
-                text: 'This will reload all completed orders data.',
-                icon: 'info',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, Refresh',
-                cancelButtonText: 'Cancel',
-                customClass: {
-                    confirmButton: 'btn btn-primary',
-                    cancelButton: 'btn btn-outline-secondary'
+        function submitUpdateForm(event) {
+            event.preventDefault();
+
+            const form = event.target;
+            const formData = new FormData(form);
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.innerHTML;
+
+            // Show loading state
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Updating...';
+            submitBtn.disabled = true;
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: data.message,
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.href = data.redirect_url || '{{ route('wholesaler.order.complete-order') }}';
+                        });
+                    } else {
+                        throw new Error(data.message || 'Update failed');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: error.message
+                    });
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                });
+
+            return false;
+        }
+
+        function deleteOrder(id, orderNumber) {
+            Swal.fire({
+                title: 'Delete Order?',
+                html: `Are you sure you want to delete order <strong>${orderNumber}</strong>?<br><br>
+                       <div class="alert alert-warning py-2 px-3 mb-0">
+                           <small>⚠️ This will restore product stock and cannot be undone.</small>
+                       </div>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Yes, Delete',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.reload();
+                    // Create and submit delete form
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = `/wholesaler/order/destroy/${id}`;
+                    form.innerHTML = '@csrf @method('DELETE')';
+                    document.body.appendChild(form);
+                    form.submit();
                 }
             });
         }
-
-        // Export data function
-        function exportData(format) {
-            Swal.fire({
-                title: 'Preparing Export',
-                html: 'Please wait while we prepare your file...',
-                timerProgressBar: true,
-                showConfirmButton: false,
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-
-            // Simulate export process
-            setTimeout(() => {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Export Complete',
-                    text: `Your ${format.toUpperCase()} file is ready for download`,
-                    confirmButtonText: 'Download',
-                    customClass: {
-                        confirmButton: 'btn btn-success'
-                    }
-                });
-            }, 2000);
-        }
-
-        // Auto-hide alerts
-        setTimeout(() => {
-            document.querySelectorAll('.alert').forEach(alert => {
-                alert.style.transition = 'opacity 0.5s';
-                alert.style.opacity = '0';
-                setTimeout(() => alert.remove(), 500);
-            });
-        }, 5000);
-
-        // Status change handler for modal
-        document.getElementById('statusSelect')?.addEventListener('change', function() {
-            // You can add logic here if needed
-        });
     </script>
 @endpush

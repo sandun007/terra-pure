@@ -133,30 +133,6 @@
         <h6 class="submenu-hdr">Order Management</h6>
         <ul>
             <li>
-                <a href="{{ route('wholesaler.order.new') }}"
-                   class="{{ request()->routeIs('wholesaler.order.new') ? 'active' : '' }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="9" cy="21" r="1"></circle>
-                        <circle cx="20" cy="21" r="1"></circle>
-                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                    </svg>
-                    <span>Create New Order</span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('wholesaler.order.csv-upload') }}"
-                   class="{{ request()->routeIs('wholesaler.order.csv-upload') ? 'active' : '' }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                    <span>CSV Upload</span>
-                </a>
-            </li>
-            <li>
                 <a href="{{ route('wholesaler.order.pending-order') }}"
                    class="{{ request()->routeIs('wholesaler.order.pending-order') ? 'active' : '' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -203,90 +179,6 @@
                         <line x1="3" y1="10" x2="21" y2="10"></line>
                     </svg>
                     <span>Rescheduling Orders</span>
-                </a>
-            </li>
-        </ul>
-    </li>
-
-    <!-- CALL MANAGEMENT (NEW SECTION) -->
-    <li class="submenu-open">
-        <h6 class="submenu-hdr">Call Management</h6>
-        <ul>
-            <li>
-                <a href="{{ route('wholesaler.call.index') }}"
-                   class="{{ request()->routeIs('wholesaler.call.index') ? 'active' : '' }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
-                        <line x1="12" y1="18" x2="12" y2="18"></line>
-                    </svg>
-                    <span>Pending Calls</span>
-                    @php
-                        $pendingCallsCount = \App\Models\WholesalerCall::where('wholesaler_id', auth()->id())
-                            ->where('status', 'Pending')
-                            ->count();
-                    @endphp
-                    @if($pendingCallsCount > 0)
-                        <span class="badge bg-warning rounded-pill">{{ $pendingCallsCount }}</span>
-                    @endif
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('wholesaler.call.conform') }}"
-                   class="{{ request()->routeIs('wholesaler.call.conform') ? 'active' : '' }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                    </svg>
-                    <span>Confirmed Calls</span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('wholesaler.call.reject') }}"
-                   class="{{ request()->routeIs('wholesaler.call.reject') ? 'active' : '' }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                    <span>Rejected Calls</span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('wholesaler.call.not_answer_call_list') }}"
-                   class="{{ request()->routeIs('wholesaler.call.not_answer_call_list') ? 'active' : '' }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8 10a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.574 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                    </svg>
-                    <span>Not Answered</span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('wholesaler.call.other_call_list') }}"
-                   class="{{ request()->routeIs('wholesaler.call.other_call_list') ? 'active' : '' }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="1"></circle>
-                        <circle cx="19" cy="12" r="1"></circle>
-                        <circle cx="5" cy="12" r="1"></circle>
-                    </svg>
-                    <span>Other Calls</span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('wholesaler.call.csv_upload') }}"
-                   class="{{ request()->routeIs('wholesaler.call.csv_upload') ? 'active' : '' }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                    <span>CSV Upload</span>
                 </a>
             </li>
         </ul>

@@ -1,5 +1,4 @@
 <?php
-// app/Models/WholesalerOrder.php
 
 namespace App\Models;
 
@@ -18,6 +17,7 @@ class WholesalerOrder extends Model
     protected $fillable = [
         'order_number',
         'wholesaler_id',
+        'call_id',
         'product_id',
         'product_code',
         'product_name',
@@ -93,6 +93,14 @@ class WholesalerOrder extends Model
     }
 
     /**
+     * Get the call associated with the order
+     */
+    public function call()
+    {
+        return $this->belongsTo(WholesalerCall::class, 'call_id');
+    }
+
+    /**
      * Get the order items
      */
     public function items()
@@ -130,6 +138,14 @@ class WholesalerOrder extends Model
     public function scopeRescheduling($query)
     {
         return $query->where('status', 'rescheduling');
+    }
+
+    /**
+     * Scope by call status
+     */
+    public function scopeByCallStatus($query, $status)
+    {
+        return $query->where('call_status', $status);
     }
 
     /**
@@ -221,5 +237,63 @@ class WholesalerOrder extends Model
             $phones[] = $this->customer_phone_2;
         }
         return $phones;
+    }
+
+    /**
+     * Update call status and automatically redirect to appropriate list
+     */
+    public function updateCallStatus($newStatus, $remark = null)
+    {
+        $oldStatus = $this->call_status;
+        $this->call_status = $newStatus;
+
+        if ($remark) {
+            $this->remark = $remark;
+        }
+
+        // Update dates based on status
+        switch ($newStatus) {
+            case 'Confirm':
+                $this->status = 'complete';
+                $this->delivery_date = now();
+                break;
+            case 'Reject':
+                $this->status = 'return';
+                $this->return_date = now();
+                break;
+            case 'Rescheduled':
+                $this->status = 'rescheduling';
+                $this->rescheduling_date = now()->addDays(3); // Default reschedule to 3 days later
+                break;
+            default:
+                $this->status = 'pending';
+                break;
+        }
+
+        $this->save();
+
+        // Log the change
+        \Log::info("Order #{$this->order_number} call status changed from {$oldStatus} to {$newStatus}");
+
+        return $this;
+    }
+
+    /**
+     * Get redirect route based on call status
+     */
+    public function getRedirectRoute()
+    {
+        switch ($this->call_status) {
+            case 'Confirm':
+                return 'wholesaler.call.conform';
+            case 'Reject':
+                return 'wholesaler.call.reject';
+            case 'Not Answer':
+                return 'wholesaler.call.not_answer_call_list';
+            case 'Other':
+                return 'wholesaler.call.other_call_list';
+            default:
+                return 'wholesaler.order.pending-order';
+        }
     }
 }

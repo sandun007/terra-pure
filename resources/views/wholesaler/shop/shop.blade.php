@@ -550,7 +550,8 @@
                                     Copy
                                 </button>
 
-                                <a href="{{ route('wholesaler.shop.product.show', $product->code) }}"
+                                {{-- With this: --}}
+                                <a href="{{ route('wholesaler.shop.product.show', ['code' => $product->code]) }}"
                                    class="act-btn act-view"
                                    title="View product details">
                                     <span class="material-icons-round" style="font-size:16px">visibility</span>
