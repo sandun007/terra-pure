@@ -194,8 +194,13 @@
                             <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                         </svg>
                         <span>Pending Orders</span>
-                        @php $pendingCount = \App\Models\SellerOrder::where('seller_id', auth('seller')->id())->where('status', 'pending')->count(); @endphp
-                        @if($pendingCount > 0) <span class="menu-badge">{{ $pendingCount }}</span> @endif
+                        @php
+                            $pendingCount = \App\Models\SellerOrder::where('seller_id', auth('seller')->id())
+                                ->where('status', 'pending')->count();
+                        @endphp
+                        @if($pendingCount > 0)
+                            <span class="menu-badge">{{ $pendingCount }}</span>
+                        @endif
                     </a>
                 </li>
                 <li>
@@ -306,6 +311,108 @@
         </li>
     </ul>
 
+    {{-- ═══ SELF-SELLER DELIVERY MANAGEMENT (only for self_seller) ═══ --}}
+    @if($isSelfSeller)
+        <li class="menu-section delivery-section" style="color:#059669">Delivery Management</li>
+        <ul>
+            <li class="has-submenu">
+                <a href="{{ route('seller.delivery_calls.pending') }}"
+                   class="{{ request()->routeIs('seller.delivery_calls.*') ? 'active' : '' }}">
+                    <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1" y="3" width="15" height="13" rx="2"></rect>
+                        <path d="M16 8h4l3 3v5h-7V8z"></path>
+                        <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                        <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                    </svg>
+                    <span>Delivery Calls</span>
+                    @php
+                        $pendingDeliveryCount = \App\Models\SelfSellerDeliveryCall::where('seller_id', auth('seller')->id())
+                            ->where('status', 'pending')->count();
+                    @endphp
+                    @if($pendingDeliveryCount > 0)
+                        <span class="menu-badge-emerald">{{ $pendingDeliveryCount }}</span>
+                    @endif
+                </a>
+                <ul class="submenu">
+                    <li>
+                        <a href="{{ route('seller.delivery_calls.pending') }}"
+                           class="{{ request()->routeIs('seller.delivery_calls.pending') ? 'active' : '' }}">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                            <span>Pending</span>
+                            @php
+                                $pendingCount = \App\Models\SelfSellerDeliveryCall::where('seller_id', auth('seller')->id())
+                                    ->where('status', 'pending')->count();
+                            @endphp
+                            @if($pendingCount > 0)
+                                <span class="menu-badge">{{ $pendingCount }}</span>
+                            @endif
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('seller.delivery_calls.packing') }}"
+                           class="{{ request()->routeIs('seller.delivery_calls.packing') ? 'active' : '' }}">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                            </svg>
+                            <span>Packing</span>
+                            @php
+                                $packingCount = \App\Models\SelfSellerDeliveryCall::where('seller_id', auth('seller')->id())
+                                    ->where('status', 'packing')->count();
+                            @endphp
+                            @if($packingCount > 0)
+                                <span class="menu-badge-blue">{{ $packingCount }}</span>
+                            @endif
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('seller.delivery_calls.packed') }}"
+                           class="{{ request()->routeIs('seller.delivery_calls.packed') ? 'active' : '' }}">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            <span>Packed</span>
+                            @php
+                                $packedCount = \App\Models\SelfSellerDeliveryCall::where('seller_id', auth('seller')->id())
+                                    ->where('status', 'packed')->count();
+                            @endphp
+                            @if($packedCount > 0)
+                                <span class="menu-badge">{{ $packedCount }}</span>
+                            @endif
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('seller.delivery_calls.givedriver') }}"
+                           class="{{ request()->routeIs('seller.delivery_calls.givedriver') ? 'active' : '' }}">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+                            </svg>
+                            <span>Give Driver</span>
+                            @php
+                                $givedriverCount = \App\Models\SelfSellerDeliveryCall::where('seller_id', auth('seller')->id())
+                                    ->where('status', 'givedriver')->count();
+                            @endphp
+                            @if($givedriverCount > 0)
+                                <span class="menu-badge-emerald">{{ $givedriverCount }}</span>
+                            @endif
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('seller.delivery_calls.create') }}"
+                           class="{{ request()->routeIs('seller.delivery_calls.create') ? 'active' : '' }}">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            <span>Add New Call</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    @endif
+
     {{-- ═══ CREATE NEW ORDER ═══ --}}
     <li class="menu-section" style="color:#10b981">Create New</li>
     <ul>
@@ -402,7 +509,7 @@
     <ul>
         <li>
             <a href="{{ route('seller.payment.my-payment') }}"
-               class="{{ request()->routeIs('seller.my_payment') ? 'active' : '' }}">
+               class="{{ request()->routeIs('seller.payment.my-payment') ? 'active' : '' }}">
                 <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                      stroke="currentColor" stroke-width="2">
                     <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
@@ -412,7 +519,7 @@
         </li>
         <li>
             <a href="{{ route('seller.payment.withdraw') }}"
-               class="{{ request()->routeIs('seller.withdraw') ? 'active' : '' }}">
+               class="{{ request()->routeIs('seller.payment.withdraw') ? 'active' : '' }}">
                 <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                      stroke="currentColor" stroke-width="2">
                     <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
@@ -421,8 +528,8 @@
             </a>
         </li>
         <li>
-            <a href="{{ route('seller.payment.withdraw') }}"
-               class="{{ request()->routeIs('seller.payment_history') ? 'active' : '' }}">
+            <a href="{{ route('seller.payment.history') }}"
+               class="{{ request()->routeIs('seller.payment.history') ? 'active' : '' }}">
                 <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                      stroke="currentColor" stroke-width="2">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -439,7 +546,7 @@
     <ul>
         <li>
             <a href="{{ route('seller.profile.index') }}"
-               class="{{ request()->routeIs('profile.*') ? 'active' : '' }}">
+               class="{{ request()->routeIs('seller.profile.*') ? 'active' : '' }}">
                 <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                      stroke="currentColor" stroke-width="2">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>

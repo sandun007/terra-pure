@@ -11,6 +11,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Seller\CallController;
+use App\Http\Controllers\Seller\SelfSellerDeliveryCallController;
 use App\Http\Controllers\Seller\SellerBrandController;
 use App\Http\Controllers\Seller\SellerCallController;
 use App\Http\Controllers\Seller\SellerCategoryController;
@@ -162,6 +163,38 @@ Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])-
 // ========== SELLER ROUTES ==========
 Route::middleware('auth:seller')->group(function () {
     Route::prefix('seller')->name('seller.')->group(function () {
+
+
+        // Self Seller Delivery Management
+        Route::prefix('delivery-calls')->name('delivery_calls.')->group(function () {
+            // Status pages
+            Route::get('/', [SelfSellerDeliveryCallController::class, 'index'])->name('index');
+            Route::get('/pending', [SelfSellerDeliveryCallController::class, 'pending'])->name('pending');
+            Route::get('/packing', [SelfSellerDeliveryCallController::class, 'packing'])->name('packing');
+            Route::get('/packed', [SelfSellerDeliveryCallController::class, 'packed'])->name('packed');
+            Route::get('/givedriver', [SelfSellerDeliveryCallController::class, 'givedriver'])->name('givedriver');
+
+            // Create
+            Route::get('/create', [SelfSellerDeliveryCallController::class, 'create'])->name('create');
+            Route::post('/', [SelfSellerDeliveryCallController::class, 'store'])->name('store');
+
+            // View
+            Route::get('/{id}', [SelfSellerDeliveryCallController::class, 'show'])->name('show');
+
+            // Status updates
+            Route::post('/{id}/status', [SelfSellerDeliveryCallController::class, 'updateStatus'])->name('update_status');
+            Route::post('/bulk-status', [SelfSellerDeliveryCallController::class, 'bulkUpdateStatus'])->name('bulk_status');
+
+            // Origin updates
+            Route::patch('/{id}/origin', [SelfSellerDeliveryCallController::class, 'updateOrigin'])->name('update_origin');
+            Route::patch('/bulk-origin', [SelfSellerDeliveryCallController::class, 'bulkUpdateOrigin'])->name('bulk_origin');
+
+            // Business
+            Route::post('/set-business', [SelfSellerDeliveryCallController::class, 'setBusiness'])->name('set_business');
+
+            // Tracking
+            Route::post('/tracking', [SelfSellerDeliveryCallController::class, 'tracking'])->name('tracking');
+        });
 
         // ===== AUTHENTICATION =====
         Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
@@ -342,6 +375,9 @@ Route::middleware('auth:seller')->group(function () {
         });
     });
 });
+
+
+
 
 
 // ========== EMPLOYEE ROUTES ==========

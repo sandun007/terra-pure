@@ -1,789 +1,1013 @@
 @extends('seller.layout.app')
 
 @section('content')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
-
         :root {
-            --bg:         #f4f6f9;
-            --surface:    #ffffff;
-            --surface-2:  #f8fafc;
-            --surface-3:  #f1f4f8;
-            --border:     #e2e8f0;
-            --border-s:   #edf0f5;
-            --text:       #0f172a;
-            --text-sub:   #475569;
-            --text-muted: #94a3b8;
-
-            --indigo:     #4f46e5;
-            --indigo-lt:  #eef2ff;
-            --indigo-bd:  rgba(79,70,229,0.25);
-
-            --emerald:    #059669;
-            --emerald-lt: #ecfdf5;
-            --emerald-bd: rgba(5,150,105,0.25);
-
-            --amber:      #d97706;
-            --amber-lt:   #fffbeb;
-            --amber-bd:   rgba(217,119,6,0.25);
-
-            --sky:        #0284c7;
-            --sky-lt:     #f0f9ff;
-            --sky-bd:     rgba(2,132,199,0.25);
-
-            --violet:     #7c3aed;
-            --violet-lt:  #f5f3ff;
-            --violet-bd:  rgba(124,58,237,0.25);
-
-            --rose:       #e11d48;
-            --rose-lt:    #fff1f2;
-            --rose-bd:    rgba(225,29,72,0.25);
-
-            --sh-sm: 0 1px 3px rgba(15,23,42,.06),0 1px 2px rgba(15,23,42,.04);
-            --sh:    0 4px 12px rgba(15,23,42,.08),0 1px 3px rgba(15,23,42,.05);
-            --r:     10px;
-            --r-lg:  14px;
-            --r-xl:  18px;
+            --bg:#f4f6f9; --surface:#fff; --surface-2:#f8fafc; --surface-3:#f1f4f8;
+            --border:#e2e8f0; --border-s:#edf0f5;
+            --text:#0f172a; --text-sub:#475569; --text-muted:#94a3b8;
+            --emerald:#10b981; --emerald-lt:#ecfdf5; --emerald-bd:rgba(16,185,129,.25);
+            --amber:#f59e0b; --amber-lt:#fffbeb; --amber-bd:rgba(245,158,11,.25);
+            --sky:#0284c7; --sky-lt:#f0f9ff; --sky-bd:rgba(2,132,199,.25);
+            --rose:#ef4444; --rose-lt:#fef2f2; --rose-bd:rgba(239,68,68,.25);
+            --violet:#8b5cf6; --violet-lt:#f5f3ff; --violet-bd:rgba(139,92,246,.25);
+            --sh-sm:0 1px 3px rgba(15,23,42,.06),0 1px 2px rgba(15,23,42,.04);
+            --sh:0 4px 12px rgba(15,23,42,.08),0 1px 3px rgba(15,23,42,.05);
+            --r:10px; --r-xl:18px;
         }
-
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        .dc-page{background:var(--bg);font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;padding:28px 24px 56px}
+        .dc-wrap{max-width:1600px;animation:up .35s cubic-bezier(.16,1,.3,1) both}
+        @keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 
-        .dc-page   { background:var(--bg); font-family:'Plus Jakarta Sans',sans-serif; min-height:100vh; padding:24px 20px 56px }
-        .dc-wrap   { max-width:1280px; margin:0 auto; animation:up .3s cubic-bezier(.16,1,.3,1) both }
-        @keyframes up { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        /* ── Header ── */
+        .dc-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:20px}
+        .dc-crumb{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-muted);margin-bottom:7px;font-weight:500}
+        .dc-title{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-.5px;display:flex;align-items:center;gap:10px}
+        .dc-tbadge{font-family:'JetBrains Mono',monospace;font-size:11px;padding:3px 10px;border-radius:20px;background:var(--emerald-lt);color:var(--emerald);border:1px solid var(--emerald-bd)}
+        .dc-sub{display:flex;align-items:center;gap:6px;margin-top:5px;font-size:13px;color:var(--text-sub)}
+        .dc-tabs{display:flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:4px;box-shadow:var(--sh-sm)}
+        .dc-tab{font-size:12.5px;font-weight:600;padding:7px 18px;border-radius:7px;border:1px solid transparent;color:var(--text-sub);text-decoration:none;transition:all .16s;white-space:nowrap}
+        .dc-tab:hover{background:var(--surface-3);color:var(--text)}
+        .dc-tab.active{background:var(--emerald);color:#fff;box-shadow:0 2px 8px rgba(16,185,129,.28)}
 
-        /* ── HEADER ── */
-        .dc-header { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px }
-        .dc-title  { font-size:22px; font-weight:800; color:var(--text); letter-spacing:-.4px; display:flex; align-items:center; gap:10px }
-        .dc-crumb  { font-size:12px; color:var(--text-muted); margin-top:4px; display:flex; align-items:center; gap:4px }
-        .dc-crumb svg { width:11px; height:11px }
-        .dc-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap }
+        /* ── Alerts ── */
+        .dc-alert{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;border-radius:var(--r);font-size:13.5px;margin-bottom:14px;border:1px solid;font-weight:500}
+        .dc-alert-ok{background:var(--emerald-lt);border-color:var(--emerald-bd);color:var(--emerald)}
+        .dc-alert-err{background:var(--rose-lt);border-color:var(--rose-bd);color:var(--rose)}
 
-        /* ── BUSINESS BANNER ── */
-        .biz-banner { display:flex; align-items:center; gap:12px; padding:12px 18px; background:var(--emerald-lt); border:1px solid var(--emerald-bd); border-radius:var(--r-lg); margin-bottom:16px; cursor:pointer; transition:.15s }
-        .biz-banner:hover { background:#d1fae5 }
-        .biz-banner-ico { width:36px; height:36px; background:var(--emerald); border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0 }
-        .biz-banner-txt { flex:1; min-width:0 }
-        .biz-banner-label { font-size:10px; font-weight:700; color:var(--emerald); text-transform:uppercase; letter-spacing:.7px }
-        .biz-banner-name  { font-size:14px; font-weight:700; color:var(--text) }
-        .biz-banner-arrow { color:var(--emerald); font-size:18px; font-weight:700 }
+        /* ── Business Banner ── */
+        .biz-banner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+            padding:12px 18px;background:var(--surface);border:1px solid var(--border);
+            border-radius:var(--r);box-shadow:var(--sh-sm);margin-bottom:16px}
+        .biz-banner-l{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+        .biz-ico{width:34px;height:34px;border-radius:8px;background:var(--violet-lt);border:1px solid var(--violet-bd);
+            display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+        .biz-label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:2px}
+        .biz-name{font-size:14px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+        .biz-id{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);background:var(--surface-3);
+            padding:2px 7px;border-radius:4px;border:1px solid var(--border);margin-left:6px}
+        .biz-form{display:flex;align-items:center;gap:8px}
+        .biz-select{border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;
+            font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;color:var(--text);
+            background:var(--surface);outline:none;cursor:pointer;min-width:220px;
+            transition:border-color .15s,box-shadow .15s}
+        .biz-select:focus{border-color:var(--violet);box-shadow:0 0 0 3px var(--violet-bd)}
+        .biz-no-data{font-size:12.5px;color:var(--text-muted);font-style:italic}
 
-        /* No business warning */
-        .no-biz-banner { display:flex; align-items:center; gap:12px; padding:12px 18px; background:var(--rose-lt); border:1px solid var(--rose-bd); border-radius:var(--r-lg); margin-bottom:16px }
+        /* ── Stats ── */
+        .dc-stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+        .dc-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;box-shadow:var(--sh-sm);flex:1;min-width:130px;display:flex;align-items:center;gap:12px}
+        .dc-sico{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+        .ic-em{background:var(--emerald-lt)} .ic-am{background:var(--amber-lt)} .ic-vi{background:var(--violet-lt)} .ic-sk{background:var(--sky-lt)}
+        .dc-slbl{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.7px}
+        .dc-sval{font-size:20px;font-weight:800;color:var(--text);line-height:1;margin-top:2px;font-family:'JetBrains Mono',monospace}
+        .dc-sval.em{color:var(--emerald);font-size:15px}
 
-        /* ── TABS ── */
-        .dc-tabs { display:flex; gap:4px; flex-wrap:wrap; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:5px; margin-bottom:16px; box-shadow:var(--sh-sm) }
-        .dc-tab   { font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; font-weight:600; padding:8px 20px; border-radius:8px; border:none; background:transparent; color:var(--text-muted); cursor:pointer; text-decoration:none; transition:.15s; display:flex; align-items:center; gap:6px }
-        .dc-tab:hover  { background:var(--surface-2); color:var(--text) }
-        .dc-tab.active { background:var(--emerald); color:#fff; box-shadow:0 2px 8px rgba(5,150,105,.3) }
-        .dc-tab-count  { font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; background:rgba(0,0,0,.12); color:inherit }
+        /* ── Card ── */
+        .dc-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--sh);overflow:hidden}
+        .dc-chead{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:16px 22px;border-bottom:1px solid var(--border-s);background:var(--surface-2)}
+        .dc-cbody{padding:20px 22px}
+        .dc-sf{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+        .dc-sw{position:relative}
+        .dc-sw svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none}
+        .dc-si{background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;padding:8px 12px 8px 34px;width:300px;outline:none;transition:border-color .16s;box-shadow:var(--sh-sm)}
+        .dc-si:focus{border-color:var(--emerald);box-shadow:0 0 0 3px rgba(16,185,129,.12)}
 
-        /* ── TOOLBAR ── */
-        .dc-toolbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px }
-        .dc-search  { flex:1; min-width:200px; display:flex; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:0 14px; box-shadow:var(--sh-sm) }
-        .dc-search input { flex:1; border:none; background:transparent; font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; color:var(--text); padding:10px 0; outline:none }
-        .dc-search svg   { color:var(--text-muted); flex-shrink:0 }
+        /* ── Buttons ── */
+        .btn-dc{font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;padding:8px 18px;border-radius:8px;border:1px solid transparent;cursor:pointer;transition:all .16s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;line-height:1}
+        .btn-em{background:var(--emerald);color:#fff;box-shadow:0 1px 4px rgba(16,185,129,.3)}
+        .btn-em:hover{background:#059669;color:#fff}
+        .btn-ghost{background:var(--surface);border-color:var(--border);color:var(--text-sub);box-shadow:var(--sh-sm)}
+        .btn-ghost:hover{background:var(--surface-3);color:var(--text)}
+        .btn-violet{background:var(--violet);color:#fff;box-shadow:0 1px 4px rgba(139,92,246,.3)}
+        .btn-violet:hover{background:#7c3aed;color:#fff}
+        .btn-bulk{background:var(--emerald-lt);border-color:var(--emerald-bd);color:var(--emerald)}
+        .btn-bulk:hover{background:var(--emerald);color:#fff;border-color:var(--emerald)}
+        .btn-bulk:disabled{opacity:.45;cursor:not-allowed}
+        .btn-dispatch{background:#0284c7;border-color:rgba(2,132,199,.3);color:#fff}
+        .btn-dispatch:hover{background:#0369a1;color:#fff}
+        .btn-sm-view{font-size:12px;font-weight:600;padding:5px 10px;border-radius:7px;border:1px solid var(--sky-bd);background:var(--sky-lt);color:var(--sky);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;transition:all .15s}
+        .btn-sm-view:hover{background:var(--sky);color:#fff;border-color:var(--sky)}
+        .btn-sm-next{font-size:12px;font-weight:600;padding:5px 10px;border-radius:7px;border:1px solid var(--emerald-bd);background:var(--emerald-lt);color:var(--emerald);cursor:pointer;display:inline-flex;align-items:center;transition:all .15s}
+        .btn-sm-next:hover{background:var(--emerald);color:#fff;border-color:var(--emerald)}
+        .btn-sm-dispatch{font-size:12px;font-weight:700;padding:5px 10px;border-radius:7px;border:1px solid rgba(2,132,199,.3);background:#f0f9ff;color:#0284c7;cursor:pointer;display:inline-flex;align-items:center;transition:all .15s}
+        .btn-sm-dispatch:hover{background:#0284c7;color:#fff}
+        .btn-sm-final{font-size:12px;font-weight:600;padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface-3);color:var(--text-muted);pointer-events:none;display:inline-flex;align-items:center}
 
-        /* ── BUTTONS ── */
-        .btn { font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; font-weight:600; padding:9px 18px; border-radius:var(--r); border:1px solid var(--border); background:var(--surface); color:var(--text-sub); cursor:pointer; transition:.15s; display:inline-flex; align-items:center; gap:7px; text-decoration:none; white-space:nowrap }
-        .btn:hover { background:var(--surface-3); color:var(--text) }
-        .btn-em { background:var(--emerald); color:#fff; border-color:transparent; box-shadow:0 2px 8px rgba(5,150,105,.25) }
-        .btn-em:hover { background:#047857; color:#fff }
-        .btn-ind { background:var(--indigo-lt); color:var(--indigo); border-color:var(--indigo-bd) }
-        .btn-ind:hover { background:var(--indigo); color:#fff }
-        .btn-sm { padding:6px 12px; font-size:12px }
-        .btn-rose { background:var(--rose-lt); color:var(--rose); border-color:var(--rose-bd) }
-        .btn-rose:hover { background:var(--rose); color:#fff }
+        /* ── Bulk bars ── */
+        .dc-bulk{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:11px 16px;background:var(--emerald-lt);border:1px solid var(--emerald-bd);border-radius:var(--r);margin-bottom:16px}
+        .dc-bulk-l{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 
-        /* ── TABLE ── */
-        .dc-card  { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-xl); box-shadow:var(--sh); overflow:hidden }
-        .dc-table { width:100%; border-collapse:collapse; font-family:'Plus Jakarta Sans',sans-serif }
-        .dc-table thead th { font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.7px; padding:12px 14px; border-bottom:1px solid var(--border); background:var(--surface-2); white-space:nowrap }
-        .dc-table tbody tr { border-bottom:1px solid var(--border-s); transition:.12s }
-        .dc-table tbody tr:last-child { border-bottom:none }
-        .dc-table tbody tr:hover { background:var(--surface-2) }
-        .dc-table tbody td { padding:12px 14px; font-size:13px; color:var(--text) }
-        .dc-table tbody tr.row-fail { background:#fff1f2 }
+        /* ── Checkboxes ── */
+        input[type=checkbox].chk-main,input[type=checkbox].rowCheck{appearance:none;-webkit-appearance:none;width:16px;height:16px;border-radius:5px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;position:relative;transition:all .14s;flex-shrink:0;vertical-align:middle}
+        input[type=checkbox].chk-main:checked,input[type=checkbox].rowCheck:checked{background:var(--emerald);border-color:var(--emerald)}
+        input[type=checkbox].chk-main:checked::after,input[type=checkbox].rowCheck:checked::after{content:'';position:absolute;left:4px;top:1.5px;width:5px;height:9px;border:2px solid #fff;border-top:none;border-left:none;transform:rotate(45deg)}
+        .dc-tpill{font-size:12px;font-weight:600;color:var(--text-sub);background:var(--surface);padding:4px 14px;border-radius:20px;border:1px solid var(--border);font-family:'JetBrains Mono',monospace}
 
-        .dc-table-wrap { overflow-x:auto }
+        /* ── Table ── */
+        .dc-twrap{border-radius:var(--r);overflow:hidden;border:1px solid var(--border)}
+        table.dc-t{width:100%;border-collapse:collapse;font-size:13px}
+        table.dc-t thead{background:var(--surface-2);border-bottom:2px solid var(--border)}
+        table.dc-t thead th{font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--text-muted);padding:11px 13px;white-space:nowrap;text-align:left;border-right:1px solid var(--border-s)}
+        table.dc-t thead th:last-child{border-right:none}
+        table.dc-t tbody tr{border-bottom:1px solid var(--border-s);transition:background .1s}
+        table.dc-t tbody tr:last-child{border-bottom:none}
+        table.dc-t tbody tr:hover{background:#f8f9ff}
+        table.dc-t tbody td{padding:11px 13px;color:var(--text);vertical-align:middle;border-right:1px solid var(--border-s)}
+        table.dc-t tbody td:last-child{border-right:none}
+        table.dc-t tfoot tr{background:var(--surface-2);border-top:2px solid var(--border)}
+        table.dc-t tfoot td{padding:10px 13px;font-family:'JetBrains Mono',monospace}
 
-        .dc-cb { width:16px; height:16px; accent-color:var(--emerald); cursor:pointer }
+        /* ── Cell styles ── */
+        .c-id{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted)}
+        .c-call{font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:500;color:var(--emerald)}
+        .c-oc{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--amber-lt);padding:2px 7px;border-radius:4px;border:1px solid var(--amber-bd);color:var(--amber);white-space:nowrap}
+        .c-date{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--text-sub)}
+        .c-name{font-weight:700}
+        .c-ph{font-family:'JetBrains Mono',monospace;font-size:12px}
+        .c-loc{font-size:12px;color:var(--text-sub)}
+        .c-total{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--emerald);display:block;text-align:right}
 
-        /* ── BADGES ── */
-        .dc-badge { font-size:10px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; padding:3px 10px; border-radius:20px; display:inline-flex; align-items:center; gap:4px; border:1px solid; white-space:nowrap }
-        .dc-badge::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; opacity:.7; flex-shrink:0 }
-        .badge-Pending,.dc-badge-Pending     { background:var(--amber-lt); border-color:var(--amber-bd); color:var(--amber) }
-        .badge-packing,.dc-badge-packing     { background:var(--sky-lt); border-color:var(--sky-bd); color:var(--sky) }
-        .badge-packed,.dc-badge-packed       { background:var(--violet-lt); border-color:var(--violet-bd); color:var(--violet) }
-        .badge-givedriver,.dc-badge-givedriver { background:var(--emerald-lt); border-color:var(--emerald-bd); color:var(--emerald) }
+        /* ── Badges ── */
+        .dc-badge{font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:3px 9px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;border:1px solid;white-space:nowrap}
+        .dc-badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.7}
+        .badge-pending,.dc-badge-pending{background:var(--amber-lt);border-color:var(--amber-bd);color:var(--amber)}
+        .badge-packing{background:var(--sky-lt);border-color:var(--sky-bd);color:var(--sky)}
+        .badge-packed{background:var(--violet-lt);border-color:var(--violet-bd);color:var(--violet)}
+        .badge-give-driver,.badge-givedriver{background:var(--emerald-lt);border-color:var(--emerald-bd);color:var(--emerald)}
+        .waybill-badge{font-family:'JetBrains Mono',monospace;font-size:11px;background:#f0f9ff;color:#0284c7;padding:3px 8px;border-radius:5px;border:1px solid rgba(2,132,199,.2)}
+        .no-city-warn{font-size:11px;background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:4px;border:1px solid #fde68a}
+        .curfox-error{font-size:11px;color:var(--rose);background:var(--rose-lt);padding:3px 8px;border-radius:5px;border:1px solid var(--rose-bd);margin-top:4px;display:block}
+        tbody tr.row-ok td{background:#f0fdf4!important}
+        tbody tr.row-fail td{background:#fff1f2!important}
 
-        /* ── ORIGIN TAG ── */
-        .origin-tag { display:inline-flex; align-items:center; gap:4px; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; padding:3px 8px; border-radius:5px; border:1px solid; cursor:pointer }
-        .origin-tag.custom  { background:var(--sky-lt); color:var(--sky); border-color:var(--sky-bd) }
-        .origin-tag.default { background:var(--amber-lt); color:var(--amber); border-color:var(--amber-bd) }
+        /* ── Empty state ── */
+        .dc-empty{text-align:center;padding:56px 0}
+        .dc-empty-ico{width:52px;height:52px;background:var(--surface-3);border-radius:13px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:21px;border:1px solid var(--border)}
 
-        /* Error tag */
-        .err-tag { font-size:10px; color:var(--rose); font-weight:600; display:flex; align-items:center; gap:3px; margin-top:3px; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+        /* ── Pagination ── */
+        nav[aria-label] span[aria-current=page]>span,nav[aria-label] a,nav[aria-label] button{background:var(--surface)!important;border:1px solid var(--border)!important;color:var(--text-sub)!important;border-radius:7px!important;font-family:'JetBrains Mono',monospace!important;font-size:12px!important;padding:5px 12px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:34px;height:32px;text-decoration:none;line-height:1!important;transition:all .14s}
+        nav[aria-label] a:hover{background:var(--emerald)!important;border-color:var(--emerald)!important;color:#fff!important}
+        nav[aria-label] span[aria-current=page]>span{background:var(--emerald)!important;border-color:var(--emerald)!important;color:#fff!important}
+        nav[aria-label]>div:first-child{display:none}
+        nav[aria-label] .flex{gap:4px;flex-wrap:wrap;align-items:center}
 
-        /* ── BULK BAR ── */
-        .bulk-bar { display:none; align-items:center; gap:10px; flex-wrap:wrap; padding:10px 16px; background:var(--indigo-lt); border:1px solid var(--indigo-bd); border-radius:var(--r-lg); margin-bottom:12px }
-        .bulk-bar.show { display:flex }
-        .bulk-count { font-size:13px; font-weight:700; color:var(--indigo) }
+        /* ── Origin badge & edit ── */
+        .origin-wrap{display:flex;align-items:center;gap:4px}
+        .origin-badge{display:inline-flex;align-items:center;gap:4px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:3px 8px;border-radius:5px;background:var(--sky-lt);color:var(--sky);border:1px solid var(--sky-bd);white-space:nowrap;line-height:1.3}
+        .origin-badge.is-default{background:var(--amber-lt);color:var(--amber);border-color:var(--amber-bd)}
+        .origin-badge .def-tag{font-size:9px;opacity:.75;font-weight:500}
+        .origin-edit-btn{background:none;border:1px solid transparent;cursor:pointer;padding:3px 5px;border-radius:5px;color:var(--text-muted);line-height:1;transition:all .14s;font-size:13px;flex-shrink:0}
+        .origin-edit-btn:hover{background:var(--emerald-lt);border-color:var(--emerald-bd);color:var(--emerald)}
 
-        /* ── PROGRESS ── */
-        .progress-pill { font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; padding:4px 10px; border-radius:6px; background:var(--surface-3); color:var(--text-muted); display:none }
-        .progress-pill.show { display:inline-flex }
+        /* ── Bulk origin bar ── */
+        .bulk-origin-bar{display:none;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;background:var(--amber-lt);border:1px solid var(--amber-bd);border-radius:var(--r);margin-bottom:12px}
+        .bulk-origin-bar.show{display:flex}
 
-        /* ── EMPTY ── */
-        .dc-empty { text-align:center; padding:60px 20px }
-        .dc-empty-ico { font-size:48px; margin-bottom:12px }
-        .dc-empty-txt { font-size:15px; font-weight:700; color:var(--text); margin-bottom:6px }
-        .dc-empty-sub { font-size:13px; color:var(--text-muted) }
+        /* ── City autocomplete ── */
+        .city-ac-wrap{position:relative}
+        .city-ac-input{width:100%;border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:var(--text);outline:none;background:var(--surface);transition:border-color .15s}
+        .city-ac-input:focus{border-color:var(--emerald);box-shadow:0 0 0 3px rgba(16,185,129,.1)}
+        .city-ac-drop{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:var(--sh);z-index:200;max-height:210px;overflow-y:auto}
+        .city-ac-drop.open{display:block}
+        .city-ac-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;cursor:pointer;transition:background .1s}
+        .city-ac-item:hover{background:var(--emerald-lt)}
+        .city-ac-name{font-size:13px;font-weight:600;color:var(--text)}
+        .city-ac-state{font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
+        .city-ac-empty{padding:10px 12px;font-size:13px;color:var(--text-muted);pointer-events:none}
 
-        /* ── MODAL ── */
-        .modal-overlay { position:fixed; inset:0; background:rgba(15,23,42,.45); backdrop-filter:blur(4px); z-index:1000; display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; pointer-events:none; transition:.2s }
-        .modal-overlay.open { opacity:1; pointer-events:all }
-        .modal-box { background:var(--surface); border-radius:var(--r-xl); box-shadow:0 24px 64px rgba(15,23,42,.18); width:100%; max-width:520px; max-height:88vh; overflow:auto; transform:scale(.96); transition:.2s }
-        .modal-overlay.open .modal-box { transform:scale(1) }
-        .modal-head { padding:18px 22px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between }
-        .modal-title { font-size:16px; font-weight:800; color:var(--text) }
-        .modal-close { width:32px; height:32px; border-radius:8px; border:1px solid var(--border); background:var(--surface-2); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px; color:var(--text-muted) }
-        .modal-close:hover { background:var(--surface-3) }
-        .modal-body { padding:20px 22px }
-        .modal-foot { padding:14px 22px; border-top:1px solid var(--border); display:flex; gap:8px; justify-content:flex-end }
+        /* ── Origin modal ── */
+        .om-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:1000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)}
+        .om-overlay.open{display:flex}
+        .om-box{background:var(--surface);border-radius:var(--r-xl);box-shadow:0 24px 64px rgba(15,23,42,.2);width:100%;max-width:460px;overflow:hidden;animation:omUp .2s cubic-bezier(.16,1,.3,1)}
+        @keyframes omUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+        .om-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+        .om-head h3{font-size:15px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
+        .om-close{background:none;border:none;cursor:pointer;font-size:19px;color:var(--text-muted);line-height:1;padding:2px 5px;border-radius:5px;transition:all .14s}
+        .om-close:hover{background:var(--rose-lt);color:var(--rose)}
+        .om-body{padding:22px}
+        .om-foot{display:flex;gap:10px;justify-content:flex-end;padding:14px 22px;border-top:1px solid var(--border);background:var(--surface-2)}
+        .om-note{font-size:12.5px;color:var(--text-sub);line-height:1.6;padding:10px 12px;background:var(--sky-lt);border:1px solid var(--sky-bd);border-radius:7px;margin-bottom:18px}
+        .om-field{margin-bottom:16px}
+        .om-field label{display:block;font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px}
+        .om-field .readonly-val{padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);font-size:13px;color:var(--text-sub);font-family:'JetBrains Mono',monospace;min-height:38px}
 
-        /* ── FORM ── */
-        .form-group { margin-bottom:14px }
-        .form-label { font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.6px; margin-bottom:5px; display:block }
-        .form-control { width:100%; font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; color:var(--text); border:1px solid var(--border); border-radius:var(--r); padding:9px 13px; background:var(--surface); outline:none; transition:.15s }
-        .form-control:focus { border-color:var(--emerald); box-shadow:0 0 0 3px var(--emerald-bd) }
-
-        /* ── BIZ CARDS ── */
-        .biz-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; margin-top:14px }
-        .biz-card { border:2px solid var(--border); border-radius:var(--r-lg); padding:14px 16px; cursor:pointer; transition:.15s; background:var(--surface-2) }
-        .biz-card:hover { border-color:var(--emerald-bd); background:var(--emerald-lt) }
-        .biz-card.selected { border-color:var(--emerald); background:var(--emerald-lt) }
-        .biz-card-name { font-size:14px; font-weight:700; color:var(--text); margin-bottom:4px }
-        .biz-card-meta { font-size:11px; color:var(--text-muted) }
-
-        /* PAGINATION */
-        .dc-pager { display:flex; justify-content:center; padding:16px; gap:4px }
-        .dc-pager a, .dc-pager span { font-size:13px; font-weight:600; padding:6px 12px; border-radius:7px; border:1px solid var(--border); background:var(--surface); color:var(--text-sub); text-decoration:none; transition:.12s }
-        .dc-pager a:hover { background:var(--surface-3) }
-        .dc-pager span.active { background:var(--emerald); color:#fff; border-color:var(--emerald) }
+        /* ── Business modal ── */
+        .bm-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:1000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)}
+        .bm-overlay.open{display:flex}
+        .bm-box{background:var(--surface);border-radius:var(--r-xl);box-shadow:0 24px 64px rgba(15,23,42,.2);width:100%;max-width:480px;overflow:hidden;animation:omUp .2s cubic-bezier(.16,1,.3,1)}
+        .bm-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,var(--violet-lt) 0%,var(--surface-2) 100%)}
+        .bm-head h3{font-size:15px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
+        .bm-close{background:none;border:none;cursor:pointer;font-size:19px;color:var(--text-muted);line-height:1;padding:2px 5px;border-radius:5px;transition:all .14s}
+        .bm-close:hover{background:var(--rose-lt);color:var(--rose)}
+        .bm-body{padding:22px}
+        .bm-foot{display:flex;gap:10px;justify-content:flex-end;padding:14px 22px;border-top:1px solid var(--border);background:var(--surface-2)}
+        .bm-note{font-size:12.5px;color:var(--text-sub);line-height:1.6;padding:10px 12px;background:var(--violet-lt);border:1px solid var(--violet-bd);border-radius:7px;margin-bottom:18px}
+        .biz-card{border:2px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:all .16s;margin-bottom:10px;display:flex;align-items:center;gap:12px;position:relative}
+        .biz-card:hover{border-color:var(--violet);background:var(--violet-lt)}
+        .biz-card.selected{border-color:var(--violet);background:var(--violet-lt);box-shadow:0 0 0 3px var(--violet-bd)}
+        .biz-card-ico{width:40px;height:40px;border-radius:9px;background:var(--violet-lt);border:1px solid var(--violet-bd);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+        .biz-card.selected .biz-card-ico{background:var(--violet);border-color:var(--violet)}
+        .biz-card-name{font-size:14px;font-weight:700;color:var(--text)}
+        .biz-card-meta{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);margin-top:2px}
+        .biz-card-check{width:20px;height:20px;border-radius:50%;background:var(--violet);border:none;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;margin-left:auto;flex-shrink:0;display:none}
+        .biz-card.selected .biz-card-check{display:flex}
+        .biz-card-default{font-size:10px;font-weight:700;background:var(--emerald-lt);color:var(--emerald);border:1px solid var(--emerald-bd);padding:1px 6px;border-radius:10px;margin-left:6px;vertical-align:middle}
     </style>
 
     <div class="dc-page">
         <div class="dc-wrap">
 
-            {{-- HEADER --}}
-            <div class="dc-header">
+            {{-- ── HEADER ── --}}
+            <div class="dc-hdr">
                 <div>
-                    <div class="dc-crumb">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                        Seller Portal
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px"><polyline points="9 18 15 12 9 6"/></svg>
-                        My Delivery Calls
-                    </div>
+                    <div class="dc-crumb">Seller Portal › Delivery Calls › <span style="color:var(--emerald);font-weight:700">{{ ucfirst($status) }}</span></div>
                     <div class="dc-title">
-                        🚚 My Delivery Calls
-                        <span class="dc-badge dc-badge-{{ $status }}" style="font-size:11px">{{ ucfirst($status) }}</span>
+                        Delivery Calls <span class="dc-tbadge">{{ ucfirst($status) }}</span>
+                        @if($status === 'packed')
+                            <span style="font-size:12px;font-weight:600;color:var(--sky);background:var(--sky-lt);padding:3px 10px;border-radius:20px;border:1px solid var(--sky-bd)">🚚 Next: Dispatch to Courier</span>
+                        @endif
+                    </div>
+                    <div class="dc-sub">
+                        Showing <strong>{{ ucfirst($status) }}</strong> records
+                        @if($nextStatus)
+                            → Next: <span style="font-weight:700;color:var(--emerald)">{{ ucfirst($nextStatus) }}</span>
+                            @if($nextStatus === 'givedriver')<span style="color:var(--sky);font-weight:700">(Curfox API dispatch)</span>@endif
+                        @else
+                            <span style="color:var(--emerald);font-weight:700">✓ Final Stage</span>
+                        @endif
                     </div>
                 </div>
-                <div class="dc-actions">
-                    <a href="{{ route('seller.delivery_calls.create') }}" class="btn btn-em">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        Add New Call
-                    </a>
-                    <a href="{{ route('seller.delivery_calls.businesses') }}" class="btn btn-ind">
-                        🏢 My Businesses
-                    </a>
+                <div class="dc-tabs">
+                    <a class="dc-tab {{ request()->routeIs('seller.delivery_calls.pending') ? 'active' : '' }}" href="{{ route('seller.delivery_calls.pending') }}">Pending</a>
+                    <a class="dc-tab {{ request()->routeIs('seller.delivery_calls.packing') ? 'active' : '' }}" href="{{ route('seller.delivery_calls.packing') }}">Packing</a>
+                    <a class="dc-tab {{ request()->routeIs('seller.delivery_calls.packed') ? 'active' : '' }}" href="{{ route('seller.delivery_calls.packed') }}">Packed</a>
+                    <a class="dc-tab {{ request()->routeIs('seller.delivery_calls.givedriver') ? 'active' : '' }}" href="{{ route('seller.delivery_calls.givedriver') }}">Give Driver</a>
                 </div>
             </div>
 
-            {{-- BUSINESS BANNER --}}
-            @if($myBusinesses->isEmpty())
-                <div class="no-biz-banner">
-                    <div style="font-size:22px">⚠️</div>
+            @if(session('success'))<div class="dc-alert dc-alert-ok">✓ &nbsp;{{ session('success') }}</div>@endif
+            @if(session('error'))<div class="dc-alert dc-alert-err">✕ &nbsp;{{ session('error') }}</div>@endif
+
+            {{-- ── BUSINESS BANNER ── --}}
+            <div class="biz-banner">
+                <div class="biz-banner-l">
+                    <div class="biz-ico">🏢</div>
                     <div>
-                        <div style="font-size:13px;font-weight:700;color:var(--rose)">No Curfox Business Configured</div>
-                        <div style="font-size:12px;color:var(--text-sub);margin-top:2px">You need to create a Curfox business before you can dispatch orders.</div>
+                        <div class="biz-label">Active Curfox Business</div>
+                        @if(!empty($curfoxBusinesses))
+                            @php
+                                $activeBiz = collect($curfoxBusinesses)->firstWhere('id', $selectedBusinessId)
+                                          ?? collect($curfoxBusinesses)->first();
+                            @endphp
+                            <div style="display:flex;align-items:center;gap:4px">
+                                <span class="biz-name" id="activeBizName">{{ $activeBiz['business_name'] ?? '—' }}</span>
+                                <span class="biz-id" id="activeBizId">ID: {{ $selectedBusinessId }}</span>
+                            </div>
+                        @else
+                            <div class="biz-no-data">No businesses loaded — using default ID {{ $selectedBusinessId }}</div>
+                        @endif
                     </div>
-                    <a href="{{ route('seller.delivery_calls.businesses') }}" class="btn btn-rose btn-sm" style="margin-left:auto">Create Business</a>
                 </div>
-            @else
-                <div class="biz-banner" onclick="openBizModal()" id="bizBanner">
-                    <div class="biz-banner-ico">🏢</div>
-                    <div class="biz-banner-txt">
-                        <div class="biz-banner-label">Active Curfox Business</div>
-                        <div class="biz-banner-name" id="activeBizName">
-                            {{ $activeBusiness?->business_name ?? 'Click to select a business' }}
+                <div>
+                    @if(!empty($curfoxBusinesses))
+                        <button type="button" class="btn-dc btn-violet" onclick="openBizModal()">
+                            ⚙ Switch Business
+                        </button>
+                    @else
+                        <form action="{{ route('seller.delivery_calls.set_business') }}" method="POST" class="biz-form">
+                            @csrf
+                            <input type="text" name="merchant_business_id"
+                                   value="{{ $selectedBusinessId }}"
+                                   class="biz-select" style="min-width:120px"
+                                   placeholder="Business ID">
+                            <button type="submit" class="btn-dc btn-violet">Set</button>
+                        </form>
+                    @endif
+                </div>
+            </div>
+
+            @php $pageSubtotal = $calls->sum(fn($c) => ($c->price ?? 0) * ($c->qty ?? 1)); @endphp
+
+            {{-- ── STATS ── --}}
+            <div class="dc-stats">
+                <div class="dc-stat"><div class="dc-sico ic-em">📦</div><div><div class="dc-slbl">Total Records</div><div class="dc-sval">{{ $calls->total() }}</div></div></div>
+                <div class="dc-stat"><div class="dc-sico ic-am">📄</div><div><div class="dc-slbl">This Page</div><div class="dc-sval">{{ $calls->count() }}</div></div></div>
+                <div class="dc-stat"><div class="dc-sico ic-vi">🗂</div><div><div class="dc-slbl">Stage</div><div class="dc-sval" style="font-size:14px;margin-top:3px">{{ ucfirst($status) }}</div></div></div>
+                <div class="dc-stat"><div class="dc-sico ic-sk">💰</div><div><div class="dc-slbl">Page Subtotal</div><div class="dc-sval em">Rs. {{ number_format($pageSubtotal, 2) }}</div></div></div>
+                @if($status === 'givedriver')
+                    <div class="dc-stat"><div class="dc-sico" style="background:#f0f9ff">🚀</div>
+                        <div><div class="dc-slbl">Dispatched</div>
+                            <div class="dc-sval" style="font-size:14px;margin-top:3px;color:#0284c7">{{ $calls->where('curfox_waybill', '!=', null)->count() }} / {{ $calls->count() }}</div>
                         </div>
                     </div>
-                    <div class="biz-banner-arrow">⟶</div>
-                </div>
-            @endif
-
-            {{-- STATUS TABS --}}
-            @php
-                $tabs = [
-                    'Pending'    => ['route' => 'seller.delivery_calls.pending',    'icon' => '⏳', 'label' => 'Pending'],
-                    'packing'    => ['route' => 'seller.delivery_calls.packing',    'icon' => '📦', 'label' => 'Packing'],
-                    'packed'     => ['route' => 'seller.delivery_calls.packed',     'icon' => '✅', 'label' => 'Packed'],
-                    'givedriver' => ['route' => 'seller.delivery_calls.givedriver', 'icon' => '🚚', 'label' => 'Give Driver'],
-                ];
-            @endphp
-            <div class="dc-tabs">
-                @foreach($tabs as $s => $tab)
-                    @php $count = \App\Models\SelfSellerDeliveryCall::where('seller_id', $seller->id)->where('status', $s)->count() @endphp
-                    <a href="{{ route($tab['route']) }}"
-                       class="dc-tab {{ $status === $s ? 'active' : '' }}">
-                        {{ $tab['icon'] }} {{ $tab['label'] }}
-                        <span class="dc-tab-count">{{ $count }}</span>
-                    </a>
-                @endforeach
-            </div>
-
-            {{-- FLASH --}}
-            @if(session('success'))
-                <div style="padding:12px 16px;background:var(--emerald-lt);border:1px solid var(--emerald-bd);border-radius:var(--r-lg);color:var(--emerald);font-size:13px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px">
-                    ✅ {{ session('success') }}
-                </div>
-            @endif
-            @if(session('error'))
-                <div style="padding:12px 16px;background:var(--rose-lt);border:1px solid var(--rose-bd);border-radius:var(--r-lg);color:var(--rose);font-size:13px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px">
-                    ⚠️ {{ session('error') }}
-                </div>
-            @endif
-
-            {{-- TOOLBAR --}}
-            <div class="dc-toolbar">
-                <form class="dc-search" method="GET">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <input name="q" value="{{ request('q') }}" placeholder="Search name, phone, city, order code…">
-                    @if(request('q'))
-                        <a href="{{ request()->url() }}" style="color:var(--text-muted);text-decoration:none;font-size:14px">✕</a>
-                    @endif
-                </form>
-
-                @if($calls->total() > 0)
-                    <button class="btn btn-sm" onclick="selectAll()">☑ All</button>
-                    <button class="btn btn-sm" onclick="clearAll()">☐ None</button>
                 @endif
-
-                <span class="progress-pill" id="progressPill"></span>
             </div>
 
-            {{-- BULK ACTION BAR --}}
-            <div class="bulk-bar" id="bulkBar">
-                <span class="bulk-count" id="bulkCount">0 selected</span>
-                @if($nextStatus)
-                    <button class="btn btn-em btn-sm" onclick="bulkAdvanceStatus()">
-                        @if($nextStatus === 'givedriver')
-                            🚚 Bulk Dispatch to Curfox
-                        @else
-                            ⚡ Bulk → {{ ucfirst($nextStatus) }}
-                        @endif
-                    </button>
-                @endif
-                <button class="btn btn-sm" onclick="openBulkOriginModal()">📍 Set Origin</button>
-            </div>
-
-            {{-- TABLE --}}
+            {{-- ── MAIN CARD ── --}}
             <div class="dc-card">
-                @if($calls->isEmpty())
-                    <div class="dc-empty">
-                        <div class="dc-empty-ico">📭</div>
-                        <div class="dc-empty-txt">No {{ ucfirst($status) }} delivery calls</div>
-                        <div class="dc-empty-sub">
-                            @if(request('q'))
-                                No results for "{{ request('q') }}". <a href="{{ request()->url() }}">Clear search</a>
+                <div class="dc-chead">
+                    <form class="dc-sf" method="GET" action="{{ url()->current() }}">
+                        <div class="dc-sw">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                            <input type="text" name="q" class="dc-si" value="{{ request('q') }}" placeholder="Search order code, customer, phone…">
+                        </div>
+                        <button class="btn-dc btn-em" type="submit">Search</button>
+                        <a class="btn-dc btn-ghost" href="{{ url()->current() }}">Reset</a>
+                    </form>
+                    <div style="font-size:12px;color:var(--text-muted);font-weight:500">Page {{ $calls->currentPage() }} / {{ $calls->lastPage() }}</div>
+                </div>
+
+                <div class="dc-cbody">
+
+                    {{-- BULK ORIGIN BAR --}}
+                    <div class="bulk-origin-bar" id="bulkOriginBar">
+                        <span style="font-size:13px;font-weight:700;color:var(--amber)">📍 Set pickup origin for selected rows:</span>
+                        <div class="city-ac-wrap" style="flex:1;min-width:180px;max-width:260px">
+                            <input type="text" id="bulkOriginInput" class="city-ac-input" placeholder="Type city name…" autocomplete="off">
+                            <div class="city-ac-drop" id="bulkOriginDrop"></div>
+                        </div>
+                        <button id="bulkOriginApplyBtn" class="btn-dc btn-em" style="padding:8px 16px" disabled>Apply to Selected</button>
+                    </div>
+
+                    {{-- BULK STATUS BAR --}}
+                    <div class="dc-bulk">
+                        <div class="dc-bulk-l">
+                            <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--emerald);cursor:pointer;user-select:none">
+                                <input type="checkbox" class="chk-main" id="selectAll"> Select All
+                            </label>
+                            @if($nextStatus)
+                                <button type="button" id="bulkUpdateBtn" class="btn-dc {{ $nextStatus === 'givedriver' ? 'btn-dispatch' : 'btn-bulk' }}">
+                                    @if($nextStatus === 'givedriver') 🚚 Bulk Dispatch to Curfox → Give Driver
+                                    @else Bulk Update → {{ ucfirst($nextStatus) }}
+                                    @endif
+                                </button>
+                                <span id="bulkProgress" style="display:none;font-size:12px;font-weight:600;color:var(--emerald);background:#fff;padding:4px 12px;border-radius:20px;border:1px solid var(--emerald-bd);font-family:'JetBrains Mono',monospace"></span>
                             @else
-                                Create your first delivery call to get started.
+                                <span class="btn-sm-final">Final Status</span>
                             @endif
                         </div>
+                        <span class="dc-tpill">{{ $calls->total() }} total</span>
                     </div>
-                @else
-                    <div class="dc-table-wrap">
-                        <table class="dc-table">
+
+                    {{-- TABLE --}}
+                    <div class="dc-twrap">
+                        <table class="dc-t">
                             <thead>
                             <tr>
-                                <th style="width:36px"><input type="checkbox" class="dc-cb" id="masterCb" onchange="toggleAll(this)"></th>
-                                <th>Call #</th>
-                                <th>Customer</th>
-                                <th>City</th>
-                                <th>Item</th>
-                                <th>COD</th>
-                                <th>Origin</th>
-                                @if($nextStatus === 'givedriver')
-                                    <th>Waybill</th>
-                                @endif
+                                <th style="width:44px;text-align:center"></th>
+                                <th>ID</th>
+                                <th>Call No</th>
+                                <th>Order Code</th>
                                 <th>Date</th>
-                                <th>Action</th>
+                                <th>Customer</th>
+                                <th>Phone</th>
+                                <th>Destination</th>
+                                <th>Origin 📍</th>
+                                <th>Item</th>
+                                <th style="text-align:center">Qty</th>
+                                <th style="text-align:right">Total</th>
+                                <th>Status</th>
+                                @if($status === 'givedriver')<th>Waybill</th>@endif
+                                <th style="width:160px">Actions</th>
                             </tr>
                             </thead>
                             <tbody>
-                            @foreach($calls as $call)
-                                <tr id="row_tr_{{ $call->id }}">
-                                    <td><input type="checkbox" class="dc-cb row-cb" value="{{ $call->id }}" onchange="onRowCheck()"></td>
+                            @forelse($calls as $c)
+                                @php
+                                    $lineTotal   = ($c->price ?? 0) * ($c->qty ?? 1);
+                                    $hasCustom   = $c->hasCustomOrigin();
+                                    $originName  = $c->effectiveOriginCityName();
+                                    $originState = $c->effectiveOriginStateName();
+                                    $originId    = $c->effectiveOriginCityId();
+                                @endphp
+                                <tr id="row_tr_{{ $c->id }}" class="{{ $c->curfox_waybill ? 'row-ok' : '' }}">
+                                    <td style="text-align:center">
+                                        <input type="checkbox" class="rowCheck" value="{{ $c->id }}">
+                                    </td>
+                                    <td><span class="c-id">{{ $c->id }}</span></td>
+                                    <td><span class="c-call">{{ $c->call_number }}</span></td>
+                                    <td>@if($c->order_code)<span class="c-oc">{{ $c->order_code }}</span>@else<span style="color:var(--text-muted)">—</span>@endif</td>
+                                    <td><span class="c-date">{{ optional($c->date)->format('Y-m-d') }}</span></td>
                                     <td>
-                                        <a href="{{ route('seller.delivery_calls.show', $call->id) }}"
-                                           style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--indigo);text-decoration:none">
-                                            {{ $call->call_number }}
-                                        </a>
-                                        @if($call->order_code)
-                                            <div style="font-size:11px;color:var(--text-muted)">{{ $call->order_code }}</div>
-                                        @endif
-                                        @if($call->curfox_error)
-                                            <div class="err-tag" title="{{ $call->curfox_error }}">⚠ {{ $call->curfox_error }}</div>
-                                        @endif
+                                        <div class="c-name">{{ $c->customer_name }}</div>
+                                        <div style="font-size:11px;color:var(--text-muted)">{{ $c->customer_address }}</div>
                                     </td>
                                     <td>
-                                        <div style="font-weight:600">{{ $call->customer_name }}</div>
-                                        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted)">{{ $call->customer_phone_01 }}</div>
+                                        <div class="c-ph">{{ $c->customer_phone_01 }}</div>
+                                        @if($c->customer_phone_02)<div style="font-family:monospace;font-size:10.5px;color:var(--text-muted)">{{ $c->customer_phone_02 }}</div>@endif
                                     </td>
+
+                                    {{-- Destination --}}
                                     <td>
-                                        <div>{{ $call->city ?? '—' }}</div>
-                                        @if($call->destination_city_id)
-                                            <div style="font-size:10px;font-weight:700;color:var(--emerald)">✓ ID:{{ $call->destination_city_id }}</div>
+                                        @if($c->city || $c->district)
+                                            <span class="c-loc">{{ $c->city }}@if($c->city && $c->district) / @endif{{ $c->city ? '' : $c->district }}</span>
+                                            @if($c->destination_city_id)
+                                                <span style="font-size:10px;color:var(--emerald);background:var(--emerald-lt);padding:1px 5px;border-radius:3px;margin-left:4px">✓ API</span>
+                                            @else
+                                                <span class="no-city-warn">⚠ No city ID</span>
+                                            @endif
                                         @else
-                                            <div style="font-size:10px;color:var(--amber);font-weight:600">⚠ no city ID</div>
+                                            <span class="no-city-warn">No city set</span>
+                                        @endif
+                                        @if($c->curfox_error)
+                                            <span class="curfox-error" title="{{ $c->curfox_error }}">✕ {{ Str::limit($c->curfox_error, 55) }}</span>
                                         @endif
                                     </td>
+
+                                    {{-- Origin (editable) --}}
                                     <td>
-                                        <div style="font-weight:600;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ $call->item_name }}</div>
-                                        <div style="font-size:11px;color:var(--text-muted)">× {{ $call->qty }}</div>
-                                    </td>
-                                    <td>
-                                        <div style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--emerald)">
-                                            Rs. {{ number_format($call->price * $call->qty, 0) }}
+                                        <div class="origin-wrap" id="origin_wrap_{{ $c->id }}">
+                                            <span class="origin-badge {{ $hasCustom ? '' : 'is-default' }}"
+                                                  id="origin_badge_{{ $c->id }}">
+                                                {{ $originName }}
+                                                @if(! $hasCustom)<span class="def-tag">(default)</span>@endif
+                                            </span>
+                                            <button type="button"
+                                                    class="origin-edit-btn"
+                                                    title="Edit pickup origin city"
+                                                    data-id="{{ $c->id }}"
+                                                    data-city-id="{{ $originId ?? '' }}"
+                                                    data-city-name="{{ $originName }}"
+                                                    data-state-name="{{ $originState }}">
+                                                ✎
+                                            </button>
                                         </div>
                                     </td>
+
+                                    <td><span style="font-size:13px">{{ $c->item_name }}</span></td>
+                                    <td style="text-align:center;font-family:monospace;font-weight:700;font-size:14px">{{ $c->qty }}</td>
+                                    <td><span class="c-total">Rs. {{ number_format($lineTotal, 2) }}</span></td>
                                     <td>
-                                    <span class="origin-tag {{ $call->hasCustomOrigin() ? 'custom' : 'default' }}"
-                                          onclick="openOriginModal({{ $call->id }}, '{{ addslashes($call->effectiveOriginCityName()) }}', '{{ addslashes($call->effectiveOriginStateName()) }}')">
-                                        📍 {{ $call->effectiveOriginCityName() }}
-                                        @if(!$call->hasCustomOrigin()) <span style="font-size:9px;opacity:.7">(default)</span> @endif
-                                    </span>
+                                        <span class="dc-badge badge-{{ strtolower(str_replace(' ','-',$c->status)) }}" id="badge_{{ $c->id }}">
+                                            {{ ucfirst($c->status) }}
+                                        </span>
                                     </td>
-                                    @if($nextStatus === 'givedriver')
+                                    @if($status === 'givedriver')
                                         <td>
-                                            @if($call->curfox_waybill)
-                                                <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--emerald)">{{ $call->curfox_waybill }}</span>
+                                            @if($c->curfox_waybill)
+                                                <span class="waybill-badge">{{ $c->curfox_waybill }}</span>
                                             @else
-                                                <span style="font-size:11px;color:var(--text-muted)">—</span>
+                                                <span style="color:var(--text-muted);font-size:12px">Pending</span>
                                             @endif
                                         </td>
                                     @endif
-                                    <td style="font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace">
-                                        {{ optional($call->date)->format('Y-m-d') ?? '—' }}
-                                    </td>
                                     <td>
-                                        <div style="display:flex;gap:6px;flex-wrap:wrap">
-                                            <a href="{{ route('seller.delivery_calls.show', $call->id) }}" class="btn btn-sm">View</a>
+                                        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+                                            <a class="btn-sm-view" href="{{ route('seller.delivery_calls.show', $c->id) }}">View</a>
                                             @if($nextStatus)
-                                                <button class="btn btn-em btn-sm dispatch-single-btn"
-                                                        onclick="singleAdvance({{ $call->id }}, this)"
-                                                        id="btn_{{ $call->id }}">
-                                                    @if($nextStatus === 'givedriver') 🚚 @else → @endif
-                                                    {{ ucfirst($nextStatus) }}
-                                                </button>
+                                                @if($nextStatus === 'givedriver')
+                                                    <button class="btn-sm-dispatch dispatch-single-btn"
+                                                            data-id="{{ $c->id }}"
+                                                            data-name="{{ $c->customer_name }}"
+                                                            data-city="{{ $c->city ?? $c->district ?? 'Unknown' }}"
+                                                            {{ $c->curfox_waybill ? 'disabled' : '' }}
+                                                            type="button">
+                                                        🚚 {{ $c->curfox_waybill ? 'Done' : 'Dispatch' }}
+                                                    </button>
+                                                @else
+                                                    <form method="POST"
+                                                          action="{{ route('seller.delivery_calls.update_status', $c->id) }}"
+                                                          onsubmit="return confirm('Update to {{ ucfirst($nextStatus) }}?')"
+                                                          style="display:contents">
+                                                        @csrf
+                                                        <button class="btn-sm-next" type="submit">→ {{ ucfirst($nextStatus) }}</button>
+                                                    </form>
+                                                @endif
+                                            @else
+                                                <span class="btn-sm-final">Final</span>
                                             @endif
                                         </div>
                                     </td>
                                 </tr>
-                            @endforeach
+                            @empty
+                                <tr>
+                                    <td colspan="{{ $status === 'givedriver' ? 16 : 15 }}">
+                                        <div class="dc-empty">
+                                            <div class="dc-empty-ico">📭</div>
+                                            <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:5px">No records found</div>
+                                            <div style="font-size:13px;color:var(--text-muted)">No {{ ucfirst($status) }} delivery calls match your search.</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
                             </tbody>
+                            @if($calls->count())
+                                <tfoot>
+                                <tr>
+                                    <td colspan="{{ $status === 'givedriver' ? 11 : 10 }}" style="text-align:right;padding:11px 13px">
+                                        <span style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.7px">Page Subtotal</span>
+                                    </td>
+                                    <td style="text-align:right;padding:11px 13px">
+                                        <span style="font-size:14px;font-weight:800;color:var(--emerald)">Rs. {{ number_format($pageSubtotal, 2) }}</span>
+                                    </td>
+                                    <td colspan="{{ $status === 'givedriver' ? 4 : 3 }}"></td>
+                                </tr>
+                                </tfoot>
+                            @endif
                         </table>
                     </div>
 
                     {{-- PAGINATION --}}
-                    @if($calls->hasPages())
-                        <div class="dc-pager">
-                            {{ $calls->links('pagination::simple-tailwind') }}
+                    <div style="margin-top:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+                        <div style="font-size:12.5px;color:var(--text-muted);font-weight:500">
+                            @if($calls->total()) Showing {{ $calls->firstItem() }}–{{ $calls->lastItem() }} of {{ $calls->total() }} results @endif
                         </div>
-                    @endif
-                @endif
+                        {{ $calls->links() }}
+                    </div>
+                </div>
             </div>
-
         </div>
     </div>
 
-    {{-- ════════════════════════════════
-         BUSINESS SELECTOR MODAL
-         ════════════════════════════════ --}}
-    <div class="modal-overlay" id="bizModal">
-        <div class="modal-box">
-            <div class="modal-head">
-                <span class="modal-title">🏢 Select Active Curfox Business</span>
-                <button class="modal-close" onclick="closeBizModal()">×</button>
+    {{-- ══ ORIGIN EDIT MODAL ══ --}}
+    <div class="om-overlay" id="originModal">
+        <div class="om-box">
+            <div class="om-head">
+                <h3>📍 Edit Pickup Origin</h3>
+                <button class="om-close" onclick="closeOriginModal()">✕</button>
             </div>
-            <div class="modal-body">
-                <p style="font-size:13px;color:var(--text-sub);margin-bottom:10px">
-                    The selected business will be used as the pickup origin for all dispatch calls.
-                </p>
-                <div class="biz-grid" id="bizGrid">
-                    @foreach($myBusinesses as $biz)
-                        <div class="biz-card {{ $biz->curfox_id == $activeBusinessId ? 'selected' : '' }}"
-                             data-biz-id="{{ $biz->curfox_id }}"
-                             onclick="selectBiz('{{ $biz->curfox_id }}', '{{ addslashes($biz->business_name) }}', this)">
-                            <div class="biz-card-name">{{ $biz->business_name }}</div>
-                            <div class="biz-card-meta">
-                                @if($biz->city_name) 📍 {{ $biz->city_name }}<br>@endif
-                                @if($biz->ref_no) Ref: {{ $biz->ref_no }}<br>@endif
-                                ID: {{ $biz->curfox_id }}
+            <div class="om-body">
+                <div class="om-note">
+                    This is where the parcel is <strong>collected from</strong>. It must match your Curfox rate card
+                    pickup location (e.g. <em>Kotte</em>, <em>Veyangoda</em>, <em>Colombo 01</em>).
+                    The wrong origin will cause a <em>"no rate card"</em> error.
+                </div>
+                <div class="om-field">
+                    <label>Search &amp; Select City</label>
+                    <div class="city-ac-wrap">
+                        <input type="text" id="omSearch" class="city-ac-input" placeholder="Type to search Curfox cities…" autocomplete="off">
+                        <div class="city-ac-drop" id="omDrop"></div>
+                    </div>
+                </div>
+                <div class="om-field">
+                    <label>Selected City</label>
+                    <div class="readonly-val" id="omSelectedDisplay">—</div>
+                </div>
+                <input type="hidden" id="omCallId">
+                <input type="hidden" id="omCityId">
+                <input type="hidden" id="omCityName">
+                <input type="hidden" id="omStateName">
+            </div>
+            <div class="om-foot">
+                <button class="btn-dc btn-ghost" onclick="closeOriginModal()">Cancel</button>
+                <button class="btn-dc btn-em" id="omSaveBtn" onclick="saveOriginModal()" disabled>Save Origin</button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ══ BUSINESS SELECT MODAL ══ --}}
+    <div class="bm-overlay" id="bizModal">
+        <div class="bm-box">
+            <div class="bm-head">
+                <h3>🏢 Select Active Business</h3>
+                <button class="bm-close" onclick="closeBizModal()">✕</button>
+            </div>
+            <div class="bm-body">
+                <div class="bm-note">
+                    The selected business determines which <strong>Curfox merchant account</strong> is used when
+                    dispatching orders to the courier. All dispatch calls in this session will use this business ID.
+                </div>
+                <div id="bizCardList">
+                    @forelse($curfoxBusinesses as $biz)
+                        <div class="biz-card {{ (string)$selectedBusinessId == (string)$biz['id'] ? 'selected' : '' }}"
+                             data-biz-id="{{ $biz['id'] }}"
+                             data-biz-name="{{ $biz['business_name'] }}"
+                             onclick="selectBizCard(this)">
+                            <div class="biz-card-ico">{{ (string)$selectedBusinessId == (string)$biz['id'] ? '✓' : '🏬' }}</div>
+                            <div style="flex:1;min-width:0">
+                                <div class="biz-card-name">
+                                    {{ $biz['business_name'] }}
+                                    @if($biz['is_default'])
+                                        <span class="biz-card-default">Default</span>
+                                    @endif
+                                </div>
+                                <div class="biz-card-meta">
+                                    ID: {{ $biz['id'] }} &nbsp;·&nbsp; Ref: {{ $biz['ref_no'] ?? '—' }}
+                                </div>
                             </div>
-                            @if($biz->is_default)
-                                <span style="font-size:10px;background:var(--emerald-lt);color:var(--emerald);border:1px solid var(--emerald-bd);padding:2px 6px;border-radius:4px;margin-top:6px;display:inline-block">Default</span>
-                            @endif
+                            <div class="biz-card-check">✓</div>
                         </div>
-                    @endforeach
+                    @empty
+                        <div style="text-align:center;padding:30px;color:var(--text-muted);font-size:13px">No businesses found</div>
+                    @endforelse
                 </div>
-                <div style="margin-top:14px">
-                    <a href="{{ route('seller.delivery_calls.businesses') }}" class="btn btn-ind btn-sm">
-                        + Create New Business
-                    </a>
-                </div>
+                <input type="hidden" id="bmSelectedId" value="{{ $selectedBusinessId }}">
+                <input type="hidden" id="bmSelectedName" value="">
             </div>
-            <div class="modal-foot">
-                <button class="btn" onclick="closeBizModal()">Close</button>
+            <div class="bm-foot">
+                <button class="btn-dc btn-ghost" onclick="closeBizModal()">Cancel</button>
+                <button class="btn-dc btn-violet" id="bmSaveBtn" onclick="saveBizModal()">Apply Business</button>
             </div>
         </div>
     </div>
 
-    {{-- ════════════════════════════════
-         ORIGIN PICKER MODAL
-         ════════════════════════════════ --}}
-    <div class="modal-overlay" id="originModal">
-        <div class="modal-box">
-            <div class="modal-head">
-                <span class="modal-title">📍 Set Pickup Origin</span>
-                <button class="modal-close" onclick="document.getElementById('originModal').classList.remove('open')">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">Search City</label>
-                    <input class="form-control" id="citySearch" placeholder="Type to search cities…" oninput="filterCities()">
-                </div>
-                <div id="cityList" style="max-height:280px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--r-lg);margin-top:4px"></div>
-                <input type="hidden" id="originCallId">
-                <input type="hidden" id="selectedCityId">
-                <input type="hidden" id="selectedCityName">
-                <input type="hidden" id="selectedStateName">
-            </div>
-            <div class="modal-foot">
-                <button class="btn" onclick="document.getElementById('originModal').classList.remove('open')">Cancel</button>
-                <button class="btn btn-em" onclick="saveOrigin()">Save Origin</button>
-            </div>
-        </div>
-    </div>
-
-    {{-- BULK ORIGIN MODAL --}}
-    <div class="modal-overlay" id="bulkOriginModal">
-        <div class="modal-box">
-            <div class="modal-head">
-                <span class="modal-title">📍 Set Origin for Selected</span>
-                <button class="modal-close" onclick="document.getElementById('bulkOriginModal').classList.remove('open')">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">Search City</label>
-                    <input class="form-control" id="bulkCitySearch" placeholder="Type to search cities…" oninput="filterBulkCities()">
-                </div>
-                <div id="bulkCityList" style="max-height:280px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--r-lg);margin-top:4px"></div>
-                <input type="hidden" id="bulkSelectedCityId">
-                <input type="hidden" id="bulkSelectedCityName">
-                <input type="hidden" id="bulkSelectedStateName">
-            </div>
-            <div class="modal-foot">
-                <button class="btn" onclick="document.getElementById('bulkOriginModal').classList.remove('open')">Cancel</button>
-                <button class="btn btn-em" onclick="saveBulkOrigin()">Apply to Selected</button>
-            </div>
-        </div>
-    </div>
+    {{-- Hidden form for business POST --}}
+    <form id="bizSetForm" action="{{ route('seller.delivery_calls.set_business') }}" method="POST" style="display:none">
+        @csrf
+        <input type="hidden" name="merchant_business_id" id="bizFormInput">
+    </form>
 
     <script>
-        const CSRF        = '{{ csrf_token() }}';
-        const BASE_URL    = '{{ rtrim(route("seller.delivery_calls.index"), "/") }}';
-        const STATUS      = '{{ $status }}';
-        const NEXT_STATUS = '{{ $nextStatus }}';
+        // ── Constants ─────────────────────────────────────────────────────────
+        const CURFOX_CITIES = @json($curfoxCities);
+        const CSRF           = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const BASE_URL       = '{{ url("/seller/delivery-calls") }}';
+        const BULK_ORIG_URL  = '{{ route("seller.delivery_calls.bulk_origin") }}';
+        const nextStatus     = @json($nextStatus);
 
-        // ── Curfox cities ─────────────────────────────────────────────────────
-        const ALL_CITIES = @json($curfoxCities);
-
-        // ── Business selector ─────────────────────────────────────────────────
-        let activeBizId   = '{{ $activeBusinessId }}';
-        let activeBizName = '{{ $activeBusiness?->business_name ?? "" }}';
-
-        function openBizModal()  { document.getElementById('bizModal').classList.add('open') }
-        function closeBizModal() { document.getElementById('bizModal').classList.remove('open') }
-
-        function selectBiz(id, name, el) {
-            document.querySelectorAll('.biz-card').forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected');
-
-            fetch(`${BASE_URL}/business/set-active`, {
-                method: 'POST',
-                headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN': CSRF },
-                body: JSON.stringify({ business_id: id }),
-            })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        activeBizId   = id;
-                        activeBizName = name;
-                        document.getElementById('activeBizName').textContent = name;
-                        closeBizModal();
-                    }
-                })
-                .catch(console.error);
+        // ── City autocomplete helper ──────────────────────────────────────────
+        function filterCities(term) {
+            if (!term || term.length < 1) return [];
+            const t = term.toLowerCase();
+            return CURFOX_CITIES.filter(c =>
+                c.name.toLowerCase().includes(t) || c.state_name.toLowerCase().includes(t)
+            ).slice(0, 40);
         }
 
-        // ── Checkbox helpers ──────────────────────────────────────────────────
-        function toggleAll(cb) {
-            document.querySelectorAll('.row-cb').forEach(c => c.checked = cb.checked);
-            onRowCheck();
-        }
-
-        function selectAll() {
-            document.querySelectorAll('.row-cb').forEach(c => c.checked = true);
-            document.getElementById('masterCb').checked = true;
-            onRowCheck();
-        }
-
-        function clearAll() {
-            document.querySelectorAll('.row-cb').forEach(c => c.checked = false);
-            document.getElementById('masterCb').checked = false;
-            onRowCheck();
-        }
-
-        function getSelected() {
-            return [...document.querySelectorAll('.row-cb:checked')].map(c => parseInt(c.value));
-        }
-
-        function onRowCheck() {
-            const sel   = getSelected();
-            const bar   = document.getElementById('bulkBar');
-            const count = document.getElementById('bulkCount');
-            if (sel.length > 0) {
-                bar.classList.add('show');
-                count.textContent = sel.length + ' selected';
+        function renderDrop(results, dropEl, onPick) {
+            dropEl.innerHTML = '';
+            if (!results.length) {
+                const d = document.createElement('div');
+                d.className = 'city-ac-empty';
+                d.textContent = 'No cities found';
+                dropEl.appendChild(d);
             } else {
-                bar.classList.remove('show');
-            }
-        }
-
-        // ── Single advance ────────────────────────────────────────────────────
-        async function singleAdvance(id, btn) {
-            if (!confirm(NEXT_STATUS === 'givedriver'
-                ? `Dispatch call #${id} to Curfox now?`
-                : `Advance call #${id} to "${NEXT_STATUS}"?`)) return;
-
-            btn.disabled = true;
-            btn.textContent = '…';
-
-            try {
-                const res  = await fetch(`${BASE_URL}/${id}/status`, {
-                    method: 'POST',
-                    headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN': CSRF },
-                    body: JSON.stringify({}),
+                results.forEach(c => {
+                    const d = document.createElement('div');
+                    d.className = 'city-ac-item';
+                    d.innerHTML = `<span class="city-ac-name">${c.name}</span><span class="city-ac-state">${c.state_name}</span>`;
+                    d.addEventListener('mousedown', e => { e.preventDefault(); onPick(c); });
+                    dropEl.appendChild(d);
                 });
-                const data = await res.json();
+            }
+            dropEl.classList.add('open');
+        }
 
-                if (data.success) {
-                    if (data.waybill) {
-                        // Find waybill cell and update
-                        const tr = document.getElementById('row_tr_' + id);
-                        const waybillCells = tr?.querySelectorAll('td');
-                        btn.textContent = '✓ Done';
-                        btn.style.background = '#d1fae5';
-                        btn.style.color = '#065f46';
-                    } else {
-                        btn.textContent = '✓ Done';
-                        btn.disabled = false;
-                    }
-                    showToast(data.message, 'success');
-                } else {
-                    throw new Error(data.message || 'Failed');
-                }
-            } catch (e) {
-                btn.disabled = false;
-                btn.textContent = '→ Retry';
-                const tr = document.getElementById('row_tr_' + id);
-                tr?.classList.add('row-fail');
-                showToast(e.message, 'error');
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.city-ac-drop').forEach(d => d.classList.remove('open'));
+        });
+
+        // ── Toast ─────────────────────────────────────────────────────────────
+        function toast(msg, ok = true) {
+            const t = document.createElement('div');
+            t.style.cssText = `position:fixed;bottom:22px;right:22px;z-index:2000;padding:11px 18px;border-radius:10px;
+                font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;
+                box-shadow:0 8px 24px rgba(0,0,0,.14);animation:omUp .25s ease;` +
+                (ok ? 'background:#ecfdf5;color:#059669;border:1px solid rgba(5,150,105,.25)'
+                    : 'background:#fff1f2;color:#e11d48;border:1px solid rgba(225,29,72,.25)');
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 3000);
+        }
+
+        // ── Update origin badge in table row ──────────────────────────────────
+        function applyOriginToRow(callId, cityId, cityName, stateName) {
+            const badge = document.getElementById('origin_badge_' + callId);
+            const btn   = document.querySelector(`.origin-edit-btn[data-id="${callId}"]`);
+            if (badge) {
+                badge.innerHTML = cityName;
+                badge.classList.remove('is-default');
+            }
+            if (btn) {
+                btn.dataset.cityId    = cityId;
+                btn.dataset.cityName  = cityName;
+                btn.dataset.stateName = stateName;
             }
         }
 
-        // ── Bulk advance ──────────────────────────────────────────────────────
-        async function bulkAdvanceStatus() {
-            const ids = getSelected();
-            if (!ids.length) return;
+        // ══ BUSINESS MODAL ════════════════════════════════════════════════════
 
-            const label = NEXT_STATUS === 'givedriver' ? `Bulk dispatch ${ids.length} to Curfox?` : `Advance ${ids.length} rows to "${NEXT_STATUS}"?`;
-            if (!confirm(label)) return;
-
-            const pill = document.getElementById('progressPill');
-            pill.classList.add('show');
-            pill.textContent = `0/${ids.length} · ✓0 · ✕0`;
-
-            let ok = 0, fail = 0;
-
-            for (let i = 0; i < ids.length; i++) {
-                const id = ids[i];
-                try {
-                    const res = await fetch(`${BASE_URL}/${id}/status`, {
-                        method: 'POST',
-                        headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN': CSRF },
-                        body: JSON.stringify({}),
-                    });
-                    if (!res.ok) {
-                        let em = `HTTP ${res.status}`;
-                        try { const j = await res.json(); em = j.message || em; } catch(e) {}
-                        throw new Error(em);
-                    }
-                    const data = await res.json();
-                    if (data.success) {
-                        ok++;
-                        const btn = document.getElementById('btn_' + id);
-                        if (btn) { btn.textContent = '✓ Done'; btn.disabled = true; }
-                    } else {
-                        throw new Error(data.message || 'Failed');
-                    }
-                } catch (e) {
-                    fail++;
-                    document.getElementById('row_tr_' + id)?.classList.add('row-fail');
-                }
-                pill.textContent = `${i+1}/${ids.length} · ✓${ok} · ✕${fail}`;
-            }
-
-            setTimeout(() => { pill.classList.remove('show'); }, 4000);
-            showToast(`Done — ✓ ${ok} succeeded · ✕ ${fail} failed`, fail > 0 ? 'error' : 'success');
-            clearAll();
+        function openBizModal() {
+            document.getElementById('bizModal').classList.add('open');
         }
 
-        // ── Origin modal ──────────────────────────────────────────────────────
-        let activeCallId = null;
+        function closeBizModal() {
+            document.getElementById('bizModal').classList.remove('open');
+        }
 
-        function openOriginModal(callId, currentCity, currentState) {
-            activeCallId = callId;
-            document.getElementById('originCallId').value = callId;
-            document.getElementById('citySearch').value = '';
-            renderCityList('cityList', 'citySearch', 'selectedCityId', 'selectedCityName', 'selectedStateName');
+        document.getElementById('bizModal').addEventListener('click', function(e) {
+            if (e.target === this) closeBizModal();
+        });
+
+        function selectBizCard(el) {
+            document.querySelectorAll('.biz-card').forEach(c => {
+                c.classList.remove('selected');
+                c.querySelector('.biz-card-ico').textContent = '🏬';
+            });
+            el.classList.add('selected');
+            el.querySelector('.biz-card-ico').textContent = '✓';
+            document.getElementById('bmSelectedId').value   = el.dataset.bizId;
+            document.getElementById('bmSelectedName').value = el.dataset.bizName;
+        }
+
+        function saveBizModal() {
+            const id   = document.getElementById('bmSelectedId').value;
+            const name = document.getElementById('bmSelectedName').value || 'ID ' + id;
+            if (!id) { alert('Please select a business.'); return; }
+
+            const btn = document.getElementById('bmSaveBtn');
+            btn.disabled = true;
+            btn.textContent = 'Saving…';
+
+            document.getElementById('bizFormInput').value = id;
+            document.getElementById('bizSetForm').submit();
+
+            const nameEl = document.getElementById('activeBizName');
+            const idEl   = document.getElementById('activeBizId');
+            if (nameEl) nameEl.textContent = name;
+            if (idEl)   idEl.textContent   = 'ID: ' + id;
+        }
+
+        // ══ ORIGIN MODAL ══════════════════════════════════════════════════════
+
+        let omSelected = null;
+
+        function openOriginModal(callId, currentCityId, currentCityName, currentStateName) {
+            document.getElementById('omCallId').value    = callId;
+            document.getElementById('omSearch').value    = currentCityName || '';
+            document.getElementById('omCityId').value    = currentCityId   || '';
+            document.getElementById('omCityName').value  = currentCityName || '';
+            document.getElementById('omStateName').value = currentStateName|| '';
+            document.getElementById('omSelectedDisplay').textContent =
+                currentCityName ? `${currentCityName} — ${currentStateName}` : '—';
+            document.getElementById('omSaveBtn').disabled = !currentCityName;
+            document.getElementById('omDrop').classList.remove('open');
+            omSelected = currentCityId ? { id: currentCityId, name: currentCityName, state_name: currentStateName } : null;
             document.getElementById('originModal').classList.add('open');
+            setTimeout(() => document.getElementById('omSearch').focus(), 120);
         }
 
-        function openBulkOriginModal() {
-            if (!getSelected().length) { alert('Select at least one row.'); return; }
-            document.getElementById('bulkCitySearch').value = '';
-            renderCityList('bulkCityList', 'bulkCitySearch', 'bulkSelectedCityId', 'bulkSelectedCityName', 'bulkSelectedStateName');
-            document.getElementById('bulkOriginModal').classList.add('open');
+        function closeOriginModal() {
+            document.getElementById('originModal').classList.remove('open');
+            omSelected = null;
         }
 
-        function renderCityList(listId, searchId, cityIdField, cityNameField, stateNameField) {
-            const q    = document.getElementById(searchId).value.toLowerCase();
-            const list = document.getElementById(listId);
-            const filtered = ALL_CITIES.filter(c => !q || c.name.toLowerCase().includes(q) || c.state_name.toLowerCase().includes(q));
-            const slice = filtered.slice(0, 80);
+        document.getElementById('originModal').addEventListener('click', function(e) {
+            if (e.target === this) closeOriginModal();
+        });
 
-            if (!slice.length) {
-                list.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:13px">No cities found</div>';
+        document.querySelectorAll('.origin-edit-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                openOriginModal(
+                    btn.dataset.id,
+                    btn.dataset.cityId    || '',
+                    btn.dataset.cityName  || '',
+                    btn.dataset.stateName || ''
+                );
+            });
+        });
+
+        document.getElementById('omSearch').addEventListener('input', function() {
+            const res = filterCities(this.value);
+            if (!this.value.trim()) {
+                document.getElementById('omDrop').classList.remove('open');
                 return;
             }
+            renderDrop(res, document.getElementById('omDrop'), city => {
+                omSelected = city;
+                document.getElementById('omSearch').value    = city.name;
+                document.getElementById('omCityId').value    = city.id;
+                document.getElementById('omCityName').value  = city.name;
+                document.getElementById('omStateName').value = city.state_name;
+                document.getElementById('omSelectedDisplay').textContent = `${city.name} — ${city.state_name}`;
+                document.getElementById('omSaveBtn').disabled = false;
+                document.getElementById('omDrop').classList.remove('open');
+            });
+        });
 
-            list.innerHTML = slice.map(c => `
-        <div onclick="selectCity(${c.id},'${c.name.replace(/'/g,"\\'")}','${c.state_name.replace(/'/g,"\\'")}','${listId}','${cityIdField}','${cityNameField}','${stateNameField}')"
-             style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border-s);font-size:13px;transition:.1s"
-             onmouseover="this.style.background='var(--surface-2)'" onmouseout="this.style.background=''"
-             id="city_opt_${listId}_${c.id}">
-            <span style="font-weight:600">${c.name}</span>
-            <span style="font-size:11px;color:var(--text-muted);margin-left:6px">${c.state_name}</span>
-        </div>
-    `).join('');
-        }
+        async function saveOriginModal() {
+            const callId    = document.getElementById('omCallId').value;
+            const cityId    = parseInt(document.getElementById('omCityId').value);
+            const cityName  = document.getElementById('omCityName').value;
+            const stateName = document.getElementById('omStateName').value;
 
-        function selectCity(id, name, state, listId, cityIdField, cityNameField, stateNameField) {
-            document.getElementById(cityIdField).value = id;
-            document.getElementById(cityNameField).value = name;
-            document.getElementById(stateNameField).value = state;
-            document.querySelectorAll(`[id^="city_opt_${listId}_"]`).forEach(el => el.style.background = '');
-            const el = document.getElementById(`city_opt_${listId}_${id}`);
-            if (el) el.style.background = 'var(--emerald-lt)';
-        }
+            if (!cityId || !cityName) { alert('Please select a city.'); return; }
 
-        function filterCities() {
-            renderCityList('cityList','citySearch','selectedCityId','selectedCityName','selectedStateName');
-        }
-
-        function filterBulkCities() {
-            renderCityList('bulkCityList','bulkCitySearch','bulkSelectedCityId','bulkSelectedCityName','bulkSelectedStateName');
-        }
-
-        async function saveOrigin() {
-            const callId    = document.getElementById('originCallId').value;
-            const cityId    = document.getElementById('selectedCityId').value;
-            const cityName  = document.getElementById('selectedCityName').value;
-            const stateName = document.getElementById('selectedStateName').value;
-
-            if (!cityId) { alert('Please select a city.'); return; }
+            const btn = document.getElementById('omSaveBtn');
+            btn.disabled = true; btn.textContent = 'Saving…';
 
             try {
                 const res  = await fetch(`${BASE_URL}/${callId}/origin`, {
                     method: 'PATCH',
-                    headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN': CSRF },
-                    body: JSON.stringify({ origin_city_id: parseInt(cityId), origin_city_name: cityName, origin_state_name: stateName }),
+                    headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':CSRF, 'Accept':'application/json' },
+                    body: JSON.stringify({ origin_city_id: cityId, origin_city_name: cityName, origin_state_name: stateName })
                 });
                 const data = await res.json();
                 if (data.success) {
-                    showToast(data.message, 'success');
-                    document.getElementById('originModal').classList.remove('open');
-                    setTimeout(() => location.reload(), 800);
+                    applyOriginToRow(callId, cityId, cityName, stateName);
+                    closeOriginModal();
+                    toast(`✓ Origin → ${cityName} (${stateName})`);
                 } else {
-                    showToast(data.message || 'Failed', 'error');
+                    toast('✕ ' + data.message, false);
                 }
-            } catch (e) {
-                showToast(e.message, 'error');
-            }
-        }
-
-        async function saveBulkOrigin() {
-            const ids       = getSelected();
-            const cityId    = document.getElementById('bulkSelectedCityId').value;
-            const cityName  = document.getElementById('bulkSelectedCityName').value;
-            const stateName = document.getElementById('bulkSelectedStateName').value;
-
-            if (!cityId) { alert('Please select a city first.'); return; }
-            if (!ids.length) { alert('No rows selected.'); return; }
-
-            try {
-                const res  = await fetch(`${BASE_URL.replace(/\/[^/]+$/, '')}/bulk-origin`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN': CSRF },
-                    body: JSON.stringify({ ids, origin_city_id: parseInt(cityId), origin_city_name: cityName, origin_state_name: stateName }),
-                });
-                const data = await res.json();
-                showToast(data.message, data.success ? 'success' : 'error');
-                document.getElementById('bulkOriginModal').classList.remove('open');
-                if (data.success) setTimeout(() => location.reload(), 800);
             } catch(e) {
-                showToast(e.message, 'error');
+                toast('✕ Network error', false);
+            } finally {
+                btn.disabled = false; btn.textContent = 'Save Origin';
             }
         }
 
-        // ── Toast ─────────────────────────────────────────────────────────────
-        function showToast(msg, type = 'success') {
-            const t = document.createElement('div');
-            t.style.cssText = `position:fixed;bottom:24px;right:24px;z-index:9999;padding:13px 20px;border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.15);max-width:340px;transition:.3s;background:${type === 'success' ? '#ecfdf5' : '#fff1f2'};color:${type === 'success' ? '#065f46' : '#9f1239'};border:1px solid ${type === 'success' ? 'rgba(5,150,105,.3)' : 'rgba(225,29,72,.3)'}`;
-            t.textContent = (type === 'success' ? '✅ ' : '⚠️ ') + msg;
-            document.body.appendChild(t);
-            setTimeout(() => t.remove(), 4500);
-        }
+        // ══ BULK ORIGIN BAR ═══════════════════════════════════════════════════
 
-        // Close modals on backdrop click
-        ['bizModal','originModal','bulkOriginModal'].forEach(id => {
-            document.getElementById(id)?.addEventListener('click', function(e) {
-                if (e.target === this) this.classList.remove('open');
+        let bulkCitySelected = null;
+
+        document.getElementById('bulkOriginInput').addEventListener('input', function() {
+            bulkCitySelected = null;
+            document.getElementById('bulkOriginApplyBtn').disabled = true;
+            if (!this.value.trim()) { document.getElementById('bulkOriginDrop').classList.remove('open'); return; }
+            renderDrop(filterCities(this.value), document.getElementById('bulkOriginDrop'), city => {
+                bulkCitySelected = city;
+                document.getElementById('bulkOriginInput').value = city.name;
+                document.getElementById('bulkOriginDrop').classList.remove('open');
+                document.getElementById('bulkOriginApplyBtn').disabled = false;
             });
         });
+
+        document.getElementById('bulkOriginApplyBtn').addEventListener('click', async () => {
+            if (!bulkCitySelected) return;
+            const ids = Array.from(document.querySelectorAll('.rowCheck:checked')).map(c => parseInt(c.value));
+            if (!ids.length) { alert('Select at least one row.'); return; }
+
+            const btn = document.getElementById('bulkOriginApplyBtn');
+            btn.disabled = true; btn.textContent = 'Saving…';
+
+            try {
+                const res  = await fetch(BULK_ORIG_URL, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':CSRF, 'Accept':'application/json' },
+                    body: JSON.stringify({
+                        ids,
+                        origin_city_id:    bulkCitySelected.id,
+                        origin_city_name:  bulkCitySelected.name,
+                        origin_state_name: bulkCitySelected.state_name
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    ids.forEach(id => applyOriginToRow(id, bulkCitySelected.id, bulkCitySelected.name, bulkCitySelected.state_name));
+                    toast(`✓ ${data.message}`);
+                } else { toast('✕ ' + data.message, false); }
+            } catch(e) { toast('✕ Network error', false); }
+            finally { btn.disabled = false; btn.textContent = 'Apply to Selected'; }
+        });
+
+        // ══ CHECKBOXES ════════════════════════════════════════════════════════
+
+        const selectAll     = document.getElementById('selectAll');
+        const bulkOriginBar = document.getElementById('bulkOriginBar');
+
+        function syncCheckboxes() {
+            const all = Array.from(document.querySelectorAll('.rowCheck'));
+            const chk = all.filter(c => c.checked);
+            if (selectAll) {
+                selectAll.indeterminate = chk.length > 0 && chk.length < all.length;
+                selectAll.checked       = chk.length > 0 && chk.length === all.length;
+            }
+            bulkOriginBar.classList.toggle('show', chk.length > 0);
+        }
+
+        if (selectAll) selectAll.addEventListener('change', () => {
+            document.querySelectorAll('.rowCheck').forEach(c => c.checked = selectAll.checked);
+            syncCheckboxes();
+        });
+        document.querySelectorAll('.rowCheck').forEach(c => c.addEventListener('change', syncCheckboxes));
+
+        // ══ STATUS UPDATE ═════════════════════════════════════════════════════
+
+        async function doSingleUpdate(id) {
+            const res = await fetch(`${BASE_URL}/${id}/status`, {
+                method: 'POST',
+                headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':CSRF, 'Accept':'application/json' },
+                body: JSON.stringify({})
+            });
+            if (!res.ok) {
+                let errMsg = 'HTTP ' + res.status;
+                try { const j = await res.clone().json(); errMsg = j.message || errMsg; } catch(e) {}
+                throw new Error(errMsg);
+            }
+            return res.json();
+        }
+
+        document.querySelectorAll('.dispatch-single-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id   = this.dataset.id;
+                const name = this.dataset.name;
+                const city = this.dataset.city;
+                const originBadge = document.getElementById('origin_badge_' + id);
+                const originLabel = originBadge ? originBadge.textContent.trim() : 'Default';
+
+                const activeBizNameEl = document.getElementById('activeBizName');
+                const activeBizIdEl   = document.getElementById('activeBizId');
+                const bizLabel = activeBizNameEl
+                    ? `${activeBizNameEl.textContent} (${activeBizIdEl ? activeBizIdEl.textContent : ''})`
+                    : 'Default';
+
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Dispatch to Courier?',
+                        html: `<table style="width:100%;font-size:13px;text-align:left;border-collapse:collapse">
+                                   <tr><td style="padding:5px 8px;color:#64748b;font-weight:600">Customer</td><td style="padding:5px 8px;font-weight:700">${name}</td></tr>
+                                   <tr style="background:#f8fafc"><td style="padding:5px 8px;color:#64748b;font-weight:600">Destination</td><td style="padding:5px 8px;font-weight:700">${city}</td></tr>
+                                   <tr><td style="padding:5px 8px;color:#64748b;font-weight:600">Pickup Origin</td><td style="padding:5px 8px;font-weight:700">${originLabel}</td></tr>
+                                   <tr style="background:#f8fafc"><td style="padding:5px 8px;color:#64748b;font-weight:600">Business</td><td style="padding:5px 8px;font-weight:700;color:#7c3aed">${bizLabel}</td></tr>
+                               </table>
+                               <p style="color:#64748b;font-size:12px;margin-top:12px">This will create a waybill in the Curfox courier system.</p>`,
+                        icon: 'question', showCancelButton: true,
+                        confirmButtonColor: '#0284c7', cancelButtonColor: '#64748b',
+                        confirmButtonText: '🚚 Dispatch Now',
+                        showLoaderOnConfirm: true,
+                        preConfirm: () => doSingleUpdate(id),
+                        allowOutsideClick: () => !Swal.isLoading()
+                    }).then(result => {
+                        if (result.isConfirmed && result.value?.success) {
+                            const waybill = result.value.waybill || '';
+                            document.getElementById('row_tr_' + id)?.classList.add('row-ok');
+                            const badge = document.getElementById('badge_' + id);
+                            if (badge) badge.textContent = 'givedriver';
+                            btn.textContent = '🚚 Done'; btn.disabled = true;
+                            if (waybill) {
+                                const td = btn.closest('tr').querySelector('td:nth-last-child(2)');
+                                if (td) td.innerHTML = `<span class="waybill-badge">${waybill}</span>`;
+                            }
+                            Swal.fire({ icon:'success', title:'Dispatched!', text:'Waybill: ' + waybill, timer:2500, showConfirmButton:false });
+                        } else if (result.value && !result.value.success) {
+                            document.getElementById('row_tr_' + id)?.classList.add('row-fail');
+                            Swal.fire({ icon:'error', title:'Dispatch Failed', text:result.value.message });
+                        }
+                    });
+                } else {
+                    if (!confirm(`Dispatch ${name} → ${city}\nPickup from: ${originLabel}\nBusiness: ${bizLabel}?`)) return;
+                    doSingleUpdate(id).then(data => {
+                        if (data.success) { document.getElementById('row_tr_' + id)?.classList.add('row-ok'); btn.disabled = true; btn.textContent = '🚚 Done'; }
+                        else alert('Error: ' + data.message);
+                    });
+                }
+            });
+        });
+
+        const bulkBtn    = document.getElementById('bulkUpdateBtn');
+        const progressEl = document.getElementById('bulkProgress');
+
+        if (bulkBtn) {
+            bulkBtn.addEventListener('click', async () => {
+                const selected = Array.from(document.querySelectorAll('.rowCheck:checked')).map(c => c.value);
+                if (!selected.length) { alert('Please select at least one row.'); return; }
+
+                const bizNameEl = document.getElementById('activeBizName');
+                const bizIdEl   = document.getElementById('activeBizId');
+                const bizInfo   = bizNameEl ? `\nBusiness: ${bizNameEl.textContent}` : '';
+
+                const msg = nextStatus === 'givedriver'
+                    ? `Dispatch ${selected.length} order(s) to Curfox?${bizInfo}`
+                    : `Update ${selected.length} row(s) to "${nextStatus}"?`;
+                if (!confirm(msg)) return;
+
+                bulkBtn.disabled = true;
+                let ok = 0, fail = 0;
+                if (progressEl) { progressEl.style.display = 'inline'; progressEl.textContent = `0/${selected.length}`; }
+
+                for (let i = 0; i < selected.length; i++) {
+                    const id = selected[i];
+                    try {
+                        const data = await doSingleUpdate(id);
+                        if (data.success) {
+                            ok++;
+                            document.getElementById('row_tr_' + id)?.classList.add('row-ok');
+                            const b = document.getElementById('badge_' + id);
+                            if (b && nextStatus) b.textContent = nextStatus;
+                            if (data.waybill) {
+                                const tr = document.getElementById('row_tr_' + id);
+                                if (tr) {
+                                    const dispBtn = tr.querySelector('.dispatch-single-btn');
+                                    if (dispBtn) { dispBtn.textContent = '🚚 Done'; dispBtn.disabled = true; }
+                                }
+                            }
+                        } else {
+                            throw new Error(data.message || 'Unknown error');
+                        }
+                    } catch(e) {
+                        fail++;
+                        document.getElementById('row_tr_' + id)?.classList.add('row-fail');
+                        console.error('Row ' + id + ' failed:', e.message);
+                    }
+                    if (progressEl) progressEl.textContent = `${i+1}/${selected.length} · ✓${ok} · ✕${fail}`;
+                }
+
+                const summary = `Done! ✓ Success: ${ok}  ✕ Failed: ${fail}`;
+                if (typeof Swal !== 'undefined') await Swal.fire({ icon: fail > 0 ? 'warning':'success', title:'Complete', text:summary });
+                else alert(summary);
+                if (ok > 0) window.location.reload();
+                bulkBtn.disabled = false;
+            });
+        }
     </script>
+
+    @once
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @endonce
 @endsection
