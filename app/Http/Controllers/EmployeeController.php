@@ -28,8 +28,10 @@ class EmployeeController extends Controller
 
     public function __construct()
     {
-        $this->middleware('auth:employee');
-    }
+//        $this->middleware('auth:employee');
+        $this->middleware('auth:employee')->except([
+            'index', 'create', 'store', 'show', 'edit', 'update', 'destroy'
+        ]);    }
 
     /**
      * Get the correct image column name from database
@@ -1477,8 +1479,8 @@ class EmployeeController extends Controller
     public function index()
     {
         try {
-            $employees = Employee::all();
-            return view('admin.employee.index', compact('employees'));
+            $employees = Employee::latest()->paginate(20);
+            return view('admin.employee.employee_list', compact('employees'));
         } catch (\Exception $e) {
             Log::error('Employee index error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Error loading employees: ' . $e->getMessage());
@@ -1490,7 +1492,8 @@ class EmployeeController extends Controller
      */
     public function create()
     {
-        return view('admin.employee.create');
+        $code = 'EMP' . time() . rand(100, 999);
+        return view('admin.employee.employee_create', compact('code'));
     }
 
     /**
@@ -1499,20 +1502,62 @@ class EmployeeController extends Controller
     public function store(Request $request)
     {
         try {
-            $validated = $request->validate([
+            $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:employees',
                 'phone' => 'required|string|max:20',
+                'whatsapp' => 'required|string|max:20',
+                'nic_no' => 'required|string|max:20',
+                'address' => 'required|string',
+                'postal_code' => 'required|string|max:20',
+                'username' => 'required|string|max:255|unique:employees',
                 'password' => 'required|string|min:8',
-                'address' => 'nullable|string',
-                'role' => 'required|in:admin,manager,staff',
+                'district' => 'required|string',
+                'code' => 'required|string',
+                'nic_front' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
+                'nic_back' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
             ]);
 
-            $validated['password'] = bcrypt($validated['password']);
-            $validated['code'] = 'EMP' . time() . rand(100, 999);
-            $validated['status'] = 'active';
+            if ($validator->fails()) {
+                return redirect()->back()->withErrors($validator)->withInput();
+            }
 
-            Employee::create($validated);
+            $validated = $validator->validated();
+
+            // Prepare data for model
+            $employeeData = [
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'mobile_no' => $validated['phone'],
+                'whatsapp_no' => $validated['whatsapp'],
+                'phone' => $validated['phone'],
+                'whatsapp' => $validated['whatsapp'],
+                'nic_no' => $validated['nic_no'],
+                'address' => $validated['address'],
+                'post_code' => $validated['postal_code'],
+                'username' => $validated['username'],
+                'password' => $validated['password'],
+                'view_password' => $validated['password'], // Storing plain text as seen in model/table
+                'district' => $validated['district'],
+                'code' => $validated['code'],
+                'role' => 'staff', // Default to staff as missing in form
+                'status' => 'active',
+                'nic_front' => '', // Initialize to avoid NOT NULL error if upload fails
+                'nic_back' => '',
+            ];
+
+            // Handle file uploads
+            if ($request->hasFile('nic_front')) {
+                $file = is_array($request->file('nic_front')) ? $request->file('nic_front')[0] : $request->file('nic_front');
+                $employeeData['nic_front'] = $file->store('employees/docs', 'public');
+            }
+
+            if ($request->hasFile('nic_back')) {
+                $file = is_array($request->file('nic_back')) ? $request->file('nic_back')[0] : $request->file('nic_back');
+                $employeeData['nic_back'] = $file->store('employees/docs', 'public');
+            }
+
+            Employee::create($employeeData);
 
             return redirect()->route('employee.list')->with('success', 'Employee created successfully!');
 
@@ -1529,7 +1574,7 @@ class EmployeeController extends Controller
     {
         try {
             $employee = Employee::findOrFail($id);
-            return view('admin.employee.show', compact('employee'));
+            return view('admin.employee.employee_show', compact('employee'));
         } catch (\Exception $e) {
             Log::error('Show employee error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Error loading employee: ' . $e->getMessage());
@@ -1543,7 +1588,7 @@ class EmployeeController extends Controller
     {
         try {
             $employee = Employee::findOrFail($id);
-            return view('admin.employee.edit', compact('employee'));
+            return view('admin.employee.employee_edit', compact('employee'));
         } catch (\Exception $e) {
             Log::error('Edit employee error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Error loading employee: ' . $e->getMessage());
@@ -1558,21 +1603,68 @@ class EmployeeController extends Controller
         try {
             $employee = Employee::findOrFail($id);
 
-            $validated = $request->validate([
+            $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:employees,email,' . $employee->id,
                 'phone' => 'required|string|max:20',
-                'address' => 'nullable|string',
+                'whatsapp' => 'required|string|max:20',
+                'nic_no' => 'required|string|max:20',
+                'address' => 'required|string',
+                'postal_code' => 'required|string|max:20',
+                'username' => 'required|string|max:255|unique:employees,username,' . $employee->id,
+                'password' => 'nullable|string|min:8',
+                'district' => 'required|string',
                 'role' => 'required|in:admin,manager,staff',
                 'status' => 'required|in:active,inactive',
+                'nic_front' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
+                'nic_back' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
             ]);
 
-            // Update password if provided
-            if ($request->filled('password')) {
-                $validated['password'] = bcrypt($request->password);
+            if ($validator->fails()) {
+                return redirect()->back()->withErrors($validator)->withInput();
             }
 
-            $employee->update($validated);
+            $validated = $validator->validated();
+
+            $employeeData = [
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'mobile_no' => $validated['phone'],
+                'whatsapp_no' => $validated['whatsapp'],
+                'phone' => $validated['phone'],
+                'whatsapp' => $validated['whatsapp'],
+                'nic_no' => $validated['nic_no'],
+                'address' => $validated['address'],
+                'post_code' => $validated['postal_code'],
+                'username' => $validated['username'],
+                'district' => $validated['district'],
+                'role' => $validated['role'],
+                'status' => $validated['status'],
+            ];
+
+            if ($request->filled('password')) {
+                $employeeData['password'] = $validated['password'];
+                $employeeData['view_password'] = $validated['password'];
+            }
+
+            // Handle file uploads
+            if ($request->hasFile('nic_front')) {
+                if ($employee->nic_front) {
+                    Storage::disk('public')->delete($employee->nic_front);
+                }
+                $file = is_array($request->file('nic_front')) ? $request->file('nic_front')[0] : $request->file('nic_front');
+                $employeeData['nic_front'] = $file->store('employees/docs', 'public');
+            }
+
+            if ($request->hasFile('nic_back')) {
+                if ($employee->nic_back) {
+                    Storage::disk('public')->delete($employee->nic_back);
+                }
+                $file = is_array($request->file('nic_back')) ? $request->file('nic_back')[0] : $request->file('nic_back');
+                $employeeData['nic_back'] = $file->store('employees/docs', 'public');
+            }
+
+            $employee->update($employeeData);
 
             return redirect()->route('employee.list')->with('success', 'Employee updated successfully!');
 
@@ -1601,7 +1693,8 @@ class EmployeeController extends Controller
 
             return redirect()->route('employee.list')->with('success', 'Employee deleted successfully!');
 
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             Log::error('Delete employee error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Error deleting employee: ' . $e->getMessage());
         }

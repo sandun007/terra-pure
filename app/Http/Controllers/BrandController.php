@@ -6,8 +6,8 @@ use App\Models\Brand;
 use Illuminate\Http\Request;
 
 // If these are in App\Helpers or App\Services, import accordingly:
-use App\Helpers\CodeGenerator;
-use App\Helpers\ImageUploader;
+//use App\Helpers\CodeGenerator;
+//use App\Helpers\ImageUploader;
 
 class BrandController extends Controller
 {
