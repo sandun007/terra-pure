@@ -656,10 +656,10 @@
                             <i class="fas fa-file-export quick-action-icon"></i>
                             <span>Export Report</span>
                         </a>
-                        <a href="#" onclick="window.open('{{ route('print.out', 0) }}'.replace('/0', ''), '_blank')" class="quick-action-btn">
-                            <i class="fas fa-print quick-action-icon"></i>
-                            <span>Print Labels</span>
-                        </a>
+{{--                        <a href="#" onclick="window.open('{{ route('', 0) }}'.replace('/0', ''), '_blank')" class="quick-action-btn">--}}
+{{--                            <i class="fas fa-print quick-action-icon"></i>--}}
+{{--                            <span>Print Labels</span>--}}
+{{--                        </a>--}}
                     </div>
                 </div>
             </div>
