@@ -6,63 +6,114 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up()
+    public function up(): void
     {
+        Schema::dropIfExists('wholesaler_order_items');
+        Schema::dropIfExists('wholesaler_orders');
+
         Schema::create('wholesaler_orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('wholesaler_id')->constrained('wholesalers')->onDelete('cascade');
+
+            // Order identifier
             $table->string('order_number')->unique();
-            $table->decimal('subtotal', 10, 2);
-            $table->decimal('tax', 10, 2)->default(0);
-            $table->decimal('shipping', 10, 2)->default(0);
-            $table->decimal('total_amount', 10, 2);
+
+            // Wholesaler reference
+            $table->unsignedBigInteger('wholesaler_id');
+
+            // Product information
+            $table->unsignedBigInteger('product_id')->nullable();
+            $table->string('product_code')->nullable();
+            $table->string('product_name');
+            $table->decimal('product_price', 10, 2);
+            $table->string('product_image')->nullable();
+            $table->integer('quantity')->default(1);
 
             // Customer information
             $table->string('customer_name');
-            $table->string('customer_email');
             $table->string('customer_phone');
-            $table->text('shipping_address');
+            $table->string('customer_email')->nullable();
+            $table->text('customer_address')->nullable();
+            $table->string('district')->nullable();
 
-            // Payment information
-            $table->enum('payment_method', ['cash_on_delivery', 'credit_card', 'bank_transfer']);
-            $table->enum('payment_status', ['pending', 'paid', 'failed', 'refunded'])->default('pending');
+            // Order details
+            $table->string('platform')->nullable()->default('manual');
+            $table->string('call_status')->default('Pending Call');
+            $table->text('remark')->nullable();
 
-            // Order status
-            $table->enum('status', [
-                'pending',
-                'confirmed',
-                'processing',
-                'shipped',
-                'delivered',
-                'completed',
-                'cancelled',
-                'refunded'
-            ])->default('pending');
+            // Dates
+            $table->date('order_date');
+            $table->date('delivery_date')->nullable();
+            $table->date('rescheduling_date')->nullable();
+            $table->date('return_date')->nullable();
 
-            $table->text('notes')->nullable();
+            // Invoice fields
+            $table->string('invoice_no')->nullable();
+            $table->date('invoice_date')->nullable();
+
+            // Financial
+            $table->decimal('subtotal', 10, 2)->default(0);
+            $table->decimal('discount', 10, 2)->default(0);
+            $table->decimal('shipping', 10, 2)->default(0);
+            $table->decimal('total_amount', 10, 2)->default(0);
+            $table->string('payment_method')->nullable()->default('cash');
+            $table->string('payment_status')->default('pending');
+
+            // Status
+            $table->enum('status', ['pending', 'complete', 'return', 'rescheduling'])->default('pending');
+
+            // File uploads
+            $table->string('file_path')->nullable();
+            $table->string('original_filename')->nullable();
+
             $table->timestamps();
-            // REMOVED: $table->softDeletes(); // Don't use soft deletes
 
             // Indexes
-            $table->index('order_number');
             $table->index('status');
-            $table->index('payment_status');
-            $table->index('created_at');
+            $table->index('order_date');
+            $table->index('wholesaler_id');
+            $table->index('call_status');
+            $table->index('product_code');
+            $table->index('order_number');
         });
 
+        Schema::table('wholesaler_orders', function (Blueprint $table) {
+            $table->foreign('wholesaler_id')
+                ->references('id')
+                ->on('wholesalers')
+                ->onDelete('cascade');
+
+            $table->foreign('product_id')
+                ->references('id')
+                ->on('wholesaler_products')
+                ->onDelete('set null');
+        });
+
+        // Order items table
         Schema::create('wholesaler_order_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('order_id')->constrained('wholesaler_orders')->onDelete('cascade');
-            $table->foreignId('product_id')->constrained('wholesaler_products')->onDelete('cascade');
+            $table->unsignedBigInteger('wholesaler_order_id');
+            $table->unsignedBigInteger('product_id')->nullable();
+            $table->string('product_code')->nullable();
             $table->string('product_name');
             $table->integer('quantity');
             $table->decimal('unit_price', 10, 2);
             $table->decimal('total_price', 10, 2);
             $table->timestamps();
+
+            $table->index('wholesaler_order_id');
+        });
+
+        Schema::table('wholesaler_order_items', function (Blueprint $table) {
+            if (Schema::hasTable('wholesaler_orders')) {
+                $table->foreign('wholesaler_order_id')
+                    ->references('id')
+                    ->on('wholesaler_orders')
+                    ->onDelete('cascade');
+            }
         });
     }
 
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('wholesaler_order_items');
         Schema::dropIfExists('wholesaler_orders');
