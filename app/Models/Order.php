@@ -72,7 +72,8 @@ class Order extends Model
         if (Schema::hasTable('wholesaler_order_items')) {
             return $this->hasMany(WholesalerOrderItem::class, 'order_id');
         } else {
-            return $this->hasMany(OrderItem::class);
+            // return $this->hasMany(OrderItem::class);
+            return $this->hasMany(WholesalerOrderItem::class, 'order_id');
         }
     }
 

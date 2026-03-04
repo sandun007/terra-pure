@@ -1,6 +1,6 @@
 @extends('admin.app')
 @push('title')
-   Seller Create
+    Seller Create
 @endpush
 @push('css')
     <style>
@@ -61,17 +61,17 @@
             <div class="accordions-items-seperate" id="accordionSpacingExample">
                 <div class="accordion-item border mb-4">
                     <h2 class="accordion-header " id="headingSpacingOne">
-                            <div class="d-flex align-items-center justify-content-between flex-fill p-3">
-                                <h5 class="d-flex align-items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                         stroke-linejoin="round" class="feather feather-info text-primary me-2">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <line x1="12" y1="16" x2="12" y2="12"></line>
-                                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                                    </svg>
-                                    <span>Seller Information</span></h5>
-                            </div>
+                        <div class="d-flex align-items-center justify-content-between flex-fill p-3">
+                            <h5 class="d-flex align-items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                     stroke-linejoin="round" class="feather feather-info text-primary me-2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
+                                <span>Seller Information</span></h5>
+                        </div>
                     </h2>
                     <div id="SpacingOne">
                         <div class="accordion-body border-top">
@@ -151,7 +151,7 @@
                                         <input type="number" name="deposit" class="form-control" placeholder="Deposit Amount" required>
                                     </div>
                                 </div>
-                                   <div class="col-sm-6 col-12">
+                                <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Seller Type<span class="text-danger ms-1">*</span></label>
                                         <select class="form-control" name="type" required>
@@ -160,7 +160,7 @@
                                         </select>
                                     </div>
                                 </div>
-                                 <div class="col-sm-6 col-12">
+                                <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Referral Code<span class="text-danger ms-1">*</span></label>
                                         <input type="text" name="ref_code" class="form-control" placeholder="Referral Code" value="0" required>
@@ -168,38 +168,38 @@
                                 </div>
 
                                 <div class="col-sm-6 col-12">
-    <div class="mb-3">
-        <label class="form-label">District</label>
-        <select class="form-control" name="district" required>
-            <option value="">Select</option>
-            <option value="Ampara">Ampara</option>
-            <option value="Anuradhapura">Anuradhapura</option>
-            <option value="Badulla">Badulla</option>
-            <option value="Batticaloa">Batticaloa</option>
-            <option value="Colombo">Colombo</option>
-            <option value="Galle">Galle</option>
-            <option value="Gampaha">Gampaha</option>
-            <option value="Hambantota">Hambantota</option>
-            <option value="Jaffna">Jaffna</option>
-            <option value="Kalutara">Kalutara</option>
-            <option value="Kandy">Kandy</option>
-            <option value="Kegalle">Kegalle</option>
-            <option value="Kilinochchi">Kilinochchi</option>
-            <option value="Kurunegala">Kurunegala</option>
-            <option value="Mannar">Mannar</option>
-            <option value="Matale">Matale</option>
-            <option value="Matara">Matara</option>
-            <option value="Monaragala">Monaragala</option>
-            <option value="Mullaitivu">Mullaitivu</option>
-            <option value="Nuwara Eliya">Nuwara Eliya</option>
-            <option value="Polonnaruwa">Polonnaruwa</option>
-            <option value="Puttalam">Puttalam</option>
-            <option value="Ratnapura">Ratnapura</option>
-            <option value="Trincomalee">Trincomalee</option>
-            <option value="Vavuniya">Vavuniya</option>
-        </select>
-    </div>
-</div>
+                                    <div class="mb-3">
+                                        <label class="form-label">District</label>
+                                        <select class="form-control" name="district" required>
+                                            <option value="">Select</option>
+                                            <option value="Ampara">Ampara</option>
+                                            <option value="Anuradhapura">Anuradhapura</option>
+                                            <option value="Badulla">Badulla</option>
+                                            <option value="Batticaloa">Batticaloa</option>
+                                            <option value="Colombo">Colombo</option>
+                                            <option value="Galle">Galle</option>
+                                            <option value="Gampaha">Gampaha</option>
+                                            <option value="Hambantota">Hambantota</option>
+                                            <option value="Jaffna">Jaffna</option>
+                                            <option value="Kalutara">Kalutara</option>
+                                            <option value="Kandy">Kandy</option>
+                                            <option value="Kegalle">Kegalle</option>
+                                            <option value="Kilinochchi">Kilinochchi</option>
+                                            <option value="Kurunegala">Kurunegala</option>
+                                            <option value="Mannar">Mannar</option>
+                                            <option value="Matale">Matale</option>
+                                            <option value="Matara">Matara</option>
+                                            <option value="Monaragala">Monaragala</option>
+                                            <option value="Mullaitivu">Mullaitivu</option>
+                                            <option value="Nuwara Eliya">Nuwara Eliya</option>
+                                            <option value="Polonnaruwa">Polonnaruwa</option>
+                                            <option value="Puttalam">Puttalam</option>
+                                            <option value="Ratnapura">Ratnapura</option>
+                                            <option value="Trincomalee">Trincomalee</option>
+                                            <option value="Vavuniya">Vavuniya</option>
+                                        </select>
+                                    </div>
+                                </div>
 
                             </div>
                         </div>
@@ -207,17 +207,17 @@
                 </div>
                 <div class="accordion-item border mb-4">
                     <h2 class="accordion-header" id="headingSpacingThree">
-                            <div class="d-flex align-items-center justify-content-between flex-fill p-3">
-                                <h5 class="d-flex align-items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                         stroke-linejoin="round" class="feather feather-image text-primary me-2">
-                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                                        <polyline points="21 15 16 10 5 21"></polyline>
-                                    </svg>
-                                    <span>NIC Image</span></h5>
-                            </div>
+                        <div class="d-flex align-items-center justify-content-between flex-fill p-3">
+                            <h5 class="d-flex align-items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                     stroke-linejoin="round" class="feather feather-image text-primary me-2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                    <polyline points="21 15 16 10 5 21"></polyline>
+                                </svg>
+                                <span>NIC Image</span></h5>
+                        </div>
                     </h2>
                     <div class="row">
                         <div class="col-6">

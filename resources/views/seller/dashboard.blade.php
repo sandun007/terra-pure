@@ -1,4 +1,5 @@
 @extends('seller.layout.app')
+
 @push('title')
     Seller Dashboard
 @endpush
@@ -1004,17 +1005,17 @@
                             <span class="material-symbols-outlined">receipt_long</span>
                             Recent Orders
                         </h3>
-                        {{--                        <a href="{{ route('seller.orders.index') }}" style="--}}
-                        {{--                            color: var(--primary);--}}
-                        {{--                            text-decoration: none;--}}
-                        {{--                            font-weight: 700;--}}
-                        {{--                            font-size: 0.875rem;--}}
-                        {{--                            display: flex;--}}
-                        {{--                            align-items: center;--}}
-                        {{--                            gap: 8px;--}}
-                        {{--                        ">--}}
-                        {{--                            View All <span class="material-symbols-outlined">arrow_forward</span>--}}
-                        {{--                        </a>--}}
+                        <a href="{{ route('seller.order.pending') }}" style="
+                            color: var(--primary);
+                            text-decoration: none;
+                            font-weight: 700;
+                            font-size: 0.875rem;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                        ">
+                            View All <span class="material-symbols-outlined">arrow_forward</span>
+                        </a>
                     </div>
 
                     @if(isset($recentOrders) && count($recentOrders) > 0)
@@ -1142,14 +1143,14 @@
                             <span class="material-symbols-outlined">inventory</span>
                             <span>Manage Products</span>
                         </a>
-                                                <a href="{{ route('seller.new-order') }}" class="quick-action">
-                                                    <span class="material-symbols-outlined">shopping_cart</span>
-                                                    <span>View Orders</span>
-                                                </a>
-                        {{--                        <a href="{{ route('seller.reports') }}" class="quick-action">--}}
-                        {{--                            <span class="material-symbols-outlined">analytics</span>--}}
-                        {{--                            <span>View Reports</span>--}}
-                        {{--                        </a>--}}
+                        <a href="{{ route('seller.create.new-order') }}" class="quick-action">
+                            <span class="material-symbols-outlined">shopping_cart</span>
+                            <span>Create Order</span>
+                        </a>
+                        <a href="{{ route('seller.order.pending') }}" class="quick-action">
+                            <span class="material-symbols-outlined">receipt</span>
+                            <span>View Orders</span>
+                        </a>
                     </div>
                 </div>
 
@@ -1577,7 +1578,7 @@
                 cancelButtonColor: '#6b7280'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = '{{ route('seller.new-order') }}?status=pending';
+                    window.location.href = '{{ route("seller.order.pending") }}';
                 }
             });
         }
@@ -1708,41 +1709,18 @@ ${generateStars({{ $stats['avg_rating'] ?? 4.8 }})}
             }
 
             if (hasHalfStar) {
-                stars += '★';
+                stars += '½';
             }
 
             return stars;
         }
 
         function viewOrderDetails(orderId) {
-            Swal.fire({
-                title: 'Loading order details...',
-                allowOutsideClick: false,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-
-            // Simulate API call
-            setTimeout(() => {
-                Swal.fire({
-                    title: 'Order #' + orderId,
-                    html: `
-                        <div style="text-align: left; margin: 20px 0;">
-                            <p>Order details would be displayed here.</p>
-                            <p>This is a simulation. In production, this would fetch real data.</p>
-                        </div>
-                    `,
-                    icon: 'info',
-                    confirmButtonText: 'Close',
-                    confirmButtonColor: '#6366f1'
-                });
-            }, 1000);
+            window.location.href = `/seller/order/show/${orderId}`;
         }
 
         function viewProduct(productId) {
-            window.location.href = `/seller/products/${productId}`;
+            window.location.href = `/seller/product/${productId}`;
         }
 
         function restockProduct(productId) {

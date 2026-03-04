@@ -12,498 +12,637 @@
 
     <style>
         :root {
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --primary-light: #eef2ff;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --dark: #0f172a;
-            --mid: #64748b;
-            --border: #e2e8f0;
-            --surface: #ffffff;
-            --bg: #f8fafc;
-            --mono: 'DM Mono', monospace;
-            --sans: 'DM Sans', sans-serif;
-            --radius-xl: 16px;
-            --radius-lg: 12px;
-            --radius-md: 8px;
-            --shadow-sm: 0 2px 8px rgba(0,0,0,.07);
-            --shadow-md: 0 6px 20px rgba(0,0,0,.09);
+            --primary: #4f46e5; --primary-hover: #4338ca; --primary-light: #eef2ff;
+            --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+            --dark: #0f172a; --mid: #64748b; --border: #e2e8f0;
+            --surface: #ffffff; --bg: #f8fafc;
+            --mono: 'DM Mono', monospace; --sans: 'DM Sans', sans-serif;
+            --radius-xl: 16px; --radius-lg: 12px; --radius-md: 8px;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,.07); --shadow-md: 0 6px 20px rgba(0,0,0,.09);
         }
-
+        * { box-sizing: border-box; }
         body { font-family: var(--sans); background: var(--bg); }
-
         .order-wrapper { padding: 32px; max-width: 1400px; margin: 0 auto; }
         @media (max-width: 768px) { .order-wrapper { padding: 16px; } }
 
-        .page-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 28px; flex-wrap: wrap; gap: 16px;
-        }
-        .page-title {
-            font-size: 26px; font-weight: 800; color: var(--dark);
-            display: flex; align-items: center; gap: 10px; margin: 0;
-        }
-        .header-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+        .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; flex-wrap:wrap; gap:16px; }
+        .page-title  { font-size:26px; font-weight:800; color:var(--dark); display:flex; align-items:center; gap:10px; margin:0; }
+        .header-actions { display:flex; gap:12px; flex-wrap:wrap; }
 
-        .form-container {
-            background: var(--surface); border: 1px solid var(--border);
-            border-radius: var(--radius-xl); padding: 32px; box-shadow: var(--shadow-sm);
-        }
-        @media (max-width: 768px) { .form-container { padding: 20px; } }
+        .form-container { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-xl); padding:32px; box-shadow:var(--shadow-sm); }
+        @media (max-width: 768px) { .form-container { padding:20px; } }
 
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
-        @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; gap: 16px; } }
+        .section-title { font-size:15px; font-weight:700; color:var(--dark); margin:0 0 18px; display:flex; align-items:center; gap:8px; padding-bottom:10px; border-bottom:2px solid var(--border); }
+        .section-divider { height:2px; background:linear-gradient(to right, var(--primary-light), transparent); border-radius:999px; margin:28px 0; }
 
-        .form-group { margin-bottom: 0; }
-        .form-label { display: block; font-size: 14px; font-weight: 600; color: var(--dark); margin-bottom: 8px; }
-        .form-label .required { color: var(--danger); margin-left: 2px; }
+        .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:24px; }
+        @media (max-width: 768px) { .form-grid { grid-template-columns:1fr; gap:16px; } }
 
-        .form-control {
-            width: 100%; padding: 12px 16px; border: 2px solid var(--border);
-            border-radius: var(--radius-md); font-family: var(--sans); font-size: 14px;
-            transition: all .2s; background: var(--surface); box-sizing: border-box;
-        }
-        .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,.1); }
-        .form-control:disabled { background: #f1f5f9; cursor: not-allowed; }
-        textarea.form-control { resize: vertical; min-height: 100px; }
+        .form-group { margin-bottom:0; }
+        .form-label { display:block; font-size:14px; font-weight:600; color:var(--dark); margin-bottom:8px; }
+        .form-label .req { color:var(--danger); margin-left:2px; }
 
-        .phone-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        @media (max-width: 480px) { .phone-pair { grid-template-columns: 1fr; } }
+        .form-control { width:100%; padding:12px 16px; border:2px solid var(--border); border-radius:var(--radius-md); font-family:var(--sans); font-size:14px; transition:all .2s; background:var(--surface); }
+        .form-control:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(79,70,229,.1); }
+        .form-control:disabled { background:#f1f5f9; cursor:not-allowed; }
+        textarea.form-control { resize:vertical; min-height:88px; }
 
-        .product-search-section {
-            background: linear-gradient(135deg,#ffffff 0%,#f8fafc 100%);
-            border: 2px solid var(--border); border-radius: var(--radius-lg);
-            padding: 24px; margin-bottom: 24px;
-        }
-        .search-header { font-size: 16px; font-weight: 700; color: var(--dark); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-        .input-with-button { display: flex; gap: 12px; align-items: flex-start; }
-        .input-with-button .form-control { flex: 1; }
+        .phone-pair { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+        @media (max-width: 480px) { .phone-pair { grid-template-columns:1fr; } }
+        .sub-label { font-size:11px; color:var(--mid); font-weight:600; margin-bottom:4px; display:block; }
 
-        .btn {
-            display: inline-flex; align-items: center; gap: 8px;
-            padding: 12px 24px; border-radius: var(--radius-md);
-            font-size: 14px; font-weight: 600; border: none; cursor: pointer;
-            transition: all .2s; font-family: var(--sans); text-decoration: none; white-space: nowrap;
-        }
-        .btn-primary   { background: var(--primary); color: #fff; }
-        .btn-primary:hover   { background: var(--primary-hover); transform: translateY(-1px); }
-        .btn-secondary { background: var(--dark); color: #fff; }
-        .btn-secondary:hover { background: #1e293b; transform: translateY(-1px); }
-        .btn-success   { background: var(--success); color: #fff; }
-        .btn-success:hover   { background: #059669; transform: translateY(-1px); }
-        .btn-warning   { background: var(--warning); color: #fff; }
-        .btn-warning:hover   { background: #d97706; transform: translateY(-1px); }
-        .btn-danger    { background: var(--danger); color: #fff; }
-        .btn-danger:hover    { background: #dc2626; }
-        .btn:disabled  { opacity: .5; cursor: not-allowed; transform: none !important; }
+        /* Product search */
+        .search-section { background:linear-gradient(135deg,#fff 0%,#f8fafc 100%); border:2px solid var(--border); border-radius:var(--radius-lg); padding:24px; margin-bottom:24px; }
+        .search-header { font-size:16px; font-weight:700; color:var(--dark); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+        .input-row { display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; }
+        .input-row .form-control { flex:1; min-width:240px; }
 
-        .product-info-card {
-            background: var(--surface); border: 2px solid var(--border);
-            border-radius: var(--radius-lg); padding: 20px; margin-bottom: 24px; display: none;
-        }
-        .product-info-card.show { display: block; animation: slideDown .3s ease-out; }
-        @keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+        /* Buttons */
+        .btn { display:inline-flex; align-items:center; gap:8px; padding:12px 24px; border-radius:var(--radius-md); font-size:14px; font-weight:600; border:none; cursor:pointer; transition:all .2s; font-family:var(--sans); text-decoration:none; white-space:nowrap; }
+        .btn-primary   { background:var(--primary); color:#fff; }
+        .btn-primary:hover   { background:var(--primary-hover); transform:translateY(-1px); }
+        .btn-secondary { background:var(--dark); color:#fff; }
+        .btn-secondary:hover { background:#1e293b; transform:translateY(-1px); }
+        .btn-success   { background:var(--success); color:#fff; }
+        .btn-success:hover   { background:#059669; transform:translateY(-1px); }
+        .btn-warning   { background:var(--warning); color:#fff; }
+        .btn-warning:hover   { background:#d97706; transform:translateY(-1px); }
+        .btn-danger    { background:var(--danger); color:#fff; }
+        .btn-danger:hover    { background:#dc2626; }
+        .btn:disabled  { opacity:.5; cursor:not-allowed; transform:none !important; }
 
-        .product-info-header { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 2px solid var(--border); }
-        .product-image-preview  { width:80px; height:80px; border-radius:var(--radius-md); object-fit:cover; border:2px solid var(--border); background:#f1f5f9; }
-        .product-image-placeholder { width:80px; height:80px; border-radius:var(--radius-md); border:2px dashed var(--border); background:#f1f5f9; display:flex; align-items:center; justify-content:center; color:var(--mid); }
-        .product-info-text h4 { font-size:18px; font-weight:700; color:var(--dark); margin:0 0 4px; }
-        .product-code-badge { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; background:var(--primary-light); color:var(--primary); border-radius:999px; font-family:var(--mono); font-size:12px; font-weight:600; }
-
+        /* Product info card */
+        .product-card { background:var(--surface); border:2px solid var(--border); border-radius:var(--radius-lg); padding:20px; margin-bottom:24px; display:none; }
+        .product-card.show { display:block; animation:slideDown .3s ease-out; }
+        @keyframes slideDown { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
+        .product-card-header { display:flex; align-items:center; gap:16px; margin-bottom:16px; padding-bottom:16px; border-bottom:2px solid var(--border); }
+        .product-img { width:80px; height:80px; border-radius:var(--radius-md); object-fit:cover; border:2px solid var(--border); }
+        .product-img-ph { width:80px; height:80px; border-radius:var(--radius-md); border:2px dashed var(--border); background:#f1f5f9; display:flex; align-items:center; justify-content:center; color:var(--mid); }
+        .product-card-header h4 { font-size:18px; font-weight:700; color:var(--dark); margin:0 0 4px; }
+        .code-badge { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; background:var(--primary-light); color:var(--primary); border-radius:999px; font-family:var(--mono); font-size:12px; font-weight:600; }
         .product-details-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
         @media (max-width:768px) { .product-details-grid { grid-template-columns:1fr; } }
-
-        .detail-item { padding:12px; background:var(--bg); border-radius:var(--radius-md); }
-        .detail-label { font-size:12px; color:var(--mid); margin-bottom:4px; }
-        .detail-value { font-size:16px; font-weight:700; color:var(--dark); }
-
+        .detail-box { padding:12px; background:var(--bg); border-radius:var(--radius-md); }
+        .detail-box-label { font-size:12px; color:var(--mid); margin-bottom:4px; }
+        .detail-box-value { font-size:16px; font-weight:700; color:var(--dark); }
         .stock-badge { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:600; }
-        .stock-available { background:#d1fae5; color:#065f46; }
-        .stock-low  { background:#fef3c7; color:#92400e; }
-        .stock-out  { background:#fee2e2; color:#991b1b; }
+        .stock-ok  { background:#d1fae5; color:#065f46; }
+        .stock-low { background:#fef3c7; color:#92400e; }
+        .stock-out { background:#fee2e2; color:#991b1b; }
 
+        /* Price summary box */
+        .price-summary { background:linear-gradient(135deg,#f0fdf4 0%,#dcfce7 100%); border:2px solid #86efac; border-radius:var(--radius-lg); padding:20px; margin-bottom:24px; display:none; }
+        .price-summary.show { display:block; animation:slideDown .3s ease-out; }
+        .price-summary-title { font-size:14px; font-weight:700; color:#15803d; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+        .price-summary-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+        @media (max-width:768px) { .price-summary-grid { grid-template-columns:repeat(2,1fr); } }
+        .ps-item { background:#fff; border-radius:var(--radius-md); padding:12px; border:1px solid #bbf7d0; }
+        .ps-label { font-size:11px; color:#16a34a; font-weight:600; margin-bottom:4px; text-transform:uppercase; letter-spacing:.5px; }
+        .ps-value { font-size:18px; font-weight:800; color:var(--dark); }
+        .ps-value.red { color:#dc2626; }
+        .ps-value.green { color:#15803d; font-size:22px; }
+        .ps-total { background:linear-gradient(135deg,#f0fdf4,#dcfce7); border-color:#86efac; }
+
+        /* Price input group */
+        .price-group { position:relative; }
+        .price-prefix { position:absolute; left:14px; top:50%; transform:translateY(-50%); font-weight:700; color:var(--mid); font-size:14px; pointer-events:none; z-index:1; }
+        .price-group .form-control { padding-left:44px; }
+
+        /* Auto-confirm badge */
+        .auto-confirm-notice { display:flex; align-items:center; flex-wrap:wrap; gap:10px; background:#f0fdf4; border:1px solid #86efac; border-radius:var(--radius-md); padding:12px 16px; margin-bottom:24px; font-size:13px; }
+        .ac-badge { display:inline-flex; align-items:center; gap:5px; background:#d1fae5; color:#065f46; border-radius:999px; padding:3px 12px; font-weight:700; font-size:12px; }
+        .ac-bulk  { display:inline-flex; align-items:center; gap:5px; background:#fef3c7; color:#92400e; border-radius:999px; padding:3px 12px; font-weight:700; font-size:12px; }
+
+        /* Remark cards */
+        .remark-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px; }
+        @media (max-width:768px) { .remark-grid { grid-template-columns:1fr; } }
+        .remark-card { border:2px solid var(--border); border-radius:var(--radius-md); padding:16px; }
+        .remark-card-title { font-size:13px; font-weight:700; color:var(--dark); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+        .remark-card textarea { border:1px solid #e2e8f0; background:#f8fafc; min-height:80px; }
+        .helper-text { font-size:12px; color:var(--mid); margin-top:4px; }
+
+        /* Form actions */
         .form-actions { display:flex; gap:12px; justify-content:flex-end; padding-top:24px; border-top:2px solid var(--border); }
         @media (max-width:576px) { .form-actions { flex-direction:column-reverse; } .btn { width:100%; justify-content:center; } }
 
+        /* Alerts */
         .alert { padding:14px 18px; border-radius:var(--radius-md); margin-bottom:20px; display:flex; align-items:center; gap:10px; }
         .alert-success { background:#d1fae5; border:1px solid #10b981; color:#065f46; }
         .alert-danger  { background:#fee2e2; border:1px solid #ef4444; color:#991b1b; }
-        .alert-info    { background:#dbeafe; border:1px solid #3b82f6; color:#1e40af; }
+        .alert-warning { background:#fef3c7; border:1px solid #f59e0b; color:#92400e; }
 
         .spinner { display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,.3); border-radius:50%; border-top-color:#fff; animation:spin .6s linear infinite; }
-        @keyframes spin { to { transform:rotate(360deg); } }
+        @keyframes spin { to{transform:rotate(360deg)} }
 
-        .helper-text { font-size:12px; color:var(--mid); margin-top:4px; }
-        .phone-sub-label { font-size:11px; color:var(--mid); font-weight:600; margin-bottom:4px; display:block; }
+        /* City autocomplete */
+        .city-wrap { position:relative; }
+        .city-wrap .form-control { padding-right:40px; }
+        .city-clear { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--mid); padding:0; display:none; align-items:center; justify-content:center; width:20px; height:20px; border-radius:50%; transition:all .2s; z-index:2; }
+        .city-clear:hover { background:#fee2e2; color:var(--danger); }
+        .city-clear.on { display:flex; }
+        .city-drop { position:absolute; top:calc(100% + 4px); left:0; right:0; background:var(--surface); border:2px solid var(--primary); border-radius:var(--radius-md); max-height:220px; overflow-y:auto; z-index:9999; box-shadow:var(--shadow-md); display:none; }
+        .city-drop.open { display:block; animation:slideDown .15s ease-out; }
+        .city-item { padding:10px 14px; font-size:14px; color:var(--dark); cursor:pointer; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; transition:background .1s; }
+        .city-item:last-child { border-bottom:none; }
+        .city-item:hover,.city-item.active { background:var(--primary-light); color:var(--primary); }
+        .city-item .st { font-size:11px; color:var(--mid); margin-left:auto; }
+        .city-item mark { background:none; color:var(--primary); font-weight:700; padding:0; }
+        .city-empty { padding:14px; font-size:13px; color:var(--mid); text-align:center; }
+        .city-selected-badge { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; background:var(--primary-light); color:var(--primary); border-radius:999px; font-size:12px; font-weight:600; margin-top:6px; }
+        .api-badge { display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:600; padding:3px 10px; border-radius:999px; }
+        .api-badge.ok  { background:#d1fae5; color:#065f46; }
+        .api-badge.err { background:#fee2e2; color:#991b1b; }
+        .api-badge.loading { background:#f1f5f9; color:var(--mid); }
 
-        /* ── City / District Autocomplete ── */
-        .city-autocomplete-wrapper { position: relative; }
+        /* Bulk CSV section */
+        .bulk-section { border:2px solid #fcd34d; border-radius:var(--radius-lg); padding:24px; margin-top:8px; background:linear-gradient(135deg,#fff 0%,#fffbeb 100%); }
+        .bulk-header { font-size:16px; font-weight:700; color:var(--dark); margin-bottom:20px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+        .bulk-product-box { background:#fffbeb; border:2px solid #fcd34d; border-radius:var(--radius-md); padding:18px; margin-bottom:16px; }
+        .bulk-product-verified { background:#fff; border:2px solid #10b981; border-radius:var(--radius-md); padding:14px; margin-top:14px; display:none; }
+        .bulk-csv-box { background:#f8fafc; border:2px solid var(--border); border-radius:var(--radius-md); padding:18px; margin-bottom:16px; }
+        .step-label { font-size:13px; font-weight:700; color:var(--dark); margin-bottom:12px; display:flex; align-items:center; gap:6px; }
 
-        .city-autocomplete-wrapper .form-control {
-            padding-right: 40px;
-        }
+        /* Validation summary */
+        .val-summary { display:flex; gap:12px; flex-wrap:wrap; margin:10px 0; }
+        .val-badge { padding:4px 12px; border-radius:999px; font-size:12px; font-weight:700; }
+        .vb-ok  { background:#d1fae5; color:#065f46; }
+        .vb-err { background:#fee2e2; color:#991b1b; }
+        .vb-warn { background:#fef3c7; color:#92400e; }
+        .val-note { font-size:12px; color:var(--mid); margin-top:4px; }
+        .cs-ok  { color:#065f46; font-weight:600; font-size:12px; }
+        .cs-bad { color:#991b1b; font-weight:600; font-size:12px; }
+        .cs-miss { color:#92400e; font-weight:600; font-size:12px; }
 
-        .city-clear-btn {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: var(--mid);
-            padding: 0;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            transition: all .2s;
-            z-index: 2;
-        }
-        .city-clear-btn:hover { background: #fee2e2; color: var(--danger); }
-        .city-clear-btn.visible { display: flex; }
-
-        .city-dropdown {
-            position: absolute;
-            top: calc(100% + 4px);
-            left: 0;
-            right: 0;
-            background: var(--surface);
-            border: 2px solid var(--primary);
-            border-radius: var(--radius-md);
-            max-height: 220px;
-            overflow-y: auto;
-            z-index: 9999;
-            box-shadow: var(--shadow-md);
-            display: none;
-        }
-        .city-dropdown.open { display: block; animation: slideDown .15s ease-out; }
-
-        .city-dropdown-item {
-            padding: 10px 14px;
-            font-size: 14px;
-            color: var(--dark);
-            cursor: pointer;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: background .1s;
-        }
-        .city-dropdown-item:last-child { border-bottom: none; }
-        .city-dropdown-item:hover,
-        .city-dropdown-item.active { background: var(--primary-light); color: var(--primary); }
-
-        .city-dropdown-item mark {
-            background: none;
-            color: var(--primary);
-            font-weight: 700;
-            padding: 0;
-        }
-
-        .city-dropdown-empty {
-            padding: 14px;
-            font-size: 13px;
-            color: var(--mid);
-            text-align: center;
-        }
-
-        .city-badge-selected {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            background: var(--primary-light);
-            color: var(--primary);
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-top: 6px;
-        }
-        .city-count-badge {
-            display: inline-block;
-            padding: 2px 7px;
-            background: var(--primary);
-            color: #fff;
-            border-radius: 999px;
-            font-size: 10px;
-            font-weight: 700;
-            margin-left: 6px;
-        }
-
-        /* scrollbar for dropdown */
-        .city-dropdown::-webkit-scrollbar { width: 6px; }
-        .city-dropdown::-webkit-scrollbar-track { background: var(--bg); }
-        .city-dropdown::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-        .city-dropdown::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+        /* Preview table */
+        .preview-table { width:100%; border-collapse:collapse; font-size:13px; }
+        .preview-table th { text-align:left; padding:10px; border-bottom:1px solid var(--border); background:var(--bg); }
+        .preview-table td { padding:10px; border-bottom:1px solid var(--border); }
     </style>
 @endpush
 
 @section('content')
     <div class="order-wrapper">
 
-        {{-- Page Header --}}
+        {{-- Page header --}}
         <div class="page-header">
             <h1 class="page-title">
                 <span class="material-icons-round" style="color:var(--primary);font-size:30px">add_shopping_cart</span>
                 Create New Order
             </h1>
             <div class="header-actions">
-                <a href="{{ route('seller.order.csv-upload') }}" class="btn btn-warning">
-                    <span class="material-icons-round" style="font-size:18px">upload_file</span>
-                    Upload CSV Leads
-                </a>
-                <a href="{{ route('seller.pending-order') }}" class="btn btn-secondary">
-                    <span class="material-icons-round" style="font-size:18px">list_alt</span>
-                    View Orders
+                <a href="{{ route('seller.order.pending') }}" class="btn btn-secondary">
+                    <span class="material-icons-round" style="font-size:18px">list_alt</span>View Orders
                 </a>
             </div>
         </div>
 
-        {{-- Session Alerts --}}
+        {{-- Session alerts --}}
         @if(session('error'))
-            <div class="alert alert-danger">
-                <span class="material-icons-round">error</span>
-                <div>{{ session('error') }}</div>
-            </div>
+            <div class="alert alert-danger"><span class="material-icons-round">error</span>{{ session('error') }}</div>
         @endif
         @if(session('success'))
-            <div class="alert alert-success">
-                <span class="material-icons-round">check_circle</span>
-                <div>{{ session('success') }}</div>
-            </div>
+            <div class="alert alert-success"><span class="material-icons-round">check_circle</span>{{ session('success') }}</div>
+        @endif
+        @if(isset($apiError))
+            <div class="alert alert-warning"><span class="material-icons-round">warning</span>{{ $apiError }}</div>
         @endif
 
-        {{-- Order Form --}}
         <form id="orderForm" action="{{ route('seller.order.store') }}" method="POST">
             @csrf
 
             <div class="form-container">
 
-                {{-- Product Code Search --}}
-                <div class="product-search-section">
+                {{-- Auto-confirm notice --}}
+                <div class="auto-confirm-notice">
+                    <span class="material-icons-round" style="color:#15803d;font-size:20px">verified</span>
+                    <span style="font-weight:600;color:#15803d">Single orders are auto-confirmed:</span>
+                    <span class="ac-badge"><span class="material-icons-round" style="font-size:14px">check_circle</span>call_status = Confirmed</span>
+                    <span class="ac-badge"><span class="material-icons-round" style="font-size:14px">local_shipping</span>Delivery call created instantly</span>
+                    <span style="color:var(--mid);font-size:12px">vs.</span>
+                    <span class="ac-bulk"><span class="material-icons-round" style="font-size:14px">pending</span>Bulk CSV → Pending Call</span>
+                </div>
+
+                {{-- ═══════════════════════════════════════════════════════════
+                     STEP 1 — Product Search
+                ═══════════════════════════════════════════════════════════ --}}
+                <div class="search-section">
                     <div class="search-header">
                         <span class="material-icons-round" style="color:var(--primary)">qr_code_scanner</span>
-                        Search Product by Code
+                        Step 1 — Search Product by Code
                     </div>
-                    <div class="input-with-button">
+                    <div class="input-row">
                         <div style="flex:1">
                             <input type="text" id="searchProductCode" class="form-control"
-                                   placeholder="Enter product code (e.g., DX/ITM/0001)"
-                                   autocomplete="off"
-                                   value="{{ $productCode ?? '' }}">
-                            <div class="helper-text">
-                                <i class="fas fa-info-circle"></i>
-                                Enter the product code and click Fetch to load product details
-                            </div>
+                                   placeholder="Enter product code e.g. DX/ITM/0001"
+                                   autocomplete="off" value="{{ $productCode ?? '' }}">
+                            <div class="helper-text"><i class="fas fa-info-circle"></i> Enter code then click Fetch Product</div>
                         </div>
                         <button type="button" id="fetchProductBtn" class="btn btn-primary">
-                            <span class="material-icons-round" style="font-size:18px">search</span>
-                            Fetch Product
+                            <span class="material-icons-round" style="font-size:18px">search</span>Fetch Product
                         </button>
                         <button type="button" id="resetBtn" class="btn btn-danger"
-                                style="display:{{ $productId ? 'inline-flex' : 'none' }}">
-                            <span class="material-icons-round" style="font-size:18px">refresh</span>
-                            Reset
+                                style="display:{{ ($productId ?? false) ? 'inline-flex' : 'none' }}">
+                            <span class="material-icons-round" style="font-size:18px">refresh</span>Reset
                         </button>
                     </div>
                 </div>
 
-                {{-- Product Info Card --}}
-                <div id="productInfoCard" class="product-info-card"
-                     style="display:{{ $productId ? 'block' : 'none' }}">
-                    <div class="product-info-header">
-                        <img id="productImagePreview" src="{{ $productImage ?? '' }}" alt="Product"
-                             class="product-image-preview"
-                             style="display:{{ $productImage ? 'block' : 'none' }}">
-                        <div id="productImagePlaceholder" class="product-image-placeholder"
-                             style="display:{{ $productImage ? 'none' : 'flex' }}">
+                {{-- Product info card --}}
+                <div id="productCard" class="product-card {{ ($productId ?? false) ? 'show' : '' }}">
+                    <div class="product-card-header">
+                        <img id="productImg" src="{{ $productImage ?? '' }}" alt=""
+                             class="product-img" style="display:{{ ($productImage ?? false) ? 'block' : 'none' }}">
+                        <div id="productImgPh" class="product-img-ph"
+                             style="display:{{ ($productImage ?? false) ? 'none' : 'flex' }}">
                             <span class="material-icons-round" style="font-size:32px">inventory_2</span>
                         </div>
-                        <div class="product-info-text" style="flex:1">
-                            <h4 id="displayProductName">{{ $productName ?? '-' }}</h4>
-                            <span class="product-code-badge">
-                                <span class="material-icons-round" style="font-size:14px">tag</span>
-                                <span id="displayProductCode">{{ $productCode ?? '-' }}</span>
-                            </span>
+                        <div style="flex:1">
+                            <h4 id="dpName">{{ $productName ?? '-' }}</h4>
+                            <span class="code-badge">
+                            <span class="material-icons-round" style="font-size:14px">tag</span>
+                            <span id="dpCode">{{ $productCode ?? '-' }}</span>
+                        </span>
                         </div>
                     </div>
                     <div class="product-details-grid">
-                        <div class="detail-item">
-                            <div class="detail-label">Price</div>
-                            <div class="detail-value" style="color:var(--danger)">
-                                Rs. <span id="displayProductPrice">{{ $productPrice ?? '0.00' }}</span>
-                            </div>
+                        <div class="detail-box">
+                            <div class="detail-box-label">Unit Price</div>
+                            <div class="detail-box-value" style="color:#dc2626">Rs. <span id="dpPrice">{{ number_format($productPrice ?? 0, 2) }}</span></div>
                         </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Available Stock</div>
-                            <div class="detail-value">
-                                <span id="displayProductStock">{{ $productStock ?? '0' }}</span> units
-                            </div>
+                        <div class="detail-box">
+                            <div class="detail-box-label">Available Stock</div>
+                            <div class="detail-box-value"><span id="dpStock">{{ $productStock ?? '0' }}</span> units</div>
                         </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Status</div>
-                            <div class="detail-value">
-                                <span id="stockStatusBadge" class="stock-badge
-                                    @if(($productStock ?? 0) <= 0) stock-out
-                                    @elseif(($productStock ?? 0) <= 10) stock-low
-                                    @else stock-available @endif">
-                                    @if(($productStock ?? 0) <= 0)
-                                        <span class="material-icons-round" style="font-size:14px">cancel</span> Out of Stock
-                                    @elseif(($productStock ?? 0) <= 10)
-                                        <span class="material-icons-round" style="font-size:14px">warning</span> Low Stock
-                                    @else
-                                        <span class="material-icons-round" style="font-size:14px">check_circle</span> Available
-                                    @endif
-                                </span>
+                        <div class="detail-box">
+                            <div class="detail-box-label">Stock Status</div>
+                            <div class="detail-box-value">
+                            <span id="stockBadge" class="stock-badge
+                                @if(($productStock ?? 0) <= 0) stock-out
+                                @elseif(($productStock ?? 0) <= 10) stock-low
+                                @else stock-ok @endif">
+                                @if(($productStock ?? 0) <= 0)
+                                    <span class="material-icons-round" style="font-size:14px">cancel</span> Out of Stock
+                                @elseif(($productStock ?? 0) <= 10)
+                                    <span class="material-icons-round" style="font-size:14px">warning</span> Low Stock
+                                @else
+                                    <span class="material-icons-round" style="font-size:14px">check_circle</span> Available
+                                @endif
+                            </span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- Hidden Fields --}}
-                <input type="hidden" name="product_code"  id="product_code"  value="{{ $productCode ?? '' }}" required>
-                <input type="hidden" name="product_id"    id="product_id"    value="{{ $productId ?? '' }}"   required>
-                <input type="hidden" name="product_name"  id="product_name"  value="{{ $productName ?? '' }}" required>
-                <input type="hidden" name="product_price" id="product_price" value="{{ $productPrice ?? '0' }}" required>
+                {{-- Hidden fields --}}
+                <input type="hidden" name="product_code"  id="product_code"  value="{{ $productCode ?? '' }}">
+                <input type="hidden" name="product_id"    id="product_id"    value="{{ $productId ?? '' }}">
+                <input type="hidden" name="product_name"  id="product_name"  value="{{ $productName ?? '' }}">
+                <input type="hidden" name="product_price" id="product_price" value="{{ $productPrice ?? '0' }}">
                 <input type="hidden" name="product_image" id="product_image" value="{{ $productImage ?? '' }}">
                 <input type="hidden" name="date"          id="order_date"    value="{{ date('Y-m-d') }}">
+                <input type="hidden" name="auto_confirm"  value="1">
+                <input type="hidden" name="destination_city_id"    id="destination_city_id">
+                <input type="hidden" name="destination_city_name"  id="destination_city_name">
+                <input type="hidden" name="destination_state_name" id="destination_state_name">
 
-                {{-- Order Details Grid --}}
+                <div class="section-divider"></div>
+
+                {{-- ═══════════════════════════════════════════════════════════
+                     STEP 2 — Customer Details
+                ═══════════════════════════════════════════════════════════ --}}
+                <div class="section-title">
+                    <span class="material-icons-round" style="color:var(--primary)">person</span>
+                    Step 2 — Customer & Order Details
+                </div>
+
                 <div class="form-grid">
-
-                    {{-- Customer Name --}}
                     <div class="form-group">
-                        <label class="form-label">Customer Name <span class="required">*</span></label>
+                        <label class="form-label">Customer Name <span class="req">*</span></label>
                         <input type="text" name="customer_name" id="customer_name" class="form-control"
-                               placeholder="Enter customer name"
-                               value="{{ old('customer_name') }}" required>
+                               placeholder="Enter customer full name" value="{{ old('customer_name') }}" required>
                     </div>
 
-                    {{-- Customer Phone --}}
                     <div class="form-group">
-                        <label class="form-label">Customer Phone <span class="required">*</span></label>
+                        <label class="form-label">Customer Phone <span class="req">*</span></label>
                         <div class="phone-pair">
                             <div>
-                                <span class="phone-sub-label">Primary Number</span>
-                                <input type="text" name="customer_phone" id="customer_phone"
-                                       class="form-control"
-                                       placeholder="e.g. 077 123 4567"
-                                       value="{{ old('customer_phone') }}" required>
+                                <span class="sub-label">Primary</span>
+                                <input type="text" name="customer_phone" id="customer_phone" class="form-control"
+                                       placeholder="077 123 4567" value="{{ old('customer_phone') }}" required>
                             </div>
                             <div>
-                                <span class="phone-sub-label">Secondary Number <small style="font-weight:400">(optional)</small></span>
-                                <input type="text" name="customer_phone_2" id="customer_phone_2"
-                                       class="form-control"
-                                       placeholder="e.g. 071 765 4321"
-                                       value="{{ old('customer_phone_2') }}">
+                                <span class="sub-label">Secondary <small>(optional)</small></span>
+                                <input type="text" name="customer_phone_2" id="customer_phone_2" class="form-control"
+                                       placeholder="071 765 4321" value="{{ old('customer_phone_2') }}">
                             </div>
                         </div>
                     </div>
 
-                    {{-- Quantity --}}
                     <div class="form-group">
-                        <label class="form-label">Quantity <span class="required">*</span></label>
+                        <label class="form-label">Quantity <span class="req">*</span></label>
                         <input type="number" name="quantity" id="quantity" class="form-control"
-                               placeholder="Enter quantity" min="1"
-                               value="{{ $quantity ?? 1 }}"
-                               {{ !$productId ? 'disabled' : '' }} required>
-                        <div class="helper-text">
-                            Available: <span id="availableStock">{{ $productStock ?? '0' }}</span> units
-                        </div>
+                               placeholder="1" min="1" value="{{ $quantity ?? 1 }}"
+                               {{ !($productId ?? false) ? 'disabled' : '' }} required>
+                        <div class="helper-text">Available: <span id="availableStock">{{ $productStock ?? '0' }}</span> units</div>
                     </div>
 
-                    {{-- District / City with Autocomplete --}}
                     <div class="form-group">
                         <label class="form-label">
-                            <span class="material-icons-round" style="font-size:16px;vertical-align:middle;color:var(--primary)">location_on</span>
-                            District / City
-                            <span class="city-count-badge">2835</span>
+                            <span class="material-icons-round" style="font-size:16px;vertical-align:middle;color:var(--primary)">local_shipping</span>
+                            Delivery City <span class="req">*</span>
+                            <span id="apiStatusBadge" class="api-badge loading" style="margin-left:6px">
+                            <span class="spinner" style="width:10px;height:10px;border-top-color:currentColor;border-color:rgba(0,0,0,.15)"></span> Loading…
+                        </span>
                         </label>
-                        <div class="city-autocomplete-wrapper">
-                            <input type="text"
-                                   name="district"
-                                   id="district"
-                                   class="form-control"
-                                   placeholder="Type to search city or district..."
-                                   value="{{ old('district') }}"
-                                   autocomplete="off"
-                                   role="combobox"
-                                   aria-autocomplete="list"
-                                   aria-expanded="false"
-                                   aria-haspopup="listbox">
-                            <button type="button" class="city-clear-btn" id="cityClearBtn" title="Clear selection" aria-label="Clear city">
+                        <div class="city-wrap">
+                            <input type="text" name="district" id="district" class="form-control"
+                                   placeholder="Type to search delivery city…"
+                                   value="{{ old('district') }}" autocomplete="off" required>
+                            <button type="button" class="city-clear" id="cityClearBtn">
                                 <span class="material-icons-round" style="font-size:16px">close</span>
                             </button>
-                            <div class="city-dropdown" id="cityDropdown" role="listbox" aria-label="City suggestions"></div>
+                            <div class="city-drop" id="cityDrop"></div>
                         </div>
-                        <div class="helper-text" id="cityHelperText">
-                            <span class="material-icons-round" style="font-size:12px;vertical-align:middle">search</span>
-                            Start typing to search from 2,835 Sri Lanka cities/districts
-                        </div>
+                        <div class="helper-text" id="cityHelper">Cities loaded from Curfox delivery API</div>
                     </div>
 
-                    {{-- Platform --}}
                     <div class="form-group">
                         <label class="form-label">Platform</label>
                         <select name="platform" id="platform" class="form-control">
                             <option value="">Select Platform</option>
-                            <option value="fb"       {{ old('platform') == 'fb'       ? 'selected' : '' }}>Facebook</option>
-                            <option value="ig"       {{ old('platform') == 'ig'       ? 'selected' : '' }}>Instagram</option>
-                            <option value="tiktok"   {{ old('platform') == 'tiktok'   ? 'selected' : '' }}>TikTok</option>
-                            <option value="website"  {{ old('platform') == 'website'  ? 'selected' : '' }}>Website</option>
-                            <option value="phone"    {{ old('platform') == 'phone'    ? 'selected' : '' }}>Phone</option>
-                            <option value="other"    {{ old('platform') == 'other'    ? 'selected' : '' }}>Other</option>
+                            <option value="fb"      {{ old('platform')=='fb'      ? 'selected':'' }}>Facebook</option>
+                            <option value="ig"      {{ old('platform')=='ig'      ? 'selected':'' }}>Instagram</option>
+                            <option value="tiktok"  {{ old('platform')=='tiktok'  ? 'selected':'' }}>TikTok</option>
+                            <option value="website" {{ old('platform')=='website' ? 'selected':'' }}>Website</option>
+                            <option value="phone"   {{ old('platform')=='phone'   ? 'selected':'' }}>Phone</option>
+                            <option value="manual"  {{ old('platform')=='manual'  ? 'selected':'' }}>Manual</option>
                         </select>
                     </div>
 
-                    {{-- Payment Method --}}
                     <div class="form-group">
-                        <label class="form-label">Payment Method <span class="required">*</span></label>
+                        <label class="form-label">Payment Method <span class="req">*</span></label>
                         <select name="payment_method" id="payment_method" class="form-control" required>
                             <option value="">Select Payment Method</option>
-                            <option value="cash"          {{ old('payment_method') == 'cash'          ? 'selected' : '' }}>Cash on Delivery</option>
-                            <option value="card"          {{ old('payment_method') == 'card'          ? 'selected' : '' }}>Card Payment</option>
-                            <option value="bank_transfer" {{ old('payment_method') == 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
-                            <option value="online"        {{ old('payment_method') == 'online'        ? 'selected' : '' }}>Online Payment</option>
+                            <option value="cash"          {{ old('payment_method')=='cash'          ? 'selected':'' }}>Cash on Delivery</option>
+                            <option value="card"          {{ old('payment_method')=='card'          ? 'selected':'' }}>Card Payment</option>
+                            <option value="bank_transfer" {{ old('payment_method')=='bank_transfer' ? 'selected':'' }}>Bank Transfer</option>
+                            <option value="online"        {{ old('payment_method')=='online'        ? 'selected':'' }}>Online Payment</option>
                         </select>
                     </div>
                 </div>
 
-                {{-- Delivery Address --}}
                 <div class="form-group" style="margin-bottom:24px">
-                    <label class="form-label">Delivery Address</label>
+                    <label class="form-label">Delivery Address <span class="req">*</span></label>
                     <textarea name="customer_address" id="customer_address" class="form-control"
-                              placeholder="Enter delivery address (optional)">{{ old('customer_address') }}</textarea>
+                              placeholder="Full delivery address — street, area, city…">{{ old('customer_address') }}</textarea>
                 </div>
 
-                {{-- Order Notes --}}
-                <div class="form-group" style="margin-bottom:24px">
-                    <label class="form-label">Order Notes / Remarks</label>
-                    <textarea name="remark" id="remark" class="form-control"
-                              placeholder="Add any special instructions or notes (optional)">{{ old('remark') }}</textarea>
+                <div class="section-divider"></div>
+
+                {{-- ═══════════════════════════════════════════════════════════
+                     STEP 3 — Price
+                ═══════════════════════════════════════════════════════════ --}}
+                <div class="section-title">
+                    <span class="material-icons-round" style="color:#15803d">receipt_long</span>
+                    Step 3 — Price
                 </div>
 
-                {{-- Form Actions --}}
+                {{-- Live price summary --}}
+                <div id="priceSummary" class="price-summary {{ ($productId ?? false) ? 'show' : '' }}">
+                    <div class="price-summary-title">
+                        <span class="material-icons-round" style="font-size:16px">calculate</span>
+                        Live Order Summary
+                    </div>
+                    <div class="price-summary-grid">
+                        <div class="ps-item">
+                            <div class="ps-label">Unit Price</div>
+                            <div class="ps-value red">Rs. <span id="psUnitPrice">{{ number_format($productPrice ?? 0, 2) }}</span></div>
+                        </div>
+                        <div class="ps-item">
+                            <div class="ps-label">Quantity</div>
+                            <div class="ps-value"><span id="psQty">{{ $quantity ?? 1 }}</span> units</div>
+                        </div>
+                        <div class="ps-item">
+                            <div class="ps-label">Subtotal</div>
+                            <div class="ps-value">Rs. <span id="psSubtotal">{{ number_format(($productPrice ?? 0) * ($quantity ?? 1), 2) }}</span></div>
+                        </div>
+                        <div class="ps-item ps-total">
+                            <div class="ps-label">COD Total</div>
+                            <div class="ps-value green">Rs. <span id="psTotal">{{ number_format(($productPrice ?? 0) * ($quantity ?? 1), 2) }}</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-grid" style="margin-bottom:0">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span class="material-icons-round" style="font-size:15px;vertical-align:middle;color:#dc2626">sell</span>
+                            Selling Price (per unit) <span class="req">*</span>
+                        </label>
+                        <div class="price-group">
+                            <span class="price-prefix">Rs.</span>
+                            <input type="number" name="selling_price" id="selling_price" class="form-control"
+                                   placeholder="0.00" min="0" step="0.01"
+                                   value="{{ $productPrice ?? '' }}"
+                                {{ !($productId ?? false) ? 'disabled' : '' }}>
+                        </div>
+                        <div class="helper-text">Editable — overrides default product price</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span class="material-icons-round" style="font-size:15px;vertical-align:middle;color:#059669">payments</span>
+                            COD Amount (auto-calculated)
+                        </label>
+                        <div class="price-group">
+                            <span class="price-prefix">Rs.</span>
+                            <input type="text" id="cod_display" class="form-control"
+                                   value="{{ number_format(($productPrice ?? 0) * ($quantity ?? 1), 2) }}"
+                                   readonly style="background:#f0fdf4;font-weight:700;color:#15803d;font-size:16px;">
+                        </div>
+                        <div class="helper-text">Price × Quantity — amount collected on delivery</div>
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                {{-- ═══════════════════════════════════════════════════════════
+                     STEP 4 — Remarks
+                ═══════════════════════════════════════════════════════════ --}}
+                <div class="section-title">
+                    <span class="material-icons-round" style="color:var(--warning)">edit_note</span>
+                    Step 4 — Remarks
+                </div>
+
+                <div class="remark-grid">
+                    {{-- Remark 1 --}}
+                    <div class="remark-card">
+                        <div class="remark-card-title">
+                            <span class="material-icons-round" style="font-size:16px;color:var(--primary)">assignment</span>
+                            Remark 1
+                            <span style="font-size:11px;color:var(--mid);font-weight:400">(internal / order note)</span>
+                        </div>
+                        <textarea name="remark" id="remark" class="form-control"
+                                  placeholder="Internal notes, agent remarks, follow-up info…">{{ old('remark') }}</textarea>
+                        <div class="helper-text">Visible to seller team only</div>
+                    </div>
+
+                    {{-- Remark 2 --}}
+                    <div class="remark-card" style="border-color:#fde68a;">
+                        <div class="remark-card-title">
+                            <span class="material-icons-round" style="font-size:16px;color:var(--warning)">local_shipping</span>
+                            Remark 2
+                            <span style="font-size:11px;color:var(--mid);font-weight:400">(delivery / driver note)</span>
+                        </div>
+                        <textarea name="delivery_remark" id="delivery_remark" class="form-control"
+                                  placeholder="Delivery instructions, landmark, fragile, special handling…">{{ old('delivery_remark') }}</textarea>
+                        <div class="helper-text">Passed to delivery call & courier</div>
+                    </div>
+                </div>
+
+                {{-- Form actions --}}
                 <div class="form-actions">
-                    <button type="button" id="printBtn" class="btn btn-secondary" {{ !$productId ? 'disabled' : '' }}>
-                        <span class="material-icons-round" style="font-size:18px">print</span>
-                        Print Order
+                    <button type="button" id="printBtn" class="btn btn-secondary" {{ !($productId ?? false) ? 'disabled' : '' }}>
+                        <span class="material-icons-round" style="font-size:18px">print</span>Print Order
                     </button>
-                    <a href="{{ route('seller.complete-order') }}" class="btn btn-secondary">
-                        <span class="material-icons-round" style="font-size:18px">list_alt</span>
-                        View Orders
-                    </a>
-                    <button type="button" id="submitBtn" class="btn btn-success" {{ !$productId ? 'disabled' : '' }}>
-                        <span class="material-icons-round" style="font-size:18px">shopping_cart</span>
-                        Create Order
+                    <button type="button" id="submitBtn" class="btn btn-success" {{ !($productId ?? false) ? 'disabled' : '' }}>
+                        <span class="material-icons-round" style="font-size:18px">check_circle</span>
+                        Create &amp; Confirm Order
                     </button>
                 </div>
-            </div>
+
+                <div class="section-divider"></div>
+
+                {{-- ═══════════════════════════════════════════════════════════
+                     BULK CSV IMPORT
+                ═══════════════════════════════════════════════════════════ --}}
+                <div class="bulk-section">
+                    <div class="bulk-header">
+                        <span class="material-icons-round" style="color:var(--warning)">upload_file</span>
+                        Bulk Import Orders (CSV)
+                        <span class="ac-bulk" style="font-size:11px;font-weight:600">Goes to Pending Call &amp; Pending Orders</span>
+                    </div>
+
+                    {{-- Bulk Step 1 — product --}}
+                    <div class="bulk-product-box">
+                        <div class="step-label">
+                            <span class="material-icons-round" style="font-size:16px;color:var(--warning)">looks_one</span>
+                            Step 1 — Select Product for Bulk Import
+                        </div>
+                        <div class="input-row">
+                            <div style="flex:1;min-width:240px">
+                                <label class="form-label" style="font-size:13px">Product Code <span class="req">*</span></label>
+                                <input type="text" id="bulkProductCode" class="form-control" placeholder="e.g. DX/ITM/0001" autocomplete="off">
+                            </div>
+                            <button type="button" id="bulkFetchBtn" class="btn btn-warning" style="height:48px">
+                                <span class="material-icons-round" style="font-size:18px">search</span>Verify Product
+                            </button>
+                            <button type="button" id="bulkResetBtn" class="btn btn-danger" style="height:48px;display:none">
+                                <span class="material-icons-round" style="font-size:18px">close</span>Clear
+                            </button>
+                        </div>
+
+                        <div id="bulkProductVerified" class="bulk-product-verified">
+                            <div style="display:flex;align-items:center;gap:14px">
+                                <img id="bpImg" src="" alt="" style="width:60px;height:60px;border-radius:8px;object-fit:cover;border:2px solid var(--border);display:none">
+                                <div id="bpImgPh" style="width:60px;height:60px;border-radius:8px;border:2px dashed var(--border);background:#f1f5f9;display:flex;align-items:center;justify-content:center;color:var(--mid)">
+                                    <span class="material-icons-round" style="font-size:26px">inventory_2</span>
+                                </div>
+                                <div style="flex:1">
+                                    <div style="font-size:16px;font-weight:800;color:var(--dark)" id="bpName">—</div>
+                                    <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
+                                        <span class="code-badge"><span class="material-icons-round" style="font-size:13px">tag</span><span id="bpCode">—</span></span>
+                                        <span style="font-size:13px;color:#dc2626;font-weight:700">Rs. <span id="bpPrice">0.00</span></span>
+                                        <span id="bpStockBadge" class="stock-badge stock-ok">
+                                        <span class="material-icons-round" style="font-size:13px">inventory</span>
+                                        <span id="bpStock">0</span> in stock
+                                    </span>
+                                    </div>
+                                </div>
+                                <div style="text-align:right">
+                                    <div style="font-size:11px;color:var(--mid)">CSV will use this product</div>
+                                    <div style="font-size:13px;font-weight:700;color:#10b981">✓ Verified</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="bpStockWarn" style="display:none;margin-top:10px;padding:10px 14px;background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;font-size:13px;color:#92400e">
+                            <span class="material-icons-round" style="font-size:15px;vertical-align:middle">warning</span>
+                            <span id="bpStockWarnText"></span>
+                        </div>
+                    </div>
+
+                    {{-- Bulk Step 2 — CSV --}}
+                    <div class="bulk-csv-box">
+                        <div class="step-label">
+                            <span class="material-icons-round" style="font-size:16px;color:var(--warning)">looks_two</span>
+                            Step 2 — Upload CSV &amp; Set Defaults
+                        </div>
+                        <div class="form-grid" style="margin-bottom:0">
+                            <div class="form-group">
+                                <label class="form-label" style="font-size:13px">CSV File <span class="req">*</span></label>
+                                <input type="file" id="csvFile" class="form-control" accept=".csv">
+                                <div class="helper-text">
+                                    Required columns: <b>customer_name</b>, <b>customer_phone</b><br>
+                                    Optional: customer_address, city, platform, remark, delivery_remark
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" style="font-size:13px">Default Platform</label>
+                                <select id="bulkDefaultPlatform" class="form-control">
+                                    <option value="fb">Facebook</option>
+                                    <option value="ig">Instagram</option>
+                                    <option value="tiktok">TikTok</option>
+                                    <option value="website">Website</option>
+                                    <option value="phone">Phone</option>
+                                    <option value="manual">Manual</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Bulk Step 3 — actions --}}
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
+                        <button type="button" id="parseCsvBtn" class="btn btn-warning" disabled>
+                            <span class="material-icons-round" style="font-size:18px">preview</span>Preview &amp; Validate
+                        </button>
+                        <button type="button" id="bulkImportBtn" class="btn btn-success" disabled>
+                            <span class="material-icons-round" style="font-size:18px">cloud_upload</span>Import Now
+                        </button>
+                        <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--mid);cursor:pointer">
+                            <input type="checkbox" id="allowNonCurfox" style="width:16px;height:16px;accent-color:var(--warning)">
+                            Allow non-Curfox cities
+                        </label>
+                    </div>
+
+                    {{-- Validation summary --}}
+                    <div id="valSummaryWrap" style="display:none;margin-bottom:12px">
+                        <div class="val-summary" id="valBadges"></div>
+                        <div id="valErrList" style="display:none;margin-top:8px;padding:12px;background:#fff5f5;border:1px solid #fecaca;border-radius:8px;max-height:180px;overflow-y:auto;font-size:12px"></div>
+                        <p class="val-note" id="valNote" style="margin-top:6px"></p>
+                    </div>
+
+                    {{-- Preview table --}}
+                    <div id="csvPreviewWrap" style="display:none">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+                            <div class="helper-text" style="margin:0">Preview (first 20 rows) — <b><span id="csvRowCount">0</span> rows</b> total</div>
+                            <div id="bpPreviewBadge" style="display:none;padding:4px 12px;background:#d1fae5;color:#065f46;border-radius:999px;font-size:12px;font-weight:700"></div>
+                        </div>
+                        <div style="overflow:auto;border:1px solid var(--border);border-radius:12px">
+                            <table class="preview-table">
+                                <thead>
+                                <tr>
+                                    <th>#</th><th>Customer</th><th>Phone</th>
+                                    <th>City (Input)</th><th>Resolved City</th>
+                                    <th>State</th><th>Platform</th>
+                                </tr>
+                                </thead>
+                                <tbody id="csvPreviewBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>{{-- /bulk-section --}}
+
+            </div>{{-- /form-container --}}
         </form>
     </div>
 @endsection
@@ -511,523 +650,653 @@
 @push('script')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // ─── Sri Lanka Cities Data ───────────────────────────────────────────
-        const SRI_LANKA_CITIES = ["Aaliyavalai", "Achuveli", "Adampan", "Addalaichenai", "Adiambalama ( Negombo )", "Adikarigama", "Adippala", "Agalawatta", "Agaliya", "Agarapathana", "Agbopura", "Aggona", "Aguruwella", "Ahangama", "Ahatugaswewa Walioya", "Ahungalla", "Aiwela (bibila monaragala)", "Akaragama", "Akarawita", "Akarella", "Akkaraipattu", "Akkarasiyaya", "Akkaravan Kulam", "Akkarayan Kulam", "Akmeemana", "Akuramboda", "Akurana", "Akuranboda", "Akuressa", "Aladeniya", "Alahengama", "Alahitiyawa", "Alampil", "Alapaladeniya", "Alaveddi", "Alawala", "Alawatugoda", "Alawatura", "Alawatuwala", "Alawwa", "Algama", "Algama (Gampaha)", "Algama (Kegalle)", "Allappity", "Allawewa Kebithigollawa", "Allepola", "Alokapura", "Alpitiya ( Ratnapura )", "Alubomulla", "Aludeniya", "Aluketiyawa", "Alutgama", "Aluthgama ( Galle )", "Aluthgama ( Kalutara )", "Aluthwala", "Alutnuwara", "Aluttaramma", "Alutwewa", "Aluvihara", "Alwatta", "Amalagoda", "Ambadandegama", "Ambagahapelessa", "Ambagahawatta", "Ambagamuwa Udabulathgama", "Ambagasdowa", "Ambagaspitiya", "Ambagaswewa", "Ambakandawila", "Ambakote", "Ambalakanda", "Ambalangoda", "Ambalantota", "Ambalkulam", "Ambana", "Ambanpola", "Ambatalawa", "Ambatenna", "Ambepussa", "Ambewela", "Ambulugala", "Amitirigala", "Ampagala", "Ampalaperumal Kulam", "Ampan", "Ampara", "Ampegama", "Ampilanthurai", "Ampitiya", "Amugoda", "Amuna", "Amunumulla", "Anaikottai", "Anairavu", "Anaivilnthan", "Analaitivu", "Analathivu", "Anamaduwa", "Anangoda", "Ananthampannai", "Andana", "Andiambalama", "Andigama", "Andiyagala", "Angampitiya ( Padukka )", "Angamuwa", "Angoda", "Angulana", "Angulugaha", "Angunakolapelessa", "Angunakolawewa", "Angunawila", "Anguruwatota", "Anhandiya", "Anhettigama", "Ankokkawala", "Ankumbura", "Anukkane", "Anuradapura City", "Anuradhapura", "Aparekka", "Arachchikattuwa", "Aragoda", "Araipattai", "Aralaganwila", "Araly", "Aranayaka", "Arangala", "Aranthalawa", "Arapola", "Arasadiththivu", "Arasady", "Arawa", "Arawakumbura", "Arawatta", "Arejalai", "Arippu", "Arugam Bay", "Aruggammana", "Arukgoda", "Arumugaththankudiyiruppu", "Aruppola", "Aselapura", "Asikkulam", "Atabage", "Atakalanpanna", "Atakiriya", "Atale", "Ataragalla", "Ataragallewa", "Atchuveli", "Athimottai", "Athu Aela", "Athuraliya", "Athurugiriya", "Atigala", "Attakada", "Attanagalla", "Attanakadawala", "Attawilluwa", "Attidiya", "Atulugama", "Atulugama ( Karawanella )", "Ausadapitya Vavuniya", "Avarangal", "Avissawella", "Awkana", "Awlegama", "Awukana", "Awulegama", "Ayagama", "Ayithiyamalai", "Ayiththiyamalai", "Ayiwela", "Ayyathigewewa Kabithigollewa", "Badalgama", "Badalkumbura", "Baddegama", "Badulla", "Baduluoya", "Baduluwela", "Baduraliya", "Baduwatta", "Bakamuna", "Bakinigahawela", "Bakinikawela (Monaragala)", "Bakkiella", "Bakmeegama", "Bakmitiyawa", "Baladora", "Balaharuwa", "Balalla", "Balana", "Balangoda", "Balangoda City", "Balapitiya", "Balayawewa Padaviya", "Ballaketuwa", "Bambaragahaela", "Bambaragaswewa", "Bambarapana", "Bammanna", "Bamunugama", "Bamunukotuwa", "Banagala", "Bandagiriya Colony", "Bandara Koswatta", "Bandaragama", "Bandarawatta", "Bandarawela", "Bandawa", "Banduragoda", "Bangadeniya", "Bangama", "Bankiyawatta", "Barampola", "Baranankattuwa", "Barathipuram", "Barawakumbuka", "Barawardhana Oya", "Batagoda", "Batagolladeniya", "Batapola", "Batatota", "Batewela", "Bathalayaya", "Battaramulla", "Battaramulla Koswatta", "Batticaloa", "Battuluoya", "Batugampola", "Batugoda", "Batumulla", "Batuwatta", "Batuwita", "Bawlana", "Baykiella", "Bekkegama", "Beliatta", "Beligala(Sab)", "Beligamuwa", "Belihuloya", "Bellana", "Bellantara", "Belummahara", "Bemmulla", "Bengamuwa", "Benthota", "Bentota", "Beragala", "Beragama", "Beralapanathara", "Beraligala", "Beralihela", "Beramada", "Berannawa", "Beruwala", "Bibila", "Bibila-Oya", "Bibile", "Bibilegama", "Bingiriya", "Biyagama", "Biyagama Ipz", "Biyagama Town", "Bogahakumbura", "Bogahawewa", "Bogahawewa Padaviya", "Bogamulla", "Bogaswawa", "Bogawantalawa", "Bokalagama", "Bokundara", "Bolgoda Bandaragama", "Bollete (Wp)", "Bolossagama", "Bolthumbe", "Bombuwala", "Bomluwageaina", "Boossa", "Bopagama", "Bopagoda", "Bopana", "Bopattalawa", "Bope", "Bopeththa", "Bopitiya (Je-ela)", "Bopitiya (Kegalle)", "Bopitiya (Kurunegala)", "Boragas", "Boralanda", "Boralankada", "Boralankada ( Avissawella )", "Boralesgamuwa", "Boralugoda", "Boraluwewa", "Borapola", "Borupana Rathmalana", "Bossella", "Bowalagama", "Bowaththa", "Bowela", "Boyagane", "Braluwewa", "Buckmigama", "Buddama", "Bujjampola", "Bujjomuwa", "Bulathkohupitiya", "Bulathsinhala", "Bulnewa", "Bulugahapitiya", "Bulutota", "Buluwala", "Bundala", "Bungiriya", "Buthpitiya", "Buttala", "Central Camp", "Champianpattu", "Changanai", "Chavakachcheri", "Chavakacheri", "Cheddipalayam", "Chempianpattu", "Chenkaladi", "Chenkalady", "Chilavathurai", "Chilaw", "Chinabay", "Chulipuram.", "Chundikulam", "Chundukuli", "Chunnagam", "Chunnakam", "Colombo 01", "Colombo 02", "Colombo 03", "Colombo 04", "Colombo 05", "Colombo 06", "Colombo 07", "Colombo 08", "Colombo 09", "Colombo 10", "Colombo 11", "Colombo 12", "Colombo 13", "Colombo 14", "Colombo 15", "D-5 Unit", "D5", "D6", "D7", "Dadayamtalawa", "Dagampitiya", "Dagonna", "Daladagama", "Dalukana", "Damana", "Damanewela", "Dambadeniya", "Dambagalla", "Dambana", "Dambulla", "Dambulla City", "Dambuluwana", "Damminna", "Dampahala", "Dampe", "Dampella", "Damunupola", "Danawala Thiniyawala", "Dangolla", "Dankanda", "Dankotuwa", "Danowita", "Danthure", "Daraluwa", "Daugala", "Daulagala", "Dayagama Bazaar", "Debahera", "Debarawewa", "Debathgama", "Dedduwala", "Dedigamuwa", "Dediwala Waskaduwa (Kaluthara)", "Dedugala", "Dedunupitiya", "Deegala Junction", "Deegala Lenama", "Deegalla", "Deegawapiya", "Deekirikewa", "Deewala Pallegama", "Deheragoda", "Dehiattakandiya", "Dehigaspe", "Dehigasthalawa", "Dehiowita", "Dehiwala", "Dehiwatte", "Deiyandara", "Dekatana", "Dekinda", "Dekirikewa", "Del-Oluva Junction", "Dela", "Deldeniya", "Delf Island", "Delgoda", "Delkanda", "Dellawa", "Delmella", "Deloluwa", "Deltara", "Deltota", "Delwagura", "Delwala", "Delwita", "Delwite", "Demalagama", "Demanhandiya", "Demataluwa", "Dematawewa", "Demodara", "Demuwatha", "Denagama", "Denipitiya", "Deniyaya", "Derangala", "Deraniyagala", "Detagamuwa", "Detawa,Narammala", "Devagiriya", "Devalahinda", "Devanampiyatissapura", "Devinuwara", "Dewagala", "Dewahuwa", "Dewalapola", "Dewalegama", "Dewanagala", "Dharga Town", "Diddeniya", "Digamadulla Weeragoda", "Digana", "Diganatenna", "Digannewa", "Digbedda", "Dikkapitiya", "Dikkovita", "Dikkumbura", "Dikoya", "Dikwella", "Dimbulagala", "Dimbulana", "Divulankadawala", "Divulapelessa", "Divulapitiya", "Divuldamana", "Divuldeniya", "Divullegoda", "Diwalakada", "Diyabeduma", "Diyadawa", "Diyagaha", "Diyagama ( Horana )", "Diyagama (Homagama)", "Diyakada", "Diyakobala", "Diyalape", "Diyasenpura", "Diyatalawa", "Dobagoda", "Dodampe", "Dodanduwa", "Dodangaslanda", "Dodangoda", "Dolapihilla", "Dolosbage", "Doloswalakanda", "Doluwa", "Dombagahawela", "Dombagoda", "Dombemada", "Dompe", "Doragala", "Doragamuwa", "Dorakumbura", "Doratiyawa", "Dorawaka", "Dulgolla", "Dullawa", "Dullewa", "Dumbara Manana", "Dummaladeniya", "Dummalasuriya", "Dunagaha", "Dunkannawa", "Dunkolawatta", "Dunukedeniya", "Dunumadalawa", "Dunumala", "Dunuwila", "Dunuwilapitiya", "Dutuwewa", "Echchantheevu", "Echchilampattai", "Edagala", "Egodawela", "Eheliyagoda", "Ehetuwewa", "Eirupalai", "Ekala", "Ekamutugama", "Ekiriya", "Ekiriyankumbura", "Elabadagama", "Elahera", "Elamalpotha", "Elamulla", "Elapatha", "Elayapattuwa", "Elephantpass", "Elgiriya", "Elibichchiya", "Elkaduwa", "Ella", "Ella Tanabaddegama", "Ellagala", "Ellagawa", "Ellakkala", "Ellaulla", "Ellawala", "Ellewewa", "Elpitiya", "Elupakadavi", "Eluwankulama", "Eluwila", "Elwala", "Embilipitiya", "Embilipitiya New Town", "Embogama", "Embuldeniya", "Embulgama (Panagoda)", "Enderamulla", "Eppawala", "Eranaimadu", "Eratna", "Eravur", "Erawula Junction", "Erepola", "Erukalampitty", "Erukkalampiddy", "Eruvil", "Essella", "Etanawala", "Etawatunuwewa", "Etaweeragollawa Medawachchiya", "Etaweeragollewa", "Ethimalewewa", "Ethkandura", "Ethnawala", "Ethul Kotte", "Ettale", "Ettampitiya", "Ettiliwewa", "Etulgama", "Etungahakotuwa", "Gabbela", "Galabedda", "Galaboda", "Galadivulwewa", "Galagama", "Galagedara (Kandy)", "Galagedara (Padukka)", "Galaha", "Galamuna", "Galapitagala", "Galapitamada", "Galatara", "Galauda", "Galedanda", "Galenbindunuwewa", "Galewela", "Galgamuwa", "Galgoda", "Galhemulla", "Galhinna", "Galigamuwa Town", "Galkadawala", "Galkiriyagama", "Galkulama", "Galle", "Gallella", "Gallellagama", "Gallewa", "Galmaththa", "Galmetiyawa", "Galmuruwa", "Galnewa", "Galoya", "Galoya Junction", "Galpatha (Kalutara)", "Galpatha(Kegalle)", "Galporuyaya", "Galtenwewa", "Galwela", "Gamagoda", "Gambirigaswewa", "Gamewela", "Gammaduwa", "Gampaha", "Gampola", "Gandara", "Ganegoda", "Ganemulla", "Ganethenna", "Ganewalpola", "Ganewatta", "Gangala Puwakpitiya", "Gangeyaya", "Gangodawila", "Gangulandeniya", "Ganthuna", "Gantuna", "Garaagoda ( Avissawella )", "Gatahetta", "Gatulawa", "Gawaragiriya", "Gawarawela", "Gelioya", "Gemunupura", "Getahetta", "Getalawa", "Getamanna", "Gillimale", "Ginigathena", "Ginimellagaha", "Gintota", "Girandurukotte", "Giratalana", "Girathalana", "Giribawa", "Giritale", "Giriulla", "Gnanikulama", "Goda Koggalla", "Godagama (Kottawa)", "Godagama (Matara)", "Godagampola", "Godahena", "Godakawela", "Godamunna", "Godapiti tenna", "Godapitiya", "Godawela", "Godigamuwa", "Godigamuwa [Ratnapura]", "Godunna", "Gokaralla", "Gokeralla", "Gomaduwa", "Gomagoda", "Gomarankadawala", "Gomilamawarala", "Gonagala", "Gonagaldeniya", "Gonagalpura", "Gonagamuwa Uduwila", "Gonagantenna", "Gonagolla", "Gonahaddenawa", "Gonakele", "Gonamulla Junction", "Gonapathirawa", "Gonapinuwala", "Gonapola Junction", "Gonawala", "Gonawalapatana", "Gonawila", "Gonawila ( Makandura )", "Gongodawila", "Gonnoruwa", "Gonuhaddenawewa Kebithigollawa", "Gorakana", "Gorakawela", "Gothatuwa", "Govinna", "Grandpass", "Gunnepana", "Gurubavilagama", "Gurubewilagama", "Gurudeniya", "Gurulubadda", "Gurutalawa", "Habaraduwa", "Habarakada", "Habarana", "Haburugala", "Hadapangoda", "Hadungamuwa", "Haggala", "Hakahinna", "Hakbellawaka", "Hakmana", "Hakuruwela", "Haldummulla", "Halgranoya", "Hali Ela", "Halkandawila", "Halloluwa", "Halmillawetiya", "Halmillawetiya Kebithigollewa", "Halmillawewa", "Halpe Balangoda", "Halpe Mirgama", "Halpita ( Kesbewa )", "Haltota", "Halvinna", "Halvitigala Colony", "Halwala", "Halwatura", "Halwinna", "Hambantota", "Hambantota Town", "Hambegamuwa", "Hamillakotuwa", "Handaganawa", "Handagiriya", "Handapangoda", "Handawalapitiya", "Handessa", "Handugala", "Handungamuwa", "Hangarapitiya", "Hangunnawa", "Hanguranketha", "Hansayapalama", "Hanwella", "Hapugastalawa", "Hapugastenna", "Haputale", "Harangalagama", "Harankahawa", "Harasbedda", "Harasgala", "Harispattuwa", "Hasalaka", "Hatangala", "Hatarabage", "Hataraliyadda", "Hatares Kotuwa", "Hatton", "Hattota Amuna", "Haupe", "Hawpe", "Hebarawa", "Hedigalla Colony", "Hedunuwewa", "Heelogama", "Heeloya", "Heiyanthuduwa", "Hekitta", "Hela Halpe Bandarawela", "Helahalpe", "Helamada", "Helapupula", "Hemmatagama", "Henagamuwa", "Henamulla", "Henegama", "Hengamuwa", "Herathhalmillawa Kebithigollawa", "Hettimulla", "Hettipola (Kurunegala)", "Hettipola (Matale)", "Hettiyawala", "Hewadiwela", "Hewaheta", "Hewainna", "Hewana,Welipennagahamula", "Hewanakumbura", "Hidellana", "Hidogama", "Hikkaduwa", "Hilogama", "Himbutana", "Hinatiyana Madawala", "Hindagala", "Hindagolla", "Hingula", "Hingula ganethenna", "Hingurakdamana", "Hingurakgoda", "Hinguralakanda", "Hingurana", "Hingurukaduwa", "Hiniduma", "Hiramadagama", "Hirana", "Hiripitiya (Homagama )", "Hiripitiya (Kottawa)", "Hiriwadunna", "Hiriyala", "Hiriyala Lenawa", "Hiruwalpola", "Hiswella", "Hitigegama", "Hiyare", "Hlmillawewa", "Hodiyadeniya", "Hokandara", "Homagama", "Hondiyadeniya", "Hopton", "Horambawa", "Horampella", "Horana", "Horapawita", "Horathapola", "Horawpatana", "Horethuduwa", "Horewelagoda", "Horiwila", "Horombawa", "Hulandawa", "Hulandola", "Hulannuge", "Hulogedara", "Hulugalla", "Humbuluwa", "Hungama", "Hunnasgiriya", "Hunumulla", "Hunupitiya", "Hunupola", "Hunuwala", "Hurigaswewa", "Hurulunikawewa", "Ibbagamuwa", "Idalgashinna", "Ihala Beligalla", "Ihala Bomiriya", "Ihala Bope", "Ihala Gomugomuwa", "Ihala Halmillewa", "Ihala Kadigamuwa", "Ihala Katugampala", "Ihala Kobbekaduwa", "Ihala Kottaramulla", "Ihala Madampella", "Ihala Puliyankulama", "Ihala Walpola", "Ihalagama", "Ihalahewessa", "Ikkapallama", "Ilippadeniya", "Ilippugamuwa", "Ilukhena", "Iluppakadawai", "Imaduwa", "Imbulana", "Imbulgasdeniya", "Imbulgoda", "Imbulgolla", "Imbulpe", "Inamaluwa", "Indulgodakanda", "Induruwa", "Inginimitiya", "Inginiyagala", "Ingiriya", "Inguruwatta", "Inuvil", "Ipalogama", "Ipologama", "Iranaimadu", "Iranavila", "Iriyagolla", "Irukalmpity", "Isinbassagala Medawachchiya", "Ismailpuram", "Ithanawatta", "Iththademaliya", "Ittakanda", "Ittapana", "Iyakachchi", "Iyyakachchi", "Ja-Ela", "Jaffna", "Jaffna Town", "Jalthara ( Hanwella )", "Jambugahapitiya", "Janakapura Welioya Mullaitivu", "Jangulla", "Jayanthipura", "Jayanthiyawewa Sripura Padaviya", "Jayasiripura", "Je - Ela ( Gampaha District )", "Jenthinagar", "Jepuram", "Jeyanthinagar North", "Jeyanthinagar South", "Julampitiya", "Julpallama", "Kabagamuwa", "Kachcheriyady", "Kadahapola", "Kadaiadampan", "Kadawatha", "Kaddaiparichchan", "Kaddaykadu", "Kaddukkulam", "Kadigamuwa", "Kadigawa", "Kadugannawa", "Kaduruwela", "Kaduwela", "Kagama", "Kahaduwa", "Kahanavita Junction", "Kahandamodara", "Kahangama", "Kahapathwala", "Kahapola", "Kahatagasdigiliya", "Kahatagastenna ( Kandy )", "Kahatagastenna ( Kegalle )", "Kahatagollewa", "Kahataliyadda", "Kahataruppa", "Kahathuduwa", "Kahatowita", "Kahawa", "Kahawala", "Kahawatta", "Kahtagollewa Kebitgollewa", "Kaikawala", "Kaithadi", "Kaithady", "Kajugaswatta", "Kakkapalliya", "Kakunugoolla", "Kalabulanda", "Kalaganwatta", "Kalagedihena", "Kalakarambewa", "Kalani Mulla", "Kalankuttiya", "Kalaoya", "Kalapaluwawa Rajagiriya", "Kalatuwawa", "Kalawana", "Kalawedi Ulpotha", "Kalawila Kiranthidiya", "Kaldemulla ( Rathmalana )", "Kaleliya", "Kalingaela", "Kalkudah", "Kalladiya", "Kallanchiya", "Kallar", "Kalliady", "Kalmunai", "Kalpe Morakwa Horowpothana", "Kalpitiya", "Kalthota", "Kaltota", "Kaluaggala", "Kalubowila", "Kalubowitiyana", "Kalubululanda", "Kaludawela", "Kaludewala", "Kalugahakandura", "Kalugala", "Kalugamuwa", "Kalukele Badanagala", "Kalundawa", "Kalupahana", "Kalutara", "Kalutara South", "Kaluthavalai", "Kaluwanchikudi", "Kaluwankemy", "Kalveyankadu", "Kalvilankulam", "Kalyanipura Welioya", "Kamburugamuwa", "Kamburugoda", "Kamburupitiya", "Kanadeniyawala", "Kanagampigaikulam", "Kanagampikaikulam", "Kanagapuram", "Kanakarajankulam", "Kananke", "Kananke Bazaar", "Kananwila", "Kanattewewa", "Kanchipuram", "Kandaketiya", "Kandakuliya", "Kandalama", "Kandana", "Kandanagama", "Kandapola", "Kandaudapanguwa", "Kandavalai", "Kandawinna", "Kande Nuwara", "Kandegedara", "Kandepuhulpola", "Kanduruwana", "Kandy", "Kaneshapuram", "Kankeshanthurai", "Kannakipuram", "Kannan Kovilady", "Kannankudah", "Kannankudha", "Kannattota", "Kanniya", "Kantalai", "Kantalai Sugar Factory", "Kanthale", "Kantharmadam", "Kapugallawa", "Kapugama", "Kapugoda", "Kapugollawa Horowpothana", "Kapuliyadde", "Karadippokku", "Karadiyanaru", "Karagahagedara", "Karagahagedara,Narammala", "Karagahawewa", "Karagahinna", "Karagampitiya", "Karagoda", "Karagoda Uyangoda", "Karainagar", "Karaiyakkanthivu", "Karambe", "Karandagolla", "Karandana", "Karandeniya", "Karangoda", "Karapitiya", "Karaputugala", "Karativponparappi", "Karativu", "Karatota", "Karaveddi", "Karawanella", "Karawitagara", "Karipaddamurippu", "Karisal", "Kariyamaditta", "Karuwalagaswewa", "Kashyapapura", "Katana", "Kataragama", "Kathiraveli", "Katiyawa", "Katpakapuram", "Kattaikadu", "Kattankudi", "Kattankudy", "Kattapitiya", "Katudeniya", "Katugastota", "Katukitula", "Katukurunda (Kalutara)", "Katukurunda (Panadura)", "Katukurunda (Ratmalana)", "Katunayake", "Katunayake Air Force Camp", "Katunayake(Ftz)", "Katuneriya", "Katupota", "Katuwana", "Katuwellegama", "Kavudupelella", "Kawantissapura", "Kawatayamuna", "Kawdumunna", "Kawudulla", "Kawuduluwewa Stagell", "Kayankeny", "Kayts", "Kebillawela", "Kebithigollewa", "Keerthi Bandarapura", "Kegalle", "Kehelpannala", "Kehelwatta", "Kekanadurra", "Kekirawa", "Kekirihena", "Kekunagolla", "Kelanigama", "Kelaniya", "Kelaniyamulla", "Kelinkanda", "Kella Junction", "Kendagolla", "Kendewa", "Kengalla", "Keppetipola", "Keppitiwalana", "Keramakkodu", "Kerawalapitiya", "Kesbewa", "Keselpotha", "Keselwatta", "Ketaboola", "Ketakumbura", "Ketanvila", "Ketawala Leula", "Ketawatta", "Kibissa", "Kilinochchi Town", "Kiliveddy", "Killuvilankulam", "Kimbulapitiya", "Kimbulwanaoya", "Kindelpitiya", "Kinniya", "Kiralogama", "Kirama", "Kiramiya Vistharipputhiddam", "Kiran", "Kirankulam", "Kiribathgoda", "Kiribathkumbura", "Kiribbanwewa Welioya", "Kiriberiya", "Kiriella", "Kirigalwewa", "Kirigalwewa Medawachchiya", "Kiriibbanwewa", "Kirillawala", "Kirimetiyawa", "Kirimtithanna", "Kirimundalama", "Kirinda", "Kirindawa", "Kirindigalla", "Kirindiwela", "Kirioruwa (Dambulla)", "Kirishnapuram", "Kiriwaldola", "Kiriwanagama", "Kiriwattuduwa", "Kiriweldola", "Kiriwelkele", "Kitalawalana", "Kithalawa", "Kiththul", "Kitulgala", "Kitulgoda", "Kitulhitiyawa", "Kitulwala", "Kiulekada Kebithgollewa", "Kiwula", "Kiyaduwa", "Kks", "Knnnankudha", "Kobbawahara", "Kobeigane", "Kobonila", "Kochchikade", "Kochchikade ( Gampaha District )", "Koddadi", "Koddaikallar", "Kodikamam", "Kodikaragoda", "Kogala", "Kohilagedara", "Kohilawatta ( Angoda )", "Koholana", "Koholanwela", "Kohuwala", "Kokkaddichcholai", "Kokkavil", "Kokkuvil", "Koklai", "Koknahara", "Kolabissa", "Kolamanthalawa", "Kolambageara", "Kolawenigama", "Kolombugama", "Kolongoda", "Kolonna", "Kolonnawa", "Kolumputhurai", "Komari", "Kommathurai", "Kondavil", "Kondeniya", "Kongahawela", "Konwewa", "Kooddakaddikulam", "Koongahawela", "Kopai", "Kopay", "Korakkalliyamadu", "Korakkankadhu", "Koralaima", "Koralawella", "Koramoddai", "Korathota", "Kosdeniya", "Kosgama", "Kosgoda", "Kosgolla", "Koslanda", "Kosnara", "Koswatta Malabe", "Koswatta North ( Wennappuwa )", "Kotadeniyawa", "Kotagala", "Kotagama", "Kotahena", "Kotamuduna", "Kotapola", "Kotawehera", "Kotawehera Mankada", "Kotaweheramankada", "Kothalawala", "Kotikawatta", "Kotiyagala", "Kotiyakumbura", "Kotmale", "Kottantivu", "Kottapitiya", "Kottawa", "Kottawagama", "Kotte", "Kottegoda", "Kottellena", "Kottukachchiya", "Kottuwe Gedara", "Kotugoda", "Kovavil", "Kovilkulam", "Ku Bopitiya", "Kuchchaveli", "Kuda Katnoruwa", "Kuda Uduwa", "Kudagalgamuwa", "Kudakatnoruwa", "Kudaoya ( Buttala )", "Kudaoya ( Tanamalvila )", "Kudawa", "Kudawella", "Kudawewa", "Kudimaththi", "Kula", "Kuleegoda", "Kuliyapitiya", "Kulugammana", "Kumaragama", "Kumarakattuwa", "Kumarapuram", "Kumbalgamuwa", "Kumbaloluwa", "Kumbiyangoda", "Kumbukgeta", "Kumbukkana", "Kumbukkandura", "Kumbukwela", "Kumbukwewa", "Kumburegama", "Kumburupiddy", "Kundasale", "Kunsupparanthan", "Kuratihena", "Kurinchakemy", "Kurinchamunai", "Kurinjanpitiya", "Kuruketiyawa", "Kurukkalmadam", "Kurulugama Kabathigollawa", "Kurumankadu", "Kurumanvely", "Kurunagar", "Kurundankulama", "Kurunegala", "Kurupanawela", "Kuruwita", "Kuruwitenna", "Kuttiyagolla", "Labbala", "Labukele", "Labunoruwa", "Laggala", "Laggala Pallegama", "Lahugala", "Lakshauyana", "Laliamba", "Landewela", "Lankagama", "Lankapatuna", "Lathpandura", "Latpadura", "Lauambay", "Laxapana", "Lbbagamuwa", "Leemagahakotuwa", "Left Bank", "Leliambe", "Lellopitiya", "Lenadora", "Lengala", "Lewangama", "Leyland handiya", "Lihiriyagama", "Lindula", "Liyanekkanda", "Liyangahawela", "Lllagolla", "Lllukkumbura", "Llluppaikadavai", "Llukhena", "Lmbulpe", "Lmkkamam", "Loluwagoda", "Lonahettiya", "Lukhena", "Lunama", "Lunu Watulewa Kebithigollewa", "Lunugala", "Lunugama", "Lunugamwehera", "Lunuketiya Maditta", "Lunuwatta", "Lunuwila", "Ma Oya Kalugaga", "Mabima", "Mabodale", "Mabola", "Madabadda", "Madagalla", "Madahapola", "Madakumburumulla", "Madalagama", "Madampe (Ratnapura)", "Madampe(Puttalam)", "Madapatha", "Madatugama", "Madawala Bazaar", "Madawala Ulpotha", "Madawalalanda", "Madelgamuwa", "Madhu Church", "Madipila", "Madipola", "Madiwela", "Madovita", "Madugalla", "Madulkele", "Madulla", "Madulsima", "Madupitiya", "Maduragoda", "Madurankuliya", "Maduruoya", "Maeliya", "Magalirthiddam", "Magama", "Magammana", "Magedara", "Maggona", "Magulagama", "Maha Ambagaswewa", "Maha Elagamuwa", "Mahabage", "Mahabulankulama", "Mahadivulwewa", "Mahadoraliyadda", "Mahagalkadawala", "Mahagalwewa", "Mahagama", "Mahagama Colony", "Mahagirilla", "Mahailluppallama", "Mahailuppallama", "Mahakachchakodiya Vavuniya", "Mahakalupahana", "Mahakanadarawa", "Mahakanda", "Mahakumbukkadawala", "Mahamedagama", "Mahamukalanyaya", "Mahamulgama", "Mahanagapura", "Mahananneriya Palugolla", "Mahananneriya Town ( Maho )", "Mahanetiyawa Kebithigollewa", "Mahaoya", "Mahapallegama", "Mahapothana", "Mahara (kadawatha)", "Maharachchimulla", "Maharagama", "Maharambaikulam", "Maharangalla", "Maharugiramam", "Mahasenpura (Anuradhapura)", "Mahasenpura (Hambantota)", "Mahatalakolawewa", "Mahauswewa", "Mahawa", "Mahawalatenna", "Mahawela", "Mahawela Sinhapura", "Mahawelathanna", "Mahawewa", "Mahawilachchiya", "Mahilavedduvan", "Mahiyanganaya", "Maho", "Mailagaswewa", "Mailapitiya", "Makadura (Kurunegala)", "Makandura (Kurunegala)", "Makandura (Matara)", "Makandura (Ratnapura)", "Makehelwala", "Makewita", "Makiladiththivu", "Makiloor", "Makkanigama", "Makola", "Makuldeniya", "Makulella", "Makulewa", "Makulpotha", "Makulwewa", "Malabe", "Malagane", "Malalpola", "Malamulla", "Malayalapuram", "Maldeniya (Nuwara Eliya)", "Maldeniya (Polonnaruwa)", "Malgalla Talangalla", "Malgoda", "Maliboda", "Maliduwa", "Maliyadda", "Mallagam", "Mallavi", "Mallawapitiya", "Mallikativu", "Malliyakadu", "Malmaduwa", "Malpradahnalla", "Malwala Junction", "Malwana", "Malwanagama", "Malwatta", "Mamadala", "Mamailkulam", "Mamangam", "Mampitiya", "Mampuri", "Mananwatta", "Manatkadu", "Manchanthoduwai", "Mandapola", "Mandaram Nuwara", "Mandawala", "Mandur", "Maneruwa", "Mangadu", "Mangalaeliya", "Mangalagama ( Maha oya Ampara )", "Manipai", "Manipay", "Maniyanthoddam", "Mankerni", "Mankulam", "Mankumpan", "Manmunai", "Mannar", "Mannarr", "Manthikai", "Maoya", "Mapakadawewa", "Mapakanda", "Mapalagama", "Mapalagama Central", "Maraba", "Maradankadawala", "Maradankalla", "Maradankawadawala Horowpothana", "Maraka", "Maramba", "Marandagahamula", "Marapana", "Marappalam", "Marassana", "Marathamunai", "Marawa", "Marawila", "Mariarawa", "Marichchi Kaddi", "Marudankeny", "Maruthamunai", "Maruthanagar", "Maruthanarmadam", "Marymount Colony", "Maskeliya", "Maspanna", "Maspotha", "Maswela", "Matalapitiya", "Matale", "Matara", "Mathagal", "Matikubura", "Mattaka", "Mattegoda", "Mattihakka", "Matugama", "Maturata", "Matuwagalagama", "Maussagolla", "Mavadivempu", "Mawadichenai", "Mawanagama", "Mawanella", "Mawaramandiya", "Mawathagama", "Mawathgama ( Padukka )", "Mawatura", "Mawela", "Mayeliti", "Mayurapura", "Meda-Keembiya", "Medagalatur", "Medagama (Monaragala)", "Medagama Bibila (Badulla District)", "Medamahanuwara", "Medamulana", "Medawachchiya", "Medawala Harispattuwa", "Medawela Udukinda", "Medawelagama", "Meddekanda", "Medirigiriya", "Mediripitiya", "Medivawa", "Meegahakiula", "Meegahatenna", "Meegakaiula", "Meegalawa", "Meegalewa", "Meegama", "Meegaswewa", "Meegoda", "Meemure", "Meepe", "Meeravodai", "Meesalai", "Meetalawa", "Meetanwala", "Meethalawa", "Meetiyagoda", "Meewellawa", "Megoda Kalugamuwa", "Megodawewa", "Melipitiya", "Mellawagedara", "Melsiripura", "Menikdiwela", "Menikhinna", "Metigahatenna", "Metihakka", "Metikumbura", "Metiyagane", "Middeniya", "Midigama", "Miella", "Migahajandura", "Migastenna Sabara", "Mihintale", "Millaniya", "Millawana", "Millewa", "Mimure", "Minhettiya", "Minigamuwa", "Minipe", "Minipura Dumbara", "Minnana", "Minneriya", "Minumthalawa", "Minuwangete", "Minuwangoda", "Mipanawa", "Mipilimana", "Mirahawatta", "Mirigama", "Mirihana", "Mirihanagama", "Mirihanegama", "Mirijjawila", "Miris Waththa", "Mirissa", "Miriswatta ( Galle )", "Miriswatta ( Gampaha )", "Miriswatta ( Piliyandala )", "Miriyabedda", "Mirusuvil", "Mithirigala", "Mitipola", "Miwanapalana", "Miyanakandura", "Miyanawita", "Modarawana", "Molagoda", "Molkawa", "Molligoda (Kadugannawa)", "Mollipothana", "Monaragala", "Monnekulama", "Moonamaldeniya", "Moragahahena", "Moragahapallama", "Moragala", "Moragala Kirillapone", "Moragane", "Moragollagama", "Morahela", "Morahenagama (Nuwaraeliya)", "Morahenagama (Polonnaruwa)", "Morakewa", "Morakewa Horowpothana", "Morakkoddanchenai", "Moraliya", "Morapitiya", "Morathiha", "Moratumulla", "Moratuwa", "Moravinna", "Morawaka", "Morenthuduwa", "Moretuwegama", "Morontota", "Morontuduwa", "Mount Lavinia", "Mudalakkuliya", "Muddaragama", "Mudungoda", "Mugunuwatawana", "Muhudukatuwa", "Mukamalai", "Mukaththuvaram", "Mukirigala", "Mukkutoduwawa", "Mulankavil", "Mulatiyana Junction", "Mulendiyawala", "Mulgama", "Mulkirigala", "Mulkiriyawa", "Mullaitivu", "Mullativu", "Mulleriyawa", "Mulleriyawa New Town", "Mullijan", "Mullijavalai", "Mullipothana", "Mulpothanai", "Munaiththivu", "Munamaldeniya", "Mundalama", "Mundel", "Munwatta", "Murakottanchanai", "Murasumoddai", "Murippu", "Muriyakadawala", "Murukandy", "Murunkan", "Murutalawa", "Muruthagahamulla", "Muruthalawa", "Muruthenge", "Muslim Attaweerawe Kebithigollewa", "Muttibandivila", "Mutugala", "Mutur", "Muwandeniya", "Mylampavely", "Myliddy", "Nabadewa", "Naboda", "Nachchaduwa", "Naddankandal", "Naddnkandal", "Nadugala", "Nagahpola", "Nagarkovil", "Nagoda (Galle)", "Nagoda (Gampaha)", "Nagoda (Kalutara)", "Nagollagama", "Nagollagoda", "Naimana", "Nainamadama", "Nainathivu", "Nakiyadeniya", "Nakkala", "Nakkawatta", "Nakulugamuwa", "Nalanda", "Nalladarankattuwa", "Nallathanniya", "Nallur", "Nalluruwa", "Namaloya", "Namalpura", "Nambakada Prangiyawadiya Horowpothana", "Namunukula", "Nanattan", "Nannapurawa", "Nanuoya", "Napawela", "Narahenpita", "Narammala", "Narangala ( Badulla )", "Narangala ( Kuliyapitiya )", "Narangoda", "Naranpanawa", "Naranpitiya", "Naranwala", "Narawelpita", "Naththandiya", "Nattandiya", "Nattarampotha", "Naula", "Navagirinagar", "Navaladi", "Navalady", "Navanthurai", "Navatkadu", "Navatkoddiyan", "Navithanveli", "Nawadagala", "Nawagampura", "Nawagamuwa ( Kaduwela )", "Nawagattegama", "Nawagiriyawa", "Nawala", "Nawalakanda", "Nawalapitiya", "Nawamedagama", "Nawana", "Nawasenapura", "Nawasigawatha", "Nawatalwatta", "Nawathispane", "Nawattuduwa", "Nawimana", "Nawinnapinnakanda", "Nayapana Janapadaya", "Nayaru", "Neboda", "Nedigamvila", "Nedungamuwa", "Nedunkeny", "Neduntheevu", "Neelapola", "Neervely", "Negampaha", "Negombo", "Nelliady", "Nelligahamulla (Dunagaha)", "Nelliya", "Nelliyadda", "Nelliyadi", "Nelsonpura", "Nelukkulam", "Nelumdeniya", "Nelumgama", "Nelumwewa", "Nelundeniya", "Neluwa ( Morawaka )", "Netolpitiya", "Nihiluwa", "Nika Wewa Dakuna Welioya", "Nikadalupotha", "Nikahetikanda", "Nikapotha", "Nikaweratiya", "Nikawewa Horowpothana", "Nilaveli", "Nildandahinna", "Nilgala", "Nillambe", "Nilpanagoda", "Nindana", "Nintavur", "Niralagama", "Nissanka Uyana", "Nithiyapuri", "Nittambuwa", "Nivil", "Nivithigala", "Niwandama", "Niwdawa", "Niyadurupola", "Nochchimunai", "Nochchiyagama", "Noori", "Norachcholai", "North Matale", "Norton", "Norwood", "Nugagolla", "Nugaliyadda", "Nugatalawa", "Nugawela", "Nugegoda", "Nugelanda", "Nunavil", "Nupe", "Nuwara Eliya", "Nuwaragala", "Nuwaragalathenna", "Nuwaragam Palatha", "Obbegoda", "Oddamavadi", "Oddisuddan", "Ohiya", "Okewela", "Okkampitiya", "Olimadu", "Olivil", "Oluvil", "Omalpe", "Omanthai", "Omanthi", "Onegama", "Onthachchimadam", "Opalgala", "Opanayaka", "Opatha (Galle)", "Opatha Katugoda", "Orrs Hill", "Orubendi Siyambalawa", "Orugodawatta", "Ovilikanda", "Owitigala", "Paandiruppu", "Pachchipalai", "Padagoda", "Padalangala", "Padavi Maithripura", "Padavi Parakramapura ( Anuradhapura )", "Padavi Parakramapura ( Vavuniya )", "Padavi Sri Tissapura ( Trincomalee )", "Padavi Sri Tissapura ( Vavuniya )", "Padavi Sripura ( Trincomalee Branch )", "Padavi Sripura ( Vavuniya )", "Padavi Sritissapura", "Padaviya", "Padaviya Sri Thissapura", "Padawgama", "Paddippalai", "Paddiruppu", "Padeniya", "Padikaramaduwa", "Padiwela", "Padiyapelella", "Padiyatalawa", "Padiyattalawa", "Padukka", "Pahala Andarawewa", "Pahala Bomiriya", "Pahala Bope", "Pahala Halmillewa", "Pahala Kadugannawa", "Pahala Maragahawe", "Pahala Millawa", "Pahalagama (Anuradhapura)", "Pahalagama (Badulla)", "Pahalagiribawa", "Pahalahewessa", "Pahalalanda", "Pahalarathkinda", "Pahamune", "Paiyagala", "Palagala", "Palai ( Jaffna )", "Palai ( Kilinochchi )", "Palaiyoothu", "Palali", "Palameenmadu", "Palampiddy", "Palamunai (Ampara)", "Palamunai (Batticoloa)", "Palapathwela", "Palathuruwella", "Palatuwa", "Palaviya", "Paleegala", "Pallama", "Pallaththara", "Pallebedda", "Pallebowala", "Pallegama", "Pallegama Matara", "Pallekale", "Pallekanda", "Pallekiruwa", "Pallekotuwa", "Pallemadawara", "Pallepola", "Pallewela", "Pallimulla", "Palliwasalturai", "Palugamam", "Palugasdamana", "Palugaswewa (Habarana)", "Palukadawala", "Pambagolla", "Pambaimadu", "Pambegama", "Pamburana", "Pamunugama", "Pamunuwatta", "Panadaragama", "Panadura", "Panagamuwa", "Panagoda ( Homagama )", "Panagoda ( Horana )", "Panaliya", "Panama", "Panamura", "Panangala", "Panapitiya", "Panapola", "Panawala", "Panawita,Narammala", "Panchikawatta", "Pandarikulam", "Pandariyavely", "Pandatharippu", "Pandiankulam", "Pandukabayapura", "Pandulagama", "Panduwasnuwara", "Pangura", "Panichankerny", "Panideniya", "Panirendawa", "Pankudaveli", "Pankulam", "Panliyadda", "Pannala", "Pannalagama", "Pannampitiya", "Pannankandy", "Pannegamuwa", "Pannila", "Pannimulla Panagoda", "Pannipitiya", "Panrimoddai", "Pansiyagama", "Panvila", "Panwewa", "Panwilatenna", "Paradeka", "Paraduwa", "Paragahakele", "Paragala", "Paragastota", "Paragoda", "Paraigama", "Parakaduwa", "Parakrama samudraya", "Parakumpura", "Parana Thanayamgoda", "Parangiyawadiya", "Paranthan", "Paranthan Town", "Paranthankuda Kumarikuda", "Parapamulla", "Parape", "Parasangahawewa", "Paraththa", "Paravippanchan", "Parussella", "Pasbage", "Pasgoda", "Pashayoor", "Passara", "Pasyala", "Patana", "Pathakada", "Pathana", "Pathanewatta", "Pattampitiya", "Pattitalawa", "Pattiya Watta", "Pattiyagedara", "Pattiyawatta", "Payagala", "Pebotuwa", "Peelawattha(Negombo)", "Pelagahatenna", "Pelanda", "Pelatiyawa", "Pelawatta ( Battaramulla )", "Pelawatta ( Matugama )", "Peliyagoda", "Pellawatta (Minuwangoda) Negombo", "Pelmadulla", "Pemaduwa", "Penetiyana", "Pepiliyawala", "Peradeniya", "Perakanatta", "Perakumpura", "Peralanda", "Perawella", "Perimiyankulama", "Periyakadneluwa", "Periyakunchikulam", "Periyamadhu", "Periyamadu", "Periyaneelavanai", "Periyaporativu", "Periyapullumalai", "Periyathivu", "Pesalai", "Pethiyagoda Gampaha", "Pethiyagoda Kelaniya", "Pettalai", "Pettigala", "Pihimbiya Ratmale", "Pihimbiyagolewa", "Pihimbiyagollawa Madawachchiya", "Pihimbuwa", "Pilawala", "Pilessa", "Pilimathalawa", "Piliyandala", "Pillaimadam", "Pillaiyaradi", "Pimbura", "Pimburattewa", "Pinnaduwa", "Pinnawala", "Pinnawala ( Rambukkana )", "Pinwatta", "Pita Kotte", "Pitabeddara", "Pitagaldeniya", "Pitakumbura", "Pitamaruwa", "Pitapola", "Pitawala (Nuwaraeliya)", "Pitawala (Polonnaruwa)", "Pitigala", "Pitipana Homagama", "Pitipana Negombo", "Piyangala", "Poddala", "Pohaddaramulla", "Poholiyadda", "Point Pedro", "Pokunuwita", "Polgahawela", "Polgampola", "Polgasowita", "Polgolla", "Polhengoda", "Polikandi", "Pollebedda", "Polommaruwa (Matara)", "Polonnaruwa", "Polpithigama", "Polpithimukulana", "Polpitigama", "Polwaga Janapadaya", "Poonagala", "Poonagary", "Poonakary", "Poraba", "Porathivu", "Porathota", "Porawagama", "Porikkadavai", "Poruwadanda", "Poruwedanda", "Pothdeniya", "Poththapitiya", "Pothuhera", "Pothukoladeniya", "Pothupitiya ( Ratnapura )", "Pothupitiya ( Wadduwa )", "Pothuwatawana", "Pothuwila", "Pottuvil", "Priya Kallar", "Pubbiliya", "Pubbogama", "Pudukudiruppu (Mannar)", "Pugoda", "Puhulpola", "Puhulwella", "Pujapitiya", "Pulastigama", "Puliyankulam", "Puliyanthivu", "Pulmoddai", "Pulmuda Road Mahasenapura Padaviya", "Puloly", "Pulukunawa", "Pulungasmulla", "Punanai", "Punarin", "Punawa", "Pundaluoya", "Punewa", "Pungavanam Junction", "Punkudutheevu", "Punkudutivu", "Punnalaikadduvan", "Pupuressa", "Purijala", "Pussalamankada", "Pussellawa", "Puswelitenna", "Puthukkudigiruppu", "Puthukkudigiruppu Valaichchenai", "Puthukudiruppu", "Puthukudiyiruppu", "Puthur", "Puttalam", "Puttalam Cement Factory", "Puttur", "Putuhapuwa", "Puvasankulam", "Puwakpitiya", "Radavana", "Radawadunna", "Radawana", "Radawela", "Raddolugama", "Raddolugama ( Gampaha District )", "Radella", "Ragala (nuwara eliya)", "Ragama", "Raigama", "Rajagalatenna", "Rajagalathenna", "Rajagiriya", "Rajakadaluwa", "Rajanganaya", "Rajanganaya 5 Mail Post", "Rajawaka", "Rajawella", "Rakwana", "Ralapanawa Horowpothana", "Ramanathankamam", "Rambe", "Rambewa", "Ramboda", "Rambuka", "Rambukkana", "Rambukkana Bandaragama", "Rambukpitiya", "Rambukwella", "Rammalawarapitiya", "Ranakeliya", "Ranala", "Ranamuregama", "Ranawarunawa", "Randenigala", "Randeniya", "Rangala", "Ranminitenna", "Ranmuduwewa", "Ranna", "Ranorawa", "Ranpathwila", "Ransegoda", "Rantembe", "Rantotuvila", "Rantotuwila", "Ranwala", "Rasayanapuram", "Rassagala", "Ratgama", "Rathmal gahawewa", "Rathmalawinna", "Rathmalgahawewa", "Raththinapuram", "Raththnapuram", "Rathukohodigala", "Ratkarawwa", "Ratmalana", "Ratmale (Matara)", "Ratmale (Vavuniya)", "Ratmalwala", "Ratna Hangamuwa", "Ratnampannai", "Ratnapura", "Ratnapuram ( kilinochchi )", "Rattota", "Rawathawatta", "Remunagoda", "Rideemaliyadda", "Ridibendiella", "Ridigama", "Ridimaliyadda", "Ridiyagama (Kurunegala)", "Rikillagaskada", "Rilpola", "Rotawewa Horowpothana", "Rottawewa", "Rotumba", "Rozella", "Ru/Ridiyagama", "Ruggahawila", "Rukmale", "Rukmalgama", "Rupaha", "Ruwalwela", "Ruwaneliya", "Ruwanwella", "Sadalankawa", "Sadathenna", "Sainthamaruthu", "Saithamarthu", "Sakthipuram (Ellukkadu)", "Salambailulam", "Saliya Asokapura", "Saliyapura", "Saliyawewa Junction", "Samanalawewa", "Samanturai", "Sammanthurai", "Sampaltivu", "Sampathnuwara Walioya", "Sampur", "Samudragama", "Sandalankawa", "Sandilipai", "Sangarajapura", "Sangilikandarawa Madawachchiya", "Santhapuram", "Santhipura", "Santhively", "Sapugaskanda", "Scheme I", "Scheme Ii", "Seaforth Colony", "Seeduwa", "Seepock (Avissawella)", "Seeppukulama", "Selagama", "Sella Kataragama", "Selvanagar", "Senapura", "Senarathwela", "Serankada", "Serugan", "Serukele", "Serunuwara", "Serupita", "Seruwila", "Sethukkudha", "Settekkulam", "Sevanapitiya", "Sevis Road", "Sewanagala", "Sialavathurai", "Siddamulla", "Sigiriya", "Silavathurai", "Sillalai", "Silmiyapura", "Silvapuram", "Singala Anganochchjaya Medawachchiya", "Singhagama", "Sinhagama", "Sirajnagar", "Sirambiadiya", "Siribopura", "Sirigala", "Sirimalgoda", "Siripura", "Sirisetagama", "Sirisethagama", "Sirrupity", "Sithamparapuram", "Siththandi", "Siththankeny", "Situlpawwa", "Sivapuram (Kilinochchi)", "Sivapuram (Vavuniya)", "Siwalakulama", "Siyabalagaskotuwa", "Siyabalagoda", "Siyambalagamuwa (Anurdhapura)", "Siyambalagashene", "Siyambalagoda", "Siyambalagune", "Siyambalanduwa", "Siyambalangamuwa", "Siyambalape", "Siyambalawewa", "Siyambalewa", "Skanthapuram", "Slave Island", "Solepura", "Solewewa", "Somapura", "Sooriyawewa Town", "Sorabora Colony", "Soragune", "Soranathota", "Soranathota", "Spring Valley", "Sravasthipura", "Sri Jayawardenepura", "Sri Palabaddala", "Sudagala", "Sultanagoda", "Sunandapura", "Sungavila", "Suriara", "Suriyakanda", "Tabbowa", "Talagampola", "Talagoda Junction", "Talahena", "Talaimannar", "Talakiriyawa", "Talakolahinna", "Talawa", "Talawakele", "Talawattegedara", "Talawatugoda", "Talawila Church", "Taldena", "Talduwa", "Talgaspe", "Talgaspitiya", "Talgaswela", "Talpe", "Talpotha", "Tamankaduwa", "Tambala", "Tambutta", "Tammennawa", "Tampalakamam", "Tangalla", "Tangalle", "Tanjantenna", "Tantirimale", "Tawalantenna", "Teldeniya", "Telhiriyawa", "Teligama", "Telwatta", "Tempitiya", "Tennekumbura", "Tennepanguwa", "Teppanawa", "Teripeha", "Thabbowa", "Thadduvankoddy", "Thaiyeddy", "Thalahena ( Malabe )", "Thalahena ( Negombo )", "Thalahitimulla", "Thalaiady", "Thalaimanna", "Thalaimannar", "Thalakiriyagama", "Thalakolawewa", "Thalankudha", "Thalathuoya", "Thalavitiya", "Thalayadi", "Thalgaswala", "Thalikulam", "Thalpitiya", "Thalpotha", "Thalwita", "Thambagalla", "Thambiluvil", "Thambuttegama", "Thampalagamam", "Thampiluvil", "Thanabela", "Thanamalwila", "Thandiyadi", "Thaneeroottu", "Thannamunai", "Thanthirimale", "Thanthirimulla", "Tharana Udawela", "Tharmapuram", "Thawalama", "Thebuwana", "Thelawala ( Rathmalana )", "Thelijjawila", "Thellipali", "Thelwatte", "Theniyankulam", "Thennampillai Farm", "Thepelpola", "Therunelveeli", "Thettathivu", "Thettativu", "Thevipuram", "Thihagoda", "Thihariya", "Thikkam", "Thikkodai", "Thimbirigaskatuwa", "Thimbiriyawa", "Thimelamadam", "Thimilatheevu", "Thiraimadu", "Thirukkovil", "Thirunagar", "Thirunagar North", "Thirunagar South", "Thirunelvely", "Thirupalugamam", "Thirupperumthurai", "Thiruvaiyaru 1St Unit", "Thiruvaiyaru 3", "Thiruvaiyaru West", "Thiruyaijar", "Thiruyaru", "Thisogama", "Thiththagonewe Kabithigollewa", "Tholangamuwa", "Thondaimanaru", "Thondamanagar", "Thonigala", "Thoranakada", "Thorayaya", "Thotawatta", "Thotawella", "Thudawa", "Thudugala", "Thumbowila", "Thumpalai", "Thunukkai", "Thuraineelavanai", "Timbirigaspitiya", "Tiranagama", "Tirappane", "Tiriyayi", "Tirukovil", "Tisogama (kuliyapitiya)", "Tissamaharama", "Tittagonewa", "Tittapattara", "Toduwawa", "Toppur", "Trincomalee", "Tulhiriya", "Tummodara", "Tunkama", "Tuntota", "Tuttiripitigama", "Uda Gomadiya", "Uda Maliboda", "Uda Peradeniya", "Udabage", "Udagaldeniya", "Udaha Hawupe", "Udahaupe", "Udahentenna", "Udahingulwala", "Udaiyarkaddu", "Udakarawita", "Udalamatta", "Udamadura", "Udamalala", "Udamattala", "Udaniriella", "Udapotha", "Udappuwa", "Udapussallawa", "Udasgiriya", "Udatalawinna", "Udatenna", "Udathuthiripitiya", "Udawalawe", "Udawatta", "Udawela", "Udawela Opanayaka", "Udispattuwa", "Udubaddawa", "Ududumbara", "Udugama", "Udugampola", "Udugoda", "Uduhawara", "Udumulla", "Udunuwara Colony", "Uduppity", "Udupussellawa", "Uduthurai", "Uduvila (Hambantota)", "Uduwa", "Uduwahinna", "Uduwaka", "Uduwara", "Uduwela", "Uggalboda", "Uhana", "Uhumiya", "Ukuwela", "Ulakkaiyanthivu", "Ulapane", "Ullinduwawa", "Ulpath Madawela", "Ulpotha Pallekele", "Ulpothagama", "Uluvitike", "Umaiyalpuram", "Unagalavehera", "Unawatuna", "Undugoda", "Unenwitiya", "Unnichai", "Unnichchai", "Unuwinna", "Uppalam", "Upparu", "Uppaveli", "Uppuvali", "Upuldeniya", "Uragaha", "Uragasmanhandiya", "Uraniya", "Urapola", "Uriyan West", "Uriyawa", "Urubokka", "Urugamuwa", "Urumpirai", "Urumutta", "Uruthirapuram D-8", "Uruthirapurisvaram", "Usgala Siyabmalangamuwa", "Ussapitiya", "Uswetakeiyawa", "Uswewa", "Uthayanagar", "Uttimaduwa", "Uttupulam", "Utumgama", "Uva Deegalla", "Uva Gangodagama", "Uva Karandagolla", "Uva Kudaoya", "Uva Mawelagama", "Uva Pelwatta", "Uva Tenna", "Uva Tissapura", "Uva Uduwara", "Uvaparanagama", "Uyanwatta", "Uyilankulam", "Vadamarachchi east vettilaikkerni", "Vaddakachchi", "Vaddukoddai", "Vaichchenai", "Vakaneri", "Vakarai", "Valaichenai", "Vallipunam", "Valvettithurai", "Vanathawilluwa", "Vangalai", "Vankalai", "Vannery", "Vantharumoolai", "Vattakandal", "Vattapalai", "Vavunatheevu", "Vavunikulam", "Vavuniya", "Veddagala", "Veddukkaddai", "Vee-Oya", "Veechukalmunai", "Veeramunai 2", "Velamboda", "Velanai", "Vellamanal", "Vellankulam", "Vellavely", "Velvettithurai", "Veppankulam", "Veyangalla", "Veyangoda", "Vidalthativu", "Vidiyagoda", "Viharahena", "Viharapalugama", "Vijayapura", "Vijeriya", "Vijithapura", "Vilanagama", "Vilavodai", "Vilsan Road", "Vinajagapuram", "Vipattuwa", "Visuvamadu", "Visvamadu", "Vitharandeniya", "Vivwgananthanagar", "Wadakada", "Waddakachchi", "Wadduwa", "Wadinagala", "Wadiyamankada", "Wadumunnegedara", "Waga", "Wahacotte", "Wahakotte", "Wahakula", "Wahalkada", "Wahalkada Kebithigollawa", "Wahamalgollawa Madawachchiya", "Wahamalgollewa", "Wahara", "Waharaka", "Waikkal", "Wakwella", "Walagambahuwa", "Walagedara", "Walahanduwa", "Walahaviddawewa", "Walakanda", "Walakumbura", "Walakumburumulla", "Walala", "Walallawita", "Walana", "Walapala", "Walapane", "Walasgala", "Walasmulla", "Walaswewa", "Walawela", "Waleboda", "Walgama", "Walgama ( Kaduwela )", "Walgammulla", "Waligepola", "Walpita", "Walpita Horana", "Walpola (Wp)", "Wanagamuwa", "Wanaluwewa", "Wanathawilluwa", "Wanchawela", "Wanduramba", "Wanduranmulla", "Wanela", "Wannigama", "Wannikudawewa", "Wannilhalagama", "Wannirasnayakapura", "Warakagoda", "Warakamura", "Warakapola", "Waralla", "Warawewa", "Wariyapola", "Warukandeniya", "Warunagama", "Waskaduwa", "Watadeniya", "Watagoda", "Watagoda Harispattuwa", "Watapotha", "Watareka (Padukka)", "Watawala", "Wathugahamulla", "Wathupitiwala", "Wathurakumbura", "Wathurugama", "Watinapaha", "Wattala", "Wattalpola (Kalutara)", "Wattappola", "Wattappola (Kandy)", "Wattegama", "Watugahamulla", "Watugedara", "Watura", "Waturawa", "Watuwatta", "Weboda", "Wedikumbura", "Weeoya", "Weeraketiya", "Weerakodiyana", "Weerapokuna", "Weerawila", "Weerawila Newtown", "Wegalla", "Wegowwa", "Weherayaya Handapanagala", "Wehigala", "Weihena", "Wekada", "Wekandawala", "Wekandawela", "Welampoda", "Welangahawatte", "Welawa Juncton", "Weligalla", "Weligama", "Weligampola", "Weligatta", "Weligepola", "Welihelatenna", "Welihinda", "Welikanda", "Welimada", "Welimupothana Horowpothana", "Welimuwapotana", "Welioya Project", "Welioya [ Ratnapura ]", "Welipanagahamulla", "Welipathayaya", "Welipenna", "Welipennagahamulla", "Welipothayaya", "Welisara", "Weliwa", "Weliweriya", "Wellagala", "Wellampitiya", "Wellarawa", "Wellawa", "Wellawa Juncton", "Wellawaya", "Welmilla", "Welmilla Junction", "Welpalla", "Wendala", "Wendaruwa", "Wennappuwa", "Wennoruwa", "Weragala", "Weragantota", "Werapitya", "Werawatta", "Werellagama", "Werunketagoda", "Wethara", "Wettawa", "Weuda", "Wewagama", "Wewala ( Piliyandala )", "Wewalawewa", "Wewatta", "Weweldeniya", "Wewelwatta", "Widulipura", "Wijayabapura", "Wijebahukanda", "Wijerama", "Wijeyakatupotha", "Wikiliya", "Wilanagama", "Wilaoya", "Wilgamuwa", "Wilpita", "Wilpotha", "Withikuliya", "Xxx Not Function", "Yagirala", "Yahalatenna", "Yakadapotha", "Yakawewa Madawachchiya", "Yakkala", "Yakkalamulla", "Yakwila", "Yanthampalawa", "Yapahuwa", "Yatadolawatta", "Yatagama", "Yatalamatta", "Yatapana", "Yatawara Junction", "Yatawatta", "Yatigala", "Yatigaloluwa", "Yatihalagala", "Yatihena ( Kaduwela )", "Yatiyana (Gampaha)", "Yatiyana (Matara)", "Yatiyantota", "Yattogoda", "Yodaela", "Yodhakanndiya", "Yogiyana", "Yudaganawa", "aluthoya (Habarana)", "aluthoya (aralaganwila)", "kallady", "kothalawala (  Kaduwela )", "mabodala Minuwangoda (Mirigama Branch)", "manampitiya", "millawa ( Kurunegala )", "neluwa ( Galle )", "pallekele"];
+        // ─── Config ──────────────────────────────────────────────────────────────────
+        const CITIES_URL      = '{{ route("seller.order.cities.json") }}';
+        const BULK_STORE_URL  = '{{ route("seller.order.bulk-store") }}';
+        const BULK_VAL_URL    = '{{ route("seller.order.bulk-validate") }}';
+        const PRODUCT_URL     = '{{ route("seller.order.product.details", ["code" => "PLACEHOLDER"]) }}';
+        const CSRF            = '{{ csrf_token() }}';
+        const PENDING_URL     = '{{ route("seller.order.pending") }}';
+        const CONFIRMED_URL   = '{{ route("seller.order.confirmed") }}';
 
-        // ─── Globals ─────────────────────────────────────────────────────────
-        let currentProductData = null;
-        const COMPLETE_ORDER_URL = '{{ route("seller.complete-order") }}';
+        // ─── City data ────────────────────────────────────────────────────────────────
+        let CITIES = [], citiesLoaded = false;
 
-        // ─── City Autocomplete ────────────────────────────────────────────────
+        @php
+            $sc = [];
+            if (!empty($statesWithCities)) {
+                foreach ($statesWithCities as $state) {
+                    foreach ($state['cities'] ?? [] as $city) {
+                        if ($city['is_active'] ?? true) {
+                            $sc[] = ['id' => $city['id'], 'name' => $city['name'], 'state_name' => $state['name']];
+                        }
+                    }
+                }
+            }
+        @endphp
+        const SERVER_CITIES = @json($sc);
+
+        if (SERVER_CITIES.length > 0) {
+            CITIES = SERVER_CITIES; citiesLoaded = true;
+            setApiBadge('ok', CITIES.length + ' cities ready');
+        } else {
+            loadCities();
+        }
+
+        async function loadCities() {
+            setApiBadge('loading', 'Loading…');
+            try {
+                const r = await fetch(CITIES_URL, { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF } });
+                const j = await r.json();
+                if (j.success && Array.isArray(j.data)) {
+                    CITIES = j.data; citiesLoaded = true;
+                    setApiBadge('ok', CITIES.length + ' cities ready');
+                } else throw new Error();
+            } catch { setApiBadge('err', 'Load failed'); }
+        }
+
+        function setApiBadge(type, text) {
+            const b = document.getElementById('apiStatusBadge'); if (!b) return;
+            b.className = 'api-badge ' + type;
+            b.innerHTML = (type === 'loading'
+                ? '<span class="spinner" style="width:10px;height:10px;border-top-color:currentColor;border-color:rgba(0,0,0,.15)"></span> '
+                : (type === 'ok' ? '✓ ' : '✕ ')) + text;
+        }
+
+        // ─── Price summary live update ────────────────────────────────────────────────
+        function updateSummary() {
+            const price = parseFloat(document.getElementById('selling_price').value) || 0;
+            const qty   = parseInt(document.getElementById('quantity').value) || 0;
+            const total = price * qty;
+            document.getElementById('psUnitPrice').textContent = price.toFixed(2);
+            document.getElementById('psQty').textContent       = qty;
+            document.getElementById('psSubtotal').textContent  = total.toFixed(2);
+            document.getElementById('psTotal').textContent     = total.toFixed(2);
+            document.getElementById('cod_display').value       = total.toFixed(2);
+            document.getElementById('product_price').value     = price;
+            if (price > 0 || qty > 0) document.getElementById('priceSummary').classList.add('show');
+        }
+        document.getElementById('selling_price').addEventListener('input', updateSummary);
+        document.getElementById('quantity').addEventListener('input', updateSummary);
+
+        // ─── City autocomplete ────────────────────────────────────────────────────────
         (function() {
-            const input      = document.getElementById('district');
-            const dropdown   = document.getElementById('cityDropdown');
-            const clearBtn   = document.getElementById('cityClearBtn');
-            const helperText = document.getElementById('cityHelperText');
+            const inp = document.getElementById('district');
+            const drop = document.getElementById('cityDrop');
+            const clr  = document.getElementById('cityClearBtn');
+            const hlp  = document.getElementById('cityHelper');
+            let idx = -1, timer, matches = [];
 
-            let activeIndex  = -1;
-            let debounceTimer;
-            let currentMatches = [];
+            const esc = s => String(s ?? '').replace(/[&<>"']/g, m =>
+                ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+            const hi = (t, q) => q ? esc(t).replace(new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')','gi'), '<mark>$1</mark>') : esc(t);
 
-            function escapeHtml(str) {
-                return str.replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-            }
-
-            function highlightMatch(text, query) {
-                if (!query) return escapeHtml(text);
-                const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                const regex = new RegExp('(' + escaped + ')', 'gi');
-                return escapeHtml(text).replace(regex, '<mark>$1</mark>');
-            }
-
-            function openDropdown(matches, query) {
-                currentMatches = matches;
-                activeIndex = -1;
-                dropdown.innerHTML = '';
-
-                if (matches.length === 0) {
-                    dropdown.innerHTML = '<div class="city-dropdown-empty"><span class="material-icons-round" style="font-size:16px;vertical-align:middle">search_off</span> No cities found for &ldquo;' + escapeHtml(query) + '&rdquo;</div>';
-                } else {
-                    const fragment = document.createDocumentFragment();
-                    const limit = Math.min(matches.length, 80);
-                    for (let i = 0; i < limit; i++) {
-                        const item = document.createElement('div');
-                        item.className = 'city-dropdown-item';
-                        item.setAttribute('role', 'option');
-                        item.setAttribute('data-index', i);
-                        item.innerHTML = '<span class="material-icons-round" style="font-size:14px;color:var(--mid)">location_on</span>' + highlightMatch(matches[i], query);
-                        item.addEventListener('mousedown', function(e) {
-                            e.preventDefault();
-                            selectCity(matches[parseInt(this.dataset.index)]);
-                        });
-                        fragment.appendChild(item);
-                    }
-                    if (matches.length > 80) {
-                        const more = document.createElement('div');
-                        more.className = 'city-dropdown-empty';
-                        more.innerHTML = '<span class="material-icons-round" style="font-size:14px;vertical-align:middle">more_horiz</span> ' + (matches.length - 80) + ' more — keep typing to narrow down';
-                        fragment.appendChild(more);
-                    }
-                    dropdown.appendChild(fragment);
+            function open(m, q) {
+                matches = m; idx = -1; drop.innerHTML = '';
+                if (!citiesLoaded) { drop.innerHTML = '<div style="padding:14px;font-size:13px;color:var(--mid)">Loading cities…</div>'; drop.classList.add('open'); return; }
+                if (!m.length) { drop.innerHTML = '<div class="city-empty">No cities found for "' + esc(q) + '"</div>'; }
+                else {
+                    const f = document.createDocumentFragment();
+                    m.slice(0, 80).forEach((c, i) => {
+                        const el = document.createElement('div');
+                        el.className = 'city-item'; el.dataset.i = i;
+                        el.innerHTML = '<span class="material-icons-round" style="font-size:14px;color:var(--mid)">location_on</span>' + hi(c.name, q) + '<span class="st">' + esc(c.state_name) + '</span>';
+                        el.addEventListener('mousedown', e => { e.preventDefault(); pick(m[+el.dataset.i]); });
+                        f.appendChild(el);
+                    });
+                    drop.appendChild(f);
                 }
-
-                dropdown.classList.add('open');
-                input.setAttribute('aria-expanded', 'true');
+                drop.classList.add('open');
             }
-
-            function closeDropdown() {
-                dropdown.classList.remove('open');
-                dropdown.innerHTML = '';
-                input.setAttribute('aria-expanded', 'false');
-                activeIndex = -1;
-                currentMatches = [];
+            function close() { drop.classList.remove('open'); drop.innerHTML = ''; idx = -1; matches = []; }
+            function pick(c) {
+                inp.value = c.name;
+                document.getElementById('destination_city_id').value    = c.id;
+                document.getElementById('destination_city_name').value  = c.name;
+                document.getElementById('destination_state_name').value = c.state_name;
+                clr.classList.add('on');
+                hlp.innerHTML = '<span class="city-selected-badge"><span class="material-icons-round" style="font-size:12px">check_circle</span>' + esc(c.name) + ' · ' + esc(c.state_name) + '</span>';
+                close();
             }
-
-            function selectCity(city) {
-                input.value = city;
-                clearBtn.classList.add('visible');
-                helperText.innerHTML = '<span class="city-badge-selected"><span class="material-icons-round" style="font-size:12px">check_circle</span>' + escapeHtml(city) + '</span>';
-                closeDropdown();
-                input.focus();
+            function clear() {
+                inp.value = '';
+                document.getElementById('destination_city_id').value = '';
+                document.getElementById('destination_city_name').value = '';
+                document.getElementById('destination_state_name').value = '';
+                clr.classList.remove('on');
+                hlp.textContent = 'Cities loaded from Curfox delivery API';
+                close(); inp.focus();
             }
-
-            function clearCity() {
-                input.value = '';
-                clearBtn.classList.remove('visible');
-                helperText.innerHTML = '<span class="material-icons-round" style="font-size:12px;vertical-align:middle">search</span> Start typing to search from 2,835 Sri Lanka cities/districts';
-                closeDropdown();
-                input.focus();
-            }
-
-            function search(query) {
-                if (!query || query.length < 1) { closeDropdown(); return; }
-                const q = query.toLowerCase().trim();
-                const exact = [];
-                const starts = [];
-                const contains = [];
-                for (let i = 0; i < SRI_LANKA_CITIES.length; i++) {
-                    const city = SRI_LANKA_CITIES[i];
-                    const lower = city.toLowerCase();
-                    if (lower === q)              { exact.push(city); }
-                    else if (lower.startsWith(q)) { starts.push(city); }
-                    else if (lower.includes(q))   { contains.push(city); }
+            function search(q) {
+                if (!q) { close(); return; }
+                const lq = q.toLowerCase().trim();
+                const ex=[], st=[], co=[];
+                for (const c of CITIES) {
+                    const l = (c.name || '').toLowerCase();
+                    if (l === lq) ex.push(c);
+                    else if (l.startsWith(lq)) st.push(c);
+                    else if (l.includes(lq)) co.push(c);
                 }
-                const matches = [...exact, ...starts, ...contains];
-                openDropdown(matches, query);
+                open([...ex, ...st, ...co], q);
             }
-
-            function setActiveItem(index) {
-                const items = dropdown.querySelectorAll('.city-dropdown-item');
-                items.forEach((el, i) => el.classList.toggle('active', i === index));
-                if (items[index]) items[index].scrollIntoView({ block: 'nearest' });
-            }
-
-            input.addEventListener('input', function() {
-                const val = this.value;
-                clearBtn.classList.toggle('visible', val.length > 0);
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => search(val), 120);
+            inp.addEventListener('input', function() {
+                clr.classList.toggle('on', this.value.length > 0);
+                document.getElementById('destination_city_id').value = '';
+                document.getElementById('destination_city_name').value = '';
+                document.getElementById('destination_state_name').value = '';
+                clearTimeout(timer); timer = setTimeout(() => search(this.value), 120);
             });
-
-            input.addEventListener('keydown', function(e) {
-                const items = dropdown.querySelectorAll('.city-dropdown-item');
-                if (!dropdown.classList.contains('open')) {
-                    if (e.key === 'ArrowDown' && this.value) { search(this.value); return; }
-                    return;
-                }
-                switch(e.key) {
-                    case 'ArrowDown':
-                        e.preventDefault();
-                        activeIndex = Math.min(activeIndex + 1, items.length - 1);
-                        setActiveItem(activeIndex);
-                        break;
-                    case 'ArrowUp':
-                        e.preventDefault();
-                        activeIndex = Math.max(activeIndex - 1, -1);
-                        setActiveItem(activeIndex);
-                        break;
-                    case 'Enter':
-                        e.preventDefault();
-                        if (activeIndex >= 0 && currentMatches[activeIndex]) {
-                            selectCity(currentMatches[activeIndex]);
-                        }
-                        break;
-                    case 'Escape':
-                        closeDropdown();
-                        break;
-                    case 'Tab':
-                        if (activeIndex >= 0 && currentMatches[activeIndex]) {
-                            selectCity(currentMatches[activeIndex]);
-                        } else {
-                            closeDropdown();
-                        }
-                        break;
-                }
+            inp.addEventListener('keydown', function(e) {
+                const items = drop.querySelectorAll('.city-item');
+                if (!drop.classList.contains('open')) return;
+                if (e.key === 'ArrowDown') { e.preventDefault(); idx = Math.min(idx+1, items.length-1); items.forEach((el,i) => el.classList.toggle('active', i===idx)); }
+                if (e.key === 'ArrowUp')   { e.preventDefault(); idx = Math.max(idx-1, -1); items.forEach((el,i) => el.classList.toggle('active', i===idx)); }
+                if (e.key === 'Enter')     { e.preventDefault(); if (idx >= 0 && matches[idx]) pick(matches[idx]); }
+                if (e.key === 'Escape')    close();
             });
-
-            input.addEventListener('focus', function() {
-                if (this.value.length > 0) search(this.value);
-            });
-
-            input.addEventListener('blur', function() {
-                setTimeout(closeDropdown, 180);
-            });
-
-            clearBtn.addEventListener('click', clearCity);
-
-            // Init clear button visibility on page load (old() value)
-            if (input.value) {
-                clearBtn.classList.add('visible');
-                helperText.innerHTML = '<span class="city-badge-selected"><span class="material-icons-round" style="font-size:12px">check_circle</span>' + escapeHtml(input.value) + '</span>';
-            }
+            inp.addEventListener('blur', () => setTimeout(close, 200));
+            clr.addEventListener('click', clear);
         })();
 
-        // ─── Init ─────────────────────────────────────────────────────────────
-        document.addEventListener('DOMContentLoaded', function () {
-            @if($productId && $productCode && $productName && $productPrice)
-                currentProductData = {
-                id:            '{{ $productId }}',
-                code:          '{{ $productCode }}',
-                name:          '{{ $productName }}',
-                display_price: parseFloat('{{ $productPrice }}') || 0,
-                qty:           parseInt('{{ $productStock }}') || 0,
-                image:         '{{ $productImage }}',
-                description:   '{{ $productDescription ?? "" }}'
-            };
-            document.getElementById('submitBtn').disabled  = false;
-            document.getElementById('printBtn').disabled   = false;
-            document.getElementById('resetBtn').style.display = 'inline-flex';
-            document.getElementById('quantity').disabled   = false;
-            @endif
+        // ─── Product fetch ────────────────────────────────────────────────────────────
+        let currentProduct = null;
 
-            // Auto-dismiss session alerts
-            setTimeout(() => {
-                document.querySelectorAll('.alert').forEach(el => {
-                    el.style.transition = 'opacity .5s';
-                    el.style.opacity    = '0';
-                    setTimeout(() => el.remove(), 500);
-                });
-            }, 5000);
-        });
-
-        // ─── Fetch Product ────────────────────────────────────────────────────
-        document.getElementById('fetchProductBtn').addEventListener('click', function () {
+        document.getElementById('fetchProductBtn').addEventListener('click', () => {
             const code = document.getElementById('searchProductCode').value.trim();
-            if (!code) {
-                Swal.fire({ icon: 'error', title: 'Missing Product Code', text: 'Please enter a product code', confirmButtonColor: '#4f46e5' });
-                return;
-            }
-            fetchProductByCode(code);
+            if (!code) { Swal.fire({ icon:'error', title:'Missing Code', text:'Please enter a product code.', confirmButtonColor:'#4f46e5' }); return; }
+            fetchProduct(code);
         });
-
-        document.getElementById('searchProductCode').addEventListener('keypress', function (e) {
+        document.getElementById('searchProductCode').addEventListener('keypress', e => {
             if (e.key === 'Enter') { e.preventDefault(); document.getElementById('fetchProductBtn').click(); }
         });
 
-        async function fetchProductByCode(productCode) {
-            const btn          = document.getElementById('fetchProductBtn');
-            const originalHTML = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner"></span> Fetching...';
-
+        async function fetchProduct(code) {
+            const btn = document.getElementById('fetchProductBtn'), orig = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Fetching…';
             try {
-                const url      = `/seller/order/product/${encodeURIComponent(productCode)}/details`;
-                const response = await fetch(url, {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
-                });
-
-                if (!response.ok) {
-                    const err = await response.json().catch(() => ({}));
-                    throw new Error(err.message || `HTTP error ${response.status}`);
-                }
-
-                const data = await response.json();
-
+                const url = PRODUCT_URL.replace('PLACEHOLDER', encodeURIComponent(code));
+                const res = await fetch(url, { headers: { 'X-Requested-With':'XMLHttpRequest', 'Accept':'application/json', 'X-CSRF-TOKEN':CSRF } });
+                const ct = res.headers.get('content-type');
+                if (!ct || !ct.includes('application/json')) throw new Error('Server returned non-JSON response.');
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || `HTTP ${res.status}`);
                 if (data.success && data.product) {
-                    displayProductInfo(data.product);
-                    Swal.fire({ icon: 'success', title: 'Product Found!', text: `${data.product.name} loaded successfully`, timer: 2000, showConfirmButton: false });
-                } else {
-                    throw new Error(data.message || 'Invalid response from server');
-                }
-            } catch (error) {
-                console.error('Fetch error:', error);
-                Swal.fire({ icon: 'error', title: 'Product Not Found', text: error.message || 'Could not find product with this code.', confirmButtonColor: '#4f46e5' });
+                    renderProduct(data.product);
+                    Swal.fire({ icon:'success', title:'Product Found!', text:data.product.name, timer:1800, showConfirmButton:false });
+                } else throw new Error(data.message || 'Product not found');
+            } catch (err) {
+                Swal.fire({ icon:'error', title:'Not Found', text:err.message, confirmButtonColor:'#4f46e5' });
                 resetForm();
-            } finally {
-                btn.disabled  = false;
-                btn.innerHTML = originalHTML;
-            }
+            } finally { btn.disabled = false; btn.innerHTML = orig; }
         }
 
-        // ─── Display Product Info ─────────────────────────────────────────────
-        function displayProductInfo(product) {
-            currentProductData = product;
-
-            const infoCard = document.getElementById('productInfoCard');
-            infoCard.style.display = 'block';
-            infoCard.classList.add('show');
+        function renderProduct(p) {
+            currentProduct = p;
+            const card = document.getElementById('productCard');
+            card.style.display = 'block'; card.classList.add('show');
             document.getElementById('resetBtn').style.display = 'inline-flex';
 
-            document.getElementById('product_code').value  = product.code;
-            document.getElementById('product_id').value    = product.id;
-            document.getElementById('product_name').value  = product.name;
-            document.getElementById('product_price').value = product.display_price || product.price;
-            document.getElementById('product_image').value = product.image || '';
+            document.getElementById('product_code').value  = p.code;
+            document.getElementById('product_id').value    = p.id;
+            document.getElementById('product_name').value  = p.name;
+            document.getElementById('product_price').value = p.display_price || p.price;
+            document.getElementById('product_image').value = p.image || '';
+            document.getElementById('dpName').textContent  = p.name;
+            document.getElementById('dpCode').textContent  = p.code;
+            document.getElementById('dpPrice').textContent = (parseFloat(p.display_price)||0).toFixed(2);
 
-            document.getElementById('displayProductName').textContent = product.name;
-            document.getElementById('displayProductCode').textContent = product.code;
+            const stock = parseInt(p.qty) || 0;
+            document.getElementById('dpStock').textContent       = stock;
+            document.getElementById('availableStock').textContent = stock;
 
-            const price = parseFloat(product.display_price) || parseFloat(product.price) || 0;
-            document.getElementById('displayProductPrice').textContent = price.toFixed(2);
+            const badge = document.getElementById('stockBadge');
+            if (stock <= 0)              { badge.className = 'stock-badge stock-out'; badge.innerHTML = '<span class="material-icons-round" style="font-size:14px">cancel</span> Out of Stock'; }
+            else if (stock <= (p.min_qty || 10)) { badge.className = 'stock-badge stock-low'; badge.innerHTML = '<span class="material-icons-round" style="font-size:14px">warning</span> Low Stock'; }
+            else                         { badge.className = 'stock-badge stock-ok';  badge.innerHTML = '<span class="material-icons-round" style="font-size:14px">check_circle</span> Available'; }
 
-            const stock = parseInt(product.qty) || 0;
-            document.getElementById('displayProductStock').textContent = stock;
-            document.getElementById('availableStock').textContent      = stock;
+            const img = document.getElementById('productImg'), ph = document.getElementById('productImgPh');
+            if (p.image) { img.src = p.image; img.style.display = 'block'; ph.style.display = 'none'; img.onerror = () => { img.style.display='none'; ph.style.display='flex'; }; }
+            else { img.style.display = 'none'; ph.style.display = 'flex'; }
 
-            const badge = document.getElementById('stockStatusBadge');
-            if (stock <= 0) {
-                badge.className = 'stock-badge stock-out';
-                badge.innerHTML = '<span class="material-icons-round" style="font-size:14px">cancel</span> Out of Stock';
-            } else if (stock <= (product.min_qty || 10)) {
-                badge.className = 'stock-badge stock-low';
-                badge.innerHTML = '<span class="material-icons-round" style="font-size:14px">warning</span> Low Stock';
-            } else {
-                badge.className = 'stock-badge stock-available';
-                badge.innerHTML = '<span class="material-icons-round" style="font-size:14px">check_circle</span> Available';
-            }
+            const qty = document.getElementById('quantity');
+            if (stock > 0) { qty.max = stock; qty.disabled = false; if (parseInt(qty.value) > stock) qty.value = 1; }
+            else { qty.disabled = true; qty.value = 0; }
 
-            const imgEl = document.getElementById('productImagePreview');
-            const phEl  = document.getElementById('productImagePlaceholder');
-            if (product.image && product.image.trim() !== '') {
-                imgEl.src           = product.image;
-                imgEl.style.display = 'block';
-                phEl.style.display  = 'none';
-                imgEl.onerror = function () { this.style.display = 'none'; phEl.style.display = 'flex'; };
-            } else {
-                imgEl.style.display = 'none';
-                phEl.style.display  = 'flex';
-            }
-
-            const qtyInput = document.getElementById('quantity');
-            if (stock > 0) {
-                qtyInput.max      = stock;
-                qtyInput.disabled = false;
-                if (parseInt(qtyInput.value) > stock) qtyInput.value = stock;
-            } else {
-                qtyInput.disabled = true;
-                qtyInput.value    = 0;
-            }
+            const sp = document.getElementById('selling_price');
+            sp.value = p.display_price || p.price || 0; sp.disabled = false;
 
             document.getElementById('submitBtn').disabled = false;
             document.getElementById('printBtn').disabled  = false;
+            document.getElementById('priceSummary').classList.add('show');
+            updateSummary();
         }
 
-        // ─── Reset Form ───────────────────────────────────────────────────────
-        document.getElementById('resetBtn').addEventListener('click', function () {
-            Swal.fire({
-                title: 'Reset Form?', text: 'This will clear all product and order information',
-                icon: 'warning', showCancelButton: true,
-                confirmButtonColor: '#ef4444', cancelButtonColor: '#64748b',
-                confirmButtonText: 'Yes, Reset', cancelButtonText: 'Cancel'
-            }).then(result => {
-                if (result.isConfirmed) {
-                    resetForm();
-                    Swal.fire({ icon: 'success', title: 'Form Reset', text: 'All fields have been cleared', timer: 1500, showConfirmButton: false });
-                }
-            });
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            Swal.fire({ title:'Reset Form?', text:'All product and order info will be cleared.', icon:'warning',
+                showCancelButton:true, confirmButtonColor:'#ef4444', cancelButtonColor:'#64748b', confirmButtonText:'Yes, Reset'
+            }).then(r => { if (r.isConfirmed) resetForm(); });
         });
 
         function resetForm() {
-            currentProductData = null;
-
-            document.getElementById('productInfoCard').style.display = 'none';
-            document.getElementById('productInfoCard').classList.remove('show');
-            document.getElementById('resetBtn').style.display  = 'none';
+            currentProduct = null;
+            document.getElementById('productCard').style.display = 'none';
+            document.getElementById('productCard').classList.remove('show');
+            document.getElementById('priceSummary').classList.remove('show');
+            document.getElementById('resetBtn').style.display = 'none';
             document.getElementById('searchProductCode').value = '';
-
-            const ids = ['product_code','product_id','product_name','product_price','product_image',
-                'customer_name','customer_phone','customer_phone_2','customer_address','quantity','remark'];
-            ids.forEach(id => { document.getElementById(id).value = id === 'quantity' ? '1' : ''; });
-
-            // Reset district/city
-            document.getElementById('district').value = '';
-            document.getElementById('cityClearBtn').classList.remove('visible');
-            document.getElementById('cityHelperText').innerHTML = '<span class="material-icons-round" style="font-size:12px;vertical-align:middle">search</span> Start typing to search from 2,835 Sri Lanka cities/districts';
-
-            document.getElementById('platform').value       = '';
-            document.getElementById('payment_method').value = '';
-
-            document.getElementById('displayProductName').textContent  = '-';
-            document.getElementById('displayProductCode').textContent  = '-';
-            document.getElementById('displayProductPrice').textContent = '0.00';
-            document.getElementById('displayProductStock').textContent = '0';
-            document.getElementById('availableStock').textContent      = '0';
-
-            document.getElementById('productImagePreview').style.display    = 'none';
-            document.getElementById('productImagePlaceholder').style.display = 'flex';
-
-            document.getElementById('quantity').disabled  = true;
-            document.getElementById('submitBtn').disabled = true;
-            document.getElementById('printBtn').disabled  = true;
+            ['product_code','product_id','product_name','product_price','product_image',
+                'customer_name','customer_phone','customer_phone_2','customer_address',
+                'quantity','remark','delivery_remark',
+                'destination_city_id','destination_city_name','destination_state_name'
+            ].forEach(id => { const el = document.getElementById(id); if (el) el.value = (id === 'quantity') ? '1' : ''; });
+            document.getElementById('district').value        = '';
+            document.getElementById('platform').value        = '';
+            document.getElementById('payment_method').value  = '';
+            document.getElementById('selling_price').value   = '';
+            document.getElementById('selling_price').disabled = true;
+            document.getElementById('cod_display').value     = '0.00';
+            document.getElementById('submitBtn').disabled    = true;
+            document.getElementById('printBtn').disabled     = true;
+            document.getElementById('dpName').textContent    = '-';
+            document.getElementById('dpCode').textContent    = '-';
+            document.getElementById('dpPrice').textContent   = '0.00';
+            document.getElementById('dpStock').textContent   = '0';
+            document.getElementById('availableStock').textContent = '0';
+            document.getElementById('productImg').style.display  = 'none';
+            document.getElementById('productImgPh').style.display = 'flex';
+            document.getElementById('quantity').disabled = true;
+            updateSummary();
         }
 
-        // ─── Quantity Validation ──────────────────────────────────────────────
-        document.getElementById('quantity').addEventListener('input', function () {
-            if (!currentProductData) return;
-            const max = parseInt(currentProductData.qty) || 0;
-            const qty = parseInt(this.value) || 0;
-            if (qty > max) {
-                this.value = max;
-                Swal.fire({ icon: 'warning', title: 'Quantity Exceeds Stock', text: `Maximum available quantity is ${max} units`, timer: 2000, showConfirmButton: false });
-            }
-        });
-
-        // ─── Print ────────────────────────────────────────────────────────────
-        document.getElementById('printBtn').addEventListener('click', function () {
-            if (!currentProductData) {
-                Swal.fire({ icon: 'error', title: 'No Product Selected', text: 'Please select a product first', confirmButtonColor: '#4f46e5' });
-                return;
-            }
-
-            const customerName    = document.getElementById('customer_name').value;
-            const customerPhone   = document.getElementById('customer_phone').value;
-            const customerPhone2  = document.getElementById('customer_phone_2').value;
-            const customerAddress = document.getElementById('customer_address').value;
-            const quantity        = document.getElementById('quantity').value;
-            const district        = document.getElementById('district').value;
-
-            if (!customerName || !customerPhone) {
-                Swal.fire({ icon: 'error', title: 'Missing Information', text: 'Please fill in customer name and primary phone number', confirmButtonColor: '#4f46e5' });
-                return;
-            }
-
-            const pw = window.open('', '', 'height=600,width=800');
-            pw.document.write('<html><head><title>Order Print</title><style>');
-            pw.document.write('body{font-family:Arial,sans-serif;padding:20px}');
-            pw.document.write('h1{color:#4f46e5;margin-bottom:20px}');
-            pw.document.write('table{width:100%;border-collapse:collapse;margin-top:20px}');
-            pw.document.write('td{padding:10px;border-bottom:1px solid #e2e8f0}');
-            pw.document.write('td:first-child{font-weight:bold;width:40%}');
-            pw.document.write('.header{background:#f8fafc;padding:20px;border-radius:8px;margin-bottom:20px}');
-            pw.document.write('</style></head><body>');
-            pw.document.write('<div class="header"><h1>Order Details</h1><p>Date: ' + new Date().toLocaleDateString() + '</p></div>');
-            pw.document.write('<table>');
-            pw.document.write('<tr><td>Product Code:</td><td>' + currentProductData.code + '</td></tr>');
-            pw.document.write('<tr><td>Product Name:</td><td>' + currentProductData.name + '</td></tr>');
-            pw.document.write('<tr><td>Price:</td><td>Rs. ' + currentProductData.display_price + '</td></tr>');
-            pw.document.write('<tr><td>Quantity:</td><td>' + quantity + '</td></tr>');
-            pw.document.write('<tr><td>Total Amount:</td><td>Rs. ' + (currentProductData.display_price * quantity).toFixed(2) + '</td></tr>');
-            pw.document.write('<tr><td>Customer Name:</td><td>' + customerName + '</td></tr>');
-            pw.document.write('<tr><td>Primary Phone:</td><td>' + customerPhone + '</td></tr>');
-            if (customerPhone2) pw.document.write('<tr><td>Secondary Phone:</td><td>' + customerPhone2 + '</td></tr>');
-            if (customerAddress) pw.document.write('<tr><td>Delivery Address:</td><td>' + customerAddress + '</td></tr>');
-            if (district) pw.document.write('<tr><td>District / City:</td><td>' + district + '</td></tr>');
-            pw.document.write('</table></body></html>');
-            pw.document.close();
-            pw.focus();
-            setTimeout(() => { pw.print(); pw.close(); }, 250);
-        });
-
-        // ─── Submit / Create Order ────────────────────────────────────────────
-        document.getElementById('submitBtn').addEventListener('click', function (e) {
+        // ─── Single order submit (AUTO-CONFIRM) ──────────────────────────────────────
+        document.getElementById('submitBtn').addEventListener('click', e => {
             e.preventDefault();
-
-            if (!currentProductData || !document.getElementById('product_id').value) {
-                Swal.fire({ icon: 'error', title: 'No Product Selected', text: 'Please fetch a product before creating an order', confirmButtonColor: '#4f46e5' });
-                return;
+            if (!currentProduct || !document.getElementById('product_id').value) {
+                Swal.fire({ icon:'error', title:'No Product', text:'Please fetch a product first.', confirmButtonColor:'#4f46e5' }); return;
             }
 
-            const customerName   = document.getElementById('customer_name').value.trim();
-            const customerPhone  = document.getElementById('customer_phone').value.trim();
-            const paymentMethod  = document.getElementById('payment_method').value;
-            const quantity       = parseInt(document.getElementById('quantity').value) || 0;
-            const stock          = parseInt(currentProductData.qty) || 0;
+            const name    = document.getElementById('customer_name').value.trim();
+            const phone   = document.getElementById('customer_phone').value.trim();
+            const address = document.getElementById('customer_address').value.trim();
+            const payment = document.getElementById('payment_method').value;
+            const city    = document.getElementById('district').value.trim();
+            const cityId  = document.getElementById('destination_city_id').value;
+            const qty     = parseInt(document.getElementById('quantity').value) || 0;
+            const price   = parseFloat(document.getElementById('selling_price').value) || 0;
+            const stock   = parseInt(currentProduct.qty) || 0;
 
-            if (!customerName) {
-                Swal.fire({ icon: 'error', title: 'Missing Information', text: 'Please enter customer name', confirmButtonColor: '#4f46e5' }); return;
-            }
-            if (!customerPhone) {
-                Swal.fire({ icon: 'error', title: 'Missing Information', text: 'Please enter primary customer phone number', confirmButtonColor: '#4f46e5' }); return;
-            }
-            if (!paymentMethod) {
-                Swal.fire({ icon: 'error', title: 'Missing Information', text: 'Please select a payment method', confirmButtonColor: '#4f46e5' }); return;
-            }
-            if (quantity <= 0) {
-                Swal.fire({ icon: 'error', title: 'Invalid Quantity', text: 'Please enter a valid quantity', confirmButtonColor: '#4f46e5' }); return;
-            }
-            if (quantity > stock) {
-                Swal.fire({ icon: 'error', title: 'Insufficient Stock', text: `Only ${stock} units available`, confirmButtonColor: '#4f46e5' }); return;
-            }
+            if (!name)    { Swal.fire({ icon:'error', title:'Missing', text:'Enter customer name.' }); return; }
+            if (!phone)   { Swal.fire({ icon:'error', title:'Missing', text:'Enter customer phone.' }); return; }
+            if (!address) { Swal.fire({ icon:'error', title:'Missing', text:'Enter delivery address.' }); return; }
+            if (!payment) { Swal.fire({ icon:'error', title:'Missing', text:'Select payment method.' }); return; }
+            if (!city)    { Swal.fire({ icon:'error', title:'Missing', text:'Select a delivery city.' }); return; }
+            if (!cityId)  { Swal.fire({ icon:'error', title:'Invalid City', text:'Please select a city from the dropdown list.' }); return; }
+            if (qty <= 0) { Swal.fire({ icon:'error', title:'Invalid Qty', text:'Enter a valid quantity.' }); return; }
+            if (qty > stock) { Swal.fire({ icon:'error', title:'Exceeds Stock', text:`Only ${stock} units available.` }); return; }
+            if (price <= 0) { Swal.fire({ icon:'error', title:'Invalid Price', text:'Enter a valid selling price.' }); return; }
 
-            const customerPhone2 = document.getElementById('customer_phone_2').value.trim();
-            const phoneDisplay   = customerPhone2 ? `${customerPhone} / ${customerPhone2}` : customerPhone;
-            const district       = document.getElementById('district').value.trim();
+            const total = (price * qty).toFixed(2);
+            const r1 = document.getElementById('remark').value.trim();
+            const r2 = document.getElementById('delivery_remark').value.trim();
 
             Swal.fire({
-                title: 'Create Order?',
-                html: `
-                    <div style="text-align:left;margin-top:16px;line-height:1.8">
-                        <p><strong>Product:</strong> ${currentProductData.name}</p>
-                        <p><strong>Code:</strong> ${currentProductData.code}</p>
-                        <p><strong>Quantity:</strong> ${quantity} units</p>
-                        <p><strong>Customer:</strong> ${customerName}</p>
-                        <p><strong>Phone:</strong> ${phoneDisplay}</p>
-                        ${district ? '<p><strong>City / District:</strong> ' + district + '</p>' : ''}
-                        <p><strong>Total:</strong> Rs. ${(currentProductData.display_price * quantity).toFixed(2)}</p>
-                    </div>`,
+                title: 'Create & Confirm Order?',
+                html: `<div style="text-align:left;font-size:14px;line-height:2">
+            <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;margin-bottom:12px">
+                <div style="font-weight:700;color:#15803d">✓ This order will be auto-confirmed</div>
+                <div style="font-size:12px;color:#64748b">Delivery call created immediately · call_status = Confirmed</div>
+            </div>
+            <p><b>Customer:</b> ${name}</p>
+            <p><b>Product:</b> ${currentProduct.name}</p>
+            <p><b>Qty:</b> ${qty} × Rs.${price.toFixed(2)} = <b style="color:#15803d">Rs.${total}</b></p>
+            <p><b>City:</b> ${city}</p>
+            ${r1 ? `<p><b>Remark 1:</b> ${r1}</p>` : ''}
+            ${r2 ? `<p><b>Remark 2:</b> ${r2}</p>` : ''}
+        </div>`,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#10b981',
                 cancelButtonColor: '#64748b',
-                confirmButtonText: 'Yes, Create Order',
-                cancelButtonText: 'Cancel',
+                confirmButtonText: '✓ Confirm & Create',
                 showLoaderOnConfirm: true,
                 preConfirm: () => {
-                    Swal.showLoading();
-                    const form     = document.getElementById('orderForm');
-                    const formData = new FormData(form);
-
+                    const form = document.getElementById('orderForm');
+                    const fd   = new FormData(form);
+                    fd.set('product_price', price);
+                    fd.set('selling_price', price);
                     return fetch(form.action, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
-                    })
-                        .then(response => {
-                            if (!response.ok) {
-                                return response.json().then(err => { throw new Error(err.message || 'Something went wrong'); });
-                            }
-                            return response.json();
-                        })
-                        .catch(error => {
-                            Swal.showValidationMessage(`Request failed: ${error.message}`);
-                        });
+                        method: 'POST', body: fd,
+                        headers: { 'X-Requested-With':'XMLHttpRequest', 'X-CSRF-TOKEN':CSRF, 'Accept':'application/json' }
+                    }).then(r => { if (!r.ok) return r.json().then(e => { throw new Error(e.message || 'Error'); }); return r.json(); })
+                        .catch(err => { Swal.showValidationMessage('Error: ' + err.message); });
                 },
                 allowOutsideClick: () => !Swal.isLoading()
-
             }).then(result => {
-                if (result.isConfirmed && result.value && result.value.success) {
+                if (result.isConfirmed && result.value?.success) {
                     Swal.fire({
-                        icon: 'success',
-                        title: 'Order Created!',
-                        html: `<p>${result.value.message || 'Order has been successfully created.'}</p>
-                               <p style="margin-top:8px;color:#64748b;font-size:13px">Redirecting to complete orders…</p>`,
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                        willClose: () => { window.location.href = COMPLETE_ORDER_URL; }
-                    });
-                } else if (result.value && !result.value.success) {
-                    Swal.fire({ icon: 'error', title: 'Error', text: result.value.message || 'Failed to create order', confirmButtonColor: '#4f46e5' });
+                        icon: 'success', title: 'Order Confirmed!',
+                        html: `<p>${result.value.message}</p><p style="font-size:13px;color:#64748b">Delivery call created automatically</p>`,
+                        timer: 2200, showConfirmButton: false
+                    }).then(() => window.location.href = result.value.redirect_url || CONFIRMED_URL);
                 }
             });
         });
 
-        // Fallback: prevent accidental native submit
-        document.getElementById('orderForm').addEventListener('submit', function (e) {
-            if (e.submitter && e.submitter.id === 'submitBtn') e.preventDefault();
+        // ─── Print ────────────────────────────────────────────────────────────────────
+        document.getElementById('printBtn').addEventListener('click', () => {
+            if (!currentProduct) return;
+            const n = document.getElementById('customer_name').value;
+            const p = document.getElementById('customer_phone').value;
+            if (!n || !p) { Swal.fire({ icon:'error', title:'Missing Info', text:'Fill customer name and phone.' }); return; }
+            const city    = document.getElementById('district').value;
+            const qty     = document.getElementById('quantity').value;
+            const state   = document.getElementById('destination_state_name').value;
+            const price   = document.getElementById('selling_price').value || currentProduct.display_price;
+            const address = document.getElementById('customer_address').value;
+            const r1      = document.getElementById('remark').value;
+            const r2      = document.getElementById('delivery_remark').value;
+            const total   = (parseFloat(price) * parseInt(qty||1)).toFixed(2);
+
+            const pw = window.open('', '', 'height=750,width=850');
+            pw.document.write(`<!DOCTYPE html><html><head><title>Order Print</title>
+    <style>body{font-family:Arial,sans-serif;padding:28px;color:#0f172a}h1{color:#4f46e5;margin-bottom:4px}
+    .badge{display:inline-block;background:#d1fae5;color:#065f46;padding:3px 12px;border-radius:999px;font-size:12px;font-weight:700;margin-bottom:18px}
+    table{width:100%;border-collapse:collapse}td{padding:10px;border-bottom:1px solid #e2e8f0}
+    td:first-child{font-weight:bold;width:38%;color:#64748b}
+    .total{font-size:22px;font-weight:800;color:#15803d}
+    .rbox{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;margin-top:16px}
+    .rtitle{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:6px}
+    </style></head><body>`);
+            pw.document.write(`<h1>Order Receipt</h1><div class="badge">✓ CONFIRMED</div>`);
+            pw.document.write(`<p style="color:#64748b;font-size:13px">Date: ${new Date().toLocaleDateString('en-GB')}</p><table>`);
+            pw.document.write(`<tr><td>Product</td><td>${currentProduct.name}</td></tr>`);
+            pw.document.write(`<tr><td>Code</td><td>${currentProduct.code}</td></tr>`);
+            pw.document.write(`<tr><td>Unit Price</td><td>Rs. ${parseFloat(price).toFixed(2)}</td></tr>`);
+            pw.document.write(`<tr><td>Quantity</td><td>${qty}</td></tr>`);
+            pw.document.write(`<tr><td>COD Total</td><td class="total">Rs. ${total}</td></tr>`);
+            pw.document.write(`<tr><td>Customer</td><td>${n}</td></tr>`);
+            pw.document.write(`<tr><td>Phone</td><td>${p}</td></tr>`);
+            if (address) pw.document.write(`<tr><td>Address</td><td>${address}</td></tr>`);
+            if (city)    pw.document.write(`<tr><td>City</td><td>${city}${state ? ', '+state : ''}</td></tr>`);
+            pw.document.write('</table>');
+            if (r1) pw.document.write(`<div class="rbox"><div class="rtitle">Remark 1 (Internal)</div>${r1}</div>`);
+            if (r2) pw.document.write(`<div class="rbox" style="border-color:#fde68a"><div class="rtitle">Remark 2 (Delivery)</div>${r2}</div>`);
+            pw.document.write('</body></html>');
+            pw.document.close(); pw.focus(); setTimeout(() => { pw.print(); pw.close(); }, 300);
+        });
+
+        // ─── CSV Bulk Import ──────────────────────────────────────────────────────────
+        let BULK_LEADS = [], bulkProduct = null;
+
+        const escH = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+        // Bulk product fetch
+        document.getElementById('bulkFetchBtn').addEventListener('click', bulkFetch);
+        document.getElementById('bulkProductCode').addEventListener('keypress', e => { if (e.key==='Enter') { e.preventDefault(); bulkFetch(); } });
+        document.getElementById('bulkResetBtn').addEventListener('click', bulkReset);
+
+        async function bulkFetch() {
+            const code = document.getElementById('bulkProductCode').value.trim();
+            if (!code) { Swal.fire({ icon:'error', title:'Missing Code', text:'Enter a product code.', confirmButtonColor:'#f59e0b' }); return; }
+            const btn = document.getElementById('bulkFetchBtn'), orig = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '<span class="spinner" style="border-top-color:#fff"></span> Verifying…';
+            try {
+                const res = await fetch(PRODUCT_URL.replace('PLACEHOLDER', encodeURIComponent(code)), {
+                    headers: { 'X-Requested-With':'XMLHttpRequest', 'Accept':'application/json', 'X-CSRF-TOKEN':CSRF }
+                });
+                const data = await res.json();
+                if (!data.success || !data.product) throw new Error(data.message || 'Not found');
+                bulkProduct = data.product;
+                renderBulkProduct(data.product);
+                document.getElementById('parseCsvBtn').disabled = false;
+                Swal.fire({ icon:'success', title:'Product Verified!', html:`<b>${escH(data.product.name)}</b><br>Stock: <b>${data.product.qty}</b>`, timer:2000, showConfirmButton:false });
+            } catch (err) {
+                bulkProduct = null; hideBulkProduct();
+                document.getElementById('parseCsvBtn').disabled = true;
+                document.getElementById('bulkImportBtn').disabled = true;
+                Swal.fire({ icon:'error', title:'Not Found', text:err.message, confirmButtonColor:'#f59e0b' });
+            } finally { btn.disabled = false; btn.innerHTML = orig; }
+        }
+
+        function renderBulkProduct(p) {
+            const card = document.getElementById('bulkProductVerified'); card.style.display = 'block';
+            document.getElementById('bpName').textContent  = p.name;
+            document.getElementById('bpCode').textContent  = p.code;
+            document.getElementById('bpPrice').textContent = (parseFloat(p.display_price)||0).toFixed(2);
+            document.getElementById('bpStock').textContent = p.qty;
+            document.getElementById('bulkResetBtn').style.display = 'inline-flex';
+            const badge = document.getElementById('bpStockBadge'), qty = parseInt(p.qty)||0;
+            badge.className = 'stock-badge ' + (qty<=0 ? 'stock-out' : qty<=10 ? 'stock-low' : 'stock-ok');
+            const img = document.getElementById('bpImg'), ph = document.getElementById('bpImgPh');
+            if (p.image) { img.src=p.image; img.style.display='block'; ph.style.display='none'; img.onerror=()=>{img.style.display='none';ph.style.display='flex';}; }
+            else { img.style.display='none'; ph.style.display='flex'; }
+            checkBulkStock();
+        }
+
+        function hideBulkProduct() {
+            document.getElementById('bulkProductVerified').style.display = 'none';
+            document.getElementById('bulkResetBtn').style.display = 'none';
+            document.getElementById('bpStockWarn').style.display = 'none';
+        }
+
+        function bulkReset() {
+            bulkProduct = null; hideBulkProduct();
+            document.getElementById('bulkProductCode').value = '';
+            document.getElementById('parseCsvBtn').disabled = true;
+            document.getElementById('bulkImportBtn').disabled = true;
+            document.getElementById('csvPreviewWrap').style.display = 'none';
+            document.getElementById('valSummaryWrap').style.display = 'none';
+            BULK_LEADS = [];
+        }
+
+        function checkBulkStock() {
+            if (!bulkProduct) return;
+            const stock = parseInt(bulkProduct.qty)||0, n = BULK_LEADS.length;
+            const warn = document.getElementById('bpStockWarn'), txt = document.getElementById('bpStockWarnText');
+            if (n > 0 && n > stock) { warn.style.display='block'; txt.textContent=`Only ${stock} in stock but CSV has ${n} rows.`; }
+            else warn.style.display = 'none';
+        }
+
+        // CSV parse & validate
+        document.getElementById('parseCsvBtn').addEventListener('click', async () => {
+            if (!bulkProduct) { Swal.fire({ icon:'error', title:'No Product', text:'Verify a product first.' }); return; }
+            const file = document.getElementById('csvFile').files[0];
+            if (!file) { Swal.fire({ icon:'error', title:'No File', text:'Please select a CSV file.' }); return; }
+
+            BULK_LEADS = parseCsv(await file.text());
+            document.getElementById('bulkImportBtn').disabled = true;
+            if (!BULK_LEADS.length) { Swal.fire({ icon:'error', title:'Empty CSV', text:'No valid rows. Ensure customer_name and customer_phone columns exist.' }); return; }
+            checkBulkStock();
+
+            const badge = document.getElementById('bpPreviewBadge');
+            badge.style.display = 'inline-flex';
+            badge.textContent = `✓ ${bulkProduct.name} (${bulkProduct.code}) — Stock: ${bulkProduct.qty}`;
+
+            const btn = document.getElementById('parseCsvBtn'), orig = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '<span class="spinner" style="border-top-color:#fff"></span> Validating…';
+
+            try {
+                const fd = new FormData(); fd.append('leads', JSON.stringify(BULK_LEADS));
+                const res = await fetch(BULK_VAL_URL, { method:'POST', headers:{'X-Requested-With':'XMLHttpRequest','X-CSRF-TOKEN':CSRF,'Accept':'application/json'}, body:fd });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const json = await res.json();
+                if (json.success) {
+                    renderPreview(BULK_LEADS, json.results);
+                    renderValSummary(json);
+                    json.results.forEach((r,i) => {
+                        if (r.status==='ok' && r.resolved && BULK_LEADS[i]) {
+                            BULK_LEADS[i]._city_id    = r.resolved.id;
+                            BULK_LEADS[i]._city_name  = r.resolved.city_name;
+                            BULK_LEADS[i]._state_name = r.resolved.state_name;
+                        }
+                    });
+                    document.getElementById('bulkImportBtn').disabled = false;
+                } else { Swal.fire({ icon:'error', title:'Validation Error', text:json.message }); renderPreviewBasic(BULK_LEADS); document.getElementById('bulkImportBtn').disabled = false; }
+            } catch (err) { renderPreviewBasic(BULK_LEADS); document.getElementById('bulkImportBtn').disabled = false; }
+            finally { btn.disabled = false; btn.innerHTML = orig; }
+        });
+
+        function parseCsvLine(l) {
+            const r=[]; let cur='', inQ=false;
+            for (let i=0;i<l.length;i++) { const c=l[i],n=l[i+1];
+                if (inQ) { if(c==='"'&&n==='"'){cur+='"';i++;}else if(c==='"'){inQ=false;}else{cur+=c;} }
+                else { if(c==='"')inQ=true; else if(c===','){r.push(cur.trim());cur='';}else{cur+=c;} }
+            } r.push(cur.trim()); return r;
+        }
+
+        function parseCsv(text) {
+            const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').filter(l=>l.trim());
+            if (lines.length < 2) return [];
+            const hdr  = parseCsvLine(lines[0].replace(/^\uFEFF/,'')).map(h=>h.toLowerCase().trim().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,''));
+            const idx  = n => hdr.indexOf(n);
+            const iN=idx('customer_name'), iP=idx('customer_phone'), iA=idx('customer_address');
+            const iC=idx('city'), iCN=idx('destination_city_name'), iPl=idx('platform');
+            const iR1=idx('remark'), iR2=idx('delivery_remark');
+            if (iN===-1||iP===-1) return [];
+            const leads=[];
+            for (let r=1;r<lines.length;r++) {
+                const c=parseCsvLine(lines[r]);
+                const name=(c[iN]??'').trim(), phone=(c[iP]??'').trim();
+                if (!name||!phone) continue;
+                const city=((iCN!==-1?c[iCN]:'')||(iC!==-1?c[iC]:'')||'').trim();
+                leads.push({
+                    customer_name:name, customer_phone:phone,
+                    customer_address:(iA!==-1?(c[iA]??'').trim():'')||null,
+                    district:city||null, destination_city_name:city||null, destination_state_name:null,
+                    platform:(iPl!==-1?(c[iPl]??'').trim():'')||null,
+                    remark:(iR1!==-1?(c[iR1]??'').trim():'')||null,
+                    delivery_remark:(iR2!==-1?(c[iR2]??'').trim():'')||null,
+                });
+            }
+            return leads;
+        }
+
+        function renderValSummary(json) {
+            const wrap=document.getElementById('valSummaryWrap'),badges=document.getElementById('valBadges');
+            const errList=document.getElementById('valErrList'),note=document.getElementById('valNote');
+            wrap.style.display='block';
+            const ok=json.results.filter(r=>r.status==='ok').length, bad=json.invalid_count||0, miss=json.missing_count||0;
+            badges.innerHTML=`<span class="val-badge vb-ok">✓ ${ok} matched</span>`
+                +(bad>0?`<span class="val-badge vb-err">✕ ${bad} invalid</span>`:'')
+                +(miss>0?`<span class="val-badge vb-warn">⚠ ${miss} missing</span>`:'');
+            if (bad>0) {
+                errList.style.display='block';
+                errList.innerHTML='<strong style="color:#991b1b">Invalid cities:</strong><br>'+json.results.filter(r=>r.status==='invalid').map(r=>`Row ${r.row}: "<b>${escH(r.input)}</b>"`).join('<br>');
+            } else errList.style.display='none';
+            note.textContent = json.all_valid ? '✓ All cities valid — ready to import.' : '';
+            if (!json.all_valid) {
+                const allow=document.getElementById('allowNonCurfox')?.checked??false;
+                note.innerHTML = allow
+                    ? '<span style="color:var(--warning)">⚠ Non-Curfox cities saved as plain text.</span>'
+                    : '<span style="color:#991b1b">Invalid rows will be skipped. Enable "Allow non-Curfox cities" to import them.</span>';
+            }
+        }
+
+        document.getElementById('allowNonCurfox')?.addEventListener('change', () => { applyNonCurfoxToggle(); });
+
+        function renderPreview(leads, vr) {
+            document.getElementById('csvPreviewWrap').style.display='block';
+            document.getElementById('csvRowCount').textContent=leads.length;
+            const tbody=document.getElementById('csvPreviewBody'); tbody.innerHTML='';
+            const lim=Math.min(leads.length,20);
+            for (let i=0;i<lim;i++) {
+                const row=leads[i],v=vr[i],st=v?v.status:'?',res=v?v.resolved:null;
+                let sh='',rs='-';
+                if (st==='ok'&&res)  { sh=`<span class="cs-ok">✓ ${escH(res.city_name)}</span>`; rs=res.state_name; }
+                else if (st==='invalid') sh=`<span class="cs-bad" id="ci-${i}">✕ Not in Curfox</span><span class="cs-ok" id="ca-${i}" style="display:none">⚠ As-is: ${escH(row.district||'')}</span>`;
+                else if (st==='missing') sh=`<span class="cs-miss">⚠ Missing</span>`;
+                else sh=`<span style="color:var(--mid)">—</span>`;
+                const tr=document.createElement('tr'); tr.dataset.cs=st;
+                tr.innerHTML=`<td>${i+1}</td><td>${escH(row.customer_name)}</td><td>${escH(row.customer_phone)}</td><td>${escH(row.district||'-')}</td><td>${sh}</td><td>${escH(rs)}</td><td>${escH(row.platform||'-')}</td>`;
+                tbody.appendChild(tr);
+            }
+            applyNonCurfoxToggle();
+        }
+
+        function renderPreviewBasic(leads) {
+            document.getElementById('csvPreviewWrap').style.display='block';
+            document.getElementById('csvRowCount').textContent=leads.length;
+            const tbody=document.getElementById('csvPreviewBody'); tbody.innerHTML='';
+            const lim=Math.min(leads.length,20);
+            for (let i=0;i<lim;i++) {
+                const row=leads[i],tr=document.createElement('tr');
+                tr.innerHTML=`<td>${i+1}</td><td>${escH(row.customer_name)}</td><td>${escH(row.customer_phone)}</td><td>${escH(row.district||'-')}</td><td>—</td><td>—</td><td>${escH(row.platform||'-')}</td>`;
+                tbody.appendChild(tr);
+            }
+        }
+
+        function applyNonCurfoxToggle() {
+            const allow=document.getElementById('allowNonCurfox')?.checked??false;
+            document.querySelectorAll('#csvPreviewBody tr[data-cs="invalid"]').forEach(tr => {
+                const ci=tr.querySelector('[id^="ci-"]'),ca=tr.querySelector('[id^="ca-"]');
+                if(ci) ci.style.display=allow?'none':'inline';
+                if(ca) ca.style.display=allow?'inline':'none';
+            });
+        }
+
+        // Bulk import submit
+        document.getElementById('bulkImportBtn').addEventListener('click', async () => {
+            if (!bulkProduct) { Swal.fire({ icon:'error', title:'No Product', text:'Verify product first.' }); return; }
+            if (!BULK_LEADS.length) { Swal.fire({ icon:'error', title:'No Data', text:'Click Preview & Validate first.' }); return; }
+
+            const stock = parseInt(bulkProduct.qty)||0;
+            if (stock < BULK_LEADS.length) {
+                const go = await Swal.fire({
+                    icon:'warning', title:'Insufficient Stock',
+                    html:`Stock: <b>${stock}</b> | CSV rows: <b>${BULK_LEADS.length}</b><br>Only first <b>${stock}</b> orders will succeed.`,
+                    showCancelButton:true, confirmButtonText:'Import Anyway', confirmButtonColor:'#f59e0b', cancelButtonColor:'#64748b'
+                });
+                if (!go.isConfirmed) return;
+            }
+
+            const leadsToSend = BULK_LEADS.map(l => {
+                const o={...l};
+                if (l._city_id) { o.destination_city_id=l._city_id; o.destination_city_name=l._city_name; o.destination_state_name=l._state_name; o.district=l._city_name; }
+                delete o._city_id; delete o._city_name; delete o._state_name;
+                return o;
+            });
+
+            const plat = document.getElementById('bulkDefaultPlatform').value;
+            const date = document.getElementById('order_date').value;
+            const anc  = document.getElementById('allowNonCurfox')?.checked ? '1' : '0';
+
+            Swal.fire({
+                title:'Confirm Bulk Import',
+                html:`<div style="text-align:left;font-size:14px;line-height:2">
+            <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:10px;margin-bottom:10px;font-size:12px;color:#92400e">
+                ⚠ Bulk orders go to <b>Pending Call</b> — requires manual confirmation
+            </div>
+            <p><b>Orders:</b> ${leadsToSend.length}</p>
+            <p><b>Product:</b> ${escH(bulkProduct.name)} (${escH(bulkProduct.code)})</p>
+            <p><b>Default Platform:</b> ${escH(plat)}</p>
+            ${anc==='1'?'<p style="color:#f59e0b;font-size:12px">⚠ Non-Curfox cities saved as-is</p>':''}
+        </div>`,
+                icon:'question', showCancelButton:true, confirmButtonText:'Yes, Import All',
+                confirmButtonColor:'#10b981', cancelButtonColor:'#64748b', showLoaderOnConfirm:true,
+                preConfirm: async () => {
+                    try {
+                        const fd=new FormData();
+                        fd.append('product_code', bulkProduct.code);
+                        fd.append('default_platform', plat);
+                        fd.append('date', date);
+                        fd.append('leads', JSON.stringify(leadsToSend));
+                        fd.append('allow_non_curfox', anc);
+                        const res=await fetch(BULK_STORE_URL, { method:'POST', headers:{'X-Requested-With':'XMLHttpRequest','X-CSRF-TOKEN':CSRF,'Accept':'application/json'}, body:fd });
+                        const json=await res.json();
+                        if (!res.ok||!json.success) throw new Error(json.message||'Import failed');
+                        return json;
+                    } catch(e) { Swal.showValidationMessage(e.message); return false; }
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then(r => {
+                if (r.isConfirmed && r.value?.success) {
+                    Swal.fire({
+                        icon:'success', title:'Import Complete!',
+                        html:`<p>${escH(r.value.message)}</p>`+(r.value.errors?.length?`<div style="text-align:left;color:#ef4444;font-size:12px;max-height:120px;overflow-y:auto">${r.value.errors.slice(0,10).map(x=>escH(x)).join('<br>')}</div>`:''),
+                        confirmButtonColor:'#4f46e5'
+                    }).then(() => window.location.href = r.value.redirect_url || PENDING_URL);
+                }
+            });
         });
     </script>
 @endpush

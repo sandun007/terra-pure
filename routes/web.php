@@ -11,6 +11,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Seller\CallController;
+use App\Http\Controllers\Seller\SelfSellerDeliveryCallController;
 use App\Http\Controllers\Seller\SellerBrandController;
 use App\Http\Controllers\Seller\SellerCallController;
 use App\Http\Controllers\Seller\SellerCategoryController;
@@ -27,10 +28,14 @@ use App\Http\Controllers\Wholesaler\WholesalerCategoryController;
 use App\Http\Controllers\Wholesaler\WholesalerOrderController;
 use App\Http\Controllers\Wholesaler\WholesalerPaymentController;
 use App\Http\Controllers\Wholesaler\WholesalerProductController;
+use App\Http\Controllers\Employee\EmployeeDeliveryCallController;
 use App\Http\Controllers\Wholesaler\WholesalerShopController;
 use App\Http\Controllers\WholesalerController;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Order;
+use Maatwebsite\Excel\Facades\Excel;
 
 /*
 |--------------------------------------------------------------------------
@@ -38,25 +43,65 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
+use App\Services\Curfoxapiservice;
+
+
+Route::middleware('auth:seller')->get('/seller/debug/curfox', function (Curfoxapiservice $curfox) {
+    $tokenOk = false;
+    $statesCount = 0;
+    $citiesCount = 0;
+
+    try {
+        $token = $curfox->getToken();
+        $tokenOk = !empty($token);
+
+        $states = $curfox->getStatesWithCities();
+        $statesCount = count($states);
+
+        $cities = $curfox->getAllCities();
+        $citiesCount = count($cities);
+
+        return response()->json([
+            'success' => true,
+            'token_ok' => $tokenOk,
+            'states_count' => $statesCount,
+            'cities_count' => $citiesCount,
+            'sample_state' => $states[0]['name'] ?? null,
+            'sample_city' => $cities[0]['name'] ?? null,
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage(),
+        ], 500);
+    }
+});
+
+
 Route::get('/', [PageController::class, 'login'])->name('login');
 Route::post('/',[LoginController::class,'loginCheck'])->name('login.check');
 
+
+
+
 // ========== ADMIN ROUTES ==========
-Route::middleware('auth:admin')->group(function(){
+Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])->group(function(){
     Route::prefix('admin')->group(function () {
         Route::post('/logout', [LoginController::class, 'logout'])->name('admin.logout');
         Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('admin.dashboard');
         Route::get('/dashboard/chart-data', [App\Http\Controllers\Admin\DashboardController::class, 'getChartData'])->name('admin.dashboard.chart-data');
         Route::get('/', [PageController::class, 'dashboard'])->name('admin.dashboard');
+        Route::get('/admins' , [AdminController::class,'index'] )->name('admin.admins.index');
+        Route::get('/admins/{id}/view', [AdminController::class, 'show'])->name('admin.admins.view');
         Route::get('/create',[AdminController::class,'create'])->name('admin.create');
-        Route::post('/',[AdminController::class,'store'])->name('admin.store');
+        Route::post('/store',[AdminController::class,'store'])->name('admin.store');
 
         Route::prefix('product')->group(function () {
             Route::get('/', [ProductController::class, 'index'])->name('product.index');
             Route::get('/create', [ProductController::class, 'create'])->name('product.create');
             Route::post('/create', [ProductController::class, 'store'])->name('product.store');
             Route::get('/edit/{id}', [ProductController::class, 'edit'])->name('product.edit');
-            Route::post('/update/{id}', [ProductController::class, 'update'])->name('product.update');
+            Route::put('/update/{id}', [ProductController::class, 'update'])->name('product.update');
             Route::get('/view/{id}', [ProductController::class, 'product_view'])->name('product.view');
             Route::get('/delete/{id}', [ProductController::class, 'delete'])->name('product.delete');
         });
@@ -65,6 +110,9 @@ Route::middleware('auth:admin')->group(function(){
             Route::get('/list', [BrandController::class, 'index'])->name('brand.index');
             Route::get('/', [BrandController::class, 'create'])->name('brand.create');
             Route::post('/', [BrandController::class, 'store'])->name('brand.store');
+            Route::get('/view/{id}', [BrandController::class, 'show'])->name('brand.show');
+            Route::get('/edit/{id}', [BrandController::class, 'edit'])->name('brand.edit');
+            Route::put('/update/{id}', [BrandController::class, 'update'])->name('brand.update');
             Route::get('/{id}', [BrandController::class, 'delete'])->name('brand.delete');
         });
 
@@ -72,6 +120,9 @@ Route::middleware('auth:admin')->group(function(){
             Route::get('/list', [CategoryController::class, 'index'])->name('category.index');
             Route::get('/', [CategoryController::class, 'create'])->name('category.create');
             Route::post('/', [CategoryController::class, 'store'])->name('category.store');
+            Route::get('/view/{id}', [CategoryController::class, 'show'])->name('category.show');
+            Route::get('/edit/{id}', [CategoryController::class, 'edit'])->name('category.edit');
+            Route::post('/update/{id}', [CategoryController::class, 'update'])->name('category.update');
             Route::get('/{id}', [CategoryController::class, 'delete'])->name('category.delete');
         });
 
@@ -81,12 +132,13 @@ Route::middleware('auth:admin')->group(function(){
             Route::post('/',[SellerController::class,'store'])->name('admin.seller.store');
             Route::get('/delete/{id}', [SellerController::class, 'delete'])->name('seller.delete');
             Route::get('/{id}',[SellerController::class,'edit'])->name('admin.seller.edit');
+            Route::get('seller/{id}', [SellerController::class, 'show'])->name('admin.seller.view');
             Route::post('/update',[SellerController::class,'update'])->name('admin.seller.update');
         });
 
         Route::prefix('order')->group(function () {
-            Route::get('new-order', [SellerController::class, 'new_order'])->name('admin.new-order');
-            Route::get('/complete-order', [OrderController::class, 'completeOrder'])->name('complete-order');
+            Route::get('new-order', [OrderController::class, 'new_order'])->name('admin.new_order');
+            Route::get('/complete-order', [OrderController::class, 'completeOrder'])->name('admin.complete_order_list');
             Route::get('/return-order', [OrderController::class, 'returnOrder'])->name('return-order');
             Route::get('/rescheduling-order', [OrderController::class, 'reschedulingOrder'])->name('rescheduling-order');
             Route::get('/pending-order', [OrderController::class, 'pendingOrder'])->name('pending-order');
@@ -110,73 +162,97 @@ Route::middleware('auth:admin')->group(function(){
 });
 
 // ========== SELLER ROUTES ==========
-Route::middleware('auth:seller')->group(function(){
-    Route::prefix('seller')->group(function () {
-        Route::post('/logout', [LoginController::class, 'logout'])->name('seller.logout');
-        Route::get('/', [SellerController::class, 'dashboard'])->name('seller.dashboard');
+Route::middleware('auth:seller')->group(function () {
+    Route::prefix('seller')->name('seller.')->group(function () {
 
-        Route::get('/profile', [App\Http\Controllers\Seller\Sellerprofilecontroller::class, 'index'])->name('profile.index');
-        Route::post('/profile/update', [App\Http\Controllers\Seller\Sellerprofilecontroller::class, 'update'])->name('profile.update');
-        Route::post('/profile/password', [App\Http\Controllers\Seller\Sellerprofilecontroller::class, 'updatePassword'])->name('profile.password');
 
-        Route::prefix('shop')->name('seller.shop.')->group(function () {
-            Route::get('/', [SellerShopController::class, 'index'])->name('seller.index');
-            Route::get('/product/view/{product}', [\App\Http\Controllers\Seller\SellerShopController::class, 'showProduct'])->name('product.show');
-            Route::get('/product/{code}/details', [SellerShopController::class, 'getProductDetails'])->name('product.details');
-            Route::get('/product/find/{code}', [SellerShopController::class, 'findByCode'])->name('product.find');
-            Route::post('/product/copy/{code}', [SellerShopController::class, 'copyProductCode'])->name('product.copy');
-            Route::post('/order-now', [SellerShopController::class, 'orderNow'])->name('order.now');
-            Route::post('/quick-order', [SellerShopController::class, 'quickOrder'])->name('quick.order');
-            Route::get('/search', [SellerShopController::class, 'search'])->name('search');
-            Route::get('/redirect-to-order', [SellerShopController::class, 'redirectToNewOrder'])->name('redirect.order');
+        // Self Seller Delivery Management
+        Route::prefix('delivery-calls')->name('delivery_calls.')->group(function () {
+            // Status pages
+            Route::get('/', [SelfSellerDeliveryCallController::class, 'index'])->name('index');
+            Route::get('/pending', [SelfSellerDeliveryCallController::class, 'pending'])->name('pending');
+            Route::get('/packing', [SelfSellerDeliveryCallController::class, 'packing'])->name('packing');
+            Route::get('/packed', [SelfSellerDeliveryCallController::class, 'packed'])->name('packed');
+            Route::get('/givedriver', [SelfSellerDeliveryCallController::class, 'givedriver'])->name('givedriver');
+
+            // Create
+            Route::get('/create', [SelfSellerDeliveryCallController::class, 'create'])->name('create');
+            Route::post('/', [SelfSellerDeliveryCallController::class, 'store'])->name('store');
+
+            // View
+            Route::get('/{id}', [SelfSellerDeliveryCallController::class, 'show'])->name('show');
+
+            // Status updates
+            Route::post('/{id}/status', [SelfSellerDeliveryCallController::class, 'updateStatus'])->name('update_status');
+            Route::post('/bulk-status', [SelfSellerDeliveryCallController::class, 'bulkUpdateStatus'])->name('bulk_status');
+
+            // Origin updates
+            Route::patch('/{id}/origin', [SelfSellerDeliveryCallController::class, 'updateOrigin'])->name('update_origin');
+            Route::patch('/bulk-origin', [SelfSellerDeliveryCallController::class, 'bulkUpdateOrigin'])->name('bulk_origin');
+
+            // Business
+            Route::post('/set-business', [SelfSellerDeliveryCallController::class, 'setBusiness'])->name('set_business');
+
+            // Tracking
+            Route::post('/tracking', [SelfSellerDeliveryCallController::class, 'tracking'])->name('tracking');
         });
 
-        Route::prefix('order')->name('seller.')->group(function () {
-            Route::get('new-order', [SellerOrderController::class, 'index'])->name('new-order');
-            Route::post('store', [SellerOrderController::class, 'store'])->name('order.store');
-            Route::get('pending-order', [SellerOrderController::class, 'pendingOrder'])->name('pending-order');
-            Route::get('complete-order', [SellerOrderController::class, 'completeOrder'])->name('complete-order');
-            Route::get('return-order', [SellerOrderController::class, 'returnOrder'])->name('return-order');
-            Route::get('rescheduling-order', [SellerOrderController::class, 'reschedulingOrder'])->name('rescheduling-order');
-            Route::get('show/{id}', [SellerOrderController::class, 'show'])->name('order.show');
-            Route::put('update/{id}', [SellerOrderController::class, 'update'])->name('order.update');
-            Route::delete('destroy/{id}', [SellerOrderController::class, 'destroy'])->name('order.destroy');
-            Route::get('product/{code}/details', [SellerOrderController::class, 'getProductDetails'])->name('product.details')->where('code', '.*');
-            Route::get('csv-upload', [SellerOrderController::class, 'csvUploadPage'])->name('order.csv-upload');
-            Route::post('csv-insert', [SellerOrderController::class, 'csvInsert'])->name('order.csv-insert');
+        // ===== AUTHENTICATION =====
+        Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+        Route::get('/', [SellerController::class, 'dashboard'])->name('dashboard');
+
+        // ===== PROFILE MANAGEMENT =====
+        Route::prefix('profile')->name('profile.')->group(function () {
+            Route::get('/', [Sellerprofilecontroller::class, 'index'])->name('index');
+            Route::post('/update', [Sellerprofilecontroller::class, 'update'])->name('update');
+            Route::post('/password', [Sellerprofilecontroller::class, 'updatePassword'])->name('password');
         });
 
-        Route::prefix('product')->group(function () {
-            Route::get('/', [SellerController::class, 'seller_product'])->name('seller.product.index');
+        // ===== CREATE NEW ORDER (Single & Bulk) =====
+        Route::prefix('create')->name('create.')->group(function () {
+            Route::get('/new-order', [SellerOrderController::class, 'index'])->name('new-order');
         });
 
-        Route::prefix('payment')->group(function () {
-            Route::get('/my-payment',[SellerPaymentController::class,'my_payment'])->name('seller.my_payment');
-            Route::get('/withdraw',[SellerPaymentController::class,'withdraw'])->name('seller.withdraw');
-            Route::get('/history',[SellerPaymentController::class,'payment_history'])->name('seller.payment_history');
+        // ===== ORDER MANAGEMENT =====
+        Route::prefix('order')->name('order.')->group(function () {
+            // Order List Pages
+            Route::get('/pending',    [SellerOrderController::class, 'pendingOrder'])->name('pending');
+            Route::get('/confirmed',  [SellerOrderController::class, 'confirmedOrders'])->name('confirmed');
+            Route::get('/rescheduled',[SellerOrderController::class, 'rescheduledOrders'])->name('rescheduled');
+            Route::get('/completed',  [SellerOrderController::class, 'completedOrders'])->name('completed');
+            Route::get('/returned',   [SellerOrderController::class, 'returnedOrders'])->name('returned');
+            Route::get('/show/{id}',  [SellerOrderController::class, 'show'])->name('show');
+
+            // ─── NEW: Full-page edit route ────────────────────────────────────────
+            Route::get('/edit/{id}',  [SellerOrderController::class, 'edit'])->name('edit');
+
+            // Product Details API (for fetching product by code with slashes)
+            Route::get('/product/{code}/details', [SellerOrderController::class, 'getProductDetails'])
+                ->name('product.details')
+                ->where('code', '.*'); // CRITICAL: Allows slashes in product code (e.g., DX/ITM/0001)
+
+            // Order CRUD Operations
+            Route::post('/store',          [SellerOrderController::class, 'store'])->name('store');
+            Route::post('/bulk-store',     [SellerOrderController::class, 'bulkStore'])->name('bulk-store');
+            Route::post('/bulk-validate',  [SellerOrderController::class, 'bulkValidate'])->name('bulk-validate');
+            Route::put('/update/{id}',     [SellerOrderController::class, 'update'])->name('update');
+            Route::delete('/destroy/{id}', [SellerOrderController::class, 'destroy'])->name('destroy');
+
+            // Utilities
+            Route::get('/cities/json', [SellerOrderController::class, 'citiesJson'])->name('cities.json');
         });
 
+        // ===== CALL MANAGEMENT =====
         Route::prefix('call')->name('call.')->group(function () {
-            Route::get('/', [SellerCallController::class, 'index'])->name('index');
-            Route::get('/conform_call_list', [SellerCallController::class, 'conformCallList'])->name('conform');
-            Route::get('/reject_call_list', [SellerCallController::class, 'rejectCallList'])->name('reject');
-            Route::get('/not_answer_call_list', [SellerCallController::class, 'notAnswerCallList'])->name('not_answer_call_list');
-            Route::get('/other_call_list', [SellerCallController::class, 'otherCallList'])->name('other_call_list');
-            Route::get('/view/{id}', [SellerCallController::class, 'show'])->name('view');
-            Route::get('/edit/{id}', [SellerCallController::class, 'edit'])->name('edit');
-            Route::put('/update/{id}', [SellerCallController::class, 'update'])->name('update');
-            Route::delete('/destroy/{id}', [SellerCallController::class, 'destroy'])->name('destroy');
-            Route::get('/print/{id}', [SellerCallController::class, 'print'])->name('print');
-            Route::post('/bulk-status', [SellerCallController::class, 'bulkUpdateStatus'])->name('bulk_status');
-            Route::get('/export-calls', [SellerCallController::class, 'export'])->name('export');
-            Route::get('/statistics', [SellerCallController::class, 'statistics'])->name('statistics');
-            Route::get('/csv-upload', [SellerCallController::class, 'csvUploadPage'])->name('csv_upload');
-            Route::post('/csv-insert', [SellerCallController::class, 'csvInsert'])->name('csv_insert');
-            Route::get('/seller-products', [SellerCallController::class, 'getSellerProducts'])->name('seller_products');
-            Route::get('/csrf-refresh', [SellerCallController::class, 'csrfRefresh'])->name('csrf_refresh');
+            Route::get('/pending',     [SellerOrderController::class, 'pendingCalls'])->name('pending');
+            Route::get('/called',      [SellerOrderController::class, 'calledCalls'])->name('called');
+            Route::get('/confirmed',   [SellerOrderController::class, 'confirmedCalls'])->name('confirmed');
+            Route::get('/not-answered',[SellerOrderController::class, 'notAnsweredCalls'])->name('not-answered');
+            Route::get('/cancelled',   [SellerOrderController::class, 'cancelledCalls'])->name('cancelled');
         });
 
-        Route::prefix('product')->name('seller.product.')->group(function (){
+        // ===== PRODUCT MANAGEMENT =====
+        Route::prefix('product')->name('product.')->group(function () {
             Route::get('/', [SellerProductController::class, 'index'])->name('index');
             Route::get('/create', [SellerProductController::class, 'create'])->name('create');
             Route::post('/', [SellerProductController::class, 'store'])->name('store');
@@ -185,9 +261,18 @@ Route::middleware('auth:seller')->group(function(){
             Route::put('/{id}', [SellerProductController::class, 'update'])->name('update');
             Route::delete('/{id}', [SellerProductController::class, 'destroy'])->name('destroy');
             Route::post('/{id}/status', [SellerProductController::class, 'updateStatus'])->name('status.update');
+
+            // Trash/Restore functionality
+            Route::get('/trashed', [SellerProductController::class, 'trashed'])->name('trashed');
+            Route::post('/{id}/restore', [SellerProductController::class, 'restore'])->name('restore');
+            Route::delete('/{id}/force-delete', [SellerProductController::class, 'forceDelete'])->name('force-delete');
+
+            // Next product code API
+            Route::get('/next-code', [SellerProductController::class, 'getNextProductCode'])->name('next-code');
         });
 
-        Route::prefix('brands')->name('seller.brands.')->group(function () {
+        // ===== BRAND MANAGEMENT =====
+        Route::prefix('brands')->name('brands.')->group(function () {
             Route::get('/', [SellerBrandController::class, 'index'])->name('index');
             Route::get('/create', [SellerBrandController::class, 'create'])->name('create');
             Route::post('/', [SellerBrandController::class, 'store'])->name('store');
@@ -195,9 +280,11 @@ Route::middleware('auth:seller')->group(function(){
             Route::get('/{brand}/edit', [SellerBrandController::class, 'edit'])->name('edit');
             Route::put('/{brand}', [SellerBrandController::class, 'update'])->name('update');
             Route::delete('/{brand}', [SellerBrandController::class, 'destroy'])->name('destroy');
+            Route::post('/{brand}/status', [SellerBrandController::class, 'updateStatus'])->name('status.update');
         });
 
-        Route::prefix('category')->name('seller.category.')->group(function () {
+        // ===== CATEGORY MANAGEMENT =====
+        Route::prefix('category')->name('category.')->group(function () {
             Route::get('/', [SellerCategoryController::class, 'index'])->name('index');
             Route::get('/create', [SellerCategoryController::class, 'create'])->name('create');
             Route::post('/', [SellerCategoryController::class, 'store'])->name('store');
@@ -207,11 +294,119 @@ Route::middleware('auth:seller')->group(function(){
             Route::delete('/{id}', [SellerCategoryController::class, 'destroy'])->name('destroy');
             Route::patch('/{id}/toggle-status', [SellerCategoryController::class, 'toggleStatus'])->name('toggle-status');
         });
+
+        // ===== PAYMENT MANAGEMENT =====
+        Route::prefix('payment')->name('payment.')->group(function () {
+            Route::get('/my-payment', [SellerPaymentController::class, 'my_payment'])->name('my-payment');
+            Route::get('/withdraw', [SellerPaymentController::class, 'withdraw'])->name('withdraw');
+            Route::get('/history', [SellerPaymentController::class, 'payment_history'])->name('history');
+
+            // Payment method management
+            Route::get('/methods', [SellerPaymentController::class, 'paymentMethods'])->name('methods');
+            Route::get('/methods/create', [SellerPaymentController::class, 'createPaymentMethod'])->name('methods.create');
+            Route::post('/methods', [SellerPaymentController::class, 'storePaymentMethod'])->name('methods.store');
+            Route::get('/methods/{id}/edit', [SellerPaymentController::class, 'editPaymentMethod'])->name('methods.edit');
+            Route::put('/methods/{id}', [SellerPaymentController::class, 'updatePaymentMethod'])->name('methods.update');
+            Route::delete('/methods/{id}', [SellerPaymentController::class, 'destroyPaymentMethod'])->name('methods.destroy');
+
+            // Withdrawal history
+            Route::get('/withdrawals', [SellerPaymentController::class, 'withdrawalHistory'])->name('withdrawals');
+        });
+
+        // ===== SHOP (System Seller Only - For browsing products) =====
+        Route::prefix('shop')->name('shop.')->group(function () {
+            Route::get('/', [SellerShopController::class, 'index'])->name('index');
+
+            // Product details with slashes in code
+            Route::get('/product/{code}/details', [SellerShopController::class, 'getProductDetails'])
+                ->name('product.details')
+                ->where('code', '.*'); // Allows slashes in product code
+
+            Route::get('/product/find/{code}', [SellerShopController::class, 'findByCode'])
+                ->name('product.find')
+                ->where('code', '.*');
+
+            Route::post('/product/copy/{code}', [SellerShopController::class, 'copyProductCode'])
+                ->name('product.copy')
+                ->where('code', '.*');
+
+            Route::post('/order-now', [SellerShopController::class, 'orderNow'])->name('order.now');
+            Route::post('/quick-order', [SellerShopController::class, 'quickOrder'])->name('quick.order');
+            Route::get('/search', [SellerShopController::class, 'search'])->name('search');
+            Route::get('/redirect-to-order', [SellerShopController::class, 'redirectToNewOrder'])->name('redirect.order');
+        });
+
+        // ===== DASHBOARD & REPORTS =====
+        Route::prefix('dashboard')->name('dashboard.')->group(function () {
+            Route::get('/stats', [SellerController::class, 'getStats'])->name('stats');
+            Route::get('/chart-data', [SellerController::class, 'getChartData'])->name('chart-data');
+            Route::get('/recent-orders', [SellerController::class, 'getRecentOrders'])->name('recent-orders');
+        });
+
+        // ===== REPORTS =====
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('/sales', [SellerController::class, 'salesReport'])->name('sales');
+            Route::get('/inventory', [SellerController::class, 'inventoryReport'])->name('inventory');
+            Route::get('/customers', [SellerController::class, 'customerReport'])->name('customers');
+            Route::get('/export/{type}', [SellerController::class, 'exportReport'])->name('export');
+        });
+
+        // ===== SELF-SELLER DELIVERY MANAGEMENT =====
+        Route::prefix('delivery-calls')->name('delivery_calls.')->group(function () {
+            // List pages
+            Route::get('/', [SelfSellerDeliveryCallController::class, 'index'])->name('index');
+            Route::get('/pending', [SelfSellerDeliveryCallController::class, 'pending'])->name('pending');
+            Route::get('/packing', [SelfSellerDeliveryCallController::class, 'packing'])->name('packing');
+            Route::get('/packed', [SelfSellerDeliveryCallController::class, 'packed'])->name('packed');
+            Route::get('/givedriver', [SelfSellerDeliveryCallController::class, 'givedriver'])->name('givedriver');
+            Route::get('/create', [SelfSellerDeliveryCallController::class, 'create'])->name('create');
+
+            // Bulk actions
+            Route::post('/bulk-status', [SelfSellerDeliveryCallController::class, 'bulkUpdateStatus'])->name('bulk_status');
+            Route::patch('/bulk-origin', [SelfSellerDeliveryCallController::class, 'bulkUpdateOrigin'])->name('bulk_origin');
+
+            // Business management
+            Route::get('/businesses', [SelfSellerDeliveryCallController::class, 'businessIndex'])->name('businesses');
+            Route::post('/business/create', [SelfSellerDeliveryCallController::class, 'businessCreate'])->name('business_create');
+            Route::post('/business/set-active', [SelfSellerDeliveryCallController::class, 'businessSetActive'])->name('business_set_active');
+            Route::delete('/business/{id}', [SelfSellerDeliveryCallController::class, 'businessDelete'])->name('business_delete');
+
+            // Store and individual actions
+            Route::post('/', [SelfSellerDeliveryCallController::class, 'store'])->name('store');
+            Route::get('/{id}', [SelfSellerDeliveryCallController::class, 'show'])->name('show')->whereNumber('id');
+            Route::post('/{id}/status', [SelfSellerDeliveryCallController::class, 'updateStatus'])->name('update_status')->whereNumber('id');
+            Route::patch('/{id}/origin', [SelfSellerDeliveryCallController::class, 'updateOrigin'])->name('update_origin')->whereNumber('id');
+        });
     });
 });
 
 // ========== EMPLOYEE ROUTES ==========
 Route::prefix('employee')->middleware('auth:employee')->group(function(){
+
+    // Delivery Calls
+    Route::prefix('delivery-calls')->name('employee.delivery_calls.')->group(function () {
+
+        // ── GET list pages ────────────────────────────────────────────────────
+        Route::get('/',           [EmployeeDeliveryCallController::class, 'index'])->name('index');
+        Route::get('/pending',    [EmployeeDeliveryCallController::class, 'pending'])->name('pending');
+        Route::get('/packing',    [EmployeeDeliveryCallController::class, 'packing'])->name('packing');
+        Route::get('/packed',     [EmployeeDeliveryCallController::class, 'packed'])->name('packed');
+        Route::get('/givedriver', [EmployeeDeliveryCallController::class, 'givedriver'])->name('givedriver');
+
+        // ── Fixed POST / PATCH routes (all before any /{id} wildcard) ────────
+        Route::post('/tracking',     [EmployeeDeliveryCallController::class, 'tracking'])->name('tracking');
+        Route::post('/set-business', [EmployeeDeliveryCallController::class, 'setBusiness'])->name('set_business');
+        Route::post('/bulk-status',  [EmployeeDeliveryCallController::class, 'bulkUpdateStatus'])->name('bulk_status');
+        Route::patch('/bulk-origin', [EmployeeDeliveryCallController::class, 'bulkUpdateOrigin'])->name('bulk_origin');
+
+        // ── /{id} wildcard routes — numeric IDs only ──────────────────────────
+        Route::get('/{id}',          [EmployeeDeliveryCallController::class, 'show'])->name('show')->whereNumber('id');
+        Route::post('/{id}/status',  [EmployeeDeliveryCallController::class, 'updateStatus'])->name('update_status')->whereNumber('id');
+        Route::patch('/{id}/origin', [EmployeeDeliveryCallController::class, 'updateOrigin'])->name('update_origin')->whereNumber('id');
+    });
+
+
+    // Dashboard
     Route::get('/', [EmployeeController::class, 'dashboard'])->name('employee.dashboard');
     Route::post('/logout', [LoginController::class, 'logout'])->name('employee.logout');
     Route::get('/profile', [EmployeeController::class, 'profile'])->name('employee.profile');
@@ -226,6 +421,17 @@ Route::prefix('employee')->middleware('auth:employee')->group(function(){
         Route::get('/price-update/{id}', [EmployeeController::class, 'showPriceUpdateForm'])->name('price-update-form');
         Route::post('/price-update', [EmployeeController::class, 'updateProductPrice'])->name('price-update');
         Route::post('/bulk-price-update', [EmployeeController::class, 'bulkPriceUpdate'])->name('bulk-price-update');
+
+        // Seller Management (Existing)
+        Route::prefix('seller')->name('seller.')->group(function() {
+            Route::get('/orders', [EmployeeController::class, 'sellerOrders'])->name('employee.seller.orders');
+            Route::prefix('order')->name('order.')->group(function () {
+                Route::post('/bulk-store', [SellerOrderController::class, 'bulkStore'])->name('bulk-store');
+            });
+            Route::post('/orders/status/update/{id}', [EmployeeController::class, 'updateOrderStatus'])->name('orders.status-update');
+            Route::get('/orders/view/{id}', [EmployeeController::class, 'viewOrder'])->name('order-view');
+        });
+        // Print route
         Route::get('/print/{id}', [EmployeeWholesalerOrderController::class, 'printDeliveryLabel'])->name('print.out');
     });
 

@@ -691,7 +691,7 @@
             </button>
         </div>
         <nav class="sidebar-menu" aria-label="Primary navigation">
-            @include('seller.component.sidebar')
+            @include('seller.partials.sidebar')
         </nav>
     </aside>
 
@@ -757,7 +757,7 @@
         }
         window.sellerAppInitialized = true;
 
-        // State management object - FIX: Using let instead of const for mutable state
+        // State management object
         const AppState = {
             isMobile: window.innerWidth <= 991,
             sidebarState: localStorage.getItem('sellerSidebarState') || 'expanded',
@@ -804,11 +804,9 @@
         }
 
         function hideLoader() {
-            // FIX: Use requestAnimationFrame for smoother transition
             requestAnimationFrame(function() {
                 setTimeout(function() {
                     DOM.loader.addClass('hidden');
-                    // Remove from DOM after animation
                     setTimeout(function() {
                         DOM.loader.remove();
                     }, 500);
@@ -817,15 +815,12 @@
         }
 
         function initializeSidebar() {
-            // FIX: Check current mobile state before applying saved state
             AppState.isMobile = window.innerWidth <= 991;
 
             if (AppState.isMobile) {
-                // On mobile, always reset to default state
                 DOM.sidebar.removeClass('collapsed');
                 DOM.pageWrapper.removeClass('collapsed');
             } else {
-                // On desktop, apply saved state
                 if (AppState.sidebarState === 'collapsed') {
                     DOM.sidebar.addClass('collapsed');
                     DOM.pageWrapper.addClass('collapsed');
@@ -834,48 +829,39 @@
         }
 
         function bindEvents() {
-            // Desktop sidebar toggle - use .off() to prevent duplicate bindings
             DOM.sidebarToggle.off('click').on('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                // FIX: Check current mobile state, not cached state
                 if (window.innerWidth > 991) {
                     toggleSidebar();
                 }
             });
 
-            // Mobile menu toggle
             DOM.mobileMenuToggle.off('click').on('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 toggleMobileMenu();
             });
 
-            // Close sidebar when clicking overlay
             DOM.sidebarOverlay.off('click').on('click', function(e) {
                 e.preventDefault();
                 closeMobileMenu();
             });
 
-            // Close mobile menu when clicking a link
             $(document).off('click.sidebarMenu').on('click.sidebarMenu', '.sidebar-menu a', function(e) {
-                // FIX: Check current mobile state
                 if (window.innerWidth <= 991) {
                     e.stopPropagation();
                     closeMobileMenu();
                 }
             });
 
-            // Handle window resize with debounce - FIX: Proper resize handling
             $(window).off('resize.sellerApp').on('resize.sellerApp', function() {
                 clearTimeout(AppState.resizeTimer);
                 AppState.resizeTimer = setTimeout(handleResize, 250);
             });
 
-            // Keyboard shortcuts
             $(document).off('keydown.sellerApp').on('keydown.sellerApp', handleKeyboardShortcuts);
 
-            // Header scroll effect
             $(window).off('scroll.header').on('scroll.header', function() {
                 const header = $('.app-header');
                 if ($(this).scrollTop() > 50) {
@@ -885,7 +871,6 @@
                 }
             });
 
-            // Back to top button - FIX: Use class toggle instead of fadeIn/fadeOut
             $(window).off('scroll.backToTop').on('scroll.backToTop', function() {
                 if ($(this).scrollTop() > 300) {
                     DOM.backToTop.addClass('visible');
@@ -899,10 +884,8 @@
                 return false;
             });
 
-            // Update active menu on navigation
             $(document).off('click.menuActive').on('click.menuActive', '.sidebar-menu a', function(e) {
                 if (!$(this).hasClass('logout-link')) {
-                    // FIX: Use requestAnimationFrame instead of setTimeout
                     requestAnimationFrame(highlightActiveMenuItem);
                 }
             });
@@ -916,7 +899,6 @@
             AppState.sidebarState = isCollapsed ? 'collapsed' : 'expanded';
             localStorage.setItem('sellerSidebarState', AppState.sidebarState);
 
-            // Dispatch custom event
             window.dispatchEvent(new CustomEvent('sidebarToggle', {
                 detail: { collapsed: isCollapsed }
             }));
@@ -942,25 +924,20 @@
             DOM.body.removeClass('menu-open');
         }
 
-        // FIX: Completely rewritten resize handler
         function handleResize() {
             const wasMobile = AppState.isMobile;
             const nowMobile = window.innerWidth <= 991;
 
-            // Update state
             AppState.isMobile = nowMobile;
 
-            // Transitioning from desktop to mobile
             if (nowMobile && !wasMobile) {
                 DOM.sidebar.removeClass('collapsed');
                 DOM.pageWrapper.removeClass('collapsed');
                 closeMobileMenu();
             }
 
-            // Transitioning from mobile to desktop
             if (!nowMobile && wasMobile) {
-                closeMobileMenu(); // FIX: Always close mobile menu first
-                // Restore saved sidebar state
+                closeMobileMenu();
                 if (AppState.sidebarState === 'collapsed') {
                     DOM.sidebar.addClass('collapsed');
                     DOM.pageWrapper.addClass('collapsed');
@@ -990,14 +967,12 @@
                 const href = $(this).attr('href');
                 if (!href || href === '#') return;
 
-                // Exact match
                 if (currentPath === href || currentUrl === href) {
                     bestMatch = $(this);
                     bestMatchLength = Infinity;
-                    return false; // Break loop
+                    return false;
                 }
 
-                // Partial match - find longest matching prefix
                 if (href !== '/' && currentPath.startsWith(href)) {
                     if (href.length > bestMatchLength) {
                         bestMatch = $(this);
@@ -1005,7 +980,6 @@
                     }
                 }
 
-                // Query parameter match
                 if (currentUrl.includes(href) && href.includes('?')) {
                     if (href.length > bestMatchLength) {
                         bestMatch = $(this);
@@ -1020,7 +994,6 @@
         }
 
         function handleKeyboardShortcuts(e) {
-            // Ctrl/Cmd + B to toggle sidebar (desktop only)
             if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
                 if (window.innerWidth > 991) {
                     e.preventDefault();
@@ -1028,13 +1001,11 @@
                 }
             }
 
-            // Escape to close mobile menu
             if (e.key === 'Escape' && AppState.isMenuOpen) {
                 e.preventDefault();
                 closeMobileMenu();
             }
 
-            // Ctrl/Cmd + K for search
             if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
                 e.preventDefault();
                 const searchInput = $('.search-input');
@@ -1052,7 +1023,6 @@
                 }
             });
 
-            // Global error handler
             $(document).ajaxError(function(event, jqxhr, settings, thrownError) {
                 const errorMessages = {
                     419: 'Session expired. Please refresh the page.',
@@ -1067,7 +1037,6 @@
             });
         }
 
-        // Expose public API
         window.sellerApp = {
             toggleSidebar: toggleSidebar,
             closeMobileMenu: closeMobileMenu,
@@ -1104,7 +1073,6 @@
         };
     })();
 
-    // Global Alert System (kept outside IIFE for global access)
     window.Alert = {
         success: function(msg, title = 'Success!') {
             return Swal.fire({
@@ -1214,7 +1182,6 @@
         }
     };
 
-    // Laravel Session Messages
     @if(session('success'))
     Alert.toast('{{ session('success') }}', 'success');
     @endif
@@ -1231,7 +1198,6 @@
     Alert.toast('{{ session('info') }}', 'info');
     @endif
 
-    // Offline/Online detection
     window.addEventListener('online', function() {
         Alert.toast('You are back online', 'success');
     });

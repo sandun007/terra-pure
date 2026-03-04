@@ -64,34 +64,44 @@ Brand List
                         <tr>
                             <th>Brand Code</th>
                             <th>Brand Name</th>
-                            <th>Image</th>
+                            <th>Status</th>
                             <th>Action</th>
                         </tr>
                         </thead>
                         <tbody>
-                        @foreach($brands as $brand)
-                            <tr>
-                                <td>{{$brand->code}}</td>
-                                <td>{{$brand->name}}</td>
-                                <td>
-                                    <img src="{{ asset('storage/' . $brand->img) }}" alt="Brand Image" width="50">
-                                </td>
+@foreach($brands as $brand)
+    <tr>
+        <td>{{ $brand->code }}</td>
+        <td>{{ $brand->name }}</td>
+        <td>
+    @if($brand->status == 1)
+        <span class="badge bg-success">Active</span>
+    @else
+        <span class="badge bg-danger">Inactive</span>
+    @endif
+</td>
 
-                                <td>
-                                    <button class="btn btn-dark btn-sm">
-                                        <i class="bi bi-eye"></i> View
-                                    </button>
-                                    <button class="btn btn-warning btn-sm">
-                                        <i class="bi bi-pencil-square"></i> Update
-                                    </button>
-                                    <a href="{{route('brand.delete',$brand->id)}}" class="btn btn-danger btn-sm">
-                                        <i class="bi bi-trash"></i> Delete
-                                    </a>
-                                </td>
-                            </tr>
-                        @endforeach
+        <td>
+            <!-- View Button -->
+            <a href="{{ route('brand.show', $brand->id) }}" class="btn btn-dark btn-sm">
+    <i class="bi bi-eye"> View</i>
+</a>
 
-                        </tbody>
+            <!-- Edit Button -->
+            <a href="{{ route('brand.edit', $brand->id) }}" 
+               class="btn btn-warning btn-sm">
+                <i class="bi bi-pencil-square"> Update</i>
+            </a>
+
+            <!-- Delete Button -->
+            <a href="{{ route('brand.delete', $brand->id) }}" 
+   class="btn btn-danger btn-sm delete-brand">
+    <i class="bi bi-trash"></i> Delete
+</a>
+        </td>
+    </tr>
+@endforeach
+</tbody>
 
                     </table>
                 </div>
@@ -110,4 +120,48 @@ Brand List
         });
     </script>
 
+<script>
+    @if(session('success'))
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: '{{ session("success") }}',
+            confirmButtonColor: '#3085d6'
+        });
+    @endif
+
+    @if(session('error'))
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: '{{ session("error") }}',
+            confirmButtonColor: '#d33'
+        });
+    @endif
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.delete-brand').forEach(function(button) {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            let url = this.getAttribute('href');
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = url;
+                }
+            });
+        });
+    });
+});
+</script>
 @endpush

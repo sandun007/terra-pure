@@ -38,7 +38,7 @@
         <div class="add-item d-flex">
             <div class="page-title">
                 <h4 class="fw-bold">Category List</h4>
-                <h6>{{$count}}</h6>
+                <h6>Showing {{ $count }} {{ \Illuminate\Support\Str::plural('category', $count) }}</h6>
             </div>
         </div>
         <ul class="table-top-head">
@@ -52,7 +52,7 @@
             </li>
         </ul>
         <div class="page-btn mt-0">
-            <a href="{{route('brand.create')}}" class="btn btn-secondary">Create New Category</a>
+            <a href="{{ route('category.create') }}" class="btn btn-secondary">Create New Category</a>
         </div>
     </div>
     <div class="row">
@@ -64,22 +64,28 @@
                         <tr>
                             <th>Category Code</th>
                             <th>Category Name</th>
+                            <th>Status</th>
                             <th>Action</th>
                         </tr>
                         </thead>
                         <tbody>
                         @foreach($categories as $category)
                             <tr>
-                                <td>{{$category->code}}</td>
-                                <td>{{$category->name}}</td>
+                                <td>{{ $category->code }}</td>
+                                <td>{{ $category->name }}</td>
                                 <td>
-                                    <button class="btn btn-dark btn-sm">
+                                    <span class="{{ $category->status_badge }}">
+                                        {{ $category->status_text }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ route('category.show', $category->id) }}" class="btn btn-dark btn-sm">
                                         <i class="bi bi-eye"></i> View
-                                    </button>
-                                    <button class="btn btn-warning btn-sm">
+                                    </a>
+                                    <a href="{{ route('category.edit', $category->id) }}" class="btn btn-warning btn-sm">
                                         <i class="bi bi-pencil-square"></i> Update
-                                    </button>
-                                    <a href="{{route('category.delete',$category->id)}}" class="btn btn-danger btn-sm">
+                                    </a>
+                                    <a href="{{ route('category.delete',$category->id) }}" class="btn btn-danger btn-sm confirm-delete">
                                         <i class="bi bi-trash"></i> Delete
                                     </a>
                                 </td>
@@ -101,7 +107,51 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script>
         $(document).ready(function () {
-            $('#product-table').DataTable();
+            $('#product-table').DataTable({
+                info: false // removes "Showing 1 to X of Y entries"
+            });
+
+            @if(session('success'))
+                Swal.fire({
+                    title: 'Success!',
+                    text: "{{ session('success') }}",
+                    icon: 'success',
+                    confirmButtonClass: 'btn btn-primary',
+                    buttonsStyling: false
+                });
+            @endif
+
+            @if(session('error'))
+                Swal.fire({
+                    title: 'Error!',
+                    text: "{{ session('error') }}",
+                    icon: 'error',
+                    confirmButtonClass: 'btn btn-primary',
+                    buttonsStyling: false
+                });
+            @endif
+
+            $(document).on('click', '.confirm-delete', function(e) {
+                e.preventDefault();
+                var url = $(this).attr('href');
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!',
+                    confirmButtonClass: 'btn btn-primary',
+                    cancelButtonClass: 'btn btn-danger ml-1',
+                    buttonsStyling: false,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = url;
+                    }
+                });
+            });
         });
     </script>
 
