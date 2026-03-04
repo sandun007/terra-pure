@@ -25,8 +25,8 @@
         <ul>
             <!-- Wholesaler Products -->
             <li>
-                <a href="{{ route('employee.wholesaler.products') }}"
-                   class="{{ request()->routeIs('employee.wholesaler.products') ? 'active' : '' }}">
+                <a href="{{ route('employee.wholesaler.products.index') }}"
+                   class="{{ request()->routeIs('employee.wholesaler.products.*') ? 'active' : '' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
@@ -35,50 +35,71 @@
                         <path d="M9 14h6"></path>
                     </svg>
                     <span>Wholesaler Products</span>
+                    @php
+                        $pendingPriceChanges = \App\Models\WholesalerProductPriceChange::where('status', 'pending')->count();
+                    @endphp
+                    @if($pendingPriceChanges > 0)
+                        <span class="badge bg-warning ms-auto">{{ $pendingPriceChanges }}</span>
+                    @endif
                 </a>
             </li>
 
-            <!-- Wholesaler Orders -->
+            <!-- Price Changes -->
             <li>
-                <a href="{{ route('employee.wholesaler_orders.index') }}"
-                   class="{{ request()->routeIs('employee.wholesaler_orders.*') ? 'active' : '' }}">
+                <a href="{{ route('employee.wholesaler.price-changes.index') }}"
+                   class="{{ request()->routeIs('employee.wholesaler.price-change.*') ? 'active' : '' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="9" cy="21" r="1"></circle>
-                        <circle cx="20" cy="21" r="1"></circle>
-                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
                     </svg>
-                    <span>Wholesaler Orders</span>
+                    <span>Price Changes</span>
+                    @php
+                        $myPendingChanges = \App\Models\WholesalerProductPriceChange::where('status', 'pending')
+                            ->where('employee_id', Auth::guard('employee')->id())
+                            ->count();
+                    @endphp
+                    @if($myPendingChanges > 0)
+                        <span class="badge bg-warning ms-auto">{{ $myPendingChanges }}</span>
+                    @endif
                 </a>
             </li>
 
-            <!-- Today's Orders -->
+            <!-- Product Exchange -->
             <li>
-                <a href="{{ route('employee.wholesaler_orders.today') }}"
-                   class="{{ request()->routeIs('employee.wholesaler_orders.today') ? 'active' : '' }}">
+                <a href="{{ route('employee.wholesaler.exchanges.index') }}"
+                   class="{{ request()->routeIs('employee.wholesaler.exchange.*') ? 'active' : '' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
+                        <path d="M17 1l4 4-4 4"></path>
+                        <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                        <path d="M7 23l-4-4 4-4"></path>
+                        <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
                     </svg>
-                    <span>Today's Orders</span>
+                    <span>Product Exchange</span>
+                    @php
+                        $pendingExchanges = \App\Models\WholesalerProductExchange::where('status', 'pending')->count();
+                    @endphp
+                    @if($pendingExchanges > 0)
+                        <span class="badge bg-warning ms-auto">{{ $pendingExchanges }}</span>
+                    @endif
                 </a>
             </li>
 
-            <!-- Weekly Orders -->
-            <li>
-                <a href="{{ route('employee.wholesaler_orders.weekly') }}"
-                   class="{{ request()->routeIs('employee.wholesaler_orders.weekly') ? 'active' : '' }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                        <line x1="16" y1="2" x2="16" y2="6"></line>
-                        <line x1="8" y1="2" x2="8" y2="6"></line>
-                        <line x1="3" y1="10" x2="21" y2="10"></line>
-                    </svg>
-                    <span>Weekly Orders</span>
-                </a>
-            </li>
+            <!-- Pending Approvals (Quick Access) -->
+            @if($pendingPriceChanges > 0 || $pendingExchanges > 0)
+                <li>
+                    <a href="{{ route('employee.wholesaler.price-changes.pending') }}"
+                       class="text-warning">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>Pending Approvals</span>
+                        <span class="badge bg-warning ms-auto">{{ $pendingPriceChanges + $pendingExchanges }}</span>
+                    </a>
+                </li>
+            @endif
         </ul>
     </li>
 

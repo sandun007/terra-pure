@@ -16,11 +16,13 @@ class WholesalerProduct extends Model
         'wholesaler_id',
         'category_id',
         'brand_id',
+
         'code',
         'name',
         'slug',
         'sku',
         'description',
+
         'cost_price',
         'selling_price',
         'display_price',
@@ -28,19 +30,31 @@ class WholesalerProduct extends Model
         'discount',
         'profit_margin',
         'packaging_cost',
+
         'qty',
         'total_sold',
         'min_stock_level',
+
         'features',
         'barcode',
         'image',
         'status',
+
         'average_rating',
         'total_reviews',
         'total_ratings',
+
+        // price audit
         'last_price_updated_by',
         'last_price_updated_at',
-        'price_changes_count'
+        'price_changes_count',
+
+        // exchange audit (make sure these columns exist in migration)
+        'original_wholesaler_id',
+        'exchange_count',
+        'exchange_history',
+        'last_exchanged_at',
+        'last_exchanged_by',
     ];
 
     protected $casts = [
@@ -51,25 +65,47 @@ class WholesalerProduct extends Model
         'discount' => 'float',
         'profit_margin' => 'float',
         'packaging_cost' => 'float',
+
         'features' => 'array',
-        'last_price_updated_at' => 'datetime',
+
         'qty' => 'integer',
         'total_sold' => 'integer',
         'min_stock_level' => 'integer',
+
         'average_rating' => 'float',
         'total_reviews' => 'integer',
         'total_ratings' => 'integer',
+
+        'last_price_updated_at' => 'datetime',
         'price_changes_count' => 'integer',
+
+        // exchange
+        'exchange_count' => 'integer',
+        'exchange_history' => 'array',
+        'last_exchanged_at' => 'datetime',
     ];
 
-    protected $appends = ['final_price', 'display_price_formatted', 'final_price_formatted'];
+    protected $appends = [
+        'final_price',
+        'display_price_formatted',
+        'final_price_formatted',
+        'stock_status',
+        'stock_status_color',
+        'image_url',
+    ];
 
-    /**
-     * Relationships
-     */
+    /* =========================================================
+     | Relationships
+     ========================================================= */
+
     public function wholesaler(): BelongsTo
     {
         return $this->belongsTo(Wholesaler::class);
+    }
+
+    public function originalWholesaler(): BelongsTo
+    {
+        return $this->belongsTo(Wholesaler::class, 'original_wholesaler_id');
     }
 
     public function category(): BelongsTo
@@ -82,45 +118,55 @@ class WholesalerProduct extends Model
         return $this->belongsTo(Brand::class);
     }
 
-    /**
-     * Get price changes for this product
-     */
-    public function priceChanges(): HasMany
-    {
-        return $this->hasMany(EmployeePriceChange::class, 'product_id');
-    }
-
-    /**
-     * Get latest price change
-     */
-    public function latestPriceChange()
-    {
-        return $this->hasOne(EmployeePriceChange::class, 'product_id')->latest();
-    }
-
-    /**
-     * Get the employee who last updated the price
-     */
     public function lastPriceUpdatedBy(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'last_price_updated_by');
     }
 
+    public function lastExchangedBy(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'last_exchanged_by');
+    }
+
+    /** ✅ Price history table (APPROVED changes history) */
     public function priceHistories(): HasMany
     {
         return $this->hasMany(WholesalerProductPriceChange::class, 'product_id');
     }
 
-    public function reviews(): HasMany
+    public function latestPriceHistory()
     {
-        return $this->hasMany(ProductReview::class, 'product_id')
-            ->where('status', 'active')
-            ->orderBy('created_at', 'desc');
+        return $this->hasOne(WholesalerProductPriceChange::class, 'product_id')->latest();
+    }
+
+    /** ✅ Exchanges */
+    public function sourceExchanges(): HasMany
+    {
+        return $this->hasMany(WholesalerProductExchange::class, 'source_product_id');
+    }
+
+    public function destinationExchanges(): HasMany
+    {
+        return $this->hasMany(WholesalerProductExchange::class, 'destination_product_id');
     }
 
     /**
-     * Scopes
+     * Get all exchanges (source + destination) as collection
+     * NOTE: this is NOT a real Eloquent relation; it's a helper method.
      */
+    public function allExchanges()
+    {
+        return $this->sourceExchanges()
+            ->get()
+            ->merge($this->destinationExchanges()->get())
+            ->sortByDesc('created_at')
+            ->values();
+    }
+
+    /* =========================================================
+     | Scopes
+     ========================================================= */
+
     public function scopeActive($query)
     {
         return $query->where('status', 'active');
@@ -141,73 +187,69 @@ class WholesalerProduct extends Model
         return $query->whereRaw('qty <= min_stock_level');
     }
 
-    /**
-     * Accessors - Price Calculations
-     */
-
-    /**
-     * Get display price (what wholesaler sees)
-     * Returns selling_price if display_price is null
-     *
-     * @return float
-     */
-    public function getDisplayPriceAttribute(): float
+    public function scopeExchanged($query)
     {
-        // If display_price is not null, use it
-        if (!is_null($this->attributes['display_price'] ?? null)) {
-            return (float) $this->attributes['display_price'];
+        return $query->where('exchange_count', '>', 0);
+    }
+
+    public function scopeNeverExchanged($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('exchange_count')->orWhere('exchange_count', 0);
+        });
+    }
+
+    public function scopeExchangedByEmployee($query, $employeeId)
+    {
+        return $query->where('last_exchanged_by', $employeeId);
+    }
+
+    /* =========================================================
+     | Accessors (ONE VERSION ONLY)
+     ========================================================= */
+
+    /** ✅ Display price (fallback to selling_price) */
+    public function getDisplayPriceAttribute($value): float
+    {
+        if (!is_null($value)) {
+            return (float) $value;
         }
 
-        // If selling_price is set, use it
         if (!is_null($this->attributes['selling_price'] ?? null)) {
             return (float) $this->attributes['selling_price'];
         }
 
-        // Default fallback
         return 0.00;
     }
 
-    /**
-     * Get display price as formatted string (for backward compatibility)
-     */
     public function getDisplayPriceFormattedAttribute(): string
     {
         return 'Rs. ' . number_format($this->display_price, 2);
     }
 
-    /**
-     * Final price after discount
-     *
-     * @return float
-     */
+    /** ✅ Final price after discount */
     public function getFinalPriceAttribute(): float
     {
-        $price = $this->display_price;
+        $price = (float) ($this->display_price ?? 0);
 
-        if (!is_null($this->discount) && $this->discount > 0) {
-            $price = $price - ($price * ($this->discount / 100));
+        $discount = (float) ($this->discount ?? 0);
+        if ($discount > 0) {
+            $price = $price - ($price * ($discount / 100));
         }
 
         return round($price, 2);
     }
 
-    /**
-     * Get final price as formatted string
-     */
     public function getFinalPriceFormattedAttribute(): string
     {
         return 'Rs. ' . number_format($this->final_price, 2);
     }
 
-    /**
-     * Get original price (selling price) - safe method
-     */
     public function getOriginalPriceAttribute(): float
     {
         return (float) ($this->attributes['selling_price'] ?? 0);
     }
 
-    // Total cost including packaging
     public function getTotalCostAttribute(): float
     {
         $cost = (float) ($this->cost_price ?? 0);
@@ -215,7 +257,6 @@ class WholesalerProduct extends Model
         return round($cost + $packaging, 2);
     }
 
-    // Profit margin percentage
     public function getProfitMarginPercentageAttribute(): float
     {
         $totalCost = $this->total_cost;
@@ -225,131 +266,35 @@ class WholesalerProduct extends Model
         return 0;
     }
 
-    // Profit amount
     public function getProfitAmountAttribute(): float
     {
         return round($this->final_price - $this->total_cost, 2);
     }
 
-    /**
-     * Check if product has discount
-     */
     public function getHasDiscountAttribute(): bool
     {
         return !is_null($this->discount) && $this->discount > 0;
     }
 
-    /**
-     * Get discount percentage as string
-     */
     public function getDiscountPercentageAttribute(): string
     {
-        if ($this->has_discount) {
-            return $this->discount . '% OFF';
-        }
-        return '';
-    }
-
-    /**
-     * Stock Management
-     */
-    public function isLowStock(): bool
-    {
-        return $this->qty <= $this->min_stock_level;
-    }
-
-    public function isOutOfStock(): bool
-    {
-        return $this->qty === 0;
+        return $this->has_discount ? ($this->discount . '% OFF') : '';
     }
 
     public function getStockStatusAttribute(): string
     {
-        if ($this->qty === 0) {
-            return 'Out of Stock';
-        }
-        if ($this->qty <= $this->min_stock_level) {
-            return 'Low Stock';
-        }
+        if ((int)$this->qty === 0) return 'Out of Stock';
+        if ((int)$this->qty <= (int)$this->min_stock_level) return 'Low Stock';
         return 'In Stock';
     }
 
     public function getStockStatusColorAttribute(): string
     {
-        if ($this->qty === 0) {
-            return 'danger';
-        }
-        if ($this->qty <= $this->min_stock_level) {
-            return 'warning';
-        }
+        if ((int)$this->qty === 0) return 'danger';
+        if ((int)$this->qty <= (int)$this->min_stock_level) return 'warning';
         return 'success';
     }
 
-    /**
-     * Update prices with automatic display price calculation
-     */
-    public function updatePricesWithMargin(array $prices, $employeeId, $notes = null)
-    {
-        // Store old prices
-        $oldPrices = [
-            'selling_price' => $this->selling_price,
-            'display_price' => $this->display_price,
-            'discount' => $this->discount,
-            'final_price' => $this->final_price,
-        ];
-
-        // Update selling price
-        if (isset($prices['selling_price'])) {
-            $this->selling_price = $prices['selling_price'];
-            // Only update display_price if it's not explicitly set or is null
-            if (is_null($this->display_price) || !isset($prices['display_price'])) {
-                $this->display_price = $prices['selling_price'];
-            }
-        }
-
-        // Update display price if provided
-        if (isset($prices['display_price'])) {
-            $this->display_price = $prices['display_price'];
-        }
-
-        // Update discount if provided
-        if (isset($prices['discount'])) {
-            $this->discount = $prices['discount'];
-        }
-
-        // Update profit margin if provided
-        if (isset($prices['profit_margin'])) {
-            $this->profit_margin = $prices['profit_margin'];
-        }
-
-        $this->last_price_updated_by = $employeeId;
-        $this->last_price_updated_at = now();
-        $this->price_changes_count = ($this->price_changes_count ?? 0) + 1;
-
-        $this->save();
-
-        // Store new prices
-        $newPrices = [
-            'selling_price' => $this->selling_price,
-            'display_price' => $this->display_price,
-            'discount' => $this->discount,
-            'final_price' => $this->final_price,
-        ];
-
-        // Log price change
-        $this->priceHistories()->create([
-            'employee_id' => $employeeId,
-            'old_prices' => $oldPrices,
-            'new_prices' => $newPrices,
-            'notes' => $notes,
-        ]);
-
-        return $this->fresh();
-    }
-
-    /**
-     * Get image URL
-     */
     public function getImageUrlAttribute(): string
     {
         if (!$this->image) {
@@ -361,9 +306,97 @@ class WholesalerProduct extends Model
             : asset('images/default-product.png');
     }
 
+    /* =========================================================
+     | Business Methods
+     ========================================================= */
+
     /**
-     * Get product details for API/JSON response
+     * ✅ ONLY use this when a price change is APPROVED (wholesaler approved).
+     * This method updates product + saves history in WholesalerProductPriceChange.
      */
+    public function applyApprovedPriceChange(array $prices, int $employeeId, ?string $notes = null): self
+    {
+        $oldPrices = [
+            'selling_price' => (float)($this->selling_price ?? 0),
+            'display_price' => (float)($this->display_price ?? 0),
+            'discount' => (float)($this->discount ?? 0),
+            'final_price' => (float)($this->final_price ?? 0),
+        ];
+
+        if (array_key_exists('selling_price', $prices)) {
+            $this->selling_price = $prices['selling_price'];
+            if (!array_key_exists('display_price', $prices)) {
+                $this->display_price = $prices['selling_price'];
+            }
+        }
+
+        if (array_key_exists('display_price', $prices)) {
+            $this->display_price = $prices['display_price'];
+        }
+
+        if (array_key_exists('discount', $prices)) {
+            $this->discount = $prices['discount'];
+        }
+
+        if (array_key_exists('profit_margin', $prices)) {
+            $this->profit_margin = $prices['profit_margin'];
+        }
+
+        $this->last_price_updated_by = $employeeId;
+        $this->last_price_updated_at = now();
+        $this->price_changes_count = ($this->price_changes_count ?? 0) + 1;
+
+        $this->save();
+
+        $newPrices = [
+            'selling_price' => (float)($this->selling_price ?? 0),
+            'display_price' => (float)($this->display_price ?? 0),
+            'discount' => (float)($this->discount ?? 0),
+            'final_price' => (float)($this->final_price ?? 0),
+        ];
+
+        $this->priceHistories()->create([
+            'employee_id' => $employeeId,
+            'old_prices' => $oldPrices,
+            'new_prices' => $newPrices,
+            'notes' => $notes,
+        ]);
+
+        return $this->fresh();
+    }
+
+    /**
+     * ✅ Update exchange statistics (call when exchange created)
+     */
+    public function updateExchangeStats(WholesalerProductExchange $exchange): void
+    {
+        $this->exchange_count = ($this->exchange_count ?? 0) + 1;
+        $this->last_exchanged_at = now();
+        $this->last_exchanged_by = $exchange->employee_id;
+
+        $history = $this->exchange_history ?? [];
+        $history[] = [
+            'exchange_id' => $exchange->id,
+            'date' => now()->toDateTimeString(),
+            'type' => $exchange->exchange_type,
+            'from_wholesaler' => $exchange->source_wholesaler_id,
+            'to_wholesaler' => $exchange->destination_wholesaler_id,
+            'employee_id' => $exchange->employee_id,
+        ];
+
+        if (count($history) > 10) {
+            $history = array_slice($history, -10);
+        }
+
+        $this->exchange_history = $history;
+        $this->save();
+    }
+
+    public function hasBeenExchanged(): bool
+    {
+        return ($this->exchange_count ?? 0) > 0;
+    }
+
     public function toApiArray(): array
     {
         return [
@@ -384,28 +417,30 @@ class WholesalerProduct extends Model
         ];
     }
 
-    /**
-     * Boot the model
-     */
+    /* =========================================================
+     | Boot
+     ========================================================= */
+
     protected static function boot()
     {
         parent::boot();
 
         static::creating(function ($product) {
-            // Auto-generate code if not provided
             if (empty($product->code)) {
                 $product->code = 'PRD-' . strtoupper(uniqid());
             }
 
-            // Set default min_stock_level if not set
             if (is_null($product->min_stock_level)) {
                 $product->min_stock_level = 5;
             }
         });
 
         static::updating(function ($product) {
-            // Track if price changed
-            if ($product->isDirty('selling_price') || $product->isDirty('display_price') || $product->isDirty('discount')) {
+            if (
+                $product->isDirty('selling_price') ||
+                $product->isDirty('display_price') ||
+                $product->isDirty('discount')
+            ) {
                 $product->price_changes_count = ($product->price_changes_count ?? 0) + 1;
                 $product->last_price_updated_at = now();
             }

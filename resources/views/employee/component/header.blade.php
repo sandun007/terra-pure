@@ -524,14 +524,14 @@
                     My Profile
                 </a>
 
-                <a class="dropdown-item" href="{{ route('employee.analytics') }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 20V10"></path>
-                        <path d="M12 20V4"></path>
-                        <path d="M6 20v-6"></path>
-                    </svg>
-                    Analytics
-                </a>
+{{--                <a class="dropdown-item" href="{{ route('employee.analytics') }}">--}}
+{{--                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">--}}
+{{--                        <path d="M18 20V10"></path>--}}
+{{--                        <path d="M12 20V4"></path>--}}
+{{--                        <path d="M6 20v-6"></path>--}}
+{{--                    </svg>--}}
+{{--                    Analytics--}}
+{{--                </a>--}}
 
                 <div class="dropdown-divider"></div>
 

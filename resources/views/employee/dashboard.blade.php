@@ -1,4 +1,5 @@
 @extends('employee.layout.app')
+
 @push('title')
     Employee Dashboard
 @endpush
@@ -191,6 +192,18 @@
             background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
             color: white;
             box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .icon-exchanges {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: white;
+            box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3);
+        }
+
+        .icon-price-changes {
+            background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+            color: white;
+            box-shadow: 0 8px 20px rgba(168, 85, 247, 0.3);
         }
 
         .employee-stat-value {
@@ -414,6 +427,63 @@
             z-index: 1;
         }
 
+        /* Activity Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e2e8f0;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 1.5rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -0.5rem;
+            top: 0;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            background: #10b981;
+            border: 2px solid white;
+        }
+
+        .timeline-item.price::before {
+            background: #8b5cf6;
+        }
+
+        .timeline-item.exchange::before {
+            background: #f97316;
+        }
+
+        .timeline-date {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 0.25rem;
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .timeline-desc {
+            font-size: 0.9rem;
+            color: #475569;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .dashboard-container {
@@ -467,7 +537,7 @@
             </div>
         </div>
 
-        <!-- Enhanced Statistics Grid -->
+        <!-- Enhanced Statistics Grid with New Metrics -->
         <div class="employee-stats-grid">
             <div class="employee-stat-card">
                 <div class="employee-stat-header">
@@ -524,6 +594,34 @@
                     <span>Monthly revenue</span>
                 </div>
             </div>
+
+            <div class="employee-stat-card">
+                <div class="employee-stat-header">
+                    <div class="employee-stat-title">Price Changes</div>
+                    <div class="employee-stat-icon icon-price-changes">
+                        <i class="fas fa-tag"></i>
+                    </div>
+                </div>
+                <div class="employee-stat-value">{{ $stats['total_price_changes'] ?? 0 }}</div>
+                <div class="employee-stat-change">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Total: {{ $stats['my_price_changes'] ?? 0 }} by you</span>
+                </div>
+            </div>
+
+            <div class="employee-stat-card">
+                <div class="employee-stat-header">
+                    <div class="employee-stat-title">Exchanges</div>
+                    <div class="employee-stat-icon icon-exchanges">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                </div>
+                <div class="employee-stat-value">{{ $stats['total_exchanges'] ?? 0 }}</div>
+                <div class="employee-stat-change">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Pending: {{ $stats['pending_exchanges'] ?? 0 }}</span>
+                </div>
+            </div>
         </div>
 
         <div class="row">
@@ -543,55 +641,114 @@
                     </div>
                 </div>
 
-{{--                <!-- Recent Orders Section -->--}}
-{{--                <div class="dashboard-section">--}}
-{{--                    <div class="section-header">--}}
-{{--                        <h3 class="section-title">Recent Orders</h3>--}}
-{{--                        <a href="{{ route('em') }}" class="view-all-link">--}}
-{{--                            View All <i class="fas fa-arrow-right"></i>--}}
-{{--                        </a>--}}
+                <!-- Recent Price Changes -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h3 class="section-title">Recent Price Changes</h3>
+                        <a href="{{ route('employee.wholesaler.price-changes.index') }}" class="view-all-link">
+                            View All <i class="fas fa-arrow-right"></i>
+                        </a>
                     </div>
 
                     <div class="table-responsive">
                         <table class="table">
                             <thead>
                             <tr>
-                                <th>Order ID</th>
-                                <th>Customer</th>
-                                <th>Amount</th>
+                                <th>Product</th>
+                                <th>Wholesaler</th>
+                                <th>Old Price</th>
+                                <th>New Price</th>
+                                <th>Change</th>
+                                <th>Date</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @forelse($recentPriceChanges ?? [] as $change)
+                                <tr>
+                                    <td>
+                                        <strong>{{ $change->product->name ?? 'N/A' }}</strong>
+                                        <br><small class="text-muted">{{ $change->product->code ?? '' }}</small>
+                                    </td>
+                                    <td>{{ $change->wholesaler->business_name ?? 'N/A' }}</td>
+                                    <td><span class="text-muted">Rs. {{ number_format($change->old_final_price, 2) }}</span></td>
+                                    <td><strong class="text-primary">Rs. {{ number_format($change->new_final_price, 2) }}</strong></td>
+                                    <td>
+                                        <span class="badge {{ $change->price_difference > 0 ? 'bg-success' : 'bg-danger' }}">
+                                            {{ $change->price_difference > 0 ? '+' : '' }}{{ number_format($change->price_difference, 2) }}
+                                            ({{ number_format($change->percentage_change, 2) }}%)
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <i class="far fa-calendar-alt" style="color: #94a3b8; margin-right: 5px;"></i>
+                                        {{ $change->created_at->diffForHumans() }}
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted" style="padding: 40px;">
+                                        <i class="fas fa-tag" style="font-size: 48px; color: #cbd5e1; margin-bottom: 15px; display: block;"></i>
+                                        No recent price changes
+                                    </td>
+                                </tr>
+                            @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Recent Exchanges -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h3 class="section-title">Recent Exchanges</h3>
+                        <a href="{{ route('employee.wholesaler.exchanges.index') }}" class="view-all-link">
+                            View All <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>Source</th>
+                                <th>Destination</th>
+                                <th>Quantity</th>
+                                <th>Value</th>
                                 <th>Status</th>
                                 <th>Date</th>
                             </tr>
                             </thead>
                             <tbody>
-                            @forelse($recentOrders as $order)
+                            @forelse($recentExchanges ?? [] as $exchange)
                                 <tr>
-                                    <td><strong>#{{ $order->id }}</strong></td>
                                     <td>
-                                        <i class="fas fa-user-circle" style="color: #10b981; margin-right: 8px;"></i>
-                                        {{ $order->customer->name ?? 'N/A' }}
+                                        <small>{{ $exchange->sourceProduct->name ?? 'N/A' }}</small>
+                                        <br><small class="text-muted">{{ $exchange->sourceWholesaler->business_name ?? '' }}</small>
                                     </td>
-                                    <td><strong>RS. {{ number_format($order->total_amount, 2) }}</strong></td>
                                     <td>
-                                        <span class="badge
-                                            @if($order->status == 'confirmed') bg-success
-                                            @elseif($order->status == 'pending') bg-warning
-                                            @elseif($order->status == 'cancelled') bg-danger
-                                            @else bg-secondary @endif">
-                                            {{ ucfirst($order->status) }}
+                                        <small>{{ $exchange->destinationProduct->name ?? 'N/A' }}</small>
+                                        <br><small class="text-muted">{{ $exchange->destinationWholesaler->business_name ?? '' }}</small>
+                                    </td>
+                                    <td>{{ $exchange->exchange_quantity }}</td>
+                                    <td>Rs. {{ number_format($exchange->destination_price_at_time, 2) }}</td>
+                                    <td>
+                                        <span class="badge bg-{{
+                                            $exchange->status == 'completed' ? 'success' :
+                                            ($exchange->status == 'pending' ? 'warning' :
+                                            ($exchange->status == 'approved' ? 'info' : 'secondary'))
+                                        }}">
+                                            {{ ucfirst($exchange->status) }}
                                         </span>
                                     </td>
                                     <td>
                                         <i class="far fa-calendar-alt" style="color: #94a3b8; margin-right: 5px;"></i>
-                                        {{ $order->created_at->format('M d, Y') }}
+                                        {{ $exchange->created_at->diffForHumans() }}
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted" style="padding: 40px;">
-                                        <i class="fas fa-inbox"
-                                           style="font-size: 48px; color: #cbd5e1; margin-bottom: 15px; display: block;"></i>
-                                        No orders found
+                                    <td colspan="6" class="text-center text-muted" style="padding: 40px;">
+                                        <i class="fas fa-exchange-alt" style="font-size: 48px; color: #cbd5e1; margin-bottom: 15px; display: block;"></i>
+                                        No recent exchanges
                                     </td>
                                 </tr>
                             @endforelse
@@ -602,64 +759,158 @@
             </div>
 
             <div class="col-lg-4">
-                {{-- Quick Actions Section --}}
+                <!-- Quick Actions Section -->
                 <div class="dashboard-section">
                     <div class="section-header">
                         <h3 class="section-title">Quick Actions</h3>
                     </div>
 
                     <div class="quick-actions">
-                        <a href="{{ route('employee.wholesaler.products') }}" class="quick-action-btn">
+                        <a href="{{ route('employee.wholesaler.products.index') }}" class="quick-action-btn">
                             <i class="fas fa-box-open quick-action-icon"></i>
                             <span>Manage Products</span>
                         </a>
-                        <a href="{{ route('employee.wholesaler_orders.index') }}" class="quick-action-btn">
-                            <i class="fas fa-clipboard-list quick-action-icon"></i>
-                            <span>Wholesaler Orders</span>
+                        <a href="{{ route('employee.wholesaler.price-changes.create') }}" class="quick-action-btn">
+                            <i class="fas fa-tag quick-action-icon"></i>
+                            <span>Change Price</span>
                         </a>
+                        <a href="{{ route('employee.wholesaler.price-changes.bulk.create') }}" class="quick-action-btn">
+                            <i class="fas fa-layer-group quick-action-icon"></i>
+                            <span>Bulk Price Update</span>
+                        </a>
+                        <a href="{{ route('employee.wholesaler.exchanges.create') }}" class="quick-action-btn">
+                            <i class="fas fa-exchange-alt quick-action-icon"></i>
+                            <span>New Exchange</span>
+                        </a>
+
                         <a href="{{ route('employee.profile') }}" class="quick-action-btn">
                             <i class="fas fa-user-cog quick-action-icon"></i>
                             <span>Update Profile</span>
                         </a>
                     </div>
                 </div>
-{{--                    @forelse($recentWholesalers as $wholesaler)--}}
-                        <div class="alert alert-success d-flex align-items-center mb-3">
-                            <i class="fas fa-store me-3"></i>
-{{--                            <div>--}}
-{{--                                <strong>{{ $wholesaler->business_name }}</strong>--}}
-{{--                                <br>--}}
-{{--                                <small>{{ $wholesaler->name }} • {{ $wholesaler->products_count ?? 0 }} products</small>--}}
-{{--                            </div>--}}
+
+                <!-- Pending Approvals -->
+                @if(($stats['pending_price_changes'] ?? 0) > 0 || ($stats['pending_exchanges'] ?? 0) > 0)
+                    <div class="dashboard-section">
+                        <div class="section-header">
+                            <h3 class="section-title">Pending Approvals</h3>
                         </div>
-{{--                    @empty--}}
+
+                        @if(($stats['pending_price_changes'] ?? 0) > 0)
+                            <a href="{{ route('employee.wholesaler.price-changes.pending') }}" class="text-decoration-none">
+                                <div class="alert alert-warning d-flex align-items-center mb-3">
+                                    <i class="fas fa-clock me-3 fs-4"></i>
+                                    <div>
+                                        <strong>{{ $stats['pending_price_changes'] }} Price Change{{ $stats['pending_price_changes'] > 1 ? 's' : '' }}</strong>
+                                        <br>
+                                        <small>Awaiting approval</small>
+                                    </div>
+                                    <i class="fas fa-arrow-right ms-auto"></i>
+                                </div>
+                            </a>
+                        @endif
+
+                        @if(($stats['pending_exchanges'] ?? 0) > 0)
+                            <a href="{{ route('employee.wholesaler.exchanges.index', ['status' => 'pending']) }}" class="text-decoration-none">
+                                <div class="alert alert-warning d-flex align-items-center mb-3">
+                                    <i class="fas fa-exchange-alt me-3 fs-4"></i>
+                                    <div>
+                                        <strong>{{ $stats['pending_exchanges'] }} Exchange{{ $stats['pending_exchanges'] > 1 ? 's' : '' }}</strong>
+                                        <br>
+                                        <small>Awaiting approval</small>
+                                    </div>
+                                    <i class="fas fa-arrow-right ms-auto"></i>
+                                </div>
+                            </a>
+                        @endif
+                    </div>
+                @endif
+
+                <!-- Recent Wholesalers -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h3 class="section-title">Recent Wholesalers</h3>
+                        <a href="{{ route('employee.wholesaler.products.index') }}" class="view-all-link">
+                            View All
+                        </a>
+                    </div>
+
+                    @forelse($recentWholesalers ?? [] as $wholesaler)
+                        <div class="d-flex align-items-center mb-3 p-3 bg-light rounded-3">
+                            <i class="fas fa-store me-3 fs-4" style="color: #10b981;"></i>
+                            <div>
+                                <strong>{{ $wholesaler->business_name ?? $wholesaler->name }}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    {{ $wholesaler->products_count ?? 0 }} products •
+                                    {{ $wholesaler->orders_count ?? 0 }} orders
+                                </small>
+                            </div>
+                        </div>
+                    @empty
                         <div class="text-center" style="padding: 30px;">
-                            <i class="fas fa-users"
-                               style="font-size: 48px; color: #cbd5e1; margin-bottom: 15px; display: block;"></i>
+                            <i class="fas fa-users" style="font-size: 48px; color: #cbd5e1; margin-bottom: 15px; display: block;"></i>
                             <p class="text-muted mb-0">No wholesalers found</p>
                         </div>
-{{--                    @endforelse--}}
+                    @endforelse
                 </div>
 
-                <!-- Additional Quick Links -->
+                <!-- Management Tools -->
                 <div class="dashboard-section">
                     <div class="section-header">
                         <h3 class="section-title">Management Tools</h3>
                     </div>
 
                     <div class="quick-actions">
-                        <a href="{{ route('employee.analytics') }}" class="quick-action-btn">
-                            <i class="fas fa-chart-line quick-action-icon"></i>
-                            <span>Analytics</span>
+{{--                        <a href="{{ route('seller.employee.seller.orders') }}" class="quick-action-btn">--}}
+{{--                            <i class="fas fa-chart-line quick-action-icon"></i>--}}
+{{--                            <span>Analytics</span>--}}
+{{--                        </a>--}}
+                        <a href="{{ route('employee.wholesaler.price-changes.history') }}" class="quick-action-btn">
+                            <i class="fas fa-history quick-action-icon"></i>
+                            <span>Price History</span>
                         </a>
-                        <a href="{{ route('employee.wholesaler_orders.export') }}" class="quick-action-btn">
+{{--                        <a href="{{ route('employee.wholesaler.exchanges.history') }}" class="quick-action-btn">--}}
+{{--                            <i class="fas fa-exchange-alt quick-action-icon"></i>--}}
+{{--                            <span>Exchange History</span>--}}
+{{--                        </a>--}}
+                        <a href="{{ route('employee.wholesaler.products.export') }}" class="quick-action-btn">
                             <i class="fas fa-file-export quick-action-icon"></i>
-                            <span>Export Report</span>
+                            <span>Export Products</span>
                         </a>
-                        <a href="#" onclick="window.open('{{ route('print.out', 0) }}'.replace('/0', ''), '_blank')" class="quick-action-btn">
-                            <i class="fas fa-print quick-action-icon"></i>
-                            <span>Print Labels</span>
+                        <a href="{{ route('employee.wholesaler.price-changes.export') }}" class="quick-action-btn">
+                            <i class="fas fa-file-csv quick-action-icon"></i>
+                            <span>Export Price Changes</span>
                         </a>
+                        <a href="{{ route('employee.wholesaler.exchanges.export') }}" class="quick-action-btn">
+                            <i class="fas fa-file-export quick-action-icon"></i>
+                            <span>Export Exchanges</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Activity Timeline -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h3 class="section-title">Your Recent Activity</h3>
+                    </div>
+
+                    <div class="timeline">
+                        @forelse($recentActivities ?? [] as $activity)
+                            <div class="timeline-item {{ $activity->type }}">
+                                <div class="timeline-date">
+                                    <i class="far fa-clock me-1"></i> {{ $activity->created_at->diffForHumans() }}
+                                </div>
+                                <div class="timeline-title">{{ $activity->title }}</div>
+                                <div class="timeline-desc">{{ $activity->description }}</div>
+                            </div>
+                        @empty
+                            <div class="text-center py-4">
+                                <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No recent activity</p>
+                            </div>
+                        @endforelse
                     </div>
                 </div>
             </div>
@@ -856,40 +1107,52 @@
                 return;
             }
 
-            // In a real application, you would fetch new data from the server
-            let newData;
+            // Fetch data from server
+            fetch(`{{ route("employee.dashboard") }}?period=${period}`)
+                .then(response => response.json())
+                .then(data => {
+                    try {
+                        analyticsChart.data.labels = data.labels;
+                        analyticsChart.data.datasets[0].data = data.orders;
+                        analyticsChart.data.datasets[1].data = data.revenue;
+                        analyticsChart.update();
+                    } catch (error) {
+                        console.error('Error updating chart:', error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching chart data:', error);
 
-            switch (period) {
-                case 'weekly':
-                    newData = {
-                        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-                        orders: [100, 120, 150, 180],
-                        revenue: [100000, 120000, 150000, 180000]
-                    };
-                    break;
-                case 'monthly':
-                    newData = {
-                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                        orders: [180, 240, 320, 450, 500, 600, 550, 650, 700, 800, 850, 900],
-                        revenue: [180000, 240000, 320000, 450000, 500000, 600000, 550000, 650000, 700000, 800000, 850000, 900000]
-                    };
-                    break;
-                default: // daily
-                    newData = {
-                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                        orders: [12, 19, 15, 25, 22, 30, 28],
-                        revenue: [12000, 19000, 15000, 25000, 22000, 30000, 28000]
-                    };
-            }
+                    // Fallback to local data
+                    let newData;
+                    switch (period) {
+                        case 'weekly':
+                            newData = {
+                                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                                orders: [100, 120, 150, 180],
+                                revenue: [100000, 120000, 150000, 180000]
+                            };
+                            break;
+                        case 'monthly':
+                            newData = {
+                                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                                orders: [180, 240, 320, 450, 500, 600, 550, 650, 700, 800, 850, 900],
+                                revenue: [180000, 240000, 320000, 450000, 500000, 600000, 550000, 650000, 700000, 800000, 850000, 900000]
+                            };
+                            break;
+                        default: // daily
+                            newData = {
+                                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                                orders: [12, 19, 15, 25, 22, 30, 28],
+                                revenue: [12000, 19000, 15000, 25000, 22000, 30000, 28000]
+                            };
+                    }
 
-            try {
-                analyticsChart.data.labels = newData.labels;
-                analyticsChart.data.datasets[0].data = newData.orders;
-                analyticsChart.data.datasets[1].data = newData.revenue;
-                analyticsChart.update();
-            } catch (error) {
-                console.error('Error updating chart:', error);
-            }
+                    analyticsChart.data.labels = newData.labels;
+                    analyticsChart.data.datasets[0].data = newData.orders;
+                    analyticsChart.data.datasets[1].data = newData.revenue;
+                    analyticsChart.update();
+                });
         }
     </script>
 @endpush

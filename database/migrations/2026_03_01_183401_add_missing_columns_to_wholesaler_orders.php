@@ -10,36 +10,64 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('wholesaler_orders', function (Blueprint $table) {
-            // Add customer_phone_2 if not exists
+            // Add customer_phone_2 if not exists - with conditional positioning
             if (!Schema::hasColumn('wholesaler_orders', 'customer_phone_2')) {
-                $table->string('customer_phone_2')->nullable()->after('customer_phone');
+                if (Schema::hasColumn('wholesaler_orders', 'customer_phone')) {
+                    $table->string('customer_phone_2')->nullable()->after('customer_phone');
+                } else {
+                    $table->string('customer_phone_2')->nullable();
+                }
             }
 
-            // Add product_description if not exists
+            // Add product_description if not exists - with conditional positioning
             if (!Schema::hasColumn('wholesaler_orders', 'product_description')) {
-                $table->text('product_description')->nullable()->after('product_name');
+                if (Schema::hasColumn('wholesaler_orders', 'product_name')) {
+                    $table->text('product_description')->nullable()->after('product_name');
+                } else {
+                    $table->text('product_description')->nullable();
+                }
             }
 
-            // Add product_category if not exists
+            // Add product_category if not exists - with conditional positioning
             if (!Schema::hasColumn('wholesaler_orders', 'product_category')) {
-                $table->string('product_category')->nullable()->after('product_description');
+                if (Schema::hasColumn('wholesaler_orders', 'product_description')) {
+                    $table->string('product_category')->nullable()->after('product_description');
+                } else {
+                    $table->string('product_category')->nullable();
+                }
             }
 
-            // Ensure all necessary columns exist
+            // Ensure all necessary columns exist - with conditional positioning for each
             if (!Schema::hasColumn('wholesaler_orders', 'product_code')) {
-                $table->string('product_code')->nullable()->after('product_id');
+                if (Schema::hasColumn('wholesaler_orders', 'product_id')) {
+                    $table->string('product_code')->nullable()->after('product_id');
+                } else {
+                    $table->string('product_code')->nullable();
+                }
             }
 
             if (!Schema::hasColumn('wholesaler_orders', 'product_image')) {
-                $table->string('product_image')->nullable()->after('product_price');
+                if (Schema::hasColumn('wholesaler_orders', 'product_price')) {
+                    $table->string('product_image')->nullable()->after('product_price');
+                } else {
+                    $table->string('product_image')->nullable();
+                }
             }
 
             if (!Schema::hasColumn('wholesaler_orders', 'call_status')) {
-                $table->string('call_status')->default('Pending Call')->after('platform');
+                if (Schema::hasColumn('wholesaler_orders', 'platform')) {
+                    $table->string('call_status')->default('Pending Call')->after('platform');
+                } else {
+                    $table->string('call_status')->default('Pending Call');
+                }
             }
 
             if (!Schema::hasColumn('wholesaler_orders', 'payment_status')) {
-                $table->string('payment_status')->default('pending')->after('payment_method');
+                if (Schema::hasColumn('wholesaler_orders', 'payment_method')) {
+                    $table->string('payment_status')->default('pending')->after('payment_method');
+                } else {
+                    $table->string('payment_status')->default('pending');
+                }
             }
         });
     }
