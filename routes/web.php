@@ -54,6 +54,9 @@ Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])-
         Route::get('/admins/{id}/view', [AdminController::class, 'show'])->name('admin.admins.view');
         Route::get('/create',[AdminController::class,'create'])->name('admin.create');
         Route::post('/store',[AdminController::class,'store'])->name('admin.store');
+        Route::get('/profile', [AdminController::class, 'profile'])->name('admin.profile');
+        Route::get('/profile/edit', [AdminController::class, 'profileEdit'])->name('admin.profile.edit');
+        Route::post('/profile/update', [AdminController::class, 'profileUpdate'])->name('admin.profile.update');
 
         Route::prefix('product')->group(function () {
             Route::get('/', [ProductController::class, 'index'])->name('product.index');
