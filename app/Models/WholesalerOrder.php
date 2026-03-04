@@ -2,112 +2,298 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class WholesalerOrder extends Model
 {
-    // SoftDeletes removed since deleted_at column doesn't exist in database
+    use HasFactory, SoftDeletes;
+
+    protected $table = 'wholesaler_orders';
 
     protected $fillable = [
-        'wholesaler_id',
         'order_number',
+        'wholesaler_id',
+        'call_id',
+        'product_id',
+        'product_code',
+        'product_name',
+        'product_description',
+        'product_category',
+        'product_price',
+        'product_image',
+        'quantity',
+        'customer_name',
+        'customer_phone',
+        'customer_phone_2',
+        'customer_email',
+        'customer_address',
+        'district',
+        'platform',
+        'call_status',
+        'remark',
+        'order_date',
+        'delivery_date',
+        'rescheduling_date',
+        'return_date',
+        'invoice_no',
+        'invoice_date',
         'subtotal',
-        'tax',
+        'discount',
         'shipping',
         'total_amount',
-        'customer_name',
-        'customer_email',
-        'customer_phone',
-        'shipping_address',
         'payment_method',
         'payment_status',
+        'refund_status',
+        'refund_amount',
+        'refunded_at',
+        'refunded_by',
+        'cancelled_by',
+        'refund_notes',
         'status',
-        'notes'
+        'file_path',
+        'original_filename'
     ];
 
     protected $casts = [
-        'subtotal' => 'decimal:2',
-        'tax' => 'decimal:2',
-        'shipping' => 'decimal:2',
-        'total_amount' => 'decimal:2',
+        'order_date' => 'date',
+        'delivery_date' => 'date',
+        'rescheduling_date' => 'date',
+        'return_date' => 'date',
+        'invoice_date' => 'date',
+        'refunded_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'product_price' => 'decimal:2',
+        'subtotal' => 'decimal:2',
+        'discount' => 'decimal:2',
+        'shipping' => 'decimal:2',
+        'total_amount' => 'decimal:2',
+        'refund_amount' => 'decimal:2',
+        'quantity' => 'integer'
     ];
 
-
-
-    // Relationships
+    /**
+     * Get the wholesaler that owns the order
+     */
     public function wholesaler()
     {
         return $this->belongsTo(Wholesaler::class);
     }
 
+    /**
+     * Get the product associated with the order
+     */
+    public function product()
+    {
+        return $this->belongsTo(WholesalerProduct::class, 'product_id');
+    }
+
+    /**
+     * Get the call associated with the order
+     */
+    public function call()
+    {
+        return $this->belongsTo(WholesalerCall::class, 'call_id');
+    }
+
+    /**
+     * Get the order items
+     */
     public function items()
     {
-        return $this->hasMany(WholesalerOrderItem::class, 'order_id');
+        return $this->hasMany(WholesalerOrderItem::class, 'wholesaler_order_id');
     }
 
-    // Accessors
-    public function getStatusColorAttribute()
-    {
-        $colors = [
-            'pending' => 'warning',
-            'confirmed' => 'info',
-            'processing' => 'primary',
-            'shipped' => 'success',
-            'delivered' => 'success',
-            'completed' => 'success',
-            'cancelled' => 'danger',
-            'refunded' => 'secondary'
-        ];
-
-        return $colors[$this->status] ?? 'secondary';
-    }
-
-    public function getPaymentMethodTextAttribute()
-    {
-        return ucwords(str_replace('_', ' ', $this->payment_method));
-    }
-
-    public function getFormattedTotalAttribute()
-    {
-        return 'Rs. ' . number_format($this->total_amount, 2);
-    }
-
-    // Scopes
+    /**
+     * Scope for pending orders
+     */
     public function scopePending($query)
     {
         return $query->where('status', 'pending');
     }
 
-    public function scopeConfirmed($query)
+    /**
+     * Scope for completed orders
+     */
+    public function scopeComplete($query)
     {
-        return $query->where('status', 'confirmed');
+        return $query->where('status', 'complete');
     }
 
-    public function scopeProcessing($query)
+    /**
+     * Scope for returned orders
+     */
+    public function scopeReturn($query)
     {
-        return $query->where('status', 'processing');
+        return $query->where('status', 'return');
     }
 
-    public function scopeShipped($query)
+    /**
+     * Scope for rescheduling orders
+     */
+    public function scopeRescheduling($query)
     {
-        return $query->where('status', 'shipped');
+        return $query->where('status', 'rescheduling');
     }
 
-    public function scopeCompleted($query)
+    /**
+     * Scope by call status
+     */
+    public function scopeByCallStatus($query, $status)
     {
-        return $query->where('status', 'completed');
+        return $query->where('call_status', $status);
     }
 
-    public function scopeCancelled($query)
+    /**
+     * Generate unique order ID
+     */
+    public static function generateOrderId(): string
     {
-        return $query->where('status', 'cancelled');
-    }
-    // In WholesalerOrder model
+        $prefix = 'ORD/';
 
-    public function statusLogs()
+        if (!Schema::hasTable('wholesaler_orders')) {
+            return $prefix . date('ymd') . '/00001';
+        }
+
+        try {
+            $lastOrder = DB::table('wholesaler_orders')
+                ->lockForUpdate()
+                ->orderBy('id', 'desc')
+                ->first(['id', 'order_number']);
+
+            if ($lastOrder && $lastOrder->order_number) {
+                // Extract the numeric part from the last order number
+                $parts = explode('/', $lastOrder->order_number);
+                $lastNumber = (int) end($parts);
+                $newNumber = $lastNumber + 1;
+            } else {
+                // Get the highest ID if no order number exists
+                $lastOrder = DB::table('wholesaler_orders')
+                    ->orderBy('id', 'desc')
+                    ->first();
+                $newNumber = ($lastOrder ? $lastOrder->id : 0) + 1;
+            }
+
+            // Format: ORD/YYMMDD/XXXXX
+            return $prefix . date('ymd') . '/' . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+
+        } catch (\Exception $e) {
+            \Log::error('Error generating order ID: ' . $e->getMessage());
+            return $prefix . date('ymdHis');
+        }
+    }
+
+    /**
+     * Get the subtotal amount
+     */
+    public function getSubtotalAttribute($value)
     {
-        return $this->hasMany(OrderStatusLog::class, 'order_id');
+        return $value ?? ($this->quantity * $this->product_price);
+    }
+
+    /**
+     * Get the total amount
+     */
+    public function getTotalAmountAttribute($value)
+    {
+        return $value ?? ($this->subtotal - ($this->discount ?? 0) + ($this->shipping ?? 0));
+    }
+
+    /**
+     * Get customer full name
+     */
+    public function getCustomerFullNameAttribute()
+    {
+        return $this->customer_name;
+    }
+
+    /**
+     * Get customer primary phone
+     */
+    public function getCustomerPrimaryPhoneAttribute()
+    {
+        return $this->customer_phone;
+    }
+
+    /**
+     * Get customer secondary phone
+     */
+    public function getCustomerSecondaryPhoneAttribute()
+    {
+        return $this->customer_phone_2;
+    }
+
+    /**
+     * Get all customer phones as array
+     */
+    public function getCustomerPhonesAttribute(): array
+    {
+        $phones = [$this->customer_phone];
+        if ($this->customer_phone_2) {
+            $phones[] = $this->customer_phone_2;
+        }
+        return $phones;
+    }
+
+    /**
+     * Update call status and automatically redirect to appropriate list
+     */
+    public function updateCallStatus($newStatus, $remark = null)
+    {
+        $oldStatus = $this->call_status;
+        $this->call_status = $newStatus;
+
+        if ($remark) {
+            $this->remark = $remark;
+        }
+
+        // Update dates based on status
+        switch ($newStatus) {
+            case 'Confirm':
+                $this->status = 'complete';
+                $this->delivery_date = now();
+                break;
+            case 'Reject':
+                $this->status = 'return';
+                $this->return_date = now();
+                break;
+            case 'Rescheduled':
+                $this->status = 'rescheduling';
+                $this->rescheduling_date = now()->addDays(3); // Default reschedule to 3 days later
+                break;
+            default:
+                $this->status = 'pending';
+                break;
+        }
+
+        $this->save();
+
+        // Log the change
+        \Log::info("Order #{$this->order_number} call status changed from {$oldStatus} to {$newStatus}");
+
+        return $this;
+    }
+
+    /**
+     * Get redirect route based on call status
+     */
+    public function getRedirectRoute()
+    {
+        switch ($this->call_status) {
+            case 'Confirm':
+                return 'wholesaler.call.conform';
+            case 'Reject':
+                return 'wholesaler.call.reject';
+            case 'Not Answer':
+                return 'wholesaler.call.not_answer_call_list';
+            case 'Other':
+                return 'wholesaler.call.other_call_list';
+            default:
+                return 'wholesaler.order.pending-order';
+        }
     }
 }

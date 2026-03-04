@@ -6,9 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class WholesalerOrderItem extends Model
 {
+    protected $table = 'wholesaler_order_items';
+
     protected $fillable = [
-        'order_id',
+        'wholesaler_order_id',
         'product_id',
+        'product_code',
         'product_name',
         'quantity',
         'unit_price',
@@ -22,12 +25,11 @@ class WholesalerOrderItem extends Model
 
     public function order()
     {
-        return $this->belongsTo(WholesalerOrder::class);
+        return $this->belongsTo(WholesalerOrder::class, 'wholesaler_order_id');
     }
 
     public function product()
     {
         return $this->belongsTo(WholesalerProduct::class, 'product_id');
     }
-
 }
