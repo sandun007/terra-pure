@@ -111,7 +111,7 @@ Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])-
             Route::post('/', [BrandController::class, 'store'])->name('brand.store');
             Route::get('/view/{id}', [BrandController::class, 'show'])->name('brand.show');
             Route::get('/edit/{id}', [BrandController::class, 'edit'])->name('brand.edit');
-    Route::put('/update/{id}', [BrandController::class, 'update'])->name('brand.update');
+            Route::put('/update/{id}', [BrandController::class, 'update'])->name('brand.update');
             Route::get('/{id}', [BrandController::class, 'delete'])->name('brand.delete');
         });
 
@@ -215,12 +215,15 @@ Route::middleware('auth:seller')->group(function () {
         // ===== ORDER MANAGEMENT =====
         Route::prefix('order')->name('order.')->group(function () {
             // Order List Pages
-            Route::get('/pending', [SellerOrderController::class, 'pendingOrder'])->name('pending');
-            Route::get('/confirmed', [SellerOrderController::class, 'confirmedOrders'])->name('confirmed');
-            Route::get('/rescheduled', [SellerOrderController::class, 'rescheduledOrders'])->name('rescheduled');
-            Route::get('/completed', [SellerOrderController::class, 'completedOrders'])->name('completed');
-            Route::get('/returned', [SellerOrderController::class, 'returnedOrders'])->name('returned');
-            Route::get('/show/{id}', [SellerOrderController::class, 'show'])->name('show');
+            Route::get('/pending',    [SellerOrderController::class, 'pendingOrder'])->name('pending');
+            Route::get('/confirmed',  [SellerOrderController::class, 'confirmedOrders'])->name('confirmed');
+            Route::get('/rescheduled',[SellerOrderController::class, 'rescheduledOrders'])->name('rescheduled');
+            Route::get('/completed',  [SellerOrderController::class, 'completedOrders'])->name('completed');
+            Route::get('/returned',   [SellerOrderController::class, 'returnedOrders'])->name('returned');
+            Route::get('/show/{id}',  [SellerOrderController::class, 'show'])->name('show');
+
+            // ─── NEW: Full-page edit route ────────────────────────────────────────
+            Route::get('/edit/{id}',  [SellerOrderController::class, 'edit'])->name('edit');
 
             // Product Details API (for fetching product by code with slashes)
             Route::get('/product/{code}/details', [SellerOrderController::class, 'getProductDetails'])
@@ -228,10 +231,10 @@ Route::middleware('auth:seller')->group(function () {
                 ->where('code', '.*'); // CRITICAL: Allows slashes in product code (e.g., DX/ITM/0001)
 
             // Order CRUD Operations
-            Route::post('/store', [SellerOrderController::class, 'store'])->name('store');
-            Route::post('/bulk-store', [SellerOrderController::class, 'bulkStore'])->name('bulk-store');
-            Route::post('/bulk-validate', [SellerOrderController::class, 'bulkValidate'])->name('bulk-validate');
-            Route::put('/update/{id}', [SellerOrderController::class, 'update'])->name('update');
+            Route::post('/store',          [SellerOrderController::class, 'store'])->name('store');
+            Route::post('/bulk-store',     [SellerOrderController::class, 'bulkStore'])->name('bulk-store');
+            Route::post('/bulk-validate',  [SellerOrderController::class, 'bulkValidate'])->name('bulk-validate');
+            Route::put('/update/{id}',     [SellerOrderController::class, 'update'])->name('update');
             Route::delete('/destroy/{id}', [SellerOrderController::class, 'destroy'])->name('destroy');
 
             // Utilities
@@ -240,11 +243,11 @@ Route::middleware('auth:seller')->group(function () {
 
         // ===== CALL MANAGEMENT =====
         Route::prefix('call')->name('call.')->group(function () {
-            Route::get('/pending', [SellerOrderController::class, 'pendingCalls'])->name('pending');
-            Route::get('/called', [SellerOrderController::class, 'calledCalls'])->name('called');
-            Route::get('/confirmed', [SellerOrderController::class, 'confirmedCalls'])->name('confirmed');
-            Route::get('/not-answered', [SellerOrderController::class, 'notAnsweredCalls'])->name('not-answered');
-            Route::get('/cancelled', [SellerOrderController::class, 'cancelledCalls'])->name('cancelled');
+            Route::get('/pending',     [SellerOrderController::class, 'pendingCalls'])->name('pending');
+            Route::get('/called',      [SellerOrderController::class, 'calledCalls'])->name('called');
+            Route::get('/confirmed',   [SellerOrderController::class, 'confirmedCalls'])->name('confirmed');
+            Route::get('/not-answered',[SellerOrderController::class, 'notAnsweredCalls'])->name('not-answered');
+            Route::get('/cancelled',   [SellerOrderController::class, 'cancelledCalls'])->name('cancelled');
         });
 
         // ===== PRODUCT MANAGEMENT =====
@@ -375,9 +378,6 @@ Route::middleware('auth:seller')->group(function () {
         });
     });
 });
-
-
-
 
 
 // ========== EMPLOYEE ROUTES ==========

@@ -1078,8 +1078,7 @@
 
         // Other functions
         function editOrder(id) {
-            document.getElementById('updateForm').action = UPDATE_URL(id);
-            new bootstrap.Modal(document.getElementById('updateModal')).show();
+            window.location.href = `/seller/order/edit/${id}`;
         }
 
         function deleteOrder(id, orderNumber) {
