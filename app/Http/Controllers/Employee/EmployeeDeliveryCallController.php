@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Models\EmployeeDeliveryCall;
+use App\Models\Saler;
 use App\Services\Curfoxapiservice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,6 @@ class EmployeeDeliveryCallController extends Controller
         'givedriver' => null,
     ];
 
-    // Fallback merchant business ID if API call fails and no session value
     private const DEFAULT_MERCHANT_BUSINESS_ID = '7809';
 
     public function __construct(private Curfoxapiservice $curfox) {}
@@ -39,8 +39,12 @@ class EmployeeDeliveryCallController extends Controller
     {
         $q = trim((string) $request->get('q', ''));
 
+        // Get system seller IDs first
+        $systemSellerIds = Saler::where('type', 'system_seller')->pluck('id')->toArray();
+
         $callsQuery = EmployeeDeliveryCall::query()
             ->where('status', $status)
+            ->whereIn('seller_id', $systemSellerIds) // Only system sellers
             ->latest('id');
 
         if ($q !== '') {
@@ -58,7 +62,6 @@ class EmployeeDeliveryCallController extends Controller
         $calls      = $callsQuery->paginate(20)->withQueryString();
         $nextStatus = self::FLOW[$status] ?? null;
 
-        // ── Curfox city list for origin picker ────────────────────────────
         $curfoxCities = [];
         try {
             $curfoxCities = $this->curfox->getAllCities();
@@ -66,7 +69,6 @@ class EmployeeDeliveryCallController extends Controller
             Log::warning('Could not load Curfox cities for origin picker: ' . $e->getMessage());
         }
 
-        // ── Curfox business list for merchant_business_id picker ──────────
         $curfoxBusinesses      = [];
         $curfoxDefaultBusiness = null;
         try {
@@ -76,7 +78,6 @@ class EmployeeDeliveryCallController extends Controller
             Log::warning('Could not load Curfox businesses: ' . $e->getMessage());
         }
 
-        // Currently selected business ID stored in session
         $selectedBusinessId = session(
             'curfox_merchant_business_id',
             $curfoxDefaultBusiness['id'] ?? self::DEFAULT_MERCHANT_BUSINESS_ID
@@ -96,16 +97,18 @@ class EmployeeDeliveryCallController extends Controller
     public function show($id)
     {
         $call = EmployeeDeliveryCall::findOrFail($id);
+
+        // Check if this belongs to a system seller
+        $seller = Saler::find($call->seller_id);
+        if (!$seller || $seller->type !== 'system_seller') {
+            abort(403, 'Unauthorized access to non-system seller order');
+        }
+
         return view('employee.delivery_calls.view', compact('call'));
     }
 
     // ── Business selector ─────────────────────────────────────────────────
 
-    /**
-     * POST /employee/delivery-calls/set-business
-     * Stores the chosen merchant_business_id in session so all
-     * subsequent dispatches from this employee use the correct business.
-     */
     public function setBusiness(Request $request)
     {
         $v = $request->validate([
@@ -127,10 +130,6 @@ class EmployeeDeliveryCallController extends Controller
 
     // ── Origin city update ────────────────────────────────────────────────
 
-    /**
-     * PATCH /employee/delivery-calls/{id}/origin
-     * Sets origin_city_id / name / state on a single call.
-     */
     public function updateOrigin(Request $request, int $id)
     {
         $v = $request->validate([
@@ -140,6 +139,16 @@ class EmployeeDeliveryCallController extends Controller
         ]);
 
         $call = EmployeeDeliveryCall::findOrFail($id);
+
+        // Check if this belongs to a system seller
+        $seller = Saler::find($call->seller_id);
+        if (!$seller || $seller->type !== 'system_seller') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized: This order does not belong to a system seller'
+            ], 403);
+        }
+
         $call->update([
             'origin_city_id'    => $v['origin_city_id'],
             'origin_city_name'  => $v['origin_city_name'],
@@ -156,10 +165,6 @@ class EmployeeDeliveryCallController extends Controller
         ]);
     }
 
-    /**
-     * PATCH /employee/delivery-calls/bulk-origin
-     * Sets the same origin on all selected calls at once.
-     */
     public function bulkUpdateOrigin(Request $request)
     {
         $v = $request->validate([
@@ -170,17 +175,27 @@ class EmployeeDeliveryCallController extends Controller
             'origin_state_name' => 'required|string|max:150',
         ]);
 
-        $updated = EmployeeDeliveryCall::whereIn('id', $v['ids'])->update([
-            'origin_city_id'    => $v['origin_city_id'],
-            'origin_city_name'  => $v['origin_city_name'],
-            'origin_state_name' => $v['origin_state_name'],
-            'curfox_error'      => null,
-        ]);
+        // Get system seller IDs
+        $systemSellerIds = Saler::where('type', 'system_seller')->pluck('id')->toArray();
+
+        // Only update calls that belong to system sellers
+        $updated = EmployeeDeliveryCall::whereIn('id', $v['ids'])
+            ->whereIn('seller_id', $systemSellerIds)
+            ->update([
+                'origin_city_id'    => $v['origin_city_id'],
+                'origin_city_name'  => $v['origin_city_name'],
+                'origin_state_name' => $v['origin_state_name'],
+                'curfox_error'      => null,
+            ]);
+
+        $skipped = count($v['ids']) - $updated;
 
         return response()->json([
             'success' => true,
-            'message' => "Origin updated to {$v['origin_city_name']} for {$updated} call(s).",
+            'message' => "Origin updated to {$v['origin_city_name']} for {$updated} system seller call(s)." .
+                ($skipped > 0 ? " {$skipped} non-system seller call(s) skipped." : ""),
             'updated' => $updated,
+            'skipped' => $skipped,
         ]);
     }
 
@@ -189,6 +204,19 @@ class EmployeeDeliveryCallController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $call = EmployeeDeliveryCall::findOrFail($id);
+
+        // Check if this belongs to a system seller
+        $seller = Saler::find($call->seller_id);
+        if (!$seller || $seller->type !== 'system_seller') {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized: This order does not belong to a system seller'
+                ], 403);
+            }
+            return back()->with('error', 'Unauthorized: This order does not belong to a system seller');
+        }
+
         $from = $call->status;
         $next = self::FLOW[$from] ?? null;
 
@@ -248,8 +276,28 @@ class EmployeeDeliveryCallController extends Controller
             'ids.*' => 'integer',
         ]);
 
-        $ids      = $data['ids'];
-        $statuses = EmployeeDeliveryCall::whereIn('id', $ids)->distinct()->pluck('status')->toArray();
+        $ids = $data['ids'];
+
+        // Get system seller IDs
+        $systemSellerIds = Saler::where('type', 'system_seller')->pluck('id')->toArray();
+
+        // First, verify all selected calls belong to system sellers
+        $nonSystemCalls = EmployeeDeliveryCall::whereIn('id', $ids)
+            ->whereNotIn('seller_id', $systemSellerIds)
+            ->count();
+
+        if ($nonSystemCalls > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => "Cannot process: {$nonSystemCalls} selected call(s) do not belong to system sellers.",
+            ], 403);
+        }
+
+        $statuses = EmployeeDeliveryCall::whereIn('id', $ids)
+            ->whereIn('seller_id', $systemSellerIds)
+            ->distinct()
+            ->pluck('status')
+            ->toArray();
 
         if (count($statuses) !== 1) {
             return response()->json([
@@ -268,7 +316,11 @@ class EmployeeDeliveryCallController extends Controller
         $ok = 0; $fail = 0; $details = [];
 
         if ($next === 'givedriver') {
-            $calls = EmployeeDeliveryCall::whereIn('id', $ids)->where('status', $from)->get();
+            $calls = EmployeeDeliveryCall::whereIn('id', $ids)
+                ->whereIn('seller_id', $systemSellerIds)
+                ->where('status', $from)
+                ->get();
+
             foreach ($calls as $call) {
                 try {
                     $waybill = $this->dispatchToCurfox($call);
@@ -297,15 +349,16 @@ class EmployeeDeliveryCallController extends Controller
             ]);
         }
 
-        DB::transaction(function () use ($ids, $from, $next, &$ok) {
+        DB::transaction(function () use ($ids, $from, $next, $systemSellerIds, &$ok) {
             $ok = EmployeeDeliveryCall::whereIn('id', $ids)
+                ->whereIn('seller_id', $systemSellerIds)
                 ->where('status', $from)
                 ->update(['status' => $next, 'status_date' => now()]);
         });
 
         return response()->json([
             'success' => true,
-            'message' => "Updated {$ok} row(s): {$from} → {$next}",
+            'message' => "Updated {$ok} system seller row(s): {$from} → {$next}",
             'ok'      => $ok,
         ]);
     }
@@ -314,7 +367,6 @@ class EmployeeDeliveryCallController extends Controller
 
     private function dispatchToCurfox(EmployeeDeliveryCall $call): string
     {
-        // ── merchant_business_id: session → API default → hardcoded fallback ──
         $merchantBusinessId = session('curfox_merchant_business_id');
 
         if (! $merchantBusinessId) {
@@ -327,7 +379,6 @@ class EmployeeDeliveryCallController extends Controller
             }
         }
 
-        // ── Destination ───────────────────────────────────────────────────
         $destCityId    = $call->destination_city_id ?? null;
         $destCityName  = null;
         $destStateName = $call->destination_state_name ?? null;
@@ -350,12 +401,10 @@ class EmployeeDeliveryCallController extends Controller
             );
         }
 
-        // ── Origin ────────────────────────────────────────────────────────
         $originCityId    = $call->effectiveOriginCityId();
         $originCityName  = $call->effectiveOriginCityName();
         $originStateName = $call->effectiveOriginStateName();
 
-        // ── Order payload ─────────────────────────────────────────────────
         $orderData = [
             'order_no'         => $call->order_code ?? $call->call_number,
             'customer_name'    => $call->customer_name,
@@ -378,7 +427,6 @@ class EmployeeDeliveryCallController extends Controller
             $orderData['destination_state_name'] = $destStateName;
         }
 
-        // ── general_data with dynamic merchant_business_id ────────────────
         $generalData = ['merchant_business_id' => (string) $merchantBusinessId];
 
         if ($originCityId) {
@@ -388,7 +436,6 @@ class EmployeeDeliveryCallController extends Controller
             $generalData['origin_state_name'] = $originStateName;
         }
 
-        // ── Call API ──────────────────────────────────────────────────────
         $response = $this->curfox->createOrders($generalData, [$orderData]);
 
         $waybills = $response['data'] ?? [];
@@ -399,5 +446,34 @@ class EmployeeDeliveryCallController extends Controller
         }
 
         return (string) $waybill;
+    }
+
+    // ── Tracking proxy ────────────────────────────────────────────────────
+
+    /**
+     * POST /employee/delivery-calls/tracking
+     * Proxies the Curfox GET tracking-info endpoint.
+     */
+    public function tracking(Request $request)
+    {
+        $v = $request->validate([
+            'waybill_number' => 'required|string|max:100',
+        ]);
+
+        try {
+            $response = $this->curfox->getTrackingInfo($v['waybill_number']);
+            return response()->json($response);
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    /**
+     * Helper method to check if a call belongs to a system seller
+     */
+    private function isSystemSellerCall(EmployeeDeliveryCall $call): bool
+    {
+        $seller = Saler::find($call->seller_id);
+        return $seller && $seller->type === 'system_seller';
     }
 }
