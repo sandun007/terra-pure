@@ -1574,7 +1574,7 @@ class EmployeeController extends Controller
     {
         try {
             $employee = Employee::findOrFail($id);
-            return view('admin.employee.employee_show', compact('employee'));
+            return view('admin.employee.employee_view', compact('employee'));
         } catch (\Exception $e) {
             Log::error('Show employee error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Error loading employee: ' . $e->getMessage());
@@ -1588,7 +1588,7 @@ class EmployeeController extends Controller
     {
         try {
             $employee = Employee::findOrFail($id);
-            return view('admin.employee.employee_edit', compact('employee'));
+            return view('admin.employee.employee_update', compact('employee'));
         } catch (\Exception $e) {
             Log::error('Edit employee error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Error loading employee: ' . $e->getMessage());
@@ -1691,7 +1691,7 @@ class EmployeeController extends Controller
 
             $employee->delete();
 
-            return redirect()->route('employee.list')->with('success', 'Employee deleted successfully!');
+            return redirect()->route('admin.employee.employee.list')->with('success', 'Employee deleted successfully!');
 
         }
         catch (\Exception $e) {

@@ -110,7 +110,7 @@ Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])-
             Route::post('/', [BrandController::class, 'store'])->name('brand.store');
             Route::get('/view/{id}', [BrandController::class, 'show'])->name('brand.show');
             Route::get('/edit/{id}', [BrandController::class, 'edit'])->name('brand.edit');
-    Route::put('/update/{id}', [BrandController::class, 'update'])->name('brand.update');
+            Route::put('/update/{id}', [BrandController::class, 'update'])->name('brand.update');
             Route::get('/{id}', [BrandController::class, 'delete'])->name('brand.delete');
         });
 
@@ -155,6 +155,10 @@ Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])-
             Route::get('/',[EmployeeController::class,'index'])->name('employee.list');
             Route::get('/create',[EmployeeController::class,'create'])->name('employee.create');
             Route::post('/',[EmployeeController::class,'store'])->name('employee.store');
+            Route::delete('/destroy/{id}',[EmployeeController::class,'destroy'])->name('employee.delete');
+            Route::get('/edit/{id}',[EmployeeController::class,'edit'])->name('employee.edit');
+            Route::put('/update/{id}',[EmployeeController::class,'update'])->name('employee.update');
+            Route::get('/show/{id}',[EmployeeController::class,'show'])->name('employee.view');
         });
     });
 });
