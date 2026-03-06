@@ -1691,7 +1691,7 @@ class EmployeeController extends Controller
 
             $employee->delete();
 
-            return redirect()->route('admin.employee.employee.list')->with('success', 'Employee deleted successfully!');
+            return redirect()->route('employee.list')->with('success', 'Employee deleted successfully!');
 
         }
         catch (\Exception $e) {
