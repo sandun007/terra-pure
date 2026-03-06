@@ -69,6 +69,7 @@
                             <th>Mobile</th>
                             <th>Address</th>
                             <th>District</th>
+                            <th>Status</th>
                             {{--                            <th>Level</th>--}}
                             <th>Action</th>
                         </tr>
@@ -82,6 +83,8 @@
                                 <td>{{$employee->mobile_no }}</td>
                                 <td>{{$employee->address }}</td>
                                 <td>{{$employee->district }}</td>
+                                <td>{{$employee->status }}</td>
+
                                 {{--                           <td>{{$seller->code }}</td>--}}
                                 <td>
                                     <div class="btn-group" role="group">

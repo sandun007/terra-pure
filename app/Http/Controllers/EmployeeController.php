@@ -1523,8 +1523,6 @@ class EmployeeController extends Controller
             }
 
             $validated = $validator->validated();
-
-            // Prepare data for model
             $employeeData = [
                 'name' => $validated['name'],
                 'email' => $validated['email'],
@@ -1537,12 +1535,12 @@ class EmployeeController extends Controller
                 'post_code' => $validated['postal_code'],
                 'username' => $validated['username'],
                 'password' => $validated['password'],
-                'view_password' => $validated['password'], // Storing plain text as seen in model/table
+                'view_password' => $validated['password'],
                 'district' => $validated['district'],
                 'code' => $validated['code'],
-                'role' => 'staff', // Default to staff as missing in form
+                'role' => 'staff',
                 'status' => 'active',
-                'nic_front' => '', // Initialize to avoid NOT NULL error if upload fails
+                'nic_front' => '',
                 'nic_back' => '',
             ];
 

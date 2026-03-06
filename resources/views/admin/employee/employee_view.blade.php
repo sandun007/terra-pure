@@ -110,6 +110,21 @@
                                 <div class="view-field">{{ $employee->name ?? '—' }}</div>
                             </div>
                         </div>
+                        <!-- Add Status here -->
+                        <div class="col-sm-6 col-12">
+                            <div class="mb-3">
+                                <label class="form-label info-label">Status</label>
+                                <div class="view-field">
+                                    @if($employee->status === 'active')
+                                        <span class="badge bg-success px-3 py-2">Active</span>
+                                    @elseif($employee->status === 'inactive')
+                                        <span class="badge bg-danger px-3 py-2">Inactive</span>
+                                    @else
+                                        <span class="badge bg-secondary px-3 py-2">—</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
 
                         <div class="col-sm-6 col-12">
                             <div class="mb-3">
