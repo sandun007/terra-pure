@@ -65,22 +65,27 @@ class ProductController extends Controller
 }
 
     public function create()
-    {
-        try {
-            $brands = Brand::query()
-                ->where('seller_code', 0)
-                ->get();
-            $categories = Category::query()
-                ->where('seller_code', 0)
-                ->get();
-            $codeGenerate = new CodeGenerator();
-            $code = $codeGenerate->newCodeLoad('product');
+{
+    try {
 
-            return view('product.product_create', compact('brands', 'categories', 'code'));
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
-        }
+        $brands = Brand::select('id','name')->get();
+        $categories = Category::select('id','name')->get();
+
+        $codeGenerate = new CodeGenerator();
+        $code = $codeGenerate->newCodeLoad('product');
+
+        return view('product.product_create', compact(
+            'brands',
+            'categories',
+            'code'
+        ));
+
+    } catch (\Exception $e) {
+
+        return redirect()->back()->with('error', $e->getMessage());
+
     }
+}
 
     public function edit($id)
     {

@@ -163,13 +163,13 @@
                     <span class="info-value">{{ $product->barcode ?? 'N/A' }}</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label">Brand:</span>
-                    <span class="info-value">{{ $product->brand ?? 'N/A' }}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Category:</span>
-                    <span class="info-value">{{ $product->category ?? 'N/A' }}</span>
-                </div>
+    <span class="info-label">Brand:</span>
+    <span class="info-value">{{ $product->brand->name ?? 'N/A' }}</span>
+</div>
+<div class="info-row">
+    <span class="info-label">Category:</span>
+    <span class="info-value">{{ $product->category->name ?? 'N/A' }}</span>
+</div>
                 <div class="info-row">
                     <span class="info-label">Status:</span>
                     <span class="status-badge {{ $product->status === 'active' ? 'status-active' : 'status-inactive' }}">
