@@ -164,6 +164,9 @@ class EmployeeWholesalerProductController extends Controller
         try {
             $employee = Auth::guard('employee')->user();
 
+            // Debug: Log the ID being accessed
+            Log::info('Attempting to show product with ID: ' . $id);
+
             $product = WholesalerProduct::with([
                 'wholesaler',
                 'category',
@@ -172,6 +175,9 @@ class EmployeeWholesalerProductController extends Controller
                 'lastExchangedBy',
                 'originalWholesaler'
             ])->findOrFail($id);
+
+            // Debug: Log successful product retrieval
+            Log::info('Product found: ' . $product->name);
 
             // Get price changes
             $priceChanges = WholesalerProductPriceChange::where('product_id', $id)
@@ -191,8 +197,18 @@ class EmployeeWholesalerProductController extends Controller
                 ->get();
 
             $exchanges = $sourceExchanges->concat($destinationExchanges)
-                ->sortByDesc('created_at')
-                ->paginate(20, ['*'], 'exchange_page');
+                ->sortByDesc('created_at');
+
+            // Paginate exchanges
+            $currentPage = request()->get('exchange_page', 1);
+            $perPage = 20;
+            $exchanges = new \Illuminate\Pagination\LengthAwarePaginator(
+                $exchanges->forPage($currentPage, $perPage),
+                $exchanges->count(),
+                $perPage,
+                $currentPage,
+                ['path' => request()->url(), 'query' => request()->query(), 'pageName' => 'exchange_page']
+            );
 
             // Stats
             $stats = [
@@ -214,6 +230,8 @@ class EmployeeWholesalerProductController extends Controller
 
         } catch (\Exception $e) {
             Log::error('EmployeeWholesalerProductController@show error: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+
             return redirect()->route('employee.wholesaler.products.index')
                 ->with('error', 'Product not found: ' . $e->getMessage());
         }

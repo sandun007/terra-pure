@@ -20,6 +20,10 @@
             --border: #e2e8f0;
         }
 
+        body {
+            background: #f8fafc;
+        }
+
         .product-header {
             background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
             color: white;
@@ -248,6 +252,8 @@
         .tab-container {
             border-bottom: 2px solid var(--border);
             margin-bottom: 1.5rem;
+            display: flex;
+            gap: 0.5rem;
         }
 
         .tab {
@@ -258,6 +264,9 @@
             cursor: pointer;
             position: relative;
             text-decoration: none;
+            background: transparent;
+            border: none;
+            font-size: 1rem;
         }
 
         .tab.active {
@@ -300,6 +309,26 @@
             padding: 1rem;
         }
 
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .pagination .page-item .page-link {
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            color: var(--primary);
+            border: 1px solid var(--border);
+        }
+
+        .pagination .page-item.active .page-link {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
         @media (max-width: 768px) {
             .product-header {
                 padding: 1.5rem;
@@ -315,12 +344,21 @@
             .price-box .value {
                 font-size: 1.4rem;
             }
+
+            .tab-container {
+                flex-wrap: wrap;
+            }
+
+            .tab {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
         }
     </style>
 @endpush
 
 @section('content')
-    <div class="container-fluid">
+    <div class="container-fluid py-3">
         <!-- Breadcrumb -->
         <nav aria-label="breadcrumb" class="mb-3">
             <ol class="breadcrumb">
@@ -338,25 +376,25 @@
             </div>
 
             <span class="status-badge">
-            <i class="fas fa-{{ $product->status == 'active' ? 'check-circle' : 'times-circle' }}"></i>
-            {{ ucfirst($product->status) }}
-        </span>
+                <i class="fas fa-{{ $product->status == 'active' ? 'check-circle' : 'times-circle' }}"></i>
+                {{ ucfirst($product->status) }}
+            </span>
 
             <h1 class="mb-2" style="font-size: 2rem; font-weight: 700;">{{ $product->name }}</h1>
 
-            <div class="d-flex gap-3 mt-3">
-            <span class="text-white-50">
-                <i class="fas fa-store me-1"></i>
-                {{ $product->wholesaler->business_name ?? 'N/A' }}
-            </span>
+            <div class="d-flex gap-3 mt-3 flex-wrap">
                 <span class="text-white-50">
-                <i class="fas fa-tag me-1"></i>
-                {{ $product->category->name ?? 'Uncategorized' }}
-            </span>
+                    <i class="fas fa-store me-1"></i>
+                    {{ $product->wholesaler->business_name ?? 'N/A' }}
+                </span>
                 <span class="text-white-50">
-                <i class="fas fa-certificate me-1"></i>
-                {{ $product->brand->name ?? 'No Brand' }}
-            </span>
+                    <i class="fas fa-tag me-1"></i>
+                    {{ $product->category->name ?? 'Uncategorized' }}
+                </span>
+                <span class="text-white-50">
+                    <i class="fas fa-certificate me-1"></i>
+                    {{ $product->brand->name ?? 'No Brand' }}
+                </span>
             </div>
         </div>
 
@@ -446,7 +484,7 @@
             <div class="col-lg-4 mb-4">
                 <div class="info-card h-100">
                     @if($product->image)
-                        <img src="{{ asset('storage/' . $product->image) }}" class="product-image mb-3">
+                        <img src="{{ asset('storage/' . $product->image) }}" class="product-image mb-3" alt="{{ $product->name }}">
                     @else
                         <div class="product-image d-flex align-items-center justify-content-center">
                             <i class="fas fa-image" style="font-size: 4rem; color: #94a3b8;"></i>
@@ -495,13 +533,13 @@
                 <!-- Tabs -->
                 <div class="info-card mb-4">
                     <div class="tab-container">
-                        <span class="tab active" onclick="showTab('details')" id="tabDetails">Details</span>
-                        <span class="tab" onclick="showTab('price-history')" id="tabPrice">Price History ({{ $priceChanges->total() }})</span>
-                        <span class="tab" onclick="showTab('exchange-history')" id="tabExchange">Exchange History ({{ $exchanges->total() }})</span>
+                        <button class="tab active" onclick="showTab('details')" id="tabDetails">Details</button>
+                        <button class="tab" onclick="showTab('price-history')" id="tabPrice">Price History ({{ $priceChanges->total() }})</button>
+                        <button class="tab" onclick="showTab('exchange-history')" id="tabExchange">Exchange History ({{ $exchanges->total() }})</button>
                     </div>
 
                     <!-- Details Tab -->
-                    <div id="detailsTab" class="tab-pane active">
+                    <div id="detailsTab" class="tab-pane" style="display: block;">
                         <div class="row">
                             <div class="col-md-6">
                                 <h6 class="fw-bold mb-3">Product Information</h6>
@@ -535,10 +573,10 @@
                                 <div class="info-row">
                                     <span class="info-label">Current Stock</span>
                                     <span class="info-value">
-                                    <span class="badge bg-{{ $product->qty > 0 ? ($product->qty <= ($product->min_stock_level ?? 5) ? 'warning' : 'success') : 'danger' }}">
-                                        {{ $product->qty ?? 0 }} units
+                                        <span class="badge bg-{{ $product->qty > 0 ? ($product->qty <= ($product->min_stock_level ?? 5) ? 'warning' : 'success') : 'danger' }}">
+                                            {{ $product->qty ?? 0 }} units
+                                        </span>
                                     </span>
-                                </span>
                                 </div>
                                 <div class="info-row">
                                     <span class="info-label">Min Stock Level</span>
@@ -551,13 +589,13 @@
                                 <div class="info-row">
                                     <span class="info-label">Average Rating</span>
                                     <span class="info-value">
-                                    @if($product->average_rating)
+                                        @if($product->average_rating)
                                             {{ number_format($product->average_rating, 1) }} ★
                                             ({{ $product->total_reviews ?? 0 }} reviews)
                                         @else
                                             No ratings
                                         @endif
-                                </span>
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -608,103 +646,121 @@
                             </a>
                         </div>
 
-                        @forelse($priceChanges as $change)
-                            <div class="timeline-item {{ $change->price_difference > 0 ? 'increase' : ($change->price_difference < 0 ? 'decrease' : '') }}">
-                                <div class="timeline-date">
-                                    <i class="far fa-calendar me-1"></i> {{ $change->created_at->format('M d, Y h:i A') }}
+                        <div style="max-height: 500px; overflow-y: auto;">
+                            @forelse($priceChanges as $change)
+                                <div class="timeline-item {{ $change->price_difference > 0 ? 'increase' : ($change->price_difference < 0 ? 'decrease' : '') }}">
+                                    <div class="timeline-date">
+                                        <i class="far fa-calendar me-1"></i> {{ $change->created_at->format('M d, Y h:i A') }}
+                                    </div>
+                                    <div class="timeline-title">
+                                        <span class="badge-change {{ $change->price_difference > 0 ? 'increase' : ($change->price_difference < 0 ? 'decrease' : '') }}">
+                                            {{ $change->price_difference > 0 ? '+' : '' }}{{ number_format($change->price_difference, 2) }} ({{ number_format($change->percentage_change, 2) }}%)
+                                        </span>
+                                        <span class="ms-2">
+                                            Rs. {{ number_format($change->old_final_price, 2) }} →
+                                            <strong>Rs. {{ number_format($change->new_final_price, 2) }}</strong>
+                                        </span>
+                                    </div>
+                                    <div class="timeline-desc">
+                                        <span class="badge bg-secondary">{{ ucfirst($change->change_type) }}</span>
+                                        @if($change->employee)
+                                            <span class="ms-2">by {{ $change->employee->name }}</span>
+                                        @endif
+                                        @if($change->change_reason)
+                                            <div class="mt-1 text-muted"><small>Reason: {{ $change->change_reason }}</small></div>
+                                        @endif
+                                    </div>
                                 </div>
-                                <div class="timeline-title">
-                                <span class="badge-change {{ $change->price_difference > 0 ? 'increase' : ($change->price_difference < 0 ? 'decrease' : '') }}">
-                                    {{ $change->price_difference > 0 ? '+' : '' }}{{ number_format($change->price_difference, 2) }} ({{ number_format($change->percentage_change, 2) }}%)
-                                </span>
-                                    <span class="ms-2">
-                                    Rs. {{ number_format($change->old_final_price, 2) }} →
-                                    <strong>Rs. {{ number_format($change->new_final_price, 2) }}</strong>
-                                </span>
+                            @empty
+                                <div class="text-center py-4">
+                                    <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">No price changes recorded yet</p>
                                 </div>
-                                <div class="timeline-desc">
-                                    <span class="badge bg-secondary">{{ ucfirst($change->change_type) }}</span>
-                                    @if($change->employee)
-                                        <span class="ms-2">by {{ $change->employee->name }}</span>
-                                    @endif
-                                    @if($change->change_reason)
-                                        <div class="mt-1 text-muted"><small>Reason: {{ $change->change_reason }}</small></div>
-                                    @endif
-                                </div>
+                            @endforelse
+                        </div>
+
+                        <!-- Price History Pagination -->
+                        @if($priceChanges->hasPages())
+                            <div class="mt-3">
+                                {{ $priceChanges->appends(['exchange_page' => request('exchange_page')])->links() }}
                             </div>
-                        @empty
-                            <div class="text-center py-4">
-                                <i class="fas fa-history fa-3x text-muted mb-3"></i>
-                                <p class="text-muted">No price changes recorded yet</p>
-                            </div>
-                        @endforelse
+                        @endif
                     </div>
 
                     <!-- Exchange History Tab -->
                     <div id="exchangeHistoryTab" class="tab-pane" style="display: none;">
                         <h6 class="fw-bold mb-3">Exchange History</h6>
 
-                        @forelse($exchanges as $exchange)
-                            <div class="timeline-item">
-                                <div class="timeline-date">
-                                    <i class="far fa-calendar me-1"></i> {{ $exchange->created_at->format('M d, Y h:i A') }}
-                                </div>
-                                <div class="timeline-title">
-                                    @if($exchange->source_product_id == $product->id)
-                                        <span class="badge bg-warning">Source</span>
-                                        Exchanged to
-                                        <strong>{{ $exchange->destinationProduct->name }}</strong>
-                                        ({{ $exchange->destinationWholesaler->business_name }})
-                                    @else
-                                        <span class="badge bg-success">Destination</span>
-                                        Received from
-                                        <strong>{{ $exchange->sourceProduct->name }}</strong>
-                                        ({{ $exchange->sourceWholesaler->business_name }})
-                                    @endif
-                                </div>
-                                <div class="timeline-desc">
-                                    <div class="row mt-2">
-                                        <div class="col-md-3">
-                                            <small class="text-muted">Quantity:</small><br>
-                                            <strong>{{ $exchange->exchange_quantity }}</strong>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <small class="text-muted">Value:</small><br>
-                                            <strong>Rs. {{ number_format($exchange->destination_price_at_time, 2) }}</strong>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <small class="text-muted">Difference:</small><br>
-                                            <span class="badge-change {{ $exchange->price_difference > 0 ? 'increase' : ($exchange->price_difference < 0 ? 'decrease' : '') }}">
-                                            Rs. {{ number_format($exchange->price_difference, 2) }}
-                                        </span>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <small class="text-muted">Status:</small><br>
-                                            <span class="badge bg-{{
-                                            $exchange->status == 'completed' ? 'success' :
-                                            ($exchange->status == 'pending' ? 'warning' :
-                                            ($exchange->status == 'cancelled' ? 'danger' : 'secondary'))
-                                        }}">
-                                            {{ ucfirst($exchange->status) }}
-                                        </span>
-                                        </div>
+                        <div style="max-height: 500px; overflow-y: auto;">
+                            @forelse($exchanges as $exchange)
+                                <div class="timeline-item">
+                                    <div class="timeline-date">
+                                        <i class="far fa-calendar me-1"></i> {{ $exchange->created_at->format('M d, Y h:i A') }}
                                     </div>
-                                    @if($exchange->employee)
-                                        <small class="text-muted d-block mt-2">
-                                            Processed by: {{ $exchange->employee->name }}
-                                        </small>
-                                    @endif
-                                    <a href="{{ route('employee.wholesaler.exchanges.show', $exchange->id) }}" class="btn btn-sm btn-link mt-2">
-                                        View Details <i class="fas fa-arrow-right ms-1"></i>
-                                    </a>
+                                    <div class="timeline-title">
+                                        @if($exchange->source_product_id == $product->id)
+                                            <span class="badge bg-warning">Source</span>
+                                            Exchanged to
+                                            <strong>{{ $exchange->destinationProduct->name ?? 'Unknown' }}</strong>
+                                            ({{ $exchange->destinationWholesaler->business_name ?? 'N/A' }})
+                                        @else
+                                            <span class="badge bg-success">Destination</span>
+                                            Received from
+                                            <strong>{{ $exchange->sourceProduct->name ?? 'Unknown' }}</strong>
+                                            ({{ $exchange->sourceWholesaler->business_name ?? 'N/A' }})
+                                        @endif
+                                    </div>
+                                    <div class="timeline-desc">
+                                        <div class="row mt-2">
+                                            <div class="col-md-3">
+                                                <small class="text-muted">Quantity:</small><br>
+                                                <strong>{{ $exchange->exchange_quantity }}</strong>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <small class="text-muted">Value:</small><br>
+                                                <strong>Rs. {{ number_format($exchange->destination_price_at_time, 2) }}</strong>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <small class="text-muted">Difference:</small><br>
+                                                <span class="badge-change {{ ($exchange->price_difference ?? 0) > 0 ? 'increase' : (($exchange->price_difference ?? 0) < 0 ? 'decrease' : '') }}">
+                                                    Rs. {{ number_format($exchange->price_difference ?? 0, 2) }}
+                                                </span>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <small class="text-muted">Status:</small><br>
+                                                <span class="badge bg-{{
+                                                    ($exchange->status ?? 'pending') == 'completed' ? 'success' :
+                                                    (($exchange->status ?? 'pending') == 'pending' ? 'warning' :
+                                                    (($exchange->status ?? 'pending') == 'cancelled' ? 'danger' : 'secondary'))
+                                                }}">
+                                                    {{ ucfirst($exchange->status ?? 'pending') }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        @if($exchange->employee)
+                                            <small class="text-muted d-block mt-2">
+                                                Processed by: {{ $exchange->employee->name }}
+                                            </small>
+                                        @endif
+                                        <a href="{{ route('employee.wholesaler.exchanges.show', $exchange->id) }}" class="btn btn-sm btn-link mt-2">
+                                            View Details <i class="fas fa-arrow-right ms-1"></i>
+                                        </a>
+                                    </div>
                                 </div>
+                            @empty
+                                <div class="text-center py-4">
+                                    <i class="fas fa-exchange-alt fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">No exchanges recorded yet</p>
+                                </div>
+                            @endforelse
+                        </div>
+
+                        <!-- Exchange History Pagination -->
+                        @if($exchanges->hasPages())
+                            <div class="mt-3">
+                                {{ $exchanges->appends(['price_page' => request('price_page')])->links() }}
                             </div>
-                        @empty
-                            <div class="text-center py-4">
-                                <i class="fas fa-exchange-alt fa-3x text-muted mb-3"></i>
-                                <p class="text-muted">No exchanges recorded yet</p>
-                            </div>
-                        @endforelse
+                        @endif
                     </div>
                 </div>
 
@@ -759,20 +815,37 @@
             if (tab === 'details') {
                 document.getElementById('detailsTab').style.display = 'block';
                 document.getElementById('tabDetails').classList.add('active');
+                // Update URL hash without reloading
+                history.pushState(null, null, '#details');
             } else if (tab === 'price-history') {
                 document.getElementById('priceHistoryTab').style.display = 'block';
                 document.getElementById('tabPrice').classList.add('active');
+                history.pushState(null, null, '#price-history');
             } else if (tab === 'exchange-history') {
                 document.getElementById('exchangeHistoryTab').style.display = 'block';
                 document.getElementById('tabExchange').classList.add('active');
+                history.pushState(null, null, '#exchange-history');
             }
         }
 
         // Check URL hash on load
-        window.addEventListener('load', function() {
-            if (window.location.hash === '#price-history') {
+        document.addEventListener('DOMContentLoaded', function() {
+            const hash = window.location.hash;
+            if (hash === '#price-history') {
                 showTab('price-history');
-            } else if (window.location.hash === '#exchange-history') {
+            } else if (hash === '#exchange-history') {
+                showTab('exchange-history');
+            } else {
+                showTab('details');
+            }
+        });
+
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', function() {
+            const hash = window.location.hash;
+            if (hash === '#price-history') {
+                showTab('price-history');
+            } else if (hash === '#exchange-history') {
                 showTab('exchange-history');
             } else {
                 showTab('details');

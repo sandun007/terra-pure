@@ -5,6 +5,15 @@
 @endpush
 
 @push('css')
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+    <!-- Toastr (optional) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+
+    <!-- Google Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
     <style>
         :root{
             --primary:#6366f1;
@@ -20,6 +29,8 @@
             --shadow2: 0 10px 28px rgba(0,0,0,.10);
             --radius: 18px;
         }
+
+        .mi{ font-size:18px; vertical-align:-4px; margin-right:8px; }
 
         /* HERO */
         .hero {
@@ -274,6 +285,9 @@
             padding: 10px 14px;
             font-weight: 900;
             border: 1px solid rgba(0,0,0,.08);
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
         }
         .btnx-primary{
             background: linear-gradient(135deg, var(--primary), var(--primary2));
@@ -312,6 +326,7 @@
             <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
                 <div>
                     <h3 class="hero-title">
+                        <span class="material-icons-round mi">{{ $product ? 'sell' : 'add_circle' }}</span>
                         {{ $product ? 'Update Price' : 'Create Price Change' }}
                     </h3>
                     <p class="hero-sub">
@@ -321,14 +336,14 @@
 
                 @if($product)
                     <div class="d-flex gap-2 flex-wrap">
-                        <span class="pill primary"><i class="fas fa-barcode"></i> {{ $product->code }}</span>
-                        <span class="pill info"><i class="fas fa-store"></i> {{ $product->wholesaler->business_name ?? 'N/A' }}</span>
+                        <span class="pill primary"><span class="material-icons-round">barcode</span> {{ $product->code }}</span>
+                        <span class="pill info"><span class="material-icons-round">store</span> {{ $product->wholesaler->business_name ?? 'N/A' }}</span>
                         @php
                             $qty = $product->qty ?? 0;
                             $min = $product->min_stock_level ?? 0;
                             $stockClass = $qty <= 0 ? 'stock-out' : ($qty <= $min ? 'stock-low' : 'stock-ok');
                         @endphp
-                        <span class="pill {{ $stockClass }}"><i class="fas fa-cubes"></i> Stock: {{ $qty }}</span>
+                        <span class="pill {{ $stockClass }}"><span class="material-icons-round">inventory_2</span> Stock: {{ $qty }}</span>
                     </div>
                 @endif
             </div>
@@ -340,7 +355,7 @@
                 <div class="cardx-body">
                     <div class="section-title">
                         <div>
-                            <h5><i class="fas fa-search me-2 text-primary"></i>Select Product</h5>
+                            <h5><span class="material-icons-round mi text-primary">search</span>Select Product</h5>
                             <small>Pick wholesaler first, then search product by name or code.</small>
                         </div>
                         <p class="picker-hint mb-0">Tip: type at least <b>2 characters</b>.</p>
@@ -364,13 +379,13 @@
 
                         <div class="col-12">
                             <div id="loader" class="text-center py-3 text-muted" style="display:none;">
-                                <i class="fas fa-spinner fa-spin me-2"></i>Loading products...
+                                <span class="material-icons-round mi">autorenew</span>Loading products...
                             </div>
 
                             <div id="productsList" class="row g-3 mt-1">
                                 <div class="col-12 text-center py-4 text-muted">
-                                    <i class="fas fa-box-open fa-2x mb-2"></i>
-                                    <div class="fw-bold">No products loaded</div>
+                                    <span class="material-icons-round" style="font-size:44px;">inventory_2</span>
+                                    <div class="fw-bold mt-2">No products loaded</div>
                                     <small>Select a wholesaler and start searching.</small>
                                 </div>
                             </div>
@@ -381,13 +396,12 @@
             </div>
         @endif
 
-
         @if($product)
             <!-- CURRENT PRICE INFO -->
             <div class="cardx mb-4">
                 <div class="cardx-body">
                     <div class="section-title">
-                        <h5><i class="fas fa-info-circle me-2 text-primary"></i>Current Price Information</h5>
+                        <h5><span class="material-icons-round mi text-primary">info</span>Current Price Information</h5>
                         <small>Current values from product record.</small>
                     </div>
 
@@ -438,7 +452,7 @@
                 <div class="cardx mb-4">
                     <div class="cardx-body">
                         <div class="section-title">
-                            <h5><i class="fas fa-tag me-2 text-primary"></i>New Price Details</h5>
+                            <h5><span class="material-icons-round mi text-primary">sell</span>New Price Details</h5>
                             <small>Live preview updates as you type.</small>
                         </div>
 
@@ -498,7 +512,7 @@
                                 <div class="val old" id="currentPriceDisplay">Rs. {{ number_format($product->final_price, 2) }}</div>
                             </div>
 
-                            <div class="arrow"><i class="fas fa-arrow-right"></i></div>
+                            <div class="arrow"><span class="material-icons-round">arrow_forward</span></div>
 
                             <div class="price-card">
                                 <div class="lbl">New Final Price</div>
@@ -531,7 +545,7 @@
                 <div class="cardx mb-4">
                     <div class="cardx-body">
                         <div class="section-title">
-                            <h5><i class="fas fa-cog me-2 text-primary"></i>Additional Options</h5>
+                            <h5><span class="material-icons-round mi text-primary">settings</span>Additional Options</h5>
                             <small>Reason, notes, and approval requirement.</small>
                         </div>
 
@@ -572,11 +586,13 @@
                 <!-- STICKY ACTIONS -->
                 <div class="sticky-actions">
                     <div class="actions-bar">
-                        <a href="{{ route('employee.wholesaler.price-changes.index') }}" class="btnx btnx-secondary">
-                            <i class="fas fa-times me-2"></i>Cancel
+                        <a href="{{ route('employee.wholesaler.price-changes.index') }}" class="btnx btnx-secondary cancel-btn">
+                            <span class="material-icons-round">close</span>
+                            Cancel
                         </a>
-                        <button type="submit" class="btnx btnx-primary">
-                            <i class="fas fa-save me-2"></i>Save Price Change
+                        <button type="submit" class="btnx btnx-primary" id="btnSave">
+                            <span class="material-icons-round">save</span>
+                            Save Price Change
                         </button>
                     </div>
                 </div>
@@ -587,9 +603,14 @@
     </div>
 @endsection
 
-
 @push('script')
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Toastr (optional) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
     @if($product)
         <script>
@@ -640,10 +661,67 @@
             $(document).ready(function(){
                 $('#newSellingPrice, #newDisplayPrice, #newDiscount').on('input', calculateChanges);
                 calculateChanges();
+
+                // SweetAlert confirm on SAVE
+                $('#priceChangeForm').on('submit', function(e){
+                    e.preventDefault();
+
+                    const newFinalText = $('#newPriceDisplay').text();
+                    const diffText = $('#priceDifference').text();
+                    const pctText  = $('#percentageChange').text();
+
+                    Swal.fire({
+                        title: 'Confirm save price change?',
+                        html: `
+                            <div style="text-align:left">
+                                <div><b>Current Final:</b> {{ 'Rs. '.number_format($product->final_price,2) }}</div>
+                                <div><b>New Final:</b> ${newFinalText}</div>
+                                <div><b>Difference:</b> ${diffText} (${pctText})</div>
+                                <div class="mt-2 text-muted" style="font-size:12px;">
+                                    If "Require Approval" is checked, this will go to pending approvals.
+                                </div>
+                            </div>
+                        `,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, Save',
+                        cancelButtonText: 'Cancel'
+                    }).then((r)=>{
+                        if(r.isConfirmed){
+                            this.submit();
+                        }
+                    });
+                });
+
+                // SweetAlert confirm on CANCEL
+                $('.cancel-btn').on('click', function(e){
+                    e.preventDefault();
+                    const href = this.getAttribute('href');
+
+                    Swal.fire({
+                        title: 'Cancel and leave this page?',
+                        text: 'Any unsaved changes will be lost.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Leave',
+                        cancelButtonText: 'Stay'
+                    }).then((r)=>{
+                        if(r.isConfirmed){
+                            window.location.href = href;
+                        }
+                    });
+                });
+
+                // Toastr flash (optional)
+                @if(session('success'))
+                toastr.success(@json(session('success')));
+                @endif
+                @if(session('error'))
+                toastr.error(@json(session('error')));
+                @endif
             });
         </script>
     @endif
-
 
     @if(!$product)
         <script>
@@ -664,12 +742,12 @@
 
                 function renderEmpty(msg){
                     $list.html(`
-                <div class="col-12 text-center py-4 text-muted">
-                    <i class="fas fa-box-open fa-2x mb-2"></i>
-                    <div class="fw-bold">${escapeHtml(msg)}</div>
-                    <small>Try another keyword.</small>
-                </div>
-            `);
+                        <div class="col-12 text-center py-4 text-muted">
+                            <span class="material-icons-round" style="font-size:44px;">inventory_2</span>
+                            <div class="fw-bold mt-2">${escapeHtml(msg)}</div>
+                            <small>Try another keyword.</small>
+                        </div>
+                    `);
                 }
 
                 function loadProducts(){
@@ -687,7 +765,6 @@
 
                     $loader.show();
 
-                    // NOTE: You used exchanges.api.products earlier. Keep it to avoid backend change.
                     $.ajax({
                         url: '{{ route("employee.wholesaler.exchanges.api.products") }}',
                         method: 'GET',
@@ -720,25 +797,28 @@
                                 else if(qty <= min) stockClass = 'stock-low';
 
                                 html += `
-                            <div class="col-md-4">
-                                <a class="text-decoration-none"
-                                   href="{{ url('employee/wholesaler/price-change/create') }}?product_id=${encodeURIComponent(p.id)}">
-                                    <div class="product-card">
-                                        <h6>${escapeHtml(p.name)}</h6>
-                                        <div class="meta">${escapeHtml(p.code)}</div>
+                                    <div class="col-md-4">
+                                        <a class="text-decoration-none"
+                                           href="{{ url('employee/wholesaler/price-change/create') }}?product_id=${encodeURIComponent(p.id)}"
+                                           onclick="return confirmPick('${escapeHtml(p.name)}')">
+                                            <div class="product-card">
+                                                <h6>${escapeHtml(p.name)}</h6>
+                                                <div class="meta">${escapeHtml(p.code)}</div>
 
-                                        <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
-                                            <span class="pill primary">
-                                                <i class="fas fa-tag"></i> Rs. ${Number(p.selling_price || 0).toFixed(2)}
-                                            </span>
-                                            <span class="pill ${stockClass}">
-                                                <i class="fas fa-cubes"></i> Stock: ${qty}
-                                            </span>
-                                        </div>
+                                                <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                                                    <span class="pill primary">
+                                                        <span class="material-icons-round">sell</span>
+                                                        Rs. ${Number(p.selling_price || 0).toFixed(2)}
+                                                    </span>
+                                                    <span class="pill ${stockClass}">
+                                                        <span class="material-icons-round">inventory_2</span>
+                                                        Stock: ${qty}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </a>
                                     </div>
-                                </a>
-                            </div>
-                        `;
+                                `;
                             });
 
                             $list.html(html);
@@ -750,9 +830,28 @@
                     });
                 }
 
+                window.confirmPick = function(productName){
+                    // Block default navigation and use SweetAlert
+                    event.preventDefault();
+                    const href = event.currentTarget.getAttribute('href');
+
+                    Swal.fire({
+                        title: 'Select this product?',
+                        text: productName,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Select',
+                        cancelButtonText: 'Cancel'
+                    }).then((r)=>{
+                        if(r.isConfirmed){
+                            window.location.href = href;
+                        }
+                    });
+                    return false;
+                };
+
                 $wh.on('change', loadProducts);
                 $q.on('keyup', function(){
-                    // small debounce
                     clearTimeout(window.__pc_t);
                     window.__pc_t = setTimeout(loadProducts, 250);
                 });

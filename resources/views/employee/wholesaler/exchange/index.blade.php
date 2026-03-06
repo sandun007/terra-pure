@@ -1,7 +1,8 @@
+{{-- resources/views/employee/wholesaler/exchanges/index.blade.php --}}
 @extends('employee.layout.app')
 
 @push('title')
-    Product Exchange Management
+    Order Exchange Management
 @endpush
 
 @push('css')
@@ -29,7 +30,6 @@
             --radius:18px;
         }
 
-        /* google icon helper */
         .gicon{
             font-family: 'Material Icons Round';
             font-weight: normal;
@@ -44,15 +44,13 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* HERO */
         .hero{
             border-radius: 24px;
             padding: 22px;
             margin-bottom: 18px;
-            background:
-                radial-gradient(900px 260px at 10% 0%, rgba(245,158,11,.26), transparent 55%),
-                radial-gradient(900px 260px at 90% 15%, rgba(99,102,241,.18), transparent 55%),
-                linear-gradient(135deg, rgba(255,255,255,.88), rgba(255,255,255,.72));
+            background: radial-gradient(900px 260px at 10% 0%, rgba(245,158,11,.26), transparent 55%),
+            radial-gradient(900px 260px at 90% 15%, rgba(99,102,241,.18), transparent 55%),
+            linear-gradient(135deg, rgba(255,255,255,.88), rgba(255,255,255,.72));
             border: 1px solid rgba(255,255,255,.55);
             box-shadow: var(--shadow);
             backdrop-filter: blur(10px);
@@ -78,10 +76,6 @@
             border: 1px solid rgba(0,0,0,.08);
         }
 
-        /* STATS */
-        .stats{
-            margin-top: 14px;
-        }
         .stat-card{
             background: var(--card);
             border-radius: 18px;
@@ -115,7 +109,6 @@
         .stat-ico.success{ background: rgba(16,185,129,.14); color:#065f46; }
         .stat-ico.primary{ background: rgba(99,102,241,.14); color: var(--primary2); }
 
-        /* FILTERS */
         .filter-card{
             background: var(--card);
             border-radius: 18px;
@@ -124,12 +117,7 @@
             padding: 16px;
             margin: 18px 0;
         }
-        .filter-card .form-control, .filter-card .form-select{
-            border-radius: 14px !important;
-            border: 1px solid rgba(0,0,0,.08) !important;
-        }
 
-        /* LIST CARD */
         .xcard{
             background: var(--card);
             border-radius: 18px;
@@ -155,6 +143,12 @@
         .xbar.pending{ background: rgba(245,158,11,.95); }
         .xbar.approved{ background: rgba(59,130,246,.95); }
         .xbar.cancelled{ background: rgba(239,68,68,.95); }
+
+        .exchange-number{
+            font-weight: 950;
+            color: var(--primary2);
+            font-size: 16px;
+        }
 
         .badge-soft{
             display:inline-flex;
@@ -216,15 +210,6 @@
         .value-box small{ color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing:.4px; }
         .value-box p{ margin: 6px 0 0 0; font-weight: 950; }
 
-        .note{
-            margin-top: 10px;
-            padding: 10px 12px;
-            border-radius: 16px;
-            background: rgba(0,0,0,.03);
-            border: 1px solid rgba(0,0,0,.06);
-            color:#334155;
-        }
-
         .btnx{
             border-radius: 14px;
             font-weight: 950;
@@ -252,6 +237,14 @@
             text-align:center;
             box-shadow: var(--shadow2);
         }
+
+        .order-badge {
+            background: #f1f5f9;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            color: #475569;
+        }
     </style>
 @endpush
 
@@ -262,8 +255,8 @@
         <div class="hero">
             <div class="d-flex justify-content-between align-items-start align-items-md-center flex-column flex-md-row gap-3">
                 <div>
-                    <h3 class="hero-title">Product Exchange Management</h3>
-                    <p class="hero-sub">Manage and track product exchanges between wholesalers.</p>
+                    <h3 class="hero-title">Order Exchange Management</h3>
+                    <p class="hero-sub">Manage and track product exchanges between wholesaler orders.</p>
                 </div>
 
                 <div class="hero-actions d-flex gap-2 flex-wrap">
@@ -277,7 +270,7 @@
             </div>
 
             <!-- STATS -->
-            <div class="row g-3 stats">
+            <div class="row g-3 stats mt-2">
                 <div class="col-md-3">
                     <div class="stat-card">
                         <div class="stat-k">Total Exchanges</div>
@@ -368,7 +361,7 @@
                     <div class="col-12">
                         <label class="form-label fw-bold">Search</label>
                         <input type="text" name="search" class="form-control"
-                               placeholder="Search by product name or code..."
+                               placeholder="Search by exchange number, product name or code..."
                                value="{{ request('search') }}">
                     </div>
 
@@ -390,41 +383,69 @@
                 <div class="xbar {{ $exchange->status }}"></div>
 
                 <div class="row g-3 align-items-start">
+                    <!-- Exchange Info -->
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="exchange-number">
+                                <span class="gicon">qr_code</span> {{ $exchange->exchange_number }}
+                            </div>
+                            <span class="status-pill {{ $exchange->status }}">
+                                <span class="gicon">
+                                    @if($exchange->status=='completed') check_circle
+                                    @elseif($exchange->status=='pending') schedule
+                                    @elseif($exchange->status=='approved') verified
+                                    @elseif($exchange->status=='cancelled') cancel
+                                    @else info
+                                    @endif
+                                </span>
+                                {{ ucfirst($exchange->status) }}
+                            </span>
+                        </div>
+                    </div>
+
                     <!-- Path -->
                     <div class="col-lg-6">
-                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
-                            <div class="path">
-                                <div>
-                                    <small class="text-muted fw-bold">Source</small>
-                                    <div style="font-weight:950;">{{ $exchange->sourceProduct->name ?? 'N/A' }}</div>
-                                    <div class="d-flex gap-2 flex-wrap mt-2">
-                                        <span class="badge-soft code"><span class="gicon">qr_code_2</span> {{ $exchange->sourceProduct->code ?? '' }}</span>
-                                        <span class="badge-soft store"><span class="gicon">store</span> {{ $exchange->sourceWholesaler->business_name ?? 'N/A' }}</span>
-                                    </div>
-                                </div>
-
-                                <div class="arrow">
-                                    <span class="gicon">trending_flat</span>
-                                </div>
-
-                                <div>
-                                    <small class="text-muted fw-bold">Destination</small>
-                                    <div style="font-weight:950;">{{ $exchange->destinationProduct->name ?? 'N/A' }}</div>
-                                    <div class="d-flex gap-2 flex-wrap mt-2">
-                                        <span class="badge-soft code"><span class="gicon">qr_code_2</span> {{ $exchange->destinationProduct->code ?? '' }}</span>
-                                        <span class="badge-soft store"><span class="gicon">store</span> {{ $exchange->destinationWholesaler->business_name ?? 'N/A' }}</span>
-                                    </div>
+                        <div class="path">
+                            <div>
+                                <small class="text-muted fw-bold">Source</small>
+                                <div style="font-weight:950;">{{ $exchange->source_product_name }}</div>
+                                <div class="d-flex gap-2 flex-wrap mt-2">
+                                    <span class="badge-soft code"><span class="gicon">qr_code_2</span> {{ $exchange->source_product_code }}</span>
+                                    <span class="badge-soft store"><span class="gicon">store</span> {{ $exchange->sourceWholesaler->business_name ?? 'N/A' }}</span>
+                                    @if($exchange->sourceOrder)
+                                        <span class="order-badge">
+                                            <span class="gicon">shopping_cart</span> Order #{{ $exchange->sourceOrder->order_number ?? $exchange->source_order_id }}
+                                        </span>
+                                    @endif
                                 </div>
                             </div>
 
-                            <div class="d-flex gap-2 flex-wrap">
-                                <span class="badge-soft qty"><span class="gicon">inventory_2</span> {{ $exchange->exchange_quantity }} units</span>
-                                <span class="badge-soft type"><span class="gicon">category</span> {{ ucfirst($exchange->exchange_type) }}</span>
+                            <div class="arrow">
+                                <span class="gicon">trending_flat</span>
+                            </div>
+
+                            <div>
+                                <small class="text-muted fw-bold">Destination</small>
+                                <div style="font-weight:950;">{{ $exchange->destination_product_name }}</div>
+                                <div class="d-flex gap-2 flex-wrap mt-2">
+                                    <span class="badge-soft code"><span class="gicon">qr_code_2</span> {{ $exchange->destination_product_code }}</span>
+                                    <span class="badge-soft store"><span class="gicon">store</span> {{ $exchange->destinationWholesaler->business_name ?? 'N/A' }}</span>
+                                    @if($exchange->destinationOrder)
+                                        <span class="order-badge">
+                                            <span class="gicon">shopping_cart</span> Order #{{ $exchange->destinationOrder->order_number ?? $exchange->destination_order_id }}
+                                        </span>
+                                    @endif
+                                </div>
                             </div>
                         </div>
 
+                        <div class="d-flex gap-2 flex-wrap mt-3">
+                            <span class="badge-soft qty"><span class="gicon">inventory_2</span> {{ $exchange->exchange_quantity }} units</span>
+                            <span class="badge-soft type"><span class="gicon">category</span> {{ ucfirst($exchange->exchange_type) }}</span>
+                        </div>
+
                         @if($exchange->notes)
-                            <div class="note">
+                            <div class="mt-2 p-2 bg-light rounded">
                                 <span class="gicon">comment</span>
                                 <span class="ms-1">{{ $exchange->notes }}</span>
                             </div>
@@ -434,8 +455,12 @@
                     <!-- Value -->
                     <div class="col-lg-3">
                         <div class="value-box">
-                            <small>Value</small>
-                            <p>Rs. {{ number_format($exchange->destination_price_at_time, 2) }}</p>
+                            <small>Source Value</small>
+                            <p>Rs. {{ number_format($exchange->source_total_price, 2) }}</p>
+                        </div>
+                        <div class="value-box mt-2">
+                            <small>Destination Value</small>
+                            <p>Rs. {{ number_format($exchange->destination_total_price, 2) }}</p>
                         </div>
                         <div class="value-box mt-2">
                             <small>Difference</small>
@@ -447,33 +472,19 @@
 
                     <!-- Meta + Actions -->
                     <div class="col-lg-3">
-                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                        <div class="d-flex flex-column gap-2">
                             <div>
-                                <div class="status-pill {{ $exchange->status }}">
-                                <span class="gicon">
-                                    @if($exchange->status=='completed') check_circle
-                                    @elseif($exchange->status=='pending') schedule
-                                    @elseif($exchange->status=='approved') verified
-                                    @elseif($exchange->status=='cancelled') cancel
-                                    @else info
-                                    @endif
-                                </span>
-                                    {{ ucfirst($exchange->status) }}
-                                </div>
-
-                                <div class="mt-2">
-                                    <small class="text-muted fw-bold">Date</small>
-                                    <div style="font-weight:950;">{{ $exchange->created_at->format('M d, Y') }}</div>
-                                    <small class="text-muted">{{ $exchange->created_at->format('h:i A') }}</small>
-                                    @if($exchange->employee)
-                                        <div class="mt-1">
-                                            <small class="text-muted">by {{ $exchange->employee->name }}</small>
-                                        </div>
-                                    @endif
-                                </div>
+                                <small class="text-muted fw-bold">Date</small>
+                                <div style="font-weight:950;">{{ $exchange->created_at->format('M d, Y') }}</div>
+                                <small class="text-muted">{{ $exchange->created_at->format('h:i A') }}</small>
+                                @if($exchange->employee)
+                                    <div class="mt-1">
+                                        <small class="text-muted">by {{ $exchange->employee->name }}</small>
+                                    </div>
+                                @endif
                             </div>
 
-                            <div class="d-flex gap-2 flex-wrap justify-content-end">
+                            <div class="d-flex gap-2 flex-wrap mt-2">
                                 <a href="{{ route('employee.wholesaler.exchanges.show', $exchange->id) }}"
                                    class="btnx btnx-outline">
                                     <span class="gicon">visibility</span> View
@@ -492,7 +503,6 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         @empty
@@ -501,7 +511,7 @@
                     <span class="gicon" style="font-size:52px;">swap_horiz</span>
                 </div>
                 <h4 class="mt-2 mb-1" style="font-weight:950;color:#334155;">No Exchanges Found</h4>
-                <p class="text-muted mb-3">Start by creating a new product exchange.</p>
+                <p class="text-muted mb-3">Start by creating a new order exchange.</p>
                 <a href="{{ route('employee.wholesaler.exchanges.create') }}" class="btn btn-primary" style="border-radius:14px;font-weight:950;">
                     <span class="gicon">add</span> Create Exchange
                 </a>
@@ -518,8 +528,6 @@
 
 @push('script')
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-    <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
@@ -535,7 +543,7 @@
             });
         }
 
-        // Approve confirmation (SweetAlert)
+        // Approve confirmation
         $(document).on('submit', '.approve-form', function(e){
             e.preventDefault();
             const form = this;
@@ -543,7 +551,7 @@
             Swal.fire({
                 icon: 'question',
                 title: 'Approve this exchange?',
-                text: 'This action will approve the pending exchange.',
+                text: 'This action will approve the pending exchange and transfer products.',
                 showCancelButton: true,
                 confirmButtonText: 'Yes, Approve',
                 cancelButtonText: 'Cancel'
@@ -555,7 +563,7 @@
             });
         });
 
-        // Optional: show Laravel session flash via toast
+        // Show Laravel session flash
         @if(session('success'))
         toast('success', @json(session('success')));
         @endif

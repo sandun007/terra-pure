@@ -3,7 +3,7 @@
 @endphp
 
 <style>
-    /* Modern Header Styles */
+    /* Modern Fixed Header Styles */
     .app-header {
         background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
         backdrop-filter: blur(20px);
@@ -14,15 +14,28 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        position: sticky;
+        position: fixed; /* Changed from sticky to fixed */
         top: 0;
-        z-index: 999;
+        left: 0;
+        right: 0;
+        width: calc(100% - var(--sidebar-width, 260px));
+        margin-left: var(--sidebar-width, 260px);
+        z-index: 1000;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
+    /* When sidebar is collapsed */
+    .page-wrapper.collapsed .app-header {
+        width: calc(100% - var(--sidebar-collapsed-width, 70px));
+        margin-left: var(--sidebar-collapsed-width, 70px);
+    }
+
+    /* Header when scrolled - still fixed, just shadow effect */
     .app-header.scrolled {
         box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
-        height: 90px;
+        height: 75px; /* Keep same height */
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(20px);
     }
 
     /* Header Sections */
@@ -292,24 +305,137 @@
         display: inline-block;
         margin-right: 6px;
         vertical-align: middle;
+        animation: pulse 2s infinite;
     }
 
-    /* Mobile */
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.2); opacity: 0.8; }
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 1199px) {
+        .app-header {
+            padding: 0 20px;
+        }
+
+        .header-center {
+            max-width: 400px;
+            margin: 0 20px;
+        }
+    }
+
     @media (max-width: 991px) {
-        .app-header { padding: 0 15px; height: 65px; }
-        .header-center { display: none; }
+        .app-header {
+            padding: 0 15px;
+            height: 65px;
+            width: 100% !important; /* Full width on mobile */
+            margin-left: 0 !important;
+        }
+
+        .header-center {
+            display: none;
+        }
+
         .brand-logo img { height: 28px; }
         .logo-badge { font-size: 10px; padding: 3px 8px; }
         .user-name { display: none; }
         .user-btn { padding: 4px; border-radius: 50%; }
         .user-avatar { width: 35px; height: 35px; }
+
+        .search-container {
+            display: none;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .app-header {
+            padding: 0 12px;
+            height: 60px;
+        }
+
+        .brand-logo img {
+            height: 24px;
+        }
+
+        .logo-badge {
+            display: none;
+        }
+
+        .notification-btn {
+            width: 40px;
+            height: 40px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+        }
+
+        .dropdown-menu {
+            min-width: 260px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .app-header {
+            padding: 0 10px;
+            height: 55px;
+        }
+
+        .header-left {
+            gap: 10px;
+        }
+
+        .brand-logo img {
+            height: 22px;
+        }
+
+        .notification-btn {
+            width: 36px;
+            height: 36px;
+        }
+
+        .user-avatar {
+            width: 30px;
+            height: 30px;
+        }
+
+        .dropdown-menu {
+            min-width: 240px;
+            right: -10px !important;
+        }
+
+        .dropdown-header {
+            padding: 20px;
+        }
+
+        .dropdown-header .profile-img {
+            width: 50px;
+            height: 50px;
+        }
+
+        .profile-details h6 {
+            font-size: 14px;
+        }
+
+        .business-name {
+            font-size: 10px;
+        }
+    }
+
+    /* Print Styles */
+    @media print {
+        .app-header {
+            display: none;
+        }
     }
 </style>
 
-<header class="app-header">
-    <!-- Left -->
+<header class="app-header" id="appHeader">
+    <!-- Left Section -->
     <div class="header-left">
-        <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button">
+        <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-label="Toggle Menu">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="3" y1="12" x2="21" y2="12"></line>
                 <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -323,42 +449,46 @@
         </a>
     </div>
 
-    <!-- Center -->
+    <!-- Center Section (Search) -->
     <div class="header-center">
         <div class="search-container">
             <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="11" cy="11" r="8"></circle>
                 <path d="m21 21-4.35-4.35"></path>
             </svg>
-            <input type="text" class="search-input" placeholder="Search products, orders, customers..." aria-label="Search">
+            <input type="text" class="search-input" placeholder="Search products, orders, customers..." aria-label="Search" id="globalSearch">
         </div>
     </div>
 
-    <!-- Right -->
+    <!-- Right Section -->
     <div class="header-right">
-        <!-- Notifications -->
+        <!-- Notifications Dropdown -->
         <div class="dropdown">
             <button class="notification-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                     <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                 </svg>
-                <span class="notification-badge">3</span>
+                <span class="notification-badge" id="notificationCount">3</span>
             </button>
 
             <div class="dropdown-menu dropdown-menu-end p-0" style="min-width: 320px;">
-                <div class="p-3 border-bottom">
-                    <strong>Notifications</strong>
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <strong class="fs-6">Notifications</strong>
+                    <span class="badge bg-primary rounded-pill" id="notificationTotal">3 new</span>
                 </div>
-                <div class="p-3 text-muted">
-                    No new notifications.
+                <div class="p-3 text-muted text-center" id="notificationList">
+                    <p class="mb-0">No new notifications.</p>
+                </div>
+                <div class="p-2 border-top text-center">
+                    <a href="#" class="text-decoration-none small">View all notifications</a>
                 </div>
             </div>
         </div>
 
-        <!-- User -->
+        <!-- User Dropdown -->
         <div class="dropdown">
-            <button class="user-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <button class="user-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="userMenuButton">
                 <img
                     src="{{ $wholesaler?->img ? asset('storage/'.$wholesaler->img) : asset('asset/img/default-avatar.png') }}"
                     class="user-avatar"
@@ -374,7 +504,7 @@
                 </svg>
             </button>
 
-            <div class="dropdown-menu dropdown-menu-end">
+            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
                 <div class="dropdown-header">
                     <img
                         src="{{ $wholesaler?->img ? asset('storage/'.$wholesaler->img) : asset('asset/img/default-avatar.png') }}"
@@ -462,19 +592,20 @@
 </header>
 
 <script>
-    // Only UI extras (NO dropdown manual toggle - Bootstrap handles it)
-
     document.addEventListener('DOMContentLoaded', function () {
-        // Header shadow on scroll
+        // Header shadow effect on scroll (only visual, position remains fixed)
         const header = document.querySelector('.app-header');
         if (header) {
             window.addEventListener('scroll', () => {
-                if (window.scrollY > 10) header.classList.add('scrolled');
-                else header.classList.remove('scrolled');
+                if (window.scrollY > 10) {
+                    header.classList.add('scrolled');
+                } else {
+                    header.classList.remove('scrolled');
+                }
             });
         }
 
-        // Search focus animation (optional)
+        // Search focus animation
         const searchInput = document.querySelector('.search-input');
         if (searchInput) {
             searchInput.addEventListener('focus', () => {
@@ -483,6 +614,37 @@
             searchInput.addEventListener('blur', () => {
                 searchInput.parentElement.style.transform = 'scale(1)';
             });
+
+            // Search functionality with debounce
+            let searchTimeout;
+            searchInput.addEventListener('input', function(e) {
+                clearTimeout(searchTimeout);
+                const term = e.target.value.trim();
+
+                if (term.length >= 3) {
+                    searchTimeout = setTimeout(() => {
+                        performSearch(term);
+                    }, 500);
+                }
+            });
+
+            // Enter key search
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const term = e.target.value.trim();
+                    if (term) {
+                        performSearch(term);
+                    }
+                }
+            });
+        }
+
+        // Search function
+        function performSearch(term) {
+            console.log('Searching for:', term);
+            // Add your search logic here
+            // Example: window.location.href = `/wholesaler/search?q=${encodeURIComponent(term)}`;
         }
 
         // Mark current dropdown item active
@@ -503,6 +665,38 @@
             } catch (e) {
                 // ignore invalid href
             }
+        });
+
+        // Notification badge update (example)
+        function updateNotificationBadge(count) {
+            const badge = document.getElementById('notificationCount');
+            const total = document.getElementById('notificationTotal');
+            if (badge) badge.textContent = count;
+            if (total) total.textContent = count + ' new';
+        }
+
+        // Simulate notification fetch (replace with actual AJAX)
+        setTimeout(() => {
+            // Example: updateNotificationBadge(5);
+        }, 3000);
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.dropdown')) {
+                document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+                document.querySelectorAll('.user-btn[aria-expanded="true"]').forEach(btn => {
+                    btn.setAttribute('aria-expanded', 'false');
+                });
+            }
+        });
+
+        // Prevent dropdown from closing when clicking inside
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            menu.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
         });
     });
 </script>

@@ -1,7 +1,8 @@
+{{-- resources/views/employee/wholesaler/exchanges/show.blade.php --}}
 @extends('employee.layout.app')
 
 @push('title')
-    Exchange #{{ $exchange->id }} Details
+    Exchange #{{ $exchange->exchange_number }} Details
 @endpush
 
 @push('css')
@@ -117,6 +118,25 @@
             right: 2rem;
             z-index: 100;
         }
+
+        .exchange-number {
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+            display: inline-block;
+        }
+
+        .order-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .order-link:hover {
+            text-decoration: underline;
+        }
     </style>
 @endpush
 
@@ -126,19 +146,22 @@
         <div class="exchange-detail-header">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <h1 class="mb-2">Exchange #{{ $exchange->id }}</h1>
+                    <span class="exchange-number mb-2 d-inline-block">
+                        <i class="fas fa-qrcode me-2"></i>{{ $exchange->exchange_number }}
+                    </span>
+                    <h1 class="mb-2">Exchange Details</h1>
                     <p class="mb-0 opacity-75">Created {{ $exchange->created_at->format('M d, Y h:i A') }}</p>
                 </div>
                 <div>
-                <span class="status-badge-large bg-white bg-opacity-25">
-                    <i class="fas fa-circle me-2" style="color: {{
-                        $exchange->status == 'completed' ? '#10b981' :
-                        ($exchange->status == 'pending' ? '#f59e0b' :
-                        ($exchange->status == 'approved' ? '#3b82f6' :
-                        ($exchange->status == 'cancelled' ? '#ef4444' : '#94a3b8')))
-                    }}"></i>
-                    {{ ucfirst($exchange->status) }}
-                </span>
+                    <span class="status-badge-large bg-white bg-opacity-25">
+                        <i class="fas fa-circle me-2" style="color: {{
+                            $exchange->status == 'completed' ? '#10b981' :
+                            ($exchange->status == 'pending' ? '#f59e0b' :
+                            ($exchange->status == 'approved' ? '#3b82f6' :
+                            ($exchange->status == 'cancelled' ? '#ef4444' : '#94a3b8')))
+                        }}"></i>
+                        {{ ucfirst($exchange->status) }}
+                    </span>
                     @if($exchange->exchange_type)
                         <span class="badge bg-light text-dark ms-2">{{ ucfirst($exchange->exchange_type) }}</span>
                     @endif
@@ -156,22 +179,23 @@
                     </h5>
 
                     <div class="d-flex gap-3">
-                        @if($exchange->sourceProduct->image)
-                            <img src="{{ asset('storage/' . $exchange->sourceProduct->image) }}" class="product-image">
-                        @else
-                            <div class="product-image d-flex align-items-center justify-content-center">
-                                <i class="fas fa-box fa-2x text-muted"></i>
-                            </div>
-                        @endif
-
                         <div class="flex-grow-1">
-                            <h6 class="mb-1">{{ $exchange->sourceProduct->name }}</h6>
-                            <code class="text-muted">{{ $exchange->sourceProduct->code }}</code>
+                            <h6 class="mb-1">{{ $exchange->source_product_name }}</h6>
+                            <code class="text-muted">{{ $exchange->source_product_code }}</code>
+
+                            @if($exchange->sourceOrder)
+                                <div class="mt-2">
+                                    <small class="text-muted">Source Order:</small>
+                                    <a href="{{ route('employee.wholesaler.orders.show', $exchange->source_order_id) }}" class="order-link ms-2">
+                                        <i class="fas fa-external-link-alt"></i> {{ $exchange->sourceOrder->order_number ?? 'Order #'.$exchange->source_order_id }}
+                                    </a>
+                                </div>
+                            @endif
 
                             <div class="row mt-2">
                                 <div class="col-6">
                                     <small class="text-muted">Price per unit</small>
-                                    <p class="mb-0">Rs. {{ number_format($exchange->sourceProduct->selling_price, 2) }}</p>
+                                    <p class="mb-0">Rs. {{ number_format($exchange->source_price_per_unit, 2) }}</p>
                                 </div>
                                 <div class="col-6">
                                     <small class="text-muted">Quantity</small>
@@ -181,7 +205,7 @@
 
                             <div class="value-box mt-2">
                                 <div class="label">Total Value</div>
-                                <div class="value">Rs. {{ number_format($exchange->source_price_at_time, 2) }}</div>
+                                <div class="value">Rs. {{ number_format($exchange->source_total_price, 2) }}</div>
                             </div>
                         </div>
                     </div>
@@ -203,22 +227,23 @@
                     </h5>
 
                     <div class="d-flex gap-3">
-                        @if($exchange->destinationProduct->image)
-                            <img src="{{ asset('storage/' . $exchange->destinationProduct->image) }}" class="product-image">
-                        @else
-                            <div class="product-image d-flex align-items-center justify-content-center">
-                                <i class="fas fa-box fa-2x text-muted"></i>
-                            </div>
-                        @endif
-
                         <div class="flex-grow-1">
-                            <h6 class="mb-1">{{ $exchange->destinationProduct->name }}</h6>
-                            <code class="text-muted">{{ $exchange->destinationProduct->code }}</code>
+                            <h6 class="mb-1">{{ $exchange->destination_product_name }}</h6>
+                            <code class="text-muted">{{ $exchange->destination_product_code }}</code>
+
+                            @if($exchange->destinationOrder)
+                                <div class="mt-2">
+                                    <small class="text-muted">Destination Order:</small>
+                                    <a href="{{ route('employee.wholesaler.orders.show', $exchange->destination_order_id) }}" class="order-link ms-2">
+                                        <i class="fas fa-external-link-alt"></i> {{ $exchange->destinationOrder->order_number ?? 'Order #'.$exchange->destination_order_id }}
+                                    </a>
+                                </div>
+                            @endif
 
                             <div class="row mt-2">
                                 <div class="col-6">
                                     <small class="text-muted">Price per unit</small>
-                                    <p class="mb-0">Rs. {{ number_format($exchange->destinationProduct->selling_price, 2) }}</p>
+                                    <p class="mb-0">Rs. {{ number_format($exchange->destination_price_per_unit, 2) }}</p>
                                 </div>
                                 <div class="col-6">
                                     <small class="text-muted">Quantity</small>
@@ -228,7 +253,7 @@
 
                             <div class="value-box mt-2">
                                 <div class="label">Total Value</div>
-                                <div class="value">Rs. {{ number_format($exchange->destination_price_at_time, 2) }}</div>
+                                <div class="value">Rs. {{ number_format($exchange->destination_total_price, 2) }}</div>
                             </div>
                         </div>
                     </div>
@@ -241,13 +266,13 @@
             <div class="col-md-3">
                 <div class="exchange-card">
                     <h6 class="text-muted mb-2">Source Value</h6>
-                    <h3>Rs. {{ number_format($exchange->source_price_at_time, 2) }}</h3>
+                    <h3>Rs. {{ number_format($exchange->source_total_price, 2) }}</h3>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="exchange-card">
                     <h6 class="text-muted mb-2">Destination Value</h6>
-                    <h3>Rs. {{ number_format($exchange->destination_price_at_time, 2) }}</h3>
+                    <h3>Rs. {{ number_format($exchange->destination_total_price, 2) }}</h3>
                 </div>
             </div>
             <div class="col-md-3">
@@ -278,11 +303,11 @@
                 <div class="exchange-card">
                     <h6 class="text-muted mb-2">Payment Status</h6>
                     <span class="badge bg-{{
-                    $exchange->payment_status == 'completed' ? 'success' :
-                    ($exchange->payment_status == 'pending' ? 'warning' : 'secondary')
-                }}">
-                    {{ ucfirst($exchange->payment_status ?? 'pending') }}
-                </span>
+                        $exchange->payment_status == 'completed' ? 'success' :
+                        ($exchange->payment_status == 'pending' ? 'warning' : 'secondary')
+                    }}">
+                        {{ ucfirst($exchange->payment_status ?? 'pending') }}
+                    </span>
                     @if($exchange->payment_date)
                         <br><small class="text-muted">{{ $exchange->payment_date->format('M d, Y') }}</small>
                     @endif
@@ -290,8 +315,8 @@
             </div>
             <div class="col-md-4">
                 <div class="exchange-card">
-                    <h6 class="text-muted mb-2">Transaction Reference</h6>
-                    <p class="mb-0">{{ $exchange->transaction_reference ?? 'N/A' }}</p>
+                    <h6 class="text-muted mb-2">Payment Reference</h6>
+                    <p class="mb-0">{{ $exchange->payment_reference ?? 'N/A' }}</p>
                 </div>
             </div>
         </div>
@@ -341,13 +366,13 @@
         <!-- Action Buttons -->
         <div class="action-buttons">
             @if($exchange->status == 'pending')
-                <div class="btn-group">
+                <div class="btn-group-vertical">
                     <form action="{{ route('employee.wholesaler.exchanges.approve', $exchange->id) }}"
                           method="POST"
                           class="d-inline"
                           onsubmit="return confirm('Approve this exchange? This will transfer the products.')">
                         @csrf
-                        <button type="submit" class="btn btn-success btn-lg">
+                        <button type="submit" class="btn btn-success btn-lg mb-2">
                             <i class="fas fa-check me-2"></i>Approve & Process
                         </button>
                     </form>
@@ -355,16 +380,6 @@
                         <i class="fas fa-times me-2"></i>Reject
                     </button>
                 </div>
-            @elseif($exchange->status == 'approved')
-                <form action="{{ route('employee.wholesaler.exchanges.approve', $exchange->id) }}"
-                      method="POST"
-                      class="d-inline"
-                      onsubmit="return confirm('Process this approved exchange?')">
-                    @csrf
-                    <button type="submit" class="btn btn-success btn-lg">
-                        <i class="fas fa-play me-2"></i>Process Exchange
-                    </button>
-                </form>
             @endif
 
             @if(in_array($exchange->status, ['pending', 'approved']))
@@ -372,6 +387,10 @@
                     <i class="fas fa-ban me-2"></i>Cancel Exchange
                 </button>
             @endif
+
+            <a href="{{ route('employee.wholesaler.exchanges.index') }}" class="btn btn-outline-secondary btn-lg mt-2">
+                <i class="fas fa-arrow-left me-2"></i>Back to List
+            </a>
         </div>
     </div>
 
@@ -408,7 +427,7 @@
                     <h5 class="modal-title">Cancel Exchange</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="{{ route('employee.wholesaler.exchange.cancel', $exchange->id) }}" method="POST">
+                <form action="{{ route('employee.wholesaler.exchanges.cancel', $exchange->id) }}" method="POST">
                     @csrf
                     <div class="modal-body">
                         <div class="mb-3">
