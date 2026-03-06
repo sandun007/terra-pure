@@ -1,4 +1,5 @@
 <?php
+// app/Http/Controllers/Employee/EmployeeWholesalerPriceChangeController.php
 
 namespace App\Http\Controllers\Employee;
 
@@ -80,9 +81,11 @@ class EmployeeWholesalerPriceChangeController extends Controller
                 'today_changes' => WholesalerProductPriceChange::whereDate('created_at', today())->count(),
                 'pending_changes' => WholesalerProductPriceChange::where('status', 'pending')->count(),
                 'approved_changes' => WholesalerProductPriceChange::where('status', 'approved')->count(),
+                'rejected_changes' => WholesalerProductPriceChange::where('status', 'rejected')->count(),
                 'total_increase' => WholesalerProductPriceChange::where('price_difference', '>', 0)->sum('price_difference'),
                 'total_decrease' => WholesalerProductPriceChange::where('price_difference', '<', 0)->sum('price_difference'),
                 'my_changes' => WholesalerProductPriceChange::where('employee_id', $employee->id)->count(),
+                'products_affected' => WholesalerProductPriceChange::distinct('product_id')->count('product_id'),
             ];
 
             return view('employee.wholesaler.price-change.index', compact(
@@ -100,7 +103,7 @@ class EmployeeWholesalerPriceChangeController extends Controller
     }
 
     /**
-     * Show form to create price change
+     * Show form to create price change (only for approved products)
      */
     public function create(Request $request)
     {
@@ -109,16 +112,23 @@ class EmployeeWholesalerPriceChangeController extends Controller
             $product = null;
 
             if ($productId) {
-                $product = WholesalerProduct::with('wholesaler')->find($productId);
+                $product = WholesalerProduct::with('wholesaler')
+                    ->where('employee_approval_status', 'approved')
+                    ->find($productId);
+
+                if (!$product) {
+                    return redirect()->route('employee.wholesaler.price-changes.index')
+                        ->with('error', 'Product not found or not approved yet.');
+                }
             }
 
-            $wholesalers = Wholesaler::orderBy('business_name')->get();
+            $wholesalers = Wholesaler::orderBy('business_name')->get(['id', 'business_name as name']);
 
             return view('employee.wholesaler.price-change.create', compact('product', 'wholesalers'));
 
         } catch (\Exception $e) {
             Log::error('EmployeeWholesalerPriceChangeController@create error: ' . $e->getMessage());
-            return redirect()->route('employee.wholesaler.price-change.index')
+            return redirect()->route('employee.wholesaler.price-changes.index')
                 ->with('error', 'Error loading form: ' . $e->getMessage());
         }
     }
@@ -150,6 +160,13 @@ class EmployeeWholesalerPriceChangeController extends Controller
             }
 
             $product = WholesalerProduct::findOrFail($request->product_id);
+
+            // Check if product is approved
+            if (!$product->isApproved()) {
+                return redirect()->back()
+                    ->with('error', 'Cannot change price: Product is not approved yet.')
+                    ->withInput();
+            }
 
             // Store old values
             $oldSellingPrice = $product->selling_price;
@@ -241,18 +258,19 @@ class EmployeeWholesalerPriceChangeController extends Controller
     }
 
     /**
-     * Show bulk price update form
+     * Show bulk price update form (only for approved products)
      */
     public function bulkCreate(Request $request)
     {
         try {
-            $wholesalers = Wholesaler::orderBy('business_name')->get();
+            $wholesalers = Wholesaler::orderBy('business_name')->get(['id', 'business_name as name']);
 
             $selectedProducts = [];
             if ($request->filled('product_ids')) {
                 $productIds = explode(',', $request->product_ids);
                 $selectedProducts = WholesalerProduct::with('wholesaler')
                     ->whereIn('id', $productIds)
+                    ->where('employee_approval_status', 'approved')
                     ->get();
             }
 
@@ -266,7 +284,7 @@ class EmployeeWholesalerPriceChangeController extends Controller
     }
 
     /**
-     * Process bulk price update
+     * Process bulk price update (only for approved products)
      */
     public function bulkStore(Request $request)
     {
@@ -296,6 +314,18 @@ class EmployeeWholesalerPriceChangeController extends Controller
             }
 
             $productIds = $request->product_ids;
+
+            // Verify all products are approved
+            $unapprovedCount = WholesalerProduct::whereIn('id', $productIds)
+                ->where('employee_approval_status', '!=', 'approved')
+                ->count();
+
+            if ($unapprovedCount > 0) {
+                return redirect()->back()
+                    ->with('error', "Cannot update: {$unapprovedCount} product(s) are not approved yet.")
+                    ->withInput();
+            }
+
             $updateType = $request->update_type;
             $priceField = $request->price_field;
             $value = $request->value;
@@ -327,9 +357,9 @@ class EmployeeWholesalerPriceChangeController extends Controller
                 // Set new prices
                 if ($priceField === 'selling_price') {
                     $newSellingPrice = $newBasePrice;
-                    $newDisplayPrice = $oldDisplayPrice; // Keep display price same
+                    $newDisplayPrice = $oldDisplayPrice;
                 } elseif ($priceField === 'display_price') {
-                    $newSellingPrice = $oldSellingPrice; // Keep selling price same
+                    $newSellingPrice = $oldSellingPrice;
                     $newDisplayPrice = $newBasePrice;
                 } else {
                     // final_price - need to back-calculate
@@ -488,15 +518,40 @@ class EmployeeWholesalerPriceChangeController extends Controller
                 $query->where('employee_id', $request->employee_id);
             }
 
+            if ($request->filled('date_from')) {
+                $query->whereDate('created_at', '>=', $request->date_from);
+            }
+
+            if ($request->filled('date_to')) {
+                $query->whereDate('created_at', '<=', $request->date_to);
+            }
+
             $pendingChanges = $query->orderBy('created_at', 'asc')->paginate(20);
 
-            $wholesalers = Wholesaler::orderBy('business_name')->get();
-            $employees = Employee::orderBy('name')->get();
+            $wholesalers = Wholesaler::orderBy('business_name')->get(['id', 'business_name as name']);
+            $employees = Employee::orderBy('name')->get(['id', 'name']);
+
+            // Stats for pending page
+            $stats = [
+                'total_pending' => WholesalerProductPriceChange::where('status', 'pending')->count(),
+                'today_pending' => WholesalerProductPriceChange::where('status', 'pending')
+                    ->whereDate('created_at', today())
+                    ->count(),
+                'average_change' => WholesalerProductPriceChange::where('status', 'pending')
+                        ->avg('percentage_change') ?? 0,
+                'largest_increase' => WholesalerProductPriceChange::where('status', 'pending')
+                        ->where('price_difference', '>', 0)
+                        ->max('price_difference') ?? 0,
+                'largest_decrease' => WholesalerProductPriceChange::where('status', 'pending')
+                        ->where('price_difference', '<', 0)
+                        ->min('price_difference') ?? 0,
+            ];
 
             return view('employee.wholesaler.price-change.pending', compact(
                 'pendingChanges',
                 'wholesalers',
-                'employees'
+                'employees',
+                'stats'
             ));
 
         } catch (\Exception $e) {
@@ -539,6 +594,9 @@ class EmployeeWholesalerPriceChangeController extends Controller
             $priceChange->approve($employee->id);
 
             DB::commit();
+
+            // Log the approval
+            Log::info("Price change #{$priceChange->id} approved by employee #{$employee->id}");
 
             return redirect()->route('employee.wholesaler.price-change.pending')
                 ->with('success', 'Price change approved successfully.');
@@ -586,6 +644,8 @@ class EmployeeWholesalerPriceChangeController extends Controller
 
             DB::commit();
 
+            Log::info("Price change #{$priceChange->id} rejected by employee #{$employee->id}. Reason: {$request->rejection_reason}");
+
             return redirect()->route('employee.wholesaler.price-change.pending')
                 ->with('success', 'Price change rejected.');
 
@@ -631,17 +691,32 @@ class EmployeeWholesalerPriceChangeController extends Controller
                 $query->whereDate('created_at', '<=', $request->date_to);
             }
 
+            if ($request->filled('change_type') && $request->change_type != 'all') {
+                $query->where('change_type', $request->change_type);
+            }
+
             $priceChanges = $query->orderBy('created_at', 'desc')->paginate(50);
 
-            $wholesalers = Wholesaler::orderBy('business_name')->get();
-            $employees = Employee::orderBy('name')->get();
-            $products = WholesalerProduct::orderBy('name')->limit(100)->get();
+            $wholesalers = Wholesaler::orderBy('business_name')->get(['id', 'business_name as name']);
+            $employees = Employee::orderBy('name')->get(['id', 'name']);
+            $products = WholesalerProduct::orderBy('name')->limit(100)->get(['id', 'name', 'code']);
+
+            // Stats for history page
+            $stats = [
+                'total_changes' => $priceChanges->total(),
+                'total_increase' => $priceChanges->sum('price_difference'),
+                'avg_change' => $priceChanges->avg('percentage_change') ?? 0,
+                'period' => $request->date_from && $request->date_to
+                    ? $request->date_from . ' to ' . $request->date_to
+                    : 'All time'
+            ];
 
             return view('employee.wholesaler.price-change.history', compact(
                 'priceChanges',
                 'wholesalers',
                 'employees',
-                'products'
+                'products',
+                'stats'
             ));
 
         } catch (\Exception $e) {
@@ -669,6 +744,10 @@ class EmployeeWholesalerPriceChangeController extends Controller
 
             if ($request->filled('date_to')) {
                 $query->whereDate('created_at', '<=', $request->date_to);
+            }
+
+            if ($request->filled('status') && $request->status != 'all') {
+                $query->where('status', $request->status);
             }
 
             $priceChanges = $query->orderBy('created_at', 'desc')->get();
@@ -729,7 +808,7 @@ class EmployeeWholesalerPriceChangeController extends Controller
     }
 
     /**
-     * Get product price change statistics
+     * Get product price change statistics (AJAX)
      */
     public function stats(Request $request)
     {
@@ -760,10 +839,30 @@ class EmployeeWholesalerPriceChangeController extends Controller
                 ->orderBy('month', 'desc')
                 ->get();
 
+            // Top changed products
+            $topProducts = WholesalerProductPriceChange::select(
+                'product_id',
+                DB::raw('COUNT(*) as change_count'),
+                DB::raw('AVG(percentage_change) as avg_change')
+            )
+                ->with('product:id,name,code')
+                ->groupBy('product_id')
+                ->orderBy('change_count', 'desc')
+                ->limit(10)
+                ->get()
+                ->map(function($item) {
+                    return [
+                        'product' => $item->product->name . ' (' . $item->product->code . ')',
+                        'changes' => $item->change_count,
+                        'avg_change' => round($item->avg_change, 2) . '%'
+                    ];
+                });
+
             return response()->json([
                 'success' => true,
                 'stats' => $stats,
-                'monthly_trends' => $monthlyTrends
+                'monthly_trends' => $monthlyTrends,
+                'top_products' => $topProducts
             ]);
 
         } catch (\Exception $e) {
@@ -772,6 +871,177 @@ class EmployeeWholesalerPriceChangeController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error loading statistics: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get product details for quick price change
+     */
+    public function getProductDetails($id)
+    {
+        try {
+            $product = WholesalerProduct::with('wholesaler')
+                ->where('employee_approval_status', 'approved')
+                ->find($id);
+
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product not found or not approved'
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'product' => [
+                    'id' => $product->id,
+                    'code' => $product->code,
+                    'name' => $product->name,
+                    'selling_price' => $product->selling_price,
+                    'display_price' => $product->display_price,
+                    'final_price' => $product->final_price,
+                    'discount' => $product->discount,
+                    'wholesaler' => $product->wholesaler->business_name,
+                    'wholesaler_id' => $product->wholesaler_id,
+                    'qty' => $product->qty,
+                    'price_changes_count' => $product->price_changes_count,
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('EmployeeWholesalerPriceChangeController@getProductDetails error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error loading product details: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Bulk approve price changes
+     */
+    public function bulkApprove(Request $request)
+    {
+        DB::beginTransaction();
+
+        try {
+            $employee = Auth::guard('employee')->user();
+
+            $validator = Validator::make($request->all(), [
+                'price_change_ids' => 'required|array',
+                'price_change_ids.*' => 'exists:wholesaler_product_price_changes,id',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $priceChangeIds = $request->price_change_ids;
+            $approvedCount = 0;
+
+            foreach ($priceChangeIds as $id) {
+                $priceChange = WholesalerProductPriceChange::find($id);
+
+                if ($priceChange && $priceChange->status === 'pending') {
+                    $product = $priceChange->product;
+
+                    // Update product
+                    $product->update([
+                        'selling_price' => $priceChange->new_selling_price,
+                        'display_price' => $priceChange->new_display_price,
+                        'discount' => $priceChange->new_discount,
+                        'last_price_updated_by' => $employee->id,
+                        'last_price_updated_at' => now(),
+                    ]);
+
+                    $product->increment('price_changes_count');
+
+                    // Approve the change
+                    $priceChange->approve($employee->id);
+
+                    $approvedCount++;
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully approved {$approvedCount} price changes",
+                'count' => $approvedCount
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('EmployeeWholesalerPriceChangeController@bulkApprove error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error approving price changes: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Bulk reject price changes
+     */
+    public function bulkReject(Request $request)
+    {
+        DB::beginTransaction();
+
+        try {
+            $validator = Validator::make($request->all(), [
+                'price_change_ids' => 'required|array',
+                'price_change_ids.*' => 'exists:wholesaler_product_price_changes,id',
+                'rejection_reason' => 'required|string|max:500',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $priceChangeIds = $request->price_change_ids;
+            $rejectedCount = 0;
+
+            foreach ($priceChangeIds as $id) {
+                $priceChange = WholesalerProductPriceChange::find($id);
+
+                if ($priceChange && $priceChange->status === 'pending') {
+                    $priceChange->status = 'rejected';
+                    $priceChange->notes = $priceChange->notes
+                        ? $priceChange->notes . "\n\nRejection reason: " . $request->rejection_reason
+                        : 'Rejection reason: ' . $request->rejection_reason;
+                    $priceChange->save();
+
+                    $rejectedCount++;
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully rejected {$rejectedCount} price changes",
+                'count' => $rejectedCount
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('EmployeeWholesalerPriceChangeController@bulkReject error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error rejecting price changes: ' . $e->getMessage()
             ], 500);
         }
     }

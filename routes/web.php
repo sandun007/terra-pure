@@ -361,6 +361,7 @@ Route::prefix('employee')->middleware('auth:employee')->name('employee.')->group
 
     // ===== EMPLOYEE WHOLESALER MODULE =====
     Route::prefix('wholesaler')->name('wholesaler.')->group(function () {
+
         // Products Management
         Route::prefix('products')->name('products.')->group(function () {
             Route::get('/', [App\Http\Controllers\Employee\EmployeeWholesalerProductController::class, 'index'])->name('index');
@@ -368,9 +369,11 @@ Route::prefix('employee')->middleware('auth:employee')->name('employee.')->group
             Route::get('/{id}', [App\Http\Controllers\Employee\EmployeeWholesalerProductController::class, 'show'])->name('show')->whereNumber('id');
             Route::post('/bulk-update', [App\Http\Controllers\Employee\EmployeeWholesalerProductController::class, 'bulkUpdate'])->name('bulk-update');
             Route::get('/export', [App\Http\Controllers\Employee\EmployeeWholesalerProductController::class, 'export'])->name('export');
+            Route::post('/{id}/toggle-shop', [App\Http\Controllers\Employee\EmployeeWholesalerProductController::class, 'toggleShopDisplay'])->name('toggle-shop')->whereNumber('id');
+            Route::post('/bulk-shop-display', [App\Http\Controllers\Employee\EmployeeWholesalerProductController::class, 'bulkShopDisplay'])->name('bulk-shop-display');
         });
 
-        // Price Change Requests
+        // Price Changes
         Route::prefix('price-changes')->name('price-changes.')->group(function () {
             Route::get('/', [App\Http\Controllers\Employee\EmployeeWholesalerPriceChangeController::class, 'index'])->name('index');
             Route::get('/create', [App\Http\Controllers\Employee\EmployeeWholesalerPriceChangeController::class, 'create'])->name('create');
@@ -383,21 +386,24 @@ Route::prefix('employee')->middleware('auth:employee')->name('employee.')->group
             Route::get('/stats', [App\Http\Controllers\Employee\EmployeeWholesalerPriceChangeController::class, 'stats'])->name('stats');
         });
 
-        // Product Exchange (Old - To be deprecated)
+        // Exchanges
         Route::prefix('exchanges')->name('exchanges.')->group(function () {
             Route::get('/', [App\Http\Controllers\Employee\EmployeeWholesalerExchangeController::class, 'index'])->name('index');
             Route::get('/create', [App\Http\Controllers\Employee\EmployeeWholesalerExchangeController::class, 'create'])->name('create');
             Route::post('/', [App\Http\Controllers\Employee\EmployeeWholesalerExchangeController::class, 'store'])->name('store');
             Route::get('/{id}', [App\Http\Controllers\Employee\EmployeeWholesalerExchangeController::class, 'show'])->name('show')->whereNumber('id');
-            Route::post('/{id}/cancel', [App\Http\Controllers\Employee\EmployeeWholesalerExchangeController::class, 'cancel'])->name('cancel')->whereNumber('id');
-            Route::get('/history', [App\Http\Controllers\Employee\EmployeeWholesalerExchangeController::class, 'history'])->name('history');
-            Route::get('/export', [App\Http\Controllers\Employee\EmployeeWholesalerExchangeController::class, 'export'])->name('export');
-            Route::get('/stats', [App\Http\Controllers\Employee\EmployeeWholesalerExchangeController::class, 'stats'])->name('stats');
-            Route::get('/api/products-by-wholesaler', [App\Http\Controllers\Employee\EmployeeWholesalerExchangeController::class, 'getWholesalerProducts'])->name('api.products');
-            Route::get('/api/product-details', [App\Http\Controllers\Employee\EmployeeWholesalerExchangeController::class, 'getProductDetails'])->name('api.product-details');
+            Route::post('/{id}/cancel', [App\Http\Controllers\Employee\EmployeeWholesalerExchangeController::class,'cancel'])->name('cancel')->whereNumber('id');
         });
 
-        // ===== NEW: ORDER EXCHANGE MANAGEMENT =====
+        // ===== APPROVALS ROUTES (FIXED) =====
+        Route::prefix('approvals')->name('approvals.')->group(function () {
+            Route::get('/pending', [App\Http\Controllers\Employee\EmployeeWholesalerApprovalController::class, 'pendingApproval'])->name('pending');
+            Route::post('/{id}/approve', [App\Http\Controllers\Employee\EmployeeWholesalerApprovalController::class, 'approve'])->name('approve')->whereNumber('id');
+            Route::post('/{id}/reject', [App\Http\Controllers\Employee\EmployeeWholesalerApprovalController::class, 'reject'])->name('reject')->whereNumber('id');
+            Route::post('/bulk-approve', [App\Http\Controllers\Employee\EmployeeWholesalerApprovalController::class, 'bulkApprove'])->name('bulk-approve');
+            Route::post('/bulk-reject', [App\Http\Controllers\Employee\EmployeeWholesalerApprovalController::class, 'bulkReject'])->name('bulk-reject');
+        });
+                // ===== NEW: ORDER EXCHANGE MANAGEMENT =====
         Route::prefix('order-exchanges')->name('order-exchanges.')->group(function () {
             // List all exchanges
             Route::get('/', [EmployeeWholesalerOrderExchangeController::class, 'index'])->name('index');
