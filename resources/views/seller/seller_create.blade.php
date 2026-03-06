@@ -149,6 +149,7 @@
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
+
                                     <div class="mb-3">
                                         <label class="form-label">Password<span class="text-danger ms-1">*</span></label>
                                         <input type="password" name="password" class="form-control"
@@ -171,6 +172,7 @@
                                         <select class="form-control" name="type" required>
                                             <option value="self_seller">Self Seller</option>
                                             <option value="system_seller">System Seller</option>
+                                            <option value="whole_seller">Whole Seller</option>
                                         </select>
                                     </div>
                                 </div>

@@ -121,6 +121,7 @@ class SellerController extends Controller
                 'status'        => 'pending',
                 'deposit'       => $request->deposit ?? 0,
                 'cal_deposit'   => $request->deposit ?? 0,
+                'type'          => $request->type,
                 'bank_name'           => $request->bank_name,
                 'branch_name'         => $request->branch_name,
                 'account_holder_name' => $request->account_holder_name,
