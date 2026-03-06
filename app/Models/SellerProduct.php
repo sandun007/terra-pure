@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Models\Product;
+use App\Models\SellerProduct;
+use App\Models\WholesalerProduct;
+use App\Models\Saler;
 
 class SellerProduct extends Model
 {
@@ -179,9 +183,9 @@ class SellerProduct extends Model
      * Relationships
      */
     public function seller(): BelongsTo
-    {
-        return $this->belongsTo(Seller::class, 'seller_id');
-    }
+{
+    return $this->belongsTo(Saler::class, 'seller_id'); 
+}
 
     public function category(): BelongsTo
     {

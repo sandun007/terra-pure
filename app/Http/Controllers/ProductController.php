@@ -5,23 +5,64 @@ namespace App\Http\Controllers;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\SellerProduct;     
+use App\Models\WholesalerProduct;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    public function index()
-    {
-        try {
-            $products = Product::query()
-                ->where('seller_code', 0)
-                ->get();
+    public function index(Request $request)
+{
+    try {
 
-            $count = $products->count();
-            return view('product.product_list', compact('products', 'count'));
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        // Admin Products
+        $adminProducts = Product::query()
+            ->where('seller_code', 0)
+            ->get()
+            ->map(function ($product) {
+                $product->store = 'admin'; // use lowercase for easier filtering
+                return $product;
+            });
+
+        // Seller Products
+        $sellerProducts = SellerProduct::with('seller')
+            ->get()
+            ->map(function ($product) {
+                $product->store = 'seller';
+                $product->display_price = $product->display_price ?? $product->selling_price;
+                return $product;
+            });
+
+        // Wholesaler Products
+        $wholesalerProducts = WholesalerProduct::with('wholesaler')
+            ->get()
+            ->map(function ($product) {
+                $product->store = 'wholesaler';
+                $product->display_price = $product->selling_price;
+                return $product;
+            });
+
+        // Merge all products
+        $products = $adminProducts
+            ->merge($sellerProducts)
+            ->merge($wholesalerProducts);
+
+        // Apply filter if dropdown is selected
+        if ($request->filled('store')) {
+            $store = strtolower($request->store);
+            $products = $products->filter(function ($product) use ($store) {
+                return $product->store === $store;
+            });
         }
+
+        $count = $products->count();
+
+        return view('product.product_list', compact('products','count'));
+
+    } catch (\Exception $e) {
+        return redirect()->back()->with('error', $e->getMessage());
     }
+}
 
     public function create()
     {
@@ -194,40 +235,83 @@ class ProductController extends Controller
     }
 }
 
-    public function product_view($id)
-    {
-        try {
-            $product = Product::query()->findOrFail($id);
-            return view('product.product_view', compact('product'));
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
-        }
-    }
+    public function product_view($type, $id)
+{
+    try {
 
-    public function delete($id)
-    {
-        try {
+        if ($type == 'admin') {
+            $product = Product::findOrFail($id);
+        }
+
+        elseif ($type == 'seller') {
+            $product = SellerProduct::with('seller')->findOrFail($id);
+        }
+
+        elseif ($type == 'wholesaler') {
+            $product = WholesalerProduct::with('wholesaler')->findOrFail($id);
+        }
+
+        else {
+            return redirect()->back()->with('error','Invalid product type');
+        }
+
+        return view('product.product_view', compact('product','type'));
+
+    } catch (\Exception $e) {
+        return redirect()->back()->with('error',$e->getMessage());
+    }
+}
+
+   public function delete($type, $id)
+{
+    try {
+
+        if ($type == 'admin') {
+
             $product = Product::findOrFail($id);
 
-            // Delete associated images
-            if ($product->img) {
-                if (is_json($product->img)) {
-                    $images = json_decode($product->img, true);
-                    foreach ($images as $image) {
-                        ImageUploader::deleteImage($image);
-                    }
-                } else {
-                    ImageUploader::deleteImage($product->img);
-                }
-            }
+        } elseif ($type == 'seller') {
 
-            $product->delete();
+            $product = SellerProduct::findOrFail($id);
 
-            return redirect()->route('product.index')->with('success', 'Product deleted successfully.');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        } elseif ($type == 'wholesaler') {
+
+            $product = WholesalerProduct::findOrFail($id);
+
+        } else {
+            return redirect()->back()->with('error', 'Invalid product type.');
         }
+
+        // Delete product images
+        if ($product->img) {
+
+            if (is_json($product->img)) {
+
+                $images = json_decode($product->img, true);
+
+                foreach ($images as $image) {
+                    ImageUploader::deleteImage($image);
+                }
+
+            } else {
+
+                ImageUploader::deleteImage($product->img);
+
+            }
+        }
+
+        $product->delete();
+
+        return redirect()->route('product.index')
+            ->with('success', 'Product deleted successfully.');
+
+    } catch (\Exception $e) {
+
+        return redirect()->back()
+            ->with('error', $e->getMessage());
+
     }
+}
 }
 
 // Helper function to check if string is JSON
