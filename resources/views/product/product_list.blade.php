@@ -137,7 +137,7 @@
    title="View">
    <i class="fas fa-eye"></i>
 </a>
-                                        <a href="{{ route('product.edit', $product->id) }}"
+                                        <a href="{{ route('product.edit', [$product->store, $product->id]) }}"
                                            class="btn btn-warning btn-sm"
                                            data-bs-toggle="tooltip" title="Edit">
                                             <i class="fas fa-edit"></i>

@@ -108,7 +108,8 @@
             <a href="{{ route('product.index') }}" class="btn btn-outline-secondary me-2">
                 <i class="fas fa-arrow-left me-2"></i>Back to Products
             </a>
-            <a href="{{ route('product.edit', $product->id) }}" class="btn btn-warning me-2">
+            <a href="{{ route('product.edit', [$type, $product->id]) }}" class="btn btn-warning me-2">
+
                 <i class="fas fa-edit me-2"></i>Edit Product
             </a>
             <a href="{{ route('product.delete',['type'=>$type,'id'=>$product->id]) }}"class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this product?')">

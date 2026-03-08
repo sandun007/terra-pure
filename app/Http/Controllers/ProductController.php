@@ -87,22 +87,37 @@ class ProductController extends Controller
     }
 }
 
-    public function edit($id)
-    {
-        try {
-            $brands = Brand::query()
-                ->where('seller_code', 0)
-                ->get();
-            $categories = Category::query()
-                ->where('seller_code', 0)
-                ->get();
-            $product = Product::query()->findOrFail($id);
+   public function edit($type, $id)
+{
+    try {
 
-            return view('product.product_update', compact('brands', 'categories', 'product'));
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        $brands = Brand::select('id','name')->get();
+        $categories = Category::select('id','name')->get();
+
+        if ($type == 'admin') {
+            $product = Product::findOrFail($id);
         }
+
+        elseif ($type == 'seller') {
+            $product = SellerProduct::with('seller')->findOrFail($id);
+        }
+
+        elseif ($type == 'wholesaler') {
+            $product = WholesalerProduct::with('wholesaler')->findOrFail($id);
+        }
+
+        else {
+            return redirect()->back()->with('error','Invalid product type');
+        }
+
+        return view('product.product_update', compact('brands','categories','product','type'));
+
+    } catch (\Exception $e) {
+
+        return redirect()->back()->with('error',$e->getMessage());
+
     }
+}
 
     public function store(Request $request)
     {
@@ -133,8 +148,8 @@ class ProductController extends Controller
             $product->code = $request->code; // Use the code from778rm
             $product->name = $request->name;
             $product->barcode = $request->barcode;
-            $product->brand = $request->brand;
-            $product->category = $request->category;
+            $product->brand_id = $request->brand_id;
+        $product->category_id = $request->category_id;
             $product->description = $request->description;
             $product->stock_price = $request->stock_price;
             $product->display_price = $request->display_price;
@@ -169,9 +184,10 @@ class ProductController extends Controller
         }
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $type, $id)
 {
     try {
+
         $request->validate([
             'name' => 'required|string|max:255',
             'qty' => 'required|numeric|min:0',
@@ -180,19 +196,35 @@ class ProductController extends Controller
             'display_price' => 'required|numeric|min:0',
         ]);
 
-        $product = Product::findOrFail($id);
+        // Determine product model
+        if ($type == 'admin') {
+            $product = Product::findOrFail($id);
+        } 
+        elseif ($type == 'seller') {
+            $product = SellerProduct::findOrFail($id);
+        } 
+        elseif ($type == 'wholesaler') {
+            $product = WholesalerProduct::findOrFail($id);
+        } 
+        else {
+            return redirect()->back()->with('error','Invalid product type');
+        }
 
         $imagePaths = [];
 
-        // Handle new image uploads
+        // Handle image upload
         if ($request->hasFile('img')) {
-            // Delete old images if they exist
+
+            // Delete old images
             if ($product->img) {
+
                 if (is_json($product->img)) {
                     $oldImages = json_decode($product->img, true);
+
                     foreach ($oldImages as $oldImage) {
                         ImageUploader::deleteImage($oldImage);
                     }
+
                 } else {
                     ImageUploader::deleteImage($product->img);
                 }
@@ -200,8 +232,11 @@ class ProductController extends Controller
 
             // Upload new images
             foreach ($request->file('img') as $image) {
+
                 if ($image->isValid()) {
+
                     $imagePath = ImageUploader::uploadSingleImage($image, 'products');
+
                     if ($imagePath) {
                         $imagePaths[] = $imagePath;
                     }
@@ -209,10 +244,11 @@ class ProductController extends Controller
             }
         }
 
+        // Update fields
         $product->name = $request->name;
         $product->barcode = $request->barcode;
-        $product->brand = $request->brand;
-        $product->category = $request->category;
+        $product->brand_id = $request->brand_id;
+        $product->category_id = $request->category_id;
         $product->description = $request->description;
         $product->stock_price = $request->stock_price;
         $product->display_price = $request->display_price;
@@ -223,9 +259,10 @@ class ProductController extends Controller
         $product->packing_cost = $request->packing_cost ?? 0;
         $product->update_by = 'admin';
 
-        // Update images only if new images were uploaded
+        // Save images
         if (!empty($imagePaths)) {
-            if (count($imagePaths) === 1) {
+
+            if (count($imagePaths) == 1) {
                 $product->img = $imagePaths[0];
             } else {
                 $product->img = json_encode($imagePaths);
@@ -234,9 +271,15 @@ class ProductController extends Controller
 
         $product->save();
 
-        return redirect()->route('product.index')->with('success', 'Product updated successfully.');
-    } catch (\Exception $e) {
-        return redirect()->back()->with('error', $e->getMessage())->withInput();
+        return redirect()->route('product.index')
+            ->with('success','Product updated successfully.');
+
+    } 
+    catch (\Exception $e) {
+
+        return redirect()->back()
+            ->with('error',$e->getMessage())
+            ->withInput();
     }
 }
 

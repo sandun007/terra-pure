@@ -62,8 +62,8 @@ Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])-
             Route::get('/', [ProductController::class, 'index'])->name('product.index');
             Route::get('/create', [ProductController::class, 'create'])->name('product.create');
             Route::post('/create', [ProductController::class, 'store'])->name('product.store');
-            Route::get('/edit/{id}', [ProductController::class, 'edit'])->name('product.edit');
-            Route::put('/update/{id}', [ProductController::class, 'update'])->name('product.update');
+            Route::get('/edit/{type}/{id}', [ProductController::class, 'edit'])->name('product.edit');
+            Route::put('/update/{type}/{id}', [ProductController::class, 'update'])->name('product.update');
             Route::get('/view/{type}/{id}', [ProductController::class, 'product_view'])->name('product.view');
             Route::get('/delete/{type}/{id}', [ProductController::class, 'delete'])->name('product.delete');
         });
