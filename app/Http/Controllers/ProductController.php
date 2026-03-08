@@ -194,6 +194,7 @@ class ProductController extends Controller
             'min_qty' => 'required|numeric|min:0',
             'stock_price' => 'required|numeric|min:0',
             'display_price' => 'required|numeric|min:0',
+            'status' => 'required|in:active,inactive',
         ]);
 
         // Determine product model
@@ -257,6 +258,7 @@ class ProductController extends Controller
         $product->stock = $request->qty;
         $product->min_qty = $request->min_qty;
         $product->packing_cost = $request->packing_cost ?? 0;
+        $product->status = $request->status;
         $product->update_by = 'admin';
 
         // Save images
