@@ -185,7 +185,7 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Brand</label>
-                                <select name="brand" class="form-control">
+                                <select name="brand_id" class="form-control">
     <option value="">Select Brand</option>
     @foreach($brands as $brand)
         <option value="{{ $brand->id }}">
@@ -198,7 +198,7 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Category</label>
-                                <select name="category" class="form-control">
+                                <select name="category_id" class="form-control">
     <option value="">Select Category</option>
     @foreach($categories as $category)
         <option value="{{ $category->id }}">
