@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\SellerProduct;     
+use App\Models\SellerProduct;
+use App\Models\SellerBrand;
+use App\Models\SellerCategory;
 use App\Models\WholesalerProduct;
 use Illuminate\Http\Request;
 
@@ -91,18 +93,21 @@ class ProductController extends Controller
 {
     try {
 
-        $brands = Brand::select('id','name')->get();
-        $categories = Category::select('id','name')->get();
-
         if ($type == 'admin') {
+            $brands = Brand::select('id','name')->get();
+            $categories = Category::select('id','name')->get();
             $product = Product::findOrFail($id);
         }
 
         elseif ($type == 'seller') {
+            $brands = SellerBrand::select('id','name')->get();
+            $categories = SellerCategory::select('id','name')->get();
             $product = SellerProduct::with('seller')->findOrFail($id);
         }
 
         elseif ($type == 'wholesaler') {
+            $brands = Brand::select('id','name')->get();
+            $categories = Category::select('id','name')->get();
             $product = WholesalerProduct::with('wholesaler')->findOrFail($id);
         }
 
@@ -211,23 +216,27 @@ class ProductController extends Controller
             return redirect()->back()->with('error','Invalid product type');
         }
 
+        // Determine image column name per product type
+        $imageColumn = ($type == 'admin') ? 'img' : 'image';
+
         $imagePaths = [];
 
         // Handle image upload
         if ($request->hasFile('img')) {
 
             // Delete old images
-            if ($product->img) {
+            $oldImageValue = $product->$imageColumn;
+            if ($oldImageValue) {
 
-                if (is_json($product->img)) {
-                    $oldImages = json_decode($product->img, true);
+                if (is_json($oldImageValue)) {
+                    $oldImages = json_decode($oldImageValue, true);
 
                     foreach ($oldImages as $oldImage) {
                         ImageUploader::deleteImage($oldImage);
                     }
 
                 } else {
-                    ImageUploader::deleteImage($product->img);
+                    ImageUploader::deleteImage($oldImageValue);
                 }
             }
 
@@ -245,29 +254,43 @@ class ProductController extends Controller
             }
         }
 
-        // Update fields
+        // Update common fields
         $product->name = $request->name;
         $product->barcode = $request->barcode;
         $product->brand_id = $request->brand_id;
         $product->category_id = $request->category_id;
         $product->description = $request->description;
-        $product->stock_price = $request->stock_price;
         $product->display_price = $request->display_price;
         $product->discount = $request->discount ?? 0;
         $product->qty = $request->qty;
-        $product->stock = $request->qty;
-        $product->min_qty = $request->min_qty;
-        $product->packing_cost = $request->packing_cost ?? 0;
         $product->status = $request->status;
-        $product->update_by = 'admin';
 
-        // Save images
+        // Update type-specific fields
+        if ($type == 'admin') {
+            $product->stock_price = $request->stock_price;
+            $product->stock = $request->qty;
+            $product->min_qty = $request->min_qty;
+            $product->packing_cost = $request->packing_cost ?? 0;
+            $product->update_by = 'admin';
+        } elseif ($type == 'seller') {
+            $product->stock_price = $request->stock_price;
+            $product->min_qty = $request->min_qty;
+            $product->packaging_cost = $request->packing_cost ?? 0;
+            $product->update_by = 'admin';
+        } elseif ($type == 'wholesaler') {
+            $product->cost_price = $request->stock_price;
+            $product->selling_price = $request->display_price;
+            $product->min_stock_level = $request->min_qty;
+            $product->packaging_cost = $request->packing_cost ?? 0;
+        }
+
+        // Save images using correct column name
         if (!empty($imagePaths)) {
 
             if (count($imagePaths) == 1) {
-                $product->img = $imagePaths[0];
+                $product->$imageColumn = $imagePaths[0];
             } else {
-                $product->img = json_encode($imagePaths);
+                $product->$imageColumn = json_encode($imagePaths);
             }
         }
 
@@ -332,12 +355,16 @@ class ProductController extends Controller
             return redirect()->back()->with('error', 'Invalid product type.');
         }
 
+        // Get image using correct column name per type
+        $imageColumn = ($type == 'admin') ? 'img' : 'image';
+        $imageValue = $product->$imageColumn;
+
         // Delete product images
-        if ($product->img) {
+        if ($imageValue) {
 
-            if (is_json($product->img)) {
+            if (is_json($imageValue)) {
 
-                $images = json_decode($product->img, true);
+                $images = json_decode($imageValue, true);
 
                 foreach ($images as $image) {
                     ImageUploader::deleteImage($image);
@@ -345,7 +372,7 @@ class ProductController extends Controller
 
             } else {
 
-                ImageUploader::deleteImage($product->img);
+                ImageUploader::deleteImage($imageValue);
 
             }
         }

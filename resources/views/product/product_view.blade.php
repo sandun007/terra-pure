@@ -9,7 +9,7 @@
             max-width: 400px;
             height: auto;
             border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .image-gallery {
@@ -37,7 +37,7 @@
         .info-card {
             background: white;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             padding: 25px;
             margin-bottom: 25px;
             border: 1px solid #e9ecef;
@@ -112,7 +112,8 @@
 
                 <i class="fas fa-edit me-2"></i>Edit Product
             </a>
-            <a href="{{ route('product.delete',['type'=>$type,'id'=>$product->id]) }}"class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this product?')">
+            <a href="{{ route('product.delete', ['type' => $type, 'id' => $product->id]) }}"class="btn btn-danger"
+                onclick="return confirm('Are you sure you want to delete this product?')">
                 <i class="fas fa-trash me-2"></i>Delete
             </a>
         </div>
@@ -122,20 +123,21 @@
         <div class="col-lg-5">
             <div class="info-card">
                 <h5 class="mb-4"><i class="fas fa-images me-2"></i>Product Images</h5>
-                @if($product->img)
+                @if ($product->img ?? $product->image)
                     @php
-                        $images = json_decode($product->img, true);
-                        $mainImage = is_array($images) ? $images[0] : $product->img;
+                        $imgSource = $product->img ?? $product->image;
+                        $images = json_decode($imgSource, true);
+                        $mainImage = is_array($images) ? $images[0] : $imgSource;
+                        $mainImageSrc = $product->image_url ?? asset('storage/' . $mainImage);
                     @endphp
-                    <img src="{{ asset('storage/' . $mainImage) }}" alt="{{ $product->name }}" class="product-image" id="mainImage">
+                    <img src="{{ $mainImageSrc }}" alt="{{ $product->name }}" class="product-image" id="mainImage">
 
-                    @if(is_array($images) && count($images) > 1)
+                    @if (is_array($images) && count($images) > 1)
                         <div class="image-gallery">
-                            @foreach($images as $image)
-                                <img src="{{ asset('storage/' . $image) }}"
-                                     alt="{{ $product->name }}"
-                                     class="gallery-thumb {{ $loop->first ? 'active' : '' }}"
-                                     onclick="changeMainImage('{{ asset('storage/' . $image) }}', this)">
+                            @foreach ($images as $image)
+                                <img src="{{ asset('storage/' . $image) }}" alt="{{ $product->name }}"
+                                    class="gallery-thumb {{ $loop->first ? 'active' : '' }}"
+                                    onclick="changeMainImage('{{ asset('storage/' . $image) }}', this)">
                             @endforeach
                         </div>
                     @endif
@@ -164,13 +166,13 @@
                     <span class="info-value">{{ $product->barcode ?? 'N/A' }}</span>
                 </div>
                 <div class="info-row">
-    <span class="info-label">Brand:</span>
-    <span class="info-value">{{ $product->brand->name ?? 'N/A' }}</span>
-</div>
-<div class="info-row">
-    <span class="info-label">Category:</span>
-    <span class="info-value">{{ $product->category->name ?? 'N/A' }}</span>
-</div>
+                    <span class="info-label">Brand:</span>
+                    <span class="info-value">{{ $product->brand->name ?? 'N/A' }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Category:</span>
+                    <span class="info-value">{{ $product->category->name ?? 'N/A' }}</span>
+                </div>
                 <div class="info-row">
                     <span class="info-label">Status:</span>
                     <span class="status-badge {{ $product->status === 'active' ? 'status-active' : 'status-inactive' }}">
@@ -183,42 +185,47 @@
                 <h5 class="mb-4"><i class="fas fa-cube me-2"></i>Inventory & Pricing</h5>
                 <div class="info-row">
                     <span class="info-label">Stock Quantity:</span>
-                    <span class="info-value {{ $product->qty < $product->min_qty ? 'stock-warning' : 'stock-good' }}">
+                    <span
+                        class="info-value {{ $product->qty < ($product->min_qty ?? ($product->min_stock_level ?? 0)) ? 'stock-warning' : 'stock-good' }}">
                         {{ $product->qty }}
-                        @if($product->qty < $product->min_qty)
+                        @if ($product->qty < ($product->min_qty ?? ($product->min_stock_level ?? 0)))
                             <i class="fas fa-exclamation-triangle ms-1"></i>
                         @endif
                     </span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Minimum Stock Level:</span>
-                    <span class="info-value">{{ $product->min_qty }}</span>
+                    <span class="info-value">{{ $product->min_qty ?? ($product->min_stock_level ?? 0) }}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Cost Price:</span>
-                    <span class="info-value">Rs. {{ number_format($product->stock_price, 2) }}</span>
+                    <span class="info-value">Rs.
+                        {{ number_format($product->stock_price ?? ($product->cost_price ?? 0), 2) }}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Selling Price:</span>
-                    <span class="info-value">Rs. {{ number_format($product->display_price, 2) }}</span>
+                    <span class="info-value">Rs.
+                        {{ number_format($product->display_price ?? ($product->selling_price ?? 0), 2) }}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Discount:</span>
-                    <span class="info-value">{{ $product->discount }}%</span>
+                    <span class="info-value">{{ $product->discount ?? 0 }}%</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Packing Cost:</span>
-                    <span class="info-value">Rs. {{ number_format($product->packing_cost, 2) }}</span>
+                    <span class="info-value">Rs.
+                        {{ number_format($product->packing_cost ?? ($product->packaging_cost ?? 0), 2) }}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Final Price:</span>
                     <span class="price-highlight">
-                        Rs. {{ number_format($product->display_price - ($product->display_price * $product->discount / 100) + $product->packing_cost, 2) }}
+                        Rs.
+                        {{ number_format(($product->display_price ?? ($product->selling_price ?? 0)) - (($product->display_price ?? ($product->selling_price ?? 0)) * ($product->discount ?? 0)) / 100 + ($product->packing_cost ?? ($product->packaging_cost ?? 0)), 2) }}
                     </span>
                 </div>
             </div>
 
-            @if($product->description)
+            @if ($product->description)
                 <div class="info-card">
                     <h5 class="mb-4"><i class="fas fa-file-alt me-2"></i>Description</h5>
                     <p class="info-value">{{ $product->description }}</p>

@@ -17,7 +17,7 @@
             height: 120px;
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease;
         }
 
@@ -43,7 +43,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
         .upload-area {
@@ -84,7 +84,7 @@
         .form-card {
             background: white;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             padding: 25px;
             margin-bottom: 25px;
             border: 1px solid #e9ecef;
@@ -118,7 +118,7 @@
             height: 120px;
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
         }
 
         .existing-image img {
@@ -136,13 +136,13 @@
             <p class="text-muted">Edit product details and inventory information</p>
         </div>
         <div class="page-actions">
-            <a href="{{route('product.index')}}" class="btn btn-outline-secondary">
+            <a href="{{ route('product.index') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left me-2"></i>Back to Products
             </a>
         </div>
     </div>
 
-<form action="{{ route('product.update', [$type, $product->id]) }}" method="post" enctype="multipart/form-data">        @csrf
+    <form action="{{ route('product.update', [$type, $product->id]) }}" method="post" enctype="multipart/form-data"> @csrf
         @method('PUT')
         <div class="row">
             <div class="col-lg-8">
@@ -156,54 +156,61 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Product Code <span class="text-danger">*</span></label>
-                                <input type="text" name="code" class="form-control" required disabled value="{{$product->code}}">
+                                <input type="text" name="code" class="form-control" required disabled
+                                    value="{{ $product->code }}">
                                 <div class="form-text">Auto-generated product code</div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Product Name <span class="text-danger">*</span></label>
-                                <input type="text" name="name" class="form-control" required placeholder="Enter product name" value="{{$product->name}}">
+                                <input type="text" name="name" class="form-control" required
+                                    placeholder="Enter product name" value="{{ $product->name }}">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Barcode</label>
-                                <input type="text" name="barcode" class="form-control" placeholder="Enter barcode" value="{{$product->barcode}}">
+                                <input type="text" name="barcode" class="form-control" placeholder="Enter barcode"
+                                    value="{{ $product->barcode }}">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Brand</label>
                                 <select class="form-select" name="brand_id">
-    <option value="">Select Brand</option>
-    @foreach($brands as $brand)
-        <option value="{{ $brand->id }}" {{ $product->brand_id == $brand->id ? 'selected' : '' }}>
-            {{ $brand->name }}
-        </option>
-    @endforeach
-</select>
+                                    <option value="">Select Brand</option>
+                                    @foreach ($brands as $brand)
+                                        <option value="{{ $brand->id }}"
+                                            {{ $product->brand_id == $brand->id ? 'selected' : '' }}>
+                                            {{ $brand->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Category</label>
                                 <select class="form-select" name="category_id">
-    <option value="">Select Category</option>
-    @foreach($categories as $category)
-        <option value="{{ $category->id }}" {{ $product->category_id == $category->id ? 'selected' : '' }}>
-            {{ $category->name }}
-        </option>
-    @endforeach
-</select>
+                                    <option value="">Select Category</option>
+                                    @foreach ($categories as $category)
+                                        <option value="{{ $category->id }}"
+                                            {{ $product->category_id == $category->id ? 'selected' : '' }}>
+                                            {{ $category->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Status</label>
                                 <select class="form-select" name="status">
-                                    <option value="active" {{ $product->status == 'active' ? 'selected' : '' }}>Active</option>
-                                    <option value="inactive" {{ $product->status == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                                    <option value="active" {{ $product->status == 'active' ? 'selected' : '' }}>Active
+                                    </option>
+                                    <option value="inactive" {{ $product->status == 'inactive' ? 'selected' : '' }}>
+                                        Inactive</option>
                                 </select>
                             </div>
                         </div>
@@ -225,7 +232,8 @@
                     <div class="mb-3">
                         <label class="form-label">Current Image</label>
                         <div class="existing-image">
-                            <img src="{{ asset('storage/' . $product->img) }}" alt="{{ $product->name }}">
+                            <img src="{{ $product->image_url ?? asset('storage/' . ($product->img ?? $product->image)) }}"
+                                alt="{{ $product->name }}">
                         </div>
                     </div>
 
@@ -251,54 +259,70 @@
 
                     <div class="mb-3">
                         <label class="form-label">Stock Quantity <span class="text-danger">*</span></label>
-                        <input type="number" name="qty" class="form-control" required placeholder="Enter quantity" value="{{$product->qty}}">
+                        <input type="number" name="qty" class="form-control" required placeholder="Enter quantity"
+                            value="{{ $product->qty }}">
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Minimum Stock Level <span class="text-danger">*</span></label>
-                        <input type="number" name="min_qty" class="form-control" required placeholder="Enter minimum quantity" value="{{$product->min_qty}}">
+                        <input type="number" name="min_qty" class="form-control" required
+                            placeholder="Enter minimum quantity"
+                            value="{{ $product->min_qty ?? $product->min_stock_level }}">
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Cost Price <span class="text-danger">*</span></label>
-                        <input type="number" name="stock_price" class="form-control" required placeholder="Enter cost price" step="0.01" id="costPrice" value="{{$product->stock_price}}">
+                        <input type="number" name="stock_price" class="form-control" required
+                            placeholder="Enter cost price" step="0.01" id="costPrice"
+                            value="{{ $product->stock_price ?? $product->cost_price }}">
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Selling Price <span class="text-danger">*</span></label>
-                        <input type="number" name="display_price" class="form-control" required placeholder="Enter selling price" step="0.01" id="sellingPrice" value="{{$product->display_price}}">
+                        <input type="number" name="display_price" class="form-control" required
+                            placeholder="Enter selling price" step="0.01" id="sellingPrice"
+                            value="{{ $product->display_price ?? $product->selling_price }}">
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Discount %</label>
-                        <input type="number" name="discount" class="form-control" placeholder="Enter discount percentage" step="0.01" id="discountInput" value="{{$product->discount}}">
+                        <input type="number" name="discount" class="form-control"
+                            placeholder="Enter discount percentage" step="0.01" id="discountInput"
+                            value="{{ $product->discount ?? 0 }}">
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Packing Cost</label>
-                        <input type="number" name="packing_cost" class="form-control" placeholder="Enter packing cost" step="0.01" id="packingCost" value="{{$product->packing_cost}}">
+                        <input type="number" name="packing_cost" class="form-control" placeholder="Enter packing cost"
+                            step="0.01" id="packingCost"
+                            value="{{ $product->packing_cost ?? ($product->packaging_cost ?? 0) }}">
                     </div>
 
                     <div class="price-display">
                         <div class="price-row">
                             <span>Cost Price:</span>
-                            <span id="costDisplay">Rs. {{ number_format($product->stock_price, 2) }}</span>
+                            <span id="costDisplay">Rs.
+                                {{ number_format($product->stock_price ?? ($product->cost_price ?? 0), 2) }}</span>
                         </div>
                         <div class="price-row">
                             <span>Selling Price:</span>
-                            <span id="sellingDisplay">Rs. {{ number_format($product->display_price, 2) }}</span>
+                            <span id="sellingDisplay">Rs.
+                                {{ number_format($product->display_price ?? ($product->selling_price ?? 0), 2) }}</span>
                         </div>
                         <div class="price-row">
                             <span>Packing Cost:</span>
-                            <span id="packingDisplay">Rs. {{ number_format($product->packing_cost, 2) }}</span>
+                            <span id="packingDisplay">Rs.
+                                {{ number_format($product->packing_cost ?? ($product->packaging_cost ?? 0), 2) }}</span>
                         </div>
                         <div class="price-row">
                             <span>Discount:</span>
-                            <span id="discountDisplay">Rs. {{ number_format($product->display_price * ($product->discount / 100), 2) }}</span>
+                            <span id="discountDisplay">Rs.
+                                {{ number_format(($product->display_price ?? ($product->selling_price ?? 0)) * (($product->discount ?? 0) / 100), 2) }}</span>
                         </div>
                         <div class="price-row final-price">
                             <span>Final Price:</span>
-                            <span id="finalPrice">Rs. {{ number_format($product->display_price - ($product->display_price * ($product->discount / 100)) + $product->packing_cost, 2) }}</span>
+                            <span id="finalPrice">Rs.
+                                {{ number_format(($product->display_price ?? ($product->selling_price ?? 0)) - ($product->display_price ?? ($product->selling_price ?? 0)) * (($product->discount ?? 0) / 100) + ($product->packing_cost ?? ($product->packaging_cost ?? 0)), 2) }}</span>
                         </div>
                     </div>
                 </div>
@@ -308,7 +332,7 @@
                         <button type="submit" class="btn btn-primary btn-lg">
                             <i class="fas fa-save me-2"></i>Update Product
                         </button>
-                        <a href="{{route('product.index')}}" class="btn btn-outline-secondary">
+                        <a href="{{ route('product.index') }}" class="btn btn-outline-secondary">
                             Cancel
                         </a>
                     </div>
@@ -325,7 +349,7 @@
             document.getElementById('imageInput').click();
         });
 
-        document.getElementById('imageInput').addEventListener('change', function (event) {
+        document.getElementById('imageInput').addEventListener('change', function(event) {
             const files = event.target.files;
             const previewContainer = document.getElementById('imagePreviewContainer');
 
@@ -333,7 +357,7 @@
                 if (!file.type.startsWith('image/')) continue;
 
                 const reader = new FileReader();
-                reader.onload = function (e) {
+                reader.onload = function(e) {
                     const previewCard = document.createElement('div');
                     previewCard.className = 'preview-card';
 
@@ -387,6 +411,5 @@
         sellingPriceInput.addEventListener('input', updatePriceDisplay);
         discountInput.addEventListener('input', updatePriceDisplay);
         packingCostInput.addEventListener('input', updatePriceDisplay);
-
     </script>
 @endpush
