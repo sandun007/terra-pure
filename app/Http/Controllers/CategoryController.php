@@ -68,7 +68,7 @@ class CategoryController extends Controller
                 'seller_code' => 0,
             ]);
 
-            return redirect()->back()->with('success', 'Category created successfully!');
+            return redirect()->route('category.index')->with('success', 'Category created successfully!');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error creating category: ' . $e->getMessage());
         }
@@ -131,7 +131,7 @@ class CategoryController extends Controller
             $category->update_by = 'admin';
             $category->save();
 
-            return redirect()->back()->with('success', 'Category updated successfully!');
+            return redirect()->route('category.index')->with('success', 'Category updated successfully!');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error updating category: ' . $e->getMessage());
         }
