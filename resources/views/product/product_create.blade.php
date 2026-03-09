@@ -185,27 +185,27 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Brand</label>
-                                <select class="form-select" name="brand">
-                                    <option value="">Select Brand</option>
-                                    @foreach($brands as $brand)
-                                        <option value="{{ $brand->name }}" {{ old('brand') == $brand->name ? 'selected' : '' }}>
-                                            {{ $brand->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <select name="brand_id" class="form-control">
+    <option value="">Select Brand</option>
+    @foreach($brands as $brand)
+        <option value="{{ $brand->id }}">
+            {{ $brand->name }}
+        </option>
+    @endforeach
+</select>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Category</label>
-                                <select class="form-select" name="category">
-                                    <option value="">Select Category</option>
-                                    @foreach($categories as $category)
-                                        <option value="{{ $category->name }}" {{ old('category') == $category->name ? 'selected' : '' }}>
-                                            {{ $category->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <select name="category_id" class="form-control">
+    <option value="">Select Category</option>
+    @foreach($categories as $category)
+        <option value="{{ $category->id }}">
+            {{ $category->name }}
+        </option>
+    @endforeach
+</select>
                             </div>
                         </div>
                         <div class="col-12">

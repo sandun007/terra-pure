@@ -79,25 +79,28 @@ class SellerController extends Controller
 
                 Referral::create([
                     'level_01_seller_01' => $request->ref_code,
-                    'level_01_seller_02' => $code,
-                    'level_02_seller_02' => $code,
+                    'level_01_seller_02' => $request->code,
+                    'level_02_seller_02' => $request->code,
                     'level_02_seller_01' => $level_02_seller_01,
-                    'level_03_seller_02' => $code,
+                    'level_03_seller_02' => $request->code,
                     'level_03_seller_01' => $level_03_seller_01,
                 ]);
             } else {
                 Referral::create([
                     'level_01_seller_01' => 0,
-                    'level_01_seller_02' => $code,
-                    'level_02_seller_02' => $code,
+                    'level_01_seller_02' => $request->code,
+                    'level_02_seller_02' => $request->code,
                     'level_02_seller_01' => 0,
-                    'level_03_seller_02' => $code,
+                    'level_03_seller_02' => $request->code,
                     'level_03_seller_01' => 0,
                 ]);
             }
 
+            $codeGenerate = new CodeGenerator;
+            $codeGenerate->generateCode('seller'); // Increment the counter in InvPara
+
             Saler::create([
-                'code'          => $code,
+                'code'          => $request->code,
                 'name'          => $request->name,
                 'address'       => $request->address,
                 'city'          => $request->city ?? '',
@@ -116,6 +119,13 @@ class SellerController extends Controller
                 'password'      => Hash::make($request->password),
                 'view_password' => $request->password,
                 'status'        => 'pending',
+                'deposit'       => $request->deposit ?? 0,
+                'cal_deposit'   => $request->deposit ?? 0,
+                'type'          => $request->type,
+                'bank_name'           => $request->bank_name,
+                'branch_name'         => $request->branch_name,
+                'account_holder_name' => $request->account_holder_name,
+                'account_number'      => $request->account_number,
             ]);
 
             User::create([
@@ -125,10 +135,11 @@ class SellerController extends Controller
                 'password'      => Hash::make($request->password),
                 'view_password' => $request->password,
                 'type'          => 'seller',
+                'user_type'     => 'seller',
             ]);
 
             DB::commit();
-            return redirect()->back()->with('success', 'Seller created successfully');
+            return redirect()->route('seller.list')->with('success', 'Seller created successfully');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', $e->getMessage())->withInput();
@@ -178,6 +189,10 @@ class SellerController extends Controller
                 'password'      => $request->filled('password') ? Hash::make($request->password) : $seller->password,
                 'view_password' => $request->filled('password') ? $request->password : $seller->view_password,
                 'type'          => $request->type ?? $seller->type,
+                'bank_name'           => $request->bank_name,
+                'branch_name'         => $request->branch_name,
+                'account_holder_name' => $request->account_holder_name,
+                'account_number'      => $request->account_number,
             ]);
 
             return redirect()->route('seller.list')->with('success', 'Seller updated successfully');

@@ -142,8 +142,7 @@
         </div>
     </div>
 
-    <form action="{{route('product.update', $product->id)}}" method="post" enctype="multipart/form-data" class="product-form">
-        @csrf
+<form action="{{ route('product.update', [$type, $product->id]) }}" method="post" enctype="multipart/form-data">        @csrf
         @method('PUT')
         <div class="row">
             <div class="col-lg-8">
@@ -176,27 +175,27 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Brand</label>
-                                <select class="form-select" name="brand">
-                                    <option value="">Select Brand</option>
-                                    @foreach($brands as $brand)
-                                        <option value="{{ $brand->name }}" {{ $product->brand == $brand->name ? 'selected' : '' }}>
-                                            {{ $brand->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <select class="form-select" name="brand_id">
+    <option value="">Select Brand</option>
+    @foreach($brands as $brand)
+        <option value="{{ $brand->id }}" {{ $product->brand_id == $brand->id ? 'selected' : '' }}>
+            {{ $brand->name }}
+        </option>
+    @endforeach
+</select>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Category</label>
-                                <select class="form-select" name="category">
-                                    <option value="">Select Category</option>
-                                    @foreach($categories as $category)
-                                        <option value="{{$category->name}}" {{ $product->category == $category->name ? 'selected' : '' }}>
-                                            {{$category->name}}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <select class="form-select" name="category_id">
+    <option value="">Select Category</option>
+    @foreach($categories as $category)
+        <option value="{{ $category->id }}" {{ $product->category_id == $category->id ? 'selected' : '' }}>
+            {{ $category->name }}
+        </option>
+    @endforeach
+</select>
                             </div>
                         </div>
                         <div class="col-md-6">

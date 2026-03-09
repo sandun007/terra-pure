@@ -93,15 +93,18 @@ Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])-
         Route::get('/admins/{id}/view', [AdminController::class, 'show'])->name('admin.admins.view');
         Route::get('/create',[AdminController::class,'create'])->name('admin.create');
         Route::post('/store',[AdminController::class,'store'])->name('admin.store');
+        Route::get('/profile', [AdminController::class, 'profile'])->name('admin.profile');
+        Route::get('/profile/edit', [AdminController::class, 'profileEdit'])->name('admin.profile.edit');
+        Route::post('/profile/update', [AdminController::class, 'profileUpdate'])->name('admin.profile.update');
 
         Route::prefix('product')->group(function () {
             Route::get('/', [ProductController::class, 'index'])->name('product.index');
             Route::get('/create', [ProductController::class, 'create'])->name('product.create');
             Route::post('/create', [ProductController::class, 'store'])->name('product.store');
-            Route::get('/edit/{id}', [ProductController::class, 'edit'])->name('product.edit');
-            Route::put('/update/{id}', [ProductController::class, 'update'])->name('product.update');
-            Route::get('/view/{id}', [ProductController::class, 'product_view'])->name('product.view');
-            Route::get('/delete/{id}', [ProductController::class, 'delete'])->name('product.delete');
+            Route::get('/edit/{type}/{id}', [ProductController::class, 'edit'])->name('product.edit');
+            Route::put('/update/{type}/{id}', [ProductController::class, 'update'])->name('product.update');
+            Route::get('/view/{type}/{id}', [ProductController::class, 'product_view'])->name('product.view');
+            Route::get('/delete/{type}/{id}', [ProductController::class, 'delete'])->name('product.delete');
         });
 
         Route::prefix('brand')->group(function () {

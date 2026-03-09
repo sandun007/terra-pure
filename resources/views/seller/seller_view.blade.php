@@ -26,9 +26,6 @@
             display: inline-block;
             color: #495057;
         }
-        .info-value {
-            color: #212529;
-        }
         .view-field {
             padding: 8px 12px;
             background: #f8f9fa;
@@ -65,12 +62,14 @@
         </div>
         <ul class="table-top-head">
             <li>
-                <a data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Refresh"
-                   title="Refresh"><i class="ti ti-refresh"></i></a>
+                <a data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Refresh" title="Refresh">
+                    <i class="ti ti-refresh"></i>
+                </a>
             </li>
             <li>
-                <a data-bs-toggle="tooltip" data-bs-placement="top" id="collapse-header" aria-label="Collapse"
-                   title="Collapse"><i class="ti ti-chevron-up"></i></a>
+                <a data-bs-toggle="tooltip" data-bs-placement="top" id="collapse-header" aria-label="Collapse" title="Collapse">
+                    <i class="ti ti-chevron-up"></i>
+                </a>
             </li>
         </ul>
         <div class="page-btn mt-0">
@@ -81,9 +80,9 @@
     <div class="add-product">
         <div class="accordions-items-seperate" id="accordionSpacingExample">
 
-            <!-- Seller Information -->
+            <!-- 1. Seller Information -->
             <div class="accordion-item border mb-4">
-                <h2 class="accordion-header" id="headingSpacingOne">
+                <h2 class="accordion-header" id="headingSellerInfo">
                     <div class="d-flex align-items-center justify-content-between flex-fill p-3">
                         <h5 class="d-flex align-items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
@@ -99,63 +98,54 @@
                 </h2>
                 <div class="accordion-body border-top">
                     <div class="row">
-
                         <div class="col-sm-6 col-12">
                             <div class="mb-3">
                                 <label class="form-label info-label">Seller Code</label>
                                 <div class="view-field">{{ $seller->code ?? '—' }}</div>
                             </div>
                         </div>
-
                         <div class="col-sm-6 col-12">
                             <div class="mb-3">
                                 <label class="form-label info-label">Full Name</label>
                                 <div class="view-field">{{ $seller->name ?? '—' }}</div>
                             </div>
                         </div>
-
                         <div class="col-sm-6 col-12">
                             <div class="mb-3">
                                 <label class="form-label info-label">NIC No</label>
                                 <div class="view-field">{{ $seller->NIC_no ?? '—' }}</div>
                             </div>
                         </div>
-
                         <div class="col-sm-6 col-12">
                             <div class="mb-3">
                                 <label class="form-label info-label">Mobile No</label>
                                 <div class="view-field">{{ $seller->phone ?? '—' }}</div>
                             </div>
                         </div>
-
                         <div class="col-sm-6 col-12">
                             <div class="mb-3">
                                 <label class="form-label info-label">Whatsapp</label>
                                 <div class="view-field">{{ $seller->whatsapp ?? '—' }}</div>
                             </div>
                         </div>
-
                         <div class="col-sm-6 col-12">
                             <div class="mb-3">
                                 <label class="form-label info-label">Email</label>
                                 <div class="view-field">{{ $seller->email ?? '—' }}</div>
                             </div>
                         </div>
-
                         <div class="col-sm-6 col-12">
                             <div class="mb-3">
                                 <label class="form-label info-label">Address</label>
                                 <div class="view-field">{{ $seller->address ?? '—' }}</div>
                             </div>
                         </div>
-
                         <div class="col-sm-6 col-12">
                             <div class="mb-3">
                                 <label class="form-label info-label">Username</label>
                                 <div class="view-field">{{ $seller->username ?? '—' }}</div>
                             </div>
                         </div>
-
                         <div class="col-sm-6 col-12">
                             <div class="mb-3">
                                 <label class="form-label info-label">Deposit Amount</label>
@@ -164,7 +154,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="col-sm-6 col-12">
                             <div class="mb-3">
                                 <label class="form-label info-label">Password (view)</label>
@@ -174,7 +163,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="col-sm-6 col-12">
                             <div class="mb-3">
                                 <label class="form-label info-label">Seller Type</label>
@@ -183,35 +171,76 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="col-sm-6 col-12">
                             <div class="mb-3">
                                 <label class="form-label info-label">City</label>
                                 <div class="view-field">{{ $seller->city ?? '—' }}</div>
                             </div>
                         </div>
-
                         <div class="col-sm-6 col-12">
                             <div class="mb-3">
                                 <label class="form-label info-label">Postal Code</label>
                                 <div class="view-field">{{ $seller->postal_code ?? '—' }}</div>
                             </div>
                         </div>
-
                         <div class="col-sm-6 col-12">
                             <div class="mb-3">
                                 <label class="form-label info-label">District</label>
                                 <div class="view-field">{{ $seller->district ?? '—' }}</div>
                             </div>
                         </div>
-
                     </div>
                 </div>
             </div>
 
-            <!-- NIC Images -->
+            <!-- 2. Bank Details -->
             <div class="accordion-item border mb-4">
-                <h2 class="accordion-header" id="headingSpacingThree">
+                <h2 class="accordion-header" id="headingBankDetails">
+                    <div class="d-flex align-items-center justify-content-between flex-fill p-3">
+                        <h5 class="d-flex align-items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                 stroke-linejoin="round" class="feather feather-credit-card text-primary me-2">
+                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                <line x1="1" y1="10" x2="23" y2="10"></line>
+                            </svg>
+                            <span>Bank Details</span>
+                        </h5>
+                    </div>
+                </h2>
+                <div class="accordion-body border-top">
+                    <div class="row">
+                        <div class="col-sm-6 col-12">
+                            <div class="mb-3">
+                                <label class="form-label info-label">Bank Name</label>
+                                <div class="view-field">{{ $seller->bank_name ?? '—' }}</div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-12">
+                            <div class="mb-3">
+                                <label class="form-label info-label">Branch Name</label>
+                                <div class="view-field">{{ $seller->branch_name ?? '—' }}</div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-12">
+                            <div class="mb-3">
+                                <label class="form-label info-label">Account Holder Name</label>
+                                <div class="view-field">{{ $seller->account_holder_name ?? '—' }}</div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-12">
+                            <div class="mb-3">
+                                <label class="form-label info-label">Account Number</label>
+                                <div class="view-field">{{ $seller->account_number ?? '—' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. NIC Images -->
+            <div class="accordion-item border mb-4">
+                <h2 class="accordion-header" id="headingNICImages">
                     <div class="d-flex align-items-center justify-content-between flex-fill p-3">
                         <h5 class="d-flex align-items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
@@ -225,13 +254,11 @@
                         </h5>
                     </div>
                 </h2>
-
                 <div class="accordion-body border-top">
                     <div class="row justify-content-center">
                         <!-- NIC Front -->
                         <div class="col-md-6 col-12 text-center mb-4">
                             <h6 class="mb-3 fw-semibold">NIC Front</h6>
-
                             @if($seller->NIC_front && Storage::disk('public')->exists($seller->NIC_front))
                                 <div class="phone-img">
                                     <img src="{{ Storage::url($seller->NIC_front) }}"
@@ -246,10 +273,9 @@
                             @endif
                         </div>
 
-                        <!-- NIC Back (same logic) -->
+                        <!-- NIC Back -->
                         <div class="col-md-6 col-12 text-center mb-4">
                             <h6 class="mb-3 fw-semibold">NIC Back</h6>
-
                             @if($seller->NIC_back && Storage::disk('public')->exists($seller->NIC_back))
                                 <div class="phone-img">
                                     <img src="{{ Storage::url($seller->NIC_back) }}"
@@ -259,17 +285,14 @@
                             @else
                                 <div class="no-image-placeholder">
                                     <i class="ti ti-photo-x" style="font-size: 3.5rem;"></i>
-                                    <p class="mt-2 mb-0">No back image uploaded</p>  <!-- you can update text -->
+                                    <p class="mt-2 mb-0">No back image uploaded</p>
                                 </div>
                             @endif
                         </div>
-                    </div>
-
                     </div>
                 </div>
             </div>
 
         </div>
     </div>
-
 @endsection
