@@ -69,6 +69,7 @@
                             <th>Mobile</th>
                             <th>Address</th>
                             <th>District</th>
+                            <th>Status</th>
                             {{--                            <th>Level</th>--}}
                             <th>Action</th>
                         </tr>
@@ -82,11 +83,35 @@
                                 <td>{{$employee->mobile_no }}</td>
                                 <td>{{$employee->address }}</td>
                                 <td>{{$employee->district }}</td>
+                                <td>{{$employee->status }}</td>
+
                                 {{--                           <td>{{$seller->code }}</td>--}}
                                 <td>
-                                    <button class="btn btn-dark btn-sm">view</button>
-                                    <a href="" class="btn btn-warning btn-sm">Update</a>
-                                    <a href="" class="btn btn-danger btn-sm">Delete</a>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ route('employee.view', $employee->id) }}"
+                                           class="btn btn-dark btn-sm"
+                                           data-bs-toggle="tooltip" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ route('employee.edit', $employee->id) }}"
+                                           class="btn btn-warning btn-sm"
+                                           data-bs-toggle="tooltip" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form id="delete-form-{{ $employee->id }}"
+                                              action="{{ route('employee.delete', $employee->id) }}"
+                                              method="POST"
+                                              style="display:inline;">
+                                            @csrf
+                                            @method('DELETE')
+
+                                            <button type="button"
+                                                    class="btn btn-danger btn-sm"
+                                                    onclick="confirmDelete({{ $employee->id }})">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach

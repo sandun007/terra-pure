@@ -34,6 +34,18 @@ return new class extends Migration
             if (!Schema::hasColumn('employees', 'post_code')) {
                 $table->string('post_code', 20)->nullable()->after('district');
             }
+
+            if (!Schema::hasColumn('employees', 'whatsapp')) {
+                $table->string('whatsapp', 20)->nullable()->after('post_code');
+            }
+
+            if (!Schema::hasColumn('employees', 'role')) {
+                $table->enum('role', ['admin', 'manager', 'staff'])->default('staff');
+            }
+            if (!Schema::hasColumn('employees', 'status')) {
+                $table->enum('status', ['active', 'inactive'])->default('active');
+
+            }
         });
     }
 
@@ -43,13 +55,14 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('employees', function (Blueprint $table) {
-            $columns = ['phone', 'img', 'address', 'district', 'post_code'];
+            $columns = ['phone', 'img', 'address', 'district', 'post_code','whatsapp','role','status'];
 
             foreach ($columns as $column) {
                 if (Schema::hasColumn('employees', $column)) {
                     $table->dropColumn($column);
                 }
             }
+
         });
     }
 };

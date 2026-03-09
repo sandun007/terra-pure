@@ -5,58 +5,124 @@ namespace App\Http\Controllers;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\SellerProduct;
+use App\Models\SellerBrand;
+use App\Models\SellerCategory;
+use App\Models\WholesalerProduct;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    public function index()
-    {
-        try {
-            $products = Product::query()
-                ->where('seller_code', 0)
-                ->get();
+    public function index(Request $request)
+{
+    try {
 
-            $count = $products->count();
-            return view('product.product_list', compact('products', 'count'));
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        // Admin Products
+        $adminProducts = Product::query()
+            ->where('seller_code', 0)
+            ->get()
+            ->map(function ($product) {
+                $product->store = 'admin'; // use lowercase for easier filtering
+                return $product;
+            });
+
+        // Seller Products
+        $sellerProducts = SellerProduct::with('seller')
+            ->get()
+            ->map(function ($product) {
+                $product->store = 'seller';
+                $product->display_price = $product->display_price ?? $product->selling_price;
+                return $product;
+            });
+
+        // Wholesaler Products
+        $wholesalerProducts = WholesalerProduct::with('wholesaler')
+            ->get()
+            ->map(function ($product) {
+                $product->store = 'wholesaler';
+                $product->display_price = $product->selling_price;
+                return $product;
+            });
+
+        // Merge all products
+        $products = $adminProducts
+            ->merge($sellerProducts)
+            ->merge($wholesalerProducts);
+
+        // Apply filter if dropdown is selected
+        if ($request->filled('store')) {
+            $store = strtolower($request->store);
+            $products = $products->filter(function ($product) use ($store) {
+                return $product->store === $store;
+            });
         }
+
+        $count = $products->count();
+
+        return view('product.product_list', compact('products','count'));
+
+    } catch (\Exception $e) {
+        return redirect()->back()->with('error', $e->getMessage());
     }
+}
 
     public function create()
-    {
-        try {
-            $brands = Brand::query()
-                ->where('seller_code', 0)
-                ->get();
-            $categories = Category::query()
-                ->where('seller_code', 0)
-                ->get();
-            $codeGenerate = new CodeGenerator();
-            $code = $codeGenerate->newCodeLoad('product');
+{
+    try {
 
-            return view('product.product_create', compact('brands', 'categories', 'code'));
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
-        }
+        $brands = Brand::select('id','name')->get();
+        $categories = Category::select('id','name')->get();
+
+        $codeGenerate = new CodeGenerator();
+        $code = $codeGenerate->newCodeLoad('product');
+
+        return view('product.product_create', compact(
+            'brands',
+            'categories',
+            'code'
+        ));
+
+    } catch (\Exception $e) {
+
+        return redirect()->back()->with('error', $e->getMessage());
+
     }
+}
 
-    public function edit($id)
-    {
-        try {
-            $brands = Brand::query()
-                ->where('seller_code', 0)
-                ->get();
-            $categories = Category::query()
-                ->where('seller_code', 0)
-                ->get();
-            $product = Product::query()->findOrFail($id);
+   public function edit($type, $id)
+{
+    try {
 
-            return view('product.product_update', compact('brands', 'categories', 'product'));
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        if ($type == 'admin') {
+            $brands = Brand::select('id','name')->get();
+            $categories = Category::select('id','name')->get();
+            $product = Product::findOrFail($id);
         }
+
+        elseif ($type == 'seller') {
+            $brands = SellerBrand::select('id','name')->get();
+            $categories = SellerCategory::select('id','name')->get();
+            $product = SellerProduct::with('seller')->findOrFail($id);
+        }
+
+        elseif ($type == 'wholesaler') {
+            $brands = Brand::select('id','name')->get();
+            $categories = Category::select('id','name')->get();
+            $product = WholesalerProduct::with('wholesaler')->findOrFail($id);
+        }
+
+        else {
+            return redirect()->back()->with('error','Invalid product type');
+        }
+
+        return view('product.product_update', compact('brands','categories','product','type'));
+
+    } catch (\Exception $e) {
+
+        return redirect()->back()->with('error',$e->getMessage());
+
     }
+}
 
     public function store(Request $request)
     {
@@ -87,8 +153,8 @@ class ProductController extends Controller
             $product->code = $request->code; // Use the code from778rm
             $product->name = $request->name;
             $product->barcode = $request->barcode;
-            $product->brand = $request->brand;
-            $product->category = $request->category;
+            $product->brand_id = $request->brand_id;
+        $product->category_id = $request->category_id;
             $product->description = $request->description;
             $product->stock_price = $request->stock_price;
             $product->display_price = $request->display_price;
@@ -123,39 +189,64 @@ class ProductController extends Controller
         }
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $type, $id)
 {
     try {
+
         $request->validate([
             'name' => 'required|string|max:255',
             'qty' => 'required|numeric|min:0',
             'min_qty' => 'required|numeric|min:0',
             'stock_price' => 'required|numeric|min:0',
             'display_price' => 'required|numeric|min:0',
+            'status' => 'required|in:active,inactive',
         ]);
 
-        $product = Product::findOrFail($id);
+        // Determine product model
+        if ($type == 'admin') {
+            $product = Product::findOrFail($id);
+        } 
+        elseif ($type == 'seller') {
+            $product = SellerProduct::findOrFail($id);
+        } 
+        elseif ($type == 'wholesaler') {
+            $product = WholesalerProduct::findOrFail($id);
+        } 
+        else {
+            return redirect()->back()->with('error','Invalid product type');
+        }
+
+        // Determine image column name per product type
+        $imageColumn = ($type == 'admin') ? 'img' : 'image';
 
         $imagePaths = [];
 
-        // Handle new image uploads
+        // Handle image upload
         if ($request->hasFile('img')) {
-            // Delete old images if they exist
-            if ($product->img) {
-                if (is_json($product->img)) {
-                    $oldImages = json_decode($product->img, true);
+
+            // Delete old images
+            $oldImageValue = $product->$imageColumn;
+            if ($oldImageValue) {
+
+                if (is_json($oldImageValue)) {
+                    $oldImages = json_decode($oldImageValue, true);
+
                     foreach ($oldImages as $oldImage) {
                         ImageUploader::deleteImage($oldImage);
                     }
+
                 } else {
-                    ImageUploader::deleteImage($product->img);
+                    ImageUploader::deleteImage($oldImageValue);
                 }
             }
 
             // Upload new images
             foreach ($request->file('img') as $image) {
+
                 if ($image->isValid()) {
+
                     $imagePath = ImageUploader::uploadSingleImage($image, 'products');
+
                     if ($imagePath) {
                         $imagePaths[] = $imagePath;
                     }
@@ -163,71 +254,141 @@ class ProductController extends Controller
             }
         }
 
+        // Update common fields
         $product->name = $request->name;
         $product->barcode = $request->barcode;
-        $product->brand = $request->brand;
-        $product->category = $request->category;
+        $product->brand_id = $request->brand_id;
+        $product->category_id = $request->category_id;
         $product->description = $request->description;
-        $product->stock_price = $request->stock_price;
         $product->display_price = $request->display_price;
         $product->discount = $request->discount ?? 0;
         $product->qty = $request->qty;
-        $product->stock = $request->qty;
-        $product->min_qty = $request->min_qty;
-        $product->packing_cost = $request->packing_cost ?? 0;
-        $product->update_by = 'admin';
+        $product->status = $request->status;
 
-        // Update images only if new images were uploaded
+        // Update type-specific fields
+        if ($type == 'admin') {
+            $product->stock_price = $request->stock_price;
+            $product->stock = $request->qty;
+            $product->min_qty = $request->min_qty;
+            $product->packing_cost = $request->packing_cost ?? 0;
+            $product->update_by = 'admin';
+        } elseif ($type == 'seller') {
+            $product->stock_price = $request->stock_price;
+            $product->min_qty = $request->min_qty;
+            $product->packaging_cost = $request->packing_cost ?? 0;
+            $product->update_by = 'admin';
+        } elseif ($type == 'wholesaler') {
+            $product->cost_price = $request->stock_price;
+            $product->selling_price = $request->display_price;
+            $product->min_stock_level = $request->min_qty;
+            $product->packaging_cost = $request->packing_cost ?? 0;
+        }
+
+        // Save images using correct column name
         if (!empty($imagePaths)) {
-            if (count($imagePaths) === 1) {
-                $product->img = $imagePaths[0];
+
+            if (count($imagePaths) == 1) {
+                $product->$imageColumn = $imagePaths[0];
             } else {
-                $product->img = json_encode($imagePaths);
+                $product->$imageColumn = json_encode($imagePaths);
             }
         }
 
         $product->save();
 
-        return redirect()->route('product.index')->with('success', 'Product updated successfully.');
-    } catch (\Exception $e) {
-        return redirect()->back()->with('error', $e->getMessage())->withInput();
+        return redirect()->route('product.index')
+            ->with('success','Product updated successfully.');
+
+    } 
+    catch (\Exception $e) {
+
+        return redirect()->back()
+            ->with('error',$e->getMessage())
+            ->withInput();
     }
 }
 
-    public function product_view($id)
-    {
-        try {
-            $product = Product::query()->findOrFail($id);
-            return view('product.product_view', compact('product'));
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
-        }
-    }
+    public function product_view($type, $id)
+{
+    try {
 
-    public function delete($id)
-    {
-        try {
+        if ($type == 'admin') {
+            $product = Product::findOrFail($id);
+        }
+
+        elseif ($type == 'seller') {
+            $product = SellerProduct::with('seller')->findOrFail($id);
+        }
+
+        elseif ($type == 'wholesaler') {
+            $product = WholesalerProduct::with('wholesaler')->findOrFail($id);
+        }
+
+        else {
+            return redirect()->back()->with('error','Invalid product type');
+        }
+
+        return view('product.product_view', compact('product','type'));
+
+    } catch (\Exception $e) {
+        return redirect()->back()->with('error',$e->getMessage());
+    }
+}
+
+   public function delete($type, $id)
+{
+    try {
+
+        if ($type == 'admin') {
+
             $product = Product::findOrFail($id);
 
-            // Delete associated images
-            if ($product->img) {
-                if (is_json($product->img)) {
-                    $images = json_decode($product->img, true);
-                    foreach ($images as $image) {
-                        ImageUploader::deleteImage($image);
-                    }
-                } else {
-                    ImageUploader::deleteImage($product->img);
-                }
-            }
+        } elseif ($type == 'seller') {
 
-            $product->delete();
+            $product = SellerProduct::findOrFail($id);
 
-            return redirect()->route('product.index')->with('success', 'Product deleted successfully.');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        } elseif ($type == 'wholesaler') {
+
+            $product = WholesalerProduct::findOrFail($id);
+
+        } else {
+            return redirect()->back()->with('error', 'Invalid product type.');
         }
+
+        // Get image using correct column name per type
+        $imageColumn = ($type == 'admin') ? 'img' : 'image';
+        $imageValue = $product->$imageColumn;
+
+        // Delete product images
+        if ($imageValue) {
+
+            if (is_json($imageValue)) {
+
+                $images = json_decode($imageValue, true);
+
+                foreach ($images as $image) {
+                    ImageUploader::deleteImage($image);
+                }
+
+            } else {
+
+                ImageUploader::deleteImage($imageValue);
+
+            }
+        }
+
+        $product->delete();
+
+        return redirect()->route('product.index')
+            ->with('success', 'Product deleted successfully.');
+
+    } catch (\Exception $e) {
+
+        return redirect()->back()
+            ->with('error', $e->getMessage());
+
     }
+}
 }
 
 // Helper function to check if string is JSON
