@@ -23,6 +23,29 @@
     <li class="submenu-open">
         <h6 class="submenu-hdr">Wholesaler Management</h6>
         <ul>
+            @php
+                // Safe queries — tables may not exist in all environments
+                try {
+                    $pendingPriceChanges = \App\Models\WholesalerProductPriceChange::where('status', 'pending')->count();
+                } catch (\Throwable $e) {
+                    $pendingPriceChanges = 0;
+                }
+
+                try {
+                    $myPendingChanges = \App\Models\WholesalerProductPriceChange::where('status', 'pending')
+                        ->where('employee_id', Auth::guard('employee')->id())
+                        ->count();
+                } catch (\Throwable $e) {
+                    $myPendingChanges = 0;
+                }
+
+                try {
+                    $pendingExchanges = \App\Models\WholesalerProductExchange::where('status', 'pending')->count();
+                } catch (\Throwable $e) {
+                    $pendingExchanges = 0;
+                }
+            @endphp
+
             <li>
                 <a href="{{ route('employee.wholesaler.products.index') }}"
                    class="{{ request()->routeIs('employee.wholesaler.products.*') ? 'active' : '' }}">
@@ -34,9 +57,6 @@
                         <path d="M9 14h6"></path>
                     </svg>
                     <span>Wholesaler Products</span>
-                    @php
-                        $pendingPriceChanges = \App\Models\WholesalerProductPriceChange::where('status', 'pending')->count();
-                    @endphp
                     @if($pendingPriceChanges > 0)
                         <span class="badge bg-warning ms-auto">{{ $pendingPriceChanges }}</span>
                     @endif
@@ -45,17 +65,12 @@
 
             <li>
                 <a href="{{ route('employee.wholesaler.price-changes.index') }}"
-                   class="{{ request()->routeIs('employee.wholesaler.price-change.*') ? 'active' : '' }}">
+                   class="{{ request()->routeIs('employee.wholesaler.price-changes.*') ? 'active' : '' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
                     </svg>
                     <span>Price Changes</span>
-                    @php
-                        $myPendingChanges = \App\Models\WholesalerProductPriceChange::where('status', 'pending')
-                            ->where('employee_id', Auth::guard('employee')->id())
-                            ->count();
-                    @endphp
                     @if($myPendingChanges > 0)
                         <span class="badge bg-warning ms-auto">{{ $myPendingChanges }}</span>
                     @endif
@@ -64,7 +79,7 @@
 
             <li>
                 <a href="{{ route('employee.wholesaler.exchanges.index') }}"
-                   class="{{ request()->routeIs('employee.wholesaler.exchange.*') ? 'active' : '' }}">
+                   class="{{ request()->routeIs('employee.wholesaler.exchanges.*') ? 'active' : '' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M17 1l4 4-4 4"></path>
@@ -73,9 +88,6 @@
                         <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
                     </svg>
                     <span>Product Exchange</span>
-                    @php
-                        $pendingExchanges = \App\Models\WholesalerProductExchange::where('status', 'pending')->count();
-                    @endphp
                     @if($pendingExchanges > 0)
                         <span class="badge bg-warning ms-auto">{{ $pendingExchanges }}</span>
                     @endif
@@ -113,9 +125,13 @@
                     </svg>
                     <span>Seller Products</span>
                     @php
-                        $pendingCount = \App\Models\SellerProduct::whereNull('approved_by')
-                            ->where('status', 'active')
-                            ->count();
+                        try {
+                            $pendingCount = \App\Models\SellerProduct::whereNull('approved_by')
+                                ->where('status', 'active')
+                                ->count();
+                        } catch (\Throwable $e) {
+                            $pendingCount = 0;
+                        }
                     @endphp
                     @if($pendingCount > 0)
                         <span class="badge bg-warning ms-auto">{{ $pendingCount }}</span>
@@ -124,8 +140,8 @@
             </li>
 
             <li>
-                <a href="{{ route('employee.delivery_calls.pending') }}"
-                   class="{{ request()->routeIs('employee.delivery_calls.*') ? 'active' : '' }}">
+                <a href="{{ route('employee.employee.delivery_calls.pending') }}"
+                   class="{{ request()->routeIs('employee.employee.delivery_calls.*') ? 'active' : '' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="9" cy="21" r="1"></circle>
