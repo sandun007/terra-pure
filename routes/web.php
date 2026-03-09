@@ -11,6 +11,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Seller\CallController;
+use App\Http\Controllers\Seller\SystemSellerDeliveryTrackingController;
 use App\Http\Controllers\Seller\SelfSellerDeliveryCallController;
 use App\Http\Controllers\Seller\SellerBrandController;
 use App\Http\Controllers\Seller\SellerCallController;
@@ -163,11 +164,49 @@ Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])-
 
 // ========== SELLER ROUTES ==========
 Route::middleware('auth:seller')->group(function () {
+
+    Route::prefix('system-delivery')->name('seller.system_delivery.')->group(function () {
+
+        $ctrl = [\App\Http\Controllers\Seller\SystemSellerDeliveryTrackingController::class];
+        Route::get('/{id}', [...$ctrl, 'show'])->name('show')->whereNumber('id');
+        // Pipeline overview (read-only)
+        Route::get('/pipeline',              [...$ctrl, 'pipeline'])->name('pipeline');
+
+        // Tracking status pages
+        Route::get('/tracking',              [...$ctrl, 'index'])->name('tracking.index');
+        Route::get('/tracking/confirmed',    [...$ctrl, 'confirmed'])->name('tracking.confirmed');
+        Route::get('/tracking/completed',    [...$ctrl, 'completed'])->name('tracking.completed');
+        Route::get('/tracking/rescheduled',  [...$ctrl, 'rescheduled'])->name('tracking.rescheduled');
+        Route::get('/tracking/cancelled',    [...$ctrl, 'cancelled'])->name('tracking.cancelled');
+
+        // AJAX: waybill sync
+        Route::post('/sync-all',             [...$ctrl, 'syncAll'])->name('sync_all');
+        Route::post('/{id}/sync-waybill',    [...$ctrl, 'syncWaybill'])->name('sync_waybill')->whereNumber('id');
+
+        // AJAX: tracking timeline proxy
+        Route::post('/tracking-info',        [...$ctrl, 'tracking'])->name('tracking_info');
+    });
+
     Route::prefix('seller')->name('seller.')->group(function () {
+
+
 
 
         // Self Seller Delivery Management
         Route::prefix('delivery-calls')->name('delivery_calls.')->group(function () {
+
+            Route::get('/tracking',           [SelfSellerDeliveryCallController::class, 'trackingIndex'])->name('tracking.index');
+            Route::get('/tracking/confirmed', [SelfSellerDeliveryCallController::class, 'trackingConfirmed'])->name('tracking.confirmed');
+            Route::get('/tracking/completed', [SelfSellerDeliveryCallController::class, 'trackingCompleted'])->name('tracking.completed');
+            Route::get('/tracking/rescheduled',[SelfSellerDeliveryCallController::class, 'trackingRescheduled'])->name('tracking.rescheduled');
+            Route::get('/tracking/cancelled', [SelfSellerDeliveryCallController::class, 'trackingCancelled'])->name('tracking.cancelled');
+
+// ── Waybill sync endpoints ─────────────────────────────────────────────────
+            Route::post('/sync-all-waybills',      [SelfSellerDeliveryCallController::class, 'syncAllWaybills'])->name('sync_all_waybills');
+            Route::post('/{id}/sync-waybill',      [SelfSellerDeliveryCallController::class, 'syncWaybill'])->name('sync_waybill')->whereNumber('id');
+
+
+
             // Status pages
             Route::get('/', [SelfSellerDeliveryCallController::class, 'index'])->name('index');
             Route::get('/pending', [SelfSellerDeliveryCallController::class, 'pending'])->name('pending');
@@ -353,6 +392,19 @@ Route::middleware('auth:seller')->group(function () {
 
         // ===== SELF-SELLER DELIVERY MANAGEMENT =====
         Route::prefix('delivery-calls')->name('delivery_calls.')->group(function () {
+
+            Route::get('/tracking',           [SelfSellerDeliveryCallController::class, 'trackingIndex'])->name('tracking.index');
+            Route::get('/tracking/confirmed', [SelfSellerDeliveryCallController::class, 'trackingConfirmed'])->name('tracking.confirmed');
+            Route::get('/tracking/completed', [SelfSellerDeliveryCallController::class, 'trackingCompleted'])->name('tracking.completed');
+            Route::get('/tracking/rescheduled',[SelfSellerDeliveryCallController::class, 'trackingRescheduled'])->name('tracking.rescheduled');
+            Route::get('/tracking/cancelled', [SelfSellerDeliveryCallController::class, 'trackingCancelled'])->name('tracking.cancelled');
+
+// ── Waybill sync endpoints ─────────────────────────────────────────────────
+            Route::post('/sync-all-waybills',      [SelfSellerDeliveryCallController::class, 'syncAllWaybills'])->name('sync_all_waybills');
+            Route::post('/{id}/sync-waybill',      [SelfSellerDeliveryCallController::class, 'syncWaybill'])->name('sync_waybill')->whereNumber('id');
+
+
+
             // List pages
             Route::get('/', [SelfSellerDeliveryCallController::class, 'index'])->name('index');
             Route::get('/pending', [SelfSellerDeliveryCallController::class, 'pending'])->name('pending');
@@ -385,6 +437,17 @@ Route::prefix('employee')->middleware('auth:employee')->group(function(){
 
     // Delivery Calls
     Route::prefix('delivery-calls')->name('employee.delivery_calls.')->group(function () {
+
+        Route::get('/tracking',            [EmployeeDeliveryCallController::class, 'trackingIndex'])->name('tracking.index');
+        Route::get('/tracking/confirmed',  [EmployeeDeliveryCallController::class, 'trackingConfirmed'])->name('tracking.confirmed');
+        Route::get('/tracking/completed',  [EmployeeDeliveryCallController::class, 'trackingCompleted'])->name('tracking.completed');
+        Route::get('/tracking/rescheduled',[EmployeeDeliveryCallController::class, 'trackingRescheduled'])->name('tracking.rescheduled');
+        Route::get('/tracking/cancelled',  [EmployeeDeliveryCallController::class, 'trackingCancelled'])->name('tracking.cancelled');
+
+// ── Sync ──────────────────────────────────────────────────────────────────
+        Route::post('/sync-all-waybills',     [EmployeeDeliveryCallController::class, 'syncAllWaybills'])->name('sync_all_waybills');
+        Route::post('/{id}/sync-waybill',     [EmployeeDeliveryCallController::class, 'syncWaybill'])->name('sync_waybill')->whereNumber('id');
+
 
         // ── GET list pages ────────────────────────────────────────────────────
         Route::get('/',           [EmployeeDeliveryCallController::class, 'index'])->name('index');
