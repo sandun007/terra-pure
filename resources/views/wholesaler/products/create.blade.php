@@ -260,10 +260,13 @@
                                     <div class="icon-input">
                                         <span class="material-icons-outlined">fingerprint</span>
                                         <input type="text" name="code" class="form-control"
-                                               value="{{ old('code', $productCode ?? $code ?? '') }}"
+                                               value="{{ $productCode }}"
                                                readonly style="background:var(--gray-100)">
                                     </div>
-                                    <div class="info-txt"><span class="material-icons-outlined">auto_awesome</span>Auto-generated unique identifier</div>
+                                    <div class="info-txt">
+                                        <span class="material-icons-outlined">auto_awesome</span>
+                                        Auto-generated unique identifier (will be saved with product)
+                                    </div>
                                 </div>
                             </div>
 
@@ -517,7 +520,6 @@
                             <div><h5>Ready to Launch</h5><p>Review and create your product</p></div>
                         </div>
                         <div class="d-grid gap-3">
-                            {{-- NOT type="submit" — JS will call form.submit() AFTER Swal confirm --}}
                             <button type="button" id="confirmBtn" class="btn-xl btn-main w-100">
                                 <span class="material-icons-outlined">rocket_launch</span> Create Product
                             </button>
@@ -592,21 +594,28 @@
             });
 
             function assignFile(file) {
-                // Transfer dropped file to the actual file input so the form POSTs it
                 try {
                     const dt = new DataTransfer();
                     dt.items.add(file);
                     imageInput.files = dt.files;
                 } catch(e) {
-                    // Fallback: DataTransfer not supported — just show preview; user must re-select
+                    console.warn('DataTransfer not supported');
                 }
                 showPreview(file);
             }
 
             function showPreview(file) {
                 const ok = ['image/jpeg','image/png','image/jpg','image/gif','image/webp'];
-                if (!ok.includes(file.type)) { alert('Please upload JPG, PNG, GIF or WEBP only.'); imageInput.value=''; return; }
-                if (file.size > 2*1024*1024) { alert('Image must be smaller than 2 MB.'); imageInput.value=''; return; }
+                if (!ok.includes(file.type)) {
+                    Swal.fire('Invalid Format', 'Please upload JPG, PNG, GIF or WEBP only.', 'warning');
+                    imageInput.value='';
+                    return;
+                }
+                if (file.size > 2*1024*1024) {
+                    Swal.fire('File Too Large', 'Image must be smaller than 2 MB.', 'warning');
+                    imageInput.value='';
+                    return;
+                }
                 const reader = new FileReader();
                 reader.onload = e => {
                     previewBox.innerHTML = `
@@ -660,18 +669,22 @@
                 let ok = true; const errs = [];
                 form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 
+                // Check required fields
                 form.querySelectorAll('[required]').forEach(f => {
                     if (!f.value.toString().trim()) {
                         f.classList.add('is-invalid'); ok = false;
-                        errs.push(f.getAttribute('placeholder') || f.name || 'Required field missing');
+                        const label = f.getAttribute('placeholder') || f.name || 'Required field missing';
+                        errs.push(`${label} is required`);
                     }
                 });
 
+                // Check image
                 if (!imageInput.files.length && !previewBox.querySelector('img')) {
                     uploadZone.style.borderColor = 'var(--danger)'; ok = false;
                     errs.push('Product image is required');
                 } else { uploadZone.style.borderColor = ''; }
 
+                // Price validation
                 const cost = parseFloat(iCost?.value)||0, sell = parseFloat(iSell?.value)||0;
                 if (sell > 0 && sell < cost) {
                     iSell?.classList.add('is-invalid'); ok = false;
@@ -687,7 +700,8 @@
 
                 if (!ok) {
                     Swal.fire({
-                        icon: 'warning', title: 'Fix these errors first',
+                        icon: 'warning',
+                        title: 'Please Fix These Errors',
                         html: `<ul class="text-start mb-0 ps-3">${errs.map(e=>`<li>${e}</li>`).join('')}</ul>`,
                         confirmButtonColor: '#4f46e5'
                     });
@@ -696,14 +710,17 @@
                 }
 
                 const nameVal  = form.querySelector('input[name="name"]')?.value || 'N/A';
+                const codeVal  = form.querySelector('input[name="code"]')?.value || 'Auto-generated';
                 const sellVal  = parseFloat(iSell?.value||0).toFixed(2);
                 const qtyVal   = iQty?.value || '0';
 
                 Swal.fire({
-                    icon: 'question', title: 'Create this product?',
+                    icon: 'question',
+                    title: 'Create this product?',
                     html: `
                 <div class="text-start">
                     <div class="bg-light rounded p-3 mt-2">
+                        <p class="mb-2"><strong>Product Code:</strong> <span class="badge bg-primary">${codeVal}</span></p>
                         <p class="mb-1"><strong>Name:</strong> ${nameVal}</p>
                         <p class="mb-1"><strong>Selling Price:</strong> Rs. ${sellVal}</p>
                         <p class="mb-0"><strong>Stock Qty:</strong> ${qtyVal}</p>
@@ -717,7 +734,6 @@
                     reverseButtons: true
                 }).then(result => {
                     if (result.isConfirmed) {
-                        // Show loading spinner then do a plain native form POST — no AJAX, no JSON parsing
                         loading.style.display = 'flex';
                         form.submit();
                     }
@@ -726,7 +742,10 @@
 
             // Ctrl+S shortcut
             document.addEventListener('keydown', e => {
-                if (e.ctrlKey && e.key === 's') { e.preventDefault(); confirmBtn.click(); }
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    confirmBtn.click();
+                }
             });
 
             // Auto-dismiss alerts

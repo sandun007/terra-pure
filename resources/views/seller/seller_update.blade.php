@@ -197,6 +197,66 @@
         </select>
     </div>
 </div>
+                                <!-- 2. Bank Details -->
+                                <div class="accordion-item border mb-4">
+                                    <h2 class="accordion-header" id="headingBankDetails">
+                                        <div class="d-flex align-items-center justify-content-between flex-fill p-3">
+                                            <h5 class="d-flex align-items-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                     stroke-linejoin="round" class="feather feather-credit-card text-primary me-2">
+                                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                                    <line x1="1" y1="10" x2="23" y2="10"></line>
+                                                </svg>
+                                                <span>Bank Details</span>
+                                            </h5>
+                                        </div>
+                                    </h2>
+                                    <div class="accordion-body border-top">
+                                        <div class="row">
+                                            <div class="col-sm-6 col-12">
+                                                <div class="mb-3">
+                                                    <label class="form-label info-label">Bank Name</label>
+                                                    <input type="text" name="bank_name" class="form-control"
+                                                           value="{{ old('bank_name', $seller->bank_name ?? '') }}">
+                                                    @error('bank_name')
+                                                    <small class="text-danger">{{ $message }}</small>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6 col-12">
+                                                <div class="mb-3">
+                                                    <label class="form-label info-label">Branch Name</label>
+                                                    <input type="text" name="branch_name" class="form-control"
+                                                           value="{{ old('branch_name', $seller->branch_name ?? '') }}">
+                                                    @error('branch_name')
+                                                    <small class="text-danger">{{ $message }}</small>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6 col-12">
+                                                <div class="mb-3">
+                                                    <label class="form-label info-label">Account Holder Name</label>
+                                                    <input type="text" name="account_holder_name" class="form-control"
+                                                           value="{{ old('account_holder_name', $seller->account_holder_name ?? '') }}">
+                                                    @error('account_holder_name')
+                                                    <small class="text-danger">{{ $message }}</small>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6 col-12">
+                                                <div class="mb-3">
+                                                    <label class="form-label info-label">Account Number</label>
+                                                    <input type="text" name="account_number" class="form-control"
+                                                           value="{{ old('account_number', $seller->account_number ?? '') }}">
+                                                    @error('account_number')
+                                                    <small class="text-danger">{{ $message }}</small>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
                             </div>
                         </div>

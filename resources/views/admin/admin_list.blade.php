@@ -100,12 +100,6 @@
             <h6 class="text-muted">Manage system administrators (Total: <span
                     class="text-primary fw-bold">{{ $count }}</span>)</h6>
         </div>
-        <div class="page-btn">
-            <a href="{{ route('admin.create') }}" class="btn btn-primary d-flex align-items-center">
-                <i data-feather="plus-circle" class="me-2"></i>
-                Add New Admin
-            </a>
-        </div>
     </div>
 
     @if (session('success'))

@@ -1345,9 +1345,17 @@
                             <div class="price-row">
                                 <span class="price-label">
                                     <span class="material-icons-outlined">trending_up</span>
-                                    Profit:
+                                    Profit per Unit:
                                 </span>
                                 <span id="profitAmount" class="price-value">Rs. 0.00</span>
+                            </div>
+
+                            <div class="price-row">
+                                <span class="price-label">
+                                    <span class="material-icons-outlined">analytics</span>
+                                    Total Profit:
+                                </span>
+                                <span id="totalProfitDisplay" class="price-value positive">Rs. 0.00</span>
                             </div>
 
                             <div class="price-row border-top mt-2 pt-2">
@@ -1621,28 +1629,29 @@
                 const qty = parseInt(quantity?.value) || 0;
 
                 // Calculations
-                const totalCost = cost + packaging;
+                const totalCostPerUnit = cost + packaging;
+                const totalCost = totalCostPerUnit * qty;
                 const discountAmount = selling * (disc / 100);
-                const finalPrice = selling - discountAmount;
-                const profit = finalPrice - totalCost;
-                const marginPercent = totalCost > 0 ? (profit / totalCost) * 100 : 0;
+                const finalPricePerUnit = selling - discountAmount;
+                const profitPerUnit = finalPricePerUnit - totalCostPerUnit;
+                const totalProfit = profitPerUnit * qty;
+                const marginPercent = totalCostPerUnit > 0 ? (profitPerUnit / totalCostPerUnit) * 100 : 0;
                 const stockValue = cost * qty;
-                const potentialValue = finalPrice * qty;
-                const netProfit = profit * qty;
+                const potentialValue = finalPricePerUnit * qty;
 
                 // Update displays
-                const elements = {
-                    totalCostDisplay: totalCost,
+                const displays = {
+                    totalCostDisplay: totalCostPerUnit,
                     sellingPriceDisplay: selling,
-                    finalPriceDisplay: finalPrice,
-                    profitAmount: profit,
+                    finalPriceDisplay: finalPricePerUnit,
+                    profitAmount: profitPerUnit,
+                    totalProfitDisplay: totalProfit,
                     profitMargin: marginPercent,
                     stockValueDisplay: stockValue,
-                    potentialValueDisplay: potentialValue,
-                    netProfitDisplay: netProfit
+                    potentialValueDisplay: potentialValue
                 };
 
-                for (const [id, value] of Object.entries(elements)) {
+                for (const [id, value] of Object.entries(displays)) {
                     const element = document.getElementById(id);
                     if (element) {
                         if (id === 'profitMargin') {
@@ -1659,22 +1668,22 @@
                 // Color code profit margin
                 const profitMarginEl = document.getElementById('profitMargin');
                 const profitAmountEl = document.getElementById('profitAmount');
-                const netProfitEl = document.getElementById('netProfitDisplay');
+                const totalProfitEl = document.getElementById('totalProfitDisplay');
 
                 if (marginPercent > 30) {
-                    [profitMarginEl, profitAmountEl, netProfitEl].forEach(el => {
+                    [profitMarginEl, profitAmountEl, totalProfitEl].forEach(el => {
                         if (el) el.style.color = 'var(--success)';
                     });
                 } else if (marginPercent > 10) {
-                    [profitMarginEl, profitAmountEl, netProfitEl].forEach(el => {
+                    [profitMarginEl, profitAmountEl, totalProfitEl].forEach(el => {
                         if (el) el.style.color = 'var(--warning)';
                     });
                 } else if (marginPercent > 0) {
-                    [profitMarginEl, profitAmountEl, netProfitEl].forEach(el => {
+                    [profitMarginEl, profitAmountEl, totalProfitEl].forEach(el => {
                         if (el) el.style.color = 'var(--gray-500)';
                     });
                 } else {
-                    [profitMarginEl, profitAmountEl, netProfitEl].forEach(el => {
+                    [profitMarginEl, profitAmountEl, totalProfitEl].forEach(el => {
                         if (el) el.style.color = 'var(--danger)';
                     });
                 }
@@ -1787,75 +1796,16 @@
                         reverseButtons: true
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            submitForm();
+                            // Show loading
+                            loadingOverlay.style.display = 'flex';
+                            submitBtn.disabled = true;
+                            submitBtn.innerHTML = '<span class="material-icons-outlined">hourglass_top</span> Updating...';
+
+                            // Submit the form normally (not AJAX)
+                            form.submit();
                         }
                     });
                 });
-            }
-
-            function submitForm() {
-                // Show loading
-                loadingOverlay.style.display = 'flex';
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<span class="material-icons-outlined">hourglass_top</span> Updating...';
-
-                // Create FormData
-                const formData = new FormData(form);
-                formData.append('_method', 'PUT');
-
-                // Send AJAX request
-                fetch(form.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    }
-                })
-                    .then(response => response.json().then(data => ({ status: response.ok, data })))
-                    .then(({ status, data }) => {
-                        if (status) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success!',
-                                html: `
-                                <div class="text-center">
-                                    <span class="material-icons-outlined" style="font-size: 4rem; color: var(--success);">check_circle</span>
-                                    <h4 class="mt-3">${data.message || 'Product updated successfully!'}</h4>
-                                    <p class="text-muted">Your changes have been saved.</p>
-                                </div>
-                            `,
-                                showConfirmButton: false,
-                                timer: 2000
-                            }).then(() => {
-                                window.location.href = data.redirect || '{{ route("wholesaler.products.index") }}';
-                            });
-                        } else {
-                            throw data;
-                        }
-                    })
-                    .catch(error => {
-                        let errorMessage = 'An error occurred. Please try again.';
-
-                        if (error.errors) {
-                            const errorList = Object.values(error.errors).flat().join('<br>');
-                            errorMessage = `<div class="text-start">${errorList}</div>`;
-                        } else if (error.message) {
-                            errorMessage = error.message;
-                        }
-
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Update Failed',
-                            html: errorMessage,
-                            confirmButtonColor: '#f59e0b'
-                        });
-                    })
-                    .finally(() => {
-                        loadingOverlay.style.display = 'none';
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = '<span class="material-icons-outlined">save</span> Update Product';
-                    });
             }
 
             // ========== Alert Function ==========
@@ -1956,6 +1906,8 @@
                     if (typeof bootstrap !== 'undefined') {
                         const bsAlert = new bootstrap.Alert(alert);
                         bsAlert.close();
+                    } else {
+                        alert.remove();
                     }
                 });
             }, 5000);

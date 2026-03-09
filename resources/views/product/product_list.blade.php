@@ -41,7 +41,6 @@
             color: #dc3545;
             font-weight: bold;
         }
-
     </style>
 @endpush
 
@@ -50,17 +49,17 @@
         <div class="add-item d-flex">
             <div class="page-title">
                 <h4 class="fw-bold">Product List</h4>
-                <h6>{{$count}} Products</h6>
+                <h6>{{ $count }} Products</h6>
             </div>
         </div>
         <ul class="table-top-head">
             <li>
-                <a data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Refresh"
-                   data-bs-original-title="Refresh"><i class="ti ti-refresh"></i></a>
+                <a data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Refresh" data-bs-original-title="Refresh"><i
+                        class="ti ti-refresh"></i></a>
             </li>
             <li>
                 <a data-bs-toggle="tooltip" data-bs-placement="top" id="collapse-header" aria-label="Collapse"
-                   data-bs-original-title="Collapse"><i class="ti ti-chevron-up"></i></a>
+                    data-bs-original-title="Collapse"><i class="ti ti-chevron-up"></i></a>
             </li>
         </ul>
         <div class="page-btn mt-0">
@@ -68,75 +67,89 @@
         </div>
     </div>
 
-{{--    @if (session('success'))--}}
-{{--        <div class="alert alert-success alert-dismissible fade show" role="alert">--}}
-{{--            {{ session('success') }}--}}
-{{--            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>--}}
-{{--        </div>--}}
-{{--    @endif--}}
+    {{--    @if (session('success')) --}}
+    {{--        <div class="alert alert-success alert-dismissible fade show" role="alert"> --}}
+    {{--            {{ session('success') }} --}}
+    {{--            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button> --}}
+    {{--        </div> --}}
+    {{--    @endif --}}
 
-{{--    @if (session('error'))--}}
-{{--        <div class="alert alert-danger alert-dismissible fade show" role="alert">--}}
-{{--            {{ session('error') }}--}}
-{{--            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>--}}
-{{--        </div>--}}
-{{--    @endif--}}
+    {{--    @if (session('error')) --}}
+    {{--        <div class="alert alert-danger alert-dismissible fade show" role="alert"> --}}
+    {{--            {{ session('error') }} --}}
+    {{--            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button> --}}
+    {{--        </div> --}}
+    {{--    @endif --}}
 
     <div class="row">
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
+
+                    <!-- Filter Dropdown -->
+                    <form method="GET" action="{{ route('product.index') }}">
+                        <label for="store">Filter by:</label>
+                        <select name="store" id="store" onchange="this.form.submit()">
+                            <option value="">All</option>
+                            <option value="admin" {{ request('store') == 'admin' ? 'selected' : '' }}>Admin</option>
+                            <option value="seller" {{ request('store') == 'seller' ? 'selected' : '' }}>Seller</option>
+                            <option value="wholesaler" {{ request('store') == 'wholesaler' ? 'selected' : '' }}>Wholesaler
+                            </option>
+                        </select>
+                    </form>
                     <table id="product-table" class="display table table-striped" style="width:100%">
                         <thead>
-                        <tr>
-                            <th>Product Code</th>
-                            <th>Product Name</th>
-                            <th>Store</th>
-                            <th>Category</th>
-                            <th>Brand</th>
-                            <th>Price</th>
-                            <th>Stock</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
+                            <tr>
+                                <th>Product Code</th>
+                                <th>Product Name</th>
+                                <th>Store</th>
+                                <th>Category</th>
+                                <th>Brand</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
                         </thead>
                         <tbody>
-                        @foreach($products as $product)
-                            <tr>
-                                <td>{{$product->code}}</td>
-                                <td>{{$product->name}}</td>
-                                <td>Main</td>
-                                <td>{{$product->category}}</td>
-                                <td>{{$product->brand}}</td>
-                                <td>Rs. {{number_format($product->display_price, 2)}}</td>
-                                <td>{{$product->qty}}</td>
-                                <td>
-                                    <span class="{{ $product->status == 'active' ? 'status-active' : 'status-inactive' }}">
-                                        {{ucfirst($product->status)}}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <a href="{{ route('product.view', $product->id) }}"
-                                           class="btn btn-dark btn-sm"
-                                           data-bs-toggle="tooltip" title="View">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="{{ route('product.edit', $product->id) }}"
-                                           class="btn btn-warning btn-sm"
-                                           data-bs-toggle="tooltip" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a href="{{ route('product.delete', $product->id) }}"
-                                           class="btn btn-danger btn-sm delete-btn"
-                                           data-bs-toggle="tooltip"
-                                           title="Delete">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
+                            @foreach ($products as $product)
+                                <tr>
+                                    <td>{{ $product->code }}</td>
+                                    <td>{{ $product->name }}</td>
+                                    <td>{{ $product->store }}</td>
+                                    <td>{{ $product->category->name ?? $product->category }}</td>
+                                    <td>{{ $product->brand->name ?? $product->brand }}</td>
+                                    <td>
+                                        Rs.
+                                        {{ number_format($product->display_price ?? ($product->selling_price ?? 0), 2) }}
+                                    </td>
+                                    <td>{{ $product->qty }}</td>
+                                    <td>
+                                        <span
+                                            class="{{ $product->status == 'active' ? 'status-active' : 'status-inactive' }}">
+                                            {{ ucfirst($product->status) }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ route('product.view', ['type' => strtolower($product->store), 'id' => $product->id]) }}"
+                                                class="btn btn-dark btn-sm" data-bs-toggle="tooltip" title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ route('product.edit', [$product->store, $product->id]) }}"
+                                                class="btn btn-warning btn-sm" data-bs-toggle="tooltip" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{{ route('product.delete', ['type' => strtolower($product->store), 'id' => $product->id]) }}"
+                                                class="btn btn-danger btn-sm delete-btn" data-bs-toggle="tooltip"
+                                                data-product-name="{{ $product->name }}" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
@@ -151,7 +164,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
             $('#product-table').DataTable({
                 responsive: true,
                 language: {
@@ -162,41 +175,41 @@
 
             // Initialize tooltips
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl)
             });
 
             //  Success Alert (Create / Update)
-            @if(session('success'))
-            Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: '{{ session('success') }}',
-                confirmButtonColor: '#28a745',
-                confirmButtonText: 'OK',
-                timer: 3000,
-                timerProgressBar: true,
-            });
+            @if (session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: '{{ session('success') }}',
+                    confirmButtonColor: '#28a745',
+                    confirmButtonText: 'OK',
+                    timer: 3000,
+                    timerProgressBar: true,
+                });
             @endif
 
             //  Error Alert
-            @if(session('error'))
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops!',
-                text: '{{ session('error') }}',
-                confirmButtonColor: '#d33',
-                confirmButtonText: 'OK',
-                timer: 4000,
-                timerProgressBar: true,
-            });
+            @if (session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops!',
+                    text: '{{ session('error') }}',
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'OK',
+                    timer: 4000,
+                    timerProgressBar: true,
+                });
             @endif
 
             //  Delete Confirmation
-            $(document).on('click', '.delete-btn', function (e) {
+            $(document).on('click', '.delete-btn', function(e) {
                 e.preventDefault();
 
-                const deleteUrl   = $(this).attr('href');
+                const deleteUrl = $(this).attr('href');
                 const productName = $(this).data('product-name');
 
                 Swal.fire({
@@ -232,6 +245,5 @@
             });
 
         });
-
     </script>
 @endpush

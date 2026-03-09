@@ -39,7 +39,11 @@ class Saler extends Authenticatable
         'total_sales',
         'deposit',
         'cal_deposit',
-        'cost'
+        'cost',
+        'bank_name',
+        'branch_name',
+        'account_holder_name',
+        'account_number',
     ];
 
     protected $hidden = [

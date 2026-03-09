@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('code')->unique();
             $table->string('name');
+            $table->string('barcode')->nullable();
             $table->string('brand');
             $table->string('category');
             $table->string('description')->nullable();

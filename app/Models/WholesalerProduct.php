@@ -1,129 +1,217 @@
 <?php
+// app/Models/WholesalerProduct.php
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class WholesalerProduct extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
+
+    protected $table = 'wholesaler_products';
 
     protected $fillable = [
         'wholesaler_id',
-        'category_id',
-        'brand_id',
         'code',
         'name',
-        'slug',
-        'sku',
         'description',
         'cost_price',
         'selling_price',
         'display_price',
-        'previous_selling_price',
         'discount',
-        'profit_margin',
         'packaging_cost',
+        // 'final_price', // REMOVED - this is a generated column
         'qty',
-        'total_sold',
         'min_stock_level',
+        'category_id',
+        'brand_id',
         'features',
         'barcode',
         'image',
         'status',
-        'average_rating',
-        'total_reviews',
-        'total_ratings',
+        'employee_approval_status',
+        'approved_by_employee',
+        'approved_at',
+        'rejection_reason',
+        'display_in_seller_shop',
         'last_price_updated_by',
         'last_price_updated_at',
-        'price_changes_count'
+        'price_changes_count',
+        'exchange_count',
+        'last_exchanged_at',
+        'last_exchanged_by',
+        'original_wholesaler_id'
     ];
 
     protected $casts = [
-        'cost_price' => 'float',
-        'selling_price' => 'float',
-        'display_price' => 'float',
-        'previous_selling_price' => 'float',
-        'discount' => 'float',
-        'profit_margin' => 'float',
-        'packaging_cost' => 'float',
-        'features' => 'array',
-        'last_price_updated_at' => 'datetime',
+        'cost_price' => 'decimal:2',
+        'selling_price' => 'decimal:2',
+        'display_price' => 'decimal:2',
+        'discount' => 'decimal:2',
+        'packaging_cost' => 'decimal:2',
+        // 'final_price' => 'decimal:2', // REMOVED - this is a generated column
         'qty' => 'integer',
-        'total_sold' => 'integer',
         'min_stock_level' => 'integer',
-        'average_rating' => 'float',
-        'total_reviews' => 'integer',
-        'total_ratings' => 'integer',
+        'display_in_seller_shop' => 'boolean',
+        'approved_at' => 'datetime',
+        'last_price_updated_at' => 'datetime',
+        'last_exchanged_at' => 'datetime',
         'price_changes_count' => 'integer',
+        'exchange_count' => 'integer',
     ];
 
-    protected $appends = ['final_price', 'display_price_formatted', 'final_price_formatted'];
+    protected $attributes = [
+        'employee_approval_status' => 'pending',
+        'display_in_seller_shop' => false,
+        'price_changes_count' => 0,
+        'exchange_count' => 0,
+        'discount' => 0,
+        'packaging_cost' => 0,
+    ];
 
     /**
-     * Relationships
+     * The attributes that should be hidden for serialization.
      */
-    public function wholesaler(): BelongsTo
+    protected $hidden = [
+        // Add any sensitive fields here
+    ];
+
+    /**
+     * The attributes that should be appended to the model's array form.
+     */
+    protected $appends = [
+        'final_price', // Make final_price an accessor instead of a database column
+        'formatted_final_price',
+        'profit_margin',
+    ];
+
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($product) {
+            // No need to set final_price - it's generated
+        });
+
+        static::updating(function ($product) {
+            // No need to set final_price - it's generated
+        });
+    }
+
+    /**
+     * Get the final price attribute (accessor, not database column)
+     */
+    public function getFinalPriceAttribute()
+    {
+        $displayPrice = $this->display_price ?? $this->selling_price ?? 0;
+        $discount = $this->discount ?? 0;
+
+        if ($discount > 0) {
+            return round($displayPrice * (1 - $discount / 100), 2);
+        }
+
+        return round($displayPrice, 2);
+    }
+
+    /**
+     * Get formatted final price
+     */
+    public function getFormattedFinalPriceAttribute()
+    {
+        return 'Rs. ' . number_format($this->final_price, 2);
+    }
+
+    /**
+     * Get the profit margin percentage
+     */
+    public function getProfitMarginAttribute()
+    {
+        if ($this->cost_price > 0 && $this->final_price > 0) {
+            return round((($this->final_price - $this->cost_price) / $this->final_price) * 100, 2);
+        }
+        return 0;
+    }
+
+    // ─── Relationships ─────────────────────────────────────────────────────
+
+    public function wholesaler()
     {
         return $this->belongsTo(Wholesaler::class);
     }
 
-    public function category(): BelongsTo
+    public function category()
     {
         return $this->belongsTo(Category::class);
     }
 
-    public function brand(): BelongsTo
+    public function brand()
     {
         return $this->belongsTo(Brand::class);
     }
 
-    /**
-     * Get price changes for this product
-     */
-    public function priceChanges(): HasMany
+    public function approvedBy()
     {
-        return $this->hasMany(EmployeePriceChange::class, 'product_id');
+        return $this->belongsTo(Employee::class, 'approved_by_employee');
     }
 
-    /**
-     * Get latest price change
-     */
-    public function latestPriceChange()
-    {
-        return $this->hasOne(EmployeePriceChange::class, 'product_id')->latest();
-    }
-
-    /**
-     * Get the employee who last updated the price
-     */
-    public function lastPriceUpdatedBy(): BelongsTo
+    public function lastPriceUpdatedBy()
     {
         return $this->belongsTo(Employee::class, 'last_price_updated_by');
     }
 
-    public function priceHistories(): HasMany
+    public function lastExchangedBy()
+    {
+        return $this->belongsTo(Employee::class, 'last_exchanged_by');
+    }
+
+    public function originalWholesaler()
+    {
+        return $this->belongsTo(Wholesaler::class, 'original_wholesaler_id');
+    }
+
+    public function priceChanges()
     {
         return $this->hasMany(WholesalerProductPriceChange::class, 'product_id');
     }
 
-    public function reviews(): HasMany
+    public function sourceExchanges()
     {
-        return $this->hasMany(ProductReview::class, 'product_id')
-            ->where('status', 'active')
-            ->orderBy('created_at', 'desc');
+        return $this->hasMany(WholesalerProductExchange::class, 'source_product_id');
     }
 
-    /**
-     * Scopes
-     */
-    public function scopeActive($query)
+    public function destinationExchanges()
     {
-        return $query->where('status', 'active');
+        return $this->hasMany(WholesalerProductExchange::class, 'destination_product_id');
+    }
+
+    // ─── Scopes ────────────────────────────────────────────────────────────
+
+    public function scopePendingApproval($query)
+    {
+        return $query->where('employee_approval_status', 'pending');
+    }
+
+    public function scopeApproved($query)
+    {
+        return $query->where('employee_approval_status', 'approved');
+    }
+
+    public function scopeRejected($query)
+    {
+        return $query->where('employee_approval_status', 'rejected');
+    }
+
+    public function scopeAvailableInSellerShop($query)
+    {
+        return $query->where('employee_approval_status', 'approved')
+            ->where('display_in_seller_shop', true)
+            ->where('status', 'active');
     }
 
     public function scopeForWholesaler($query, $wholesalerId)
@@ -131,284 +219,303 @@ class WholesalerProduct extends Model
         return $query->where('wholesaler_id', $wholesalerId);
     }
 
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
+
+    public function scopeInactive($query)
+    {
+        return $query->where('status', 'inactive');
+    }
+
     public function scopeInStock($query)
     {
         return $query->where('qty', '>', 0);
     }
 
+    public function scopeOutOfStock($query)
+    {
+        return $query->where('qty', '<=', 0);
+    }
+
     public function scopeLowStock($query)
     {
-        return $query->whereRaw('qty <= min_stock_level');
+        return $query->whereRaw('qty > 0 AND qty <= min_stock_level');
     }
 
-    /**
-     * Accessors - Price Calculations
-     */
+    // ─── Accessors ─────────────────────────────────────────────────────────
 
-    /**
-     * Get display price (what wholesaler sees)
-     * Returns selling_price if display_price is null
-     *
-     * @return float
-     */
-    public function getDisplayPriceAttribute(): float
+    public function getFormattedSellingPriceAttribute()
     {
-        // If display_price is not null, use it
-        if (!is_null($this->attributes['display_price'] ?? null)) {
-            return (float) $this->attributes['display_price'];
-        }
-
-        // If selling_price is set, use it
-        if (!is_null($this->attributes['selling_price'] ?? null)) {
-            return (float) $this->attributes['selling_price'];
-        }
-
-        // Default fallback
-        return 0.00;
+        return 'Rs. ' . number_format($this->selling_price, 2);
     }
 
-    /**
-     * Get display price as formatted string (for backward compatibility)
-     */
-    public function getDisplayPriceFormattedAttribute(): string
+    public function getFormattedDisplayPriceAttribute()
     {
         return 'Rs. ' . number_format($this->display_price, 2);
     }
 
-    /**
-     * Final price after discount
-     *
-     * @return float
-     */
-    public function getFinalPriceAttribute(): float
+    public function getFormattedCostPriceAttribute()
     {
-        $price = $this->display_price;
+        return 'Rs. ' . number_format($this->cost_price, 2);
+    }
 
-        if (!is_null($this->discount) && $this->discount > 0) {
-            $price = $price - ($price * ($this->discount / 100));
+    public function getFormattedDiscountAttribute()
+    {
+        return $this->discount > 0 ? $this->discount . '%' : 'No Discount';
+    }
+
+    public function getApprovalBadgeAttribute()
+    {
+        $colors = [
+            'pending' => 'warning',
+            'approved' => 'success',
+            'rejected' => 'danger'
+        ];
+
+        $color = $colors[$this->employee_approval_status] ?? 'secondary';
+        $text = ucfirst($this->employee_approval_status);
+
+        return '<span class="badge bg-' . $color . '">' . $text . '</span>';
+    }
+
+    public function getStatusBadgeAttribute()
+    {
+        $color = $this->status === 'active' ? 'success' : 'secondary';
+        $text = ucfirst($this->status);
+
+        return '<span class="badge bg-' . $color . '">' . $text . '</span>';
+    }
+
+    public function getStockStatusAttribute()
+    {
+        if ($this->qty <= 0) {
+            return [
+                'status' => 'out_of_stock',
+                'badge' => 'danger',
+                'text' => 'Out of Stock',
+                'class' => 'text-danger'
+            ];
+        } elseif ($this->qty <= $this->min_stock_level) {
+            return [
+                'status' => 'low_stock',
+                'badge' => 'warning',
+                'text' => 'Low Stock',
+                'class' => 'text-warning'
+            ];
         }
-
-        return round($price, 2);
+        return [
+            'status' => 'in_stock',
+            'badge' => 'success',
+            'text' => 'In Stock',
+            'class' => 'text-success'
+        ];
     }
 
-    /**
-     * Get final price as formatted string
-     */
-    public function getFinalPriceFormattedAttribute(): string
+    public function getStockStatusBadgeAttribute()
     {
-        return 'Rs. ' . number_format($this->final_price, 2);
+        $status = $this->stock_status;
+        return '<span class="badge bg-' . $status['badge'] . '">' . $status['text'] . '</span>';
     }
 
-    /**
-     * Get original price (selling price) - safe method
-     */
-    public function getOriginalPriceAttribute(): float
+    public function getImageUrlAttribute()
     {
-        return (float) ($this->attributes['selling_price'] ?? 0);
+        return $this->image ? asset('storage/' . $this->image) : asset('images/no-image.png');
     }
 
-    // Total cost including packaging
-    public function getTotalCostAttribute(): float
+    public function getShopDisplayStatusAttribute()
     {
-        $cost = (float) ($this->cost_price ?? 0);
-        $packaging = (float) ($this->packaging_cost ?? 0);
-        return round($cost + $packaging, 2);
+        return $this->display_in_seller_shop ? 'Visible in Shop' : 'Hidden from Shop';
     }
 
-    // Profit margin percentage
-    public function getProfitMarginPercentageAttribute(): float
+    public function getShopDisplayBadgeAttribute()
     {
-        $totalCost = $this->total_cost;
-        if ($totalCost > 0) {
-            return round((($this->final_price - $totalCost) / $totalCost) * 100, 2);
+        if ($this->display_in_seller_shop) {
+            return '<span class="badge bg-success">Visible in Shop</span>';
         }
-        return 0;
+        return '<span class="badge bg-secondary">Hidden from Shop</span>';
     }
 
-    // Profit amount
-    public function getProfitAmountAttribute(): float
+    // ─── Methods ───────────────────────────────────────────────────────────
+
+    public function approve(Employee $employee, $notes = null)
     {
-        return round($this->final_price - $this->total_cost, 2);
+        $this->employee_approval_status = 'approved';
+        $this->approved_by_employee = $employee->id;
+        $this->approved_at = now();
+        $this->display_in_seller_shop = true;
+        $this->rejection_reason = null;
+        $this->save();
+
+        return $this;
     }
 
-    /**
-     * Check if product has discount
-     */
-    public function getHasDiscountAttribute(): bool
+    public function reject(Employee $employee, $reason)
     {
-        return !is_null($this->discount) && $this->discount > 0;
+        $this->employee_approval_status = 'rejected';
+        $this->approved_by_employee = $employee->id;
+        $this->approved_at = now();
+        $this->display_in_seller_shop = false;
+        $this->rejection_reason = $reason;
+        $this->save();
+
+        return $this;
     }
 
-    /**
-     * Get discount percentage as string
-     */
-    public function getDiscountPercentageAttribute(): string
+    public function toggleShopDisplay($status = null)
     {
-        if ($this->has_discount) {
-            return $this->discount . '% OFF';
+        if ($status !== null) {
+            $this->display_in_seller_shop = $status;
+        } else {
+            $this->display_in_seller_shop = !$this->display_in_seller_shop;
         }
-        return '';
+        $this->save();
+
+        return $this;
     }
 
-    /**
-     * Stock Management
-     */
+    public function isApproved(): bool
+    {
+        return $this->employee_approval_status === 'approved';
+    }
+
+    public function isPending(): bool
+    {
+        return $this->employee_approval_status === 'pending';
+    }
+
+    public function isRejected(): bool
+    {
+        return $this->employee_approval_status === 'rejected';
+    }
+
+    public function isAvailableInShop(): bool
+    {
+        return $this->isApproved() &&
+            $this->display_in_seller_shop &&
+            $this->status === 'active' &&
+            $this->qty > 0;
+    }
+
+    public function isInStock(): bool
+    {
+        return $this->qty > 0;
+    }
+
     public function isLowStock(): bool
     {
-        return $this->qty <= $this->min_stock_level;
+        return $this->qty > 0 && $this->qty <= $this->min_stock_level;
     }
 
     public function isOutOfStock(): bool
     {
-        return $this->qty === 0;
+        return $this->qty <= 0;
     }
 
-    public function getStockStatusAttribute(): string
+    public function updateExchangeStats($exchange)
     {
-        if ($this->qty === 0) {
-            return 'Out of Stock';
-        }
-        if ($this->qty <= $this->min_stock_level) {
-            return 'Low Stock';
-        }
-        return 'In Stock';
-    }
+        $this->increment('exchange_count');
+        $this->last_exchanged_at = now();
 
-    public function getStockStatusColorAttribute(): string
-    {
-        if ($this->qty === 0) {
-            return 'danger';
-        }
-        if ($this->qty <= $this->min_stock_level) {
-            return 'warning';
-        }
-        return 'success';
-    }
-
-    /**
-     * Update prices with automatic display price calculation
-     */
-    public function updatePricesWithMargin(array $prices, $employeeId, $notes = null)
-    {
-        // Store old prices
-        $oldPrices = [
-            'selling_price' => $this->selling_price,
-            'display_price' => $this->display_price,
-            'discount' => $this->discount,
-            'final_price' => $this->final_price,
-        ];
-
-        // Update selling price
-        if (isset($prices['selling_price'])) {
-            $this->selling_price = $prices['selling_price'];
-            // Only update display_price if it's not explicitly set or is null
-            if (is_null($this->display_price) || !isset($prices['display_price'])) {
-                $this->display_price = $prices['selling_price'];
+        if ($exchange instanceof WholesalerProductExchange) {
+            if ($exchange->source_product_id == $this->id) {
+                $this->last_exchanged_by = $exchange->employee_id;
+                $this->original_wholesaler_id = $exchange->destination_wholesaler_id;
+            } elseif ($exchange->destination_product_id == $this->id) {
+                $this->last_exchanged_by = $exchange->employee_id;
+                $this->original_wholesaler_id = $exchange->source_wholesaler_id;
             }
         }
-
-        // Update display price if provided
-        if (isset($prices['display_price'])) {
-            $this->display_price = $prices['display_price'];
-        }
-
-        // Update discount if provided
-        if (isset($prices['discount'])) {
-            $this->discount = $prices['discount'];
-        }
-
-        // Update profit margin if provided
-        if (isset($prices['profit_margin'])) {
-            $this->profit_margin = $prices['profit_margin'];
-        }
-
-        $this->last_price_updated_by = $employeeId;
-        $this->last_price_updated_at = now();
-        $this->price_changes_count = ($this->price_changes_count ?? 0) + 1;
 
         $this->save();
 
-        // Store new prices
-        $newPrices = [
-            'selling_price' => $this->selling_price,
-            'display_price' => $this->display_price,
-            'discount' => $this->discount,
-            'final_price' => $this->final_price,
-        ];
-
-        // Log price change
-        $this->priceHistories()->create([
-            'employee_id' => $employeeId,
-            'old_prices' => $oldPrices,
-            'new_prices' => $newPrices,
-            'notes' => $notes,
-        ]);
-
-        return $this->fresh();
+        return $this;
     }
 
-    /**
-     * Get image URL
-     */
-    public function getImageUrlAttribute(): string
+    public function decreaseStock($quantity = 1)
     {
-        if (!$this->image) {
-            return asset('images/default-product.png');
+        if ($this->qty >= $quantity) {
+            $this->decrement('qty', $quantity);
+            return true;
+        }
+        return false;
+    }
+
+    public function increaseStock($quantity = 1)
+    {
+        $this->increment('qty', $quantity);
+        return $this;
+    }
+
+    public function updatePrice($newPrice, Employee $employee = null, $type = 'selling_price')
+    {
+        $oldPrice = $this->$type;
+
+        $this->$type = $newPrice;
+
+        if ($employee) {
+            $this->last_price_updated_by = $employee->id;
+            $this->last_price_updated_at = now();
         }
 
-        return Storage::disk('public')->exists($this->image)
-            ? asset('storage/' . $this->image)
-            : asset('images/default-product.png');
-    }
+        $this->increment('price_changes_count');
+        $this->save();
 
-    /**
-     * Get product details for API/JSON response
-     */
-    public function toApiArray(): array
-    {
         return [
-            'id' => $this->id,
-            'code' => $this->code,
-            'name' => $this->name,
-            'display_price' => $this->display_price,
-            'display_price_formatted' => $this->display_price_formatted,
-            'final_price' => $this->final_price,
-            'final_price_formatted' => $this->final_price_formatted,
-            'has_discount' => $this->has_discount,
-            'discount_percentage' => $this->discount_percentage,
-            'qty' => $this->qty,
-            'stock_status' => $this->stock_status,
-            'image_url' => $this->image_url,
-            'category' => $this->category?->name,
-            'brand' => $this->brand?->name,
+            'old_price' => $oldPrice,
+            'new_price' => $newPrice,
+            'difference' => $newPrice - $oldPrice
         ];
     }
 
-    /**
-     * Boot the model
-     */
-    protected static function boot()
+    // ─── Static Methods ────────────────────────────────────────────────────
+
+    public static function generateProductCode($wholesalerId = null)
     {
-        parent::boot();
+        $prefix = 'PRD/';
 
-        static::creating(function ($product) {
-            // Auto-generate code if not provided
-            if (empty($product->code)) {
-                $product->code = 'PRD-' . strtoupper(uniqid());
-            }
+        if ($wholesalerId) {
+            $prefix = 'WS-' . $wholesalerId . '/';
+        }
 
-            // Set default min_stock_level if not set
-            if (is_null($product->min_stock_level)) {
-                $product->min_stock_level = 5;
-            }
-        });
+        $lastProduct = self::where('code', 'like', $prefix . '%')
+            ->orderBy('id', 'desc')
+            ->first();
 
-        static::updating(function ($product) {
-            // Track if price changed
-            if ($product->isDirty('selling_price') || $product->isDirty('display_price') || $product->isDirty('discount')) {
-                $product->price_changes_count = ($product->price_changes_count ?? 0) + 1;
-                $product->last_price_updated_at = now();
-            }
-        });
+        if ($lastProduct) {
+            $lastNumber = (int) substr($lastProduct->code, strrpos($lastProduct->code, '/') + 1);
+            $newNumber = $lastNumber + 1;
+        } else {
+            $newNumber = 1;
+        }
+
+        return $prefix . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+    }
+
+    public static function getPendingApprovalCount()
+    {
+        return self::where('employee_approval_status', 'pending')->count();
+    }
+
+    public static function getApprovedTodayCount()
+    {
+        return self::where('employee_approval_status', 'approved')
+            ->whereDate('approved_at', today())
+            ->count();
+    }
+
+    public static function getLowStockCount()
+    {
+        return self::where('status', 'active')
+            ->whereRaw('qty > 0 AND qty <= min_stock_level')
+            ->count();
+    }
+
+    public static function getOutOfStockCount()
+    {
+        return self::where('status', 'active')
+            ->where('qty', '<=', 0)
+            ->count();
     }
 }
