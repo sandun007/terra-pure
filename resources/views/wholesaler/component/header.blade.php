@@ -3,440 +3,450 @@
 @endphp
 
 <style>
-    /* Modern Fixed Header Styles */
-    .app-header {
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-        backdrop-filter: blur(20px);
-        border-bottom: 1px solid rgba(226, 232, 240, 0.8);
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
-        padding: 0 30px;
-        height: 75px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        position: fixed; /* Changed from sticky to fixed */
-        top: 0;
-        left: 0;
-        right: 0;
-        width: calc(100% - var(--sidebar-width, 260px));
-        margin-left: var(--sidebar-width, 260px);
-        z-index: 1000;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    .app-header{
+        position:fixed;
+        top:0;
+        right:0;
+        left:var(--sidebar-width);
+        height:var(--header-height);
+        z-index:1100;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:16px;
+        padding:0 24px;
+        background:rgba(255,255,255,.94);
+        backdrop-filter:blur(16px);
+        border-bottom:1px solid rgba(226,232,240,.9);
+        box-shadow:0 6px 24px rgba(15,23,42,.04);
+        transition:all .3s ease;
     }
 
-    /* When sidebar is collapsed */
-    .page-wrapper.collapsed .app-header {
-        width: calc(100% - var(--sidebar-collapsed-width, 70px));
-        margin-left: var(--sidebar-collapsed-width, 70px);
+    .page-wrapper.collapsed .app-header{
+        left:var(--sidebar-collapsed-width);
     }
 
-    /* Header when scrolled - still fixed, just shadow effect */
-    .app-header.scrolled {
-        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
-        height: 75px; /* Keep same height */
-        background: rgba(255, 255, 255, 0.98);
-        backdrop-filter: blur(20px);
+    .app-header.scrolled{
+        box-shadow:0 10px 30px rgba(15,23,42,.08);
+        background:rgba(255,255,255,.98);
     }
 
-    /* Header Sections */
     .header-left,
     .header-center,
-    .header-right {
-        display: flex;
-        align-items: center;
-        gap: 20px;
+    .header-right{
+        display:flex;
+        align-items:center;
     }
 
-    .header-left { flex: 0 0 auto; }
-    .header-center { flex: 1; max-width: 600px; margin: 0 40px; }
-    .header-right { flex: 0 0 auto; }
-
-    /* Brand Logo */
-    .brand-logo {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        padding: 8px 12px;
-        border-radius: 12px;
+    .header-left{
+        gap:14px;
+        flex:0 0 auto;
+        min-width:0;
     }
 
-    .brand-logo:hover {
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-        transform: translateY(-2px);
+    .header-center{
+        flex:1 1 auto;
+        max-width:620px;
+        margin:0 12px;
     }
 
-    .brand-logo img { height: 35px; width: auto; transition: all 0.3s ease; }
-    .brand-logo:hover img { transform: scale(1.05); }
-
-    .logo-badge {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    .header-right{
+        flex:0 0 auto;
+        gap:12px;
     }
 
-    /* Search */
-    .search-container { position: relative; width: 100%; }
-    .search-icon {
-        position: absolute;
-        left: 18px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #94a3b8;
-        pointer-events: none;
-        z-index: 1;
+    .sidebar-toggle-btn{
+        border:none;
+        background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+        color:white;
+        width:44px;
+        height:44px;
+        min-width:44px;
+        border-radius:14px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        cursor:pointer;
+        box-shadow:0 10px 24px rgba(102,126,234,.25);
+        transition:all .25s ease;
     }
 
-    .search-input {
-        width: 100%;
-        height: 48px;
-        padding: 0 20px 0 50px;
-        border: 2px solid #e2e8f0;
-        border-radius: 14px;
-        font-size: 14px;
-        font-weight: 500;
-        color: #475569;
-        background: white;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        outline: none;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    .sidebar-toggle-btn:hover{
+        transform:translateY(-2px);
+        box-shadow:0 14px 30px rgba(102,126,234,.32);
     }
 
-    .search-input::placeholder { color: #94a3b8; font-weight: 400; }
-
-    .search-input:focus {
-        border-color: #667eea;
-        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 8px 30px rgba(102, 126, 234, 0.15);
-        transform: translateY(-2px);
+    .brand-logo{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        text-decoration:none;
+        min-width:0;
     }
 
-    /* Notification Button */
-    .notification-btn {
-        position: relative;
-        width: 45px;
-        height: 45px;
-        border: none;
-        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        color: #64748b;
+    .brand-logo img{
+        height:34px;
+        width:auto;
+        object-fit:contain;
+        flex-shrink:0;
     }
 
-    .notification-btn:hover {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.25);
+    .logo-badge{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        padding:5px 10px;
+        border-radius:999px;
+        background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+        color:#fff;
+        font-size:11px;
+        font-weight:700;
+        letter-spacing:.05em;
+        text-transform:uppercase;
+        white-space:nowrap;
     }
 
-    .notification-badge {
-        position: absolute;
-        top: -4px;
-        right: -4px;
-        background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
-        color: white;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        font-size: 11px;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 2px solid white;
+    .search-container{
+        position:relative;
+        width:100%;
     }
 
-    /* User Dropdown */
-    .user-btn {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 8px 16px 8px 8px;
-        border: 2px solid #e2e8f0;
-        background: white;
-        border-radius: 50px;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        overflow: hidden;
+    .search-icon{
+        position:absolute;
+        left:16px;
+        top:50%;
+        transform:translateY(-50%);
+        color:#94a3b8;
+        z-index:1;
+        pointer-events:none;
     }
 
-    .user-btn::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        opacity: 0;
-        transition: opacity 0.3s ease;
+    .search-input{
+        width:100%;
+        height:46px;
+        border:1.5px solid #e2e8f0;
+        border-radius:14px;
+        background:#fff;
+        padding:0 16px 0 46px;
+        font-size:14px;
+        font-weight:500;
+        color:#334155;
+        outline:none;
+        transition:all .25s ease;
+        box-shadow:0 2px 10px rgba(15,23,42,.03);
     }
 
-    .user-btn:hover::before { opacity: 1; }
-    .user-btn:hover { border-color: transparent; box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3); transform: translateY(-2px); }
-    .user-btn:hover .user-name,
-    .user-btn:hover .dropdown-icon { color: white; }
-
-    .user-avatar {
-        width: 38px;
-        height: 38px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 2px solid #e2e8f0;
-        transition: all 0.3s ease;
-        position: relative;
-        z-index: 1;
+    .search-input:focus{
+        border-color:#667eea;
+        box-shadow:0 0 0 4px rgba(102,126,234,.10);
     }
 
-    .user-btn:hover .user-avatar { border-color: white; transform: scale(1.05); }
-
-    .user-name {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        font-weight: 600;
-        color: #1e293b;
-        font-size: 14px;
-        line-height: 1.3;
-        transition: all 0.3s ease;
-        position: relative;
-        z-index: 1;
-        white-space: nowrap;
+    .notification-btn{
+        position:relative;
+        width:44px;
+        height:44px;
+        border:none;
+        background:#fff;
+        border-radius:14px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        color:#64748b;
+        cursor:pointer;
+        border:1px solid #e2e8f0;
+        transition:all .25s ease;
     }
 
-    .user-name small { font-size: 11px; font-weight: 500; color: #94a3b8; transition: all 0.3s ease; }
-    .user-btn:hover .user-name small { color: rgba(255, 255, 255, 0.8); }
-
-    .dropdown-icon { transition: all 0.3s ease; color: #64748b; position: relative; z-index: 1; }
-    .user-btn[aria-expanded="true"] .dropdown-icon { transform: rotate(180deg); }
-
-    /* Dropdown Menu */
-    .dropdown-menu {
-        margin-top: 12px !important;
-        border: none !important;
-        border-radius: 16px !important;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
-        padding: 0 !important;
-        min-width: 280px;
-        overflow: hidden;
+    .notification-btn:hover{
+        color:#fff;
+        border-color:transparent;
+        background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+        transform:translateY(-2px);
+        box-shadow:0 10px 24px rgba(102,126,234,.24);
     }
 
-    .dropdown-header {
-        padding: 25px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        display: flex;
-        align-items: center;
-        gap: 15px;
+    .notification-badge{
+        position:absolute;
+        top:-5px;
+        right:-5px;
+        width:20px;
+        height:20px;
+        border-radius:50%;
+        background:linear-gradient(135deg,#f59e0b 0%,#ef4444 100%);
+        color:#fff;
+        border:2px solid #fff;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-size:10px;
+        font-weight:700;
     }
 
-    .dropdown-header .profile-img {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 3px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    .user-btn{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        min-height:46px;
+        padding:6px 14px 6px 6px;
+        background:#fff;
+        border:1px solid #e2e8f0;
+        border-radius:999px;
+        cursor:pointer;
+        transition:all .25s ease;
     }
 
-    .profile-details { flex: 1; color: white; }
-    .profile-details h6 { margin: 0; font-size: 16px; font-weight: 700; color: white; }
-    .profile-details small { font-size: 12px; color: rgba(255, 255, 255, 0.8); display: block; margin-top: 2px; }
-
-    .business-name {
-        display: inline-block;
-        background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(10px);
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 600;
-        margin-top: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
+    .user-btn:hover{
+        transform:translateY(-2px);
+        box-shadow:0 12px 26px rgba(15,23,42,.08);
+        border-color:#cbd5e1;
     }
 
-    .dropdown-divider { margin: 0; border-color: #f1f5f9 !important; }
-
-    .dropdown-item {
-        padding: 14px 25px !important;
-        display: flex !important;
-        align-items: center;
-        gap: 12px;
-        color: #475569 !important;
-        font-weight: 500 !important;
-        font-size: 14px !important;
-        transition: all 0.3s ease !important;
-        cursor: pointer;
-        border: none !important;
-        background: transparent !important;
-        width: 100%;
-        text-align: left;
+    .user-avatar{
+        width:34px;
+        height:34px;
+        border-radius:50%;
+        object-fit:cover;
+        flex-shrink:0;
+        border:2px solid #e2e8f0;
     }
 
-    .dropdown-item svg { color: #94a3b8; transition: all 0.3s ease; }
-
-    .dropdown-item:hover {
-        background: linear-gradient(90deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%) !important;
-        color: #667eea !important;
-        padding-left: 30px !important;
+    .user-name{
+        display:flex;
+        flex-direction:column;
+        align-items:flex-start;
+        line-height:1.2;
+        color:#0f172a;
+        font-size:13px;
+        font-weight:700;
+        white-space:nowrap;
     }
 
-    .dropdown-item:hover svg { color: #667eea; transform: translateX(3px); }
-
-    .logout-item:hover {
-        background: linear-gradient(90deg, rgba(239, 68, 68, 0.08) 0%, rgba(220, 38, 38, 0.08) 100%) !important;
-        color: #ef4444 !important;
-    }
-    .logout-item:hover svg { color: #ef4444; }
-
-    .status-dot {
-        width: 8px;
-        height: 8px;
-        background: #10b981;
-        border-radius: 50%;
-        display: inline-block;
-        margin-right: 6px;
-        vertical-align: middle;
-        animation: pulse 2s infinite;
+    .user-name small{
+        font-size:11px;
+        color:#94a3b8;
+        font-weight:600;
     }
 
-    @keyframes pulse {
-        0%, 100% { transform: scale(1); opacity: 1; }
-        50% { transform: scale(1.2); opacity: 0.8; }
+    .dropdown-icon{
+        color:#64748b;
+        transition:transform .25s ease;
     }
 
-    /* Mobile Responsive */
-    @media (max-width: 1199px) {
-        .app-header {
-            padding: 0 20px;
+    .user-btn[aria-expanded="true"] .dropdown-icon{
+        transform:rotate(180deg);
+    }
+
+    .dropdown-menu{
+        margin-top:12px !important;
+        border:none !important;
+        border-radius:18px !important;
+        overflow:hidden;
+        box-shadow:0 18px 50px rgba(15,23,42,.16) !important;
+        padding:0 !important;
+    }
+
+    .dropdown-header{
+        padding:22px;
+        display:flex;
+        align-items:center;
+        gap:14px;
+        background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+    }
+
+    .dropdown-header .profile-img{
+        width:56px;
+        height:56px;
+        border-radius:50%;
+        object-fit:cover;
+        border:3px solid rgba(255,255,255,.28);
+    }
+
+    .profile-details{
+        flex:1;
+        color:white;
+        min-width:0;
+    }
+
+    .profile-details h6{
+        margin:0;
+        color:#fff;
+        font-size:15px;
+        font-weight:700;
+    }
+
+    .profile-details small{
+        display:block;
+        margin-top:3px;
+        color:rgba(255,255,255,.86);
+        font-size:12px;
+    }
+
+    .business-name{
+        display:inline-flex;
+        align-items:center;
+        margin-top:8px;
+        padding:5px 10px;
+        border-radius:999px;
+        font-size:11px;
+        font-weight:700;
+        color:#fff;
+        background:rgba(255,255,255,.18);
+        border:1px solid rgba(255,255,255,.28);
+    }
+
+    .dropdown-item{
+        display:flex !important;
+        align-items:center;
+        gap:12px;
+        padding:14px 20px !important;
+        font-size:14px !important;
+        font-weight:600 !important;
+        color:#475569 !important;
+        transition:all .2s ease !important;
+        border:none !important;
+        background:transparent !important;
+    }
+
+    .dropdown-item:hover{
+        background:rgba(102,126,234,.08) !important;
+        color:#667eea !important;
+        padding-left:24px !important;
+    }
+
+    .dropdown-item svg{
+        color:#94a3b8;
+        flex-shrink:0;
+    }
+
+    .dropdown-item:hover svg{
+        color:#667eea;
+    }
+
+    .logout-item:hover{
+        background:rgba(239,68,68,.08) !important;
+        color:#ef4444 !important;
+    }
+
+    .logout-item:hover svg{
+        color:#ef4444;
+    }
+
+    .status-dot{
+        width:8px;
+        height:8px;
+        border-radius:50%;
+        background:#10b981;
+        display:inline-block;
+        margin-right:6px;
+    }
+
+    @media (max-width: 1199.98px){
+        .app-header{
+            padding:0 18px;
         }
 
-        .header-center {
-            max-width: 400px;
-            margin: 0 20px;
-        }
-    }
-
-    @media (max-width: 991px) {
-        .app-header {
-            padding: 0 15px;
-            height: 65px;
-            width: 100% !important; /* Full width on mobile */
-            margin-left: 0 !important;
+        .header-center{
+            max-width:430px;
         }
 
-        .header-center {
-            display: none;
-        }
-
-        .brand-logo img { height: 28px; }
-        .logo-badge { font-size: 10px; padding: 3px 8px; }
-        .user-name { display: none; }
-        .user-btn { padding: 4px; border-radius: 50%; }
-        .user-avatar { width: 35px; height: 35px; }
-
-        .search-container {
-            display: none;
-        }
-    }
-
-    @media (max-width: 767px) {
-        .app-header {
-            padding: 0 12px;
-            height: 60px;
-        }
-
-        .brand-logo img {
-            height: 24px;
-        }
-
-        .logo-badge {
-            display: none;
-        }
-
-        .notification-btn {
-            width: 40px;
-            height: 40px;
-        }
-
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-        }
-
-        .dropdown-menu {
-            min-width: 260px;
+        .logo-badge{
+            display:none;
         }
     }
 
-    @media (max-width: 480px) {
-        .app-header {
-            padding: 0 10px;
-            height: 55px;
+    @media (max-width: 991.98px){
+        .app-header{
+            left:0 !important;
+            height:var(--mobile-header-height);
+            padding:0 16px;
         }
 
-        .header-left {
-            gap: 10px;
+        .header-center{
+            display:none;
         }
 
-        .brand-logo img {
-            height: 22px;
+        .brand-logo img{
+            height:28px;
         }
 
-        .notification-btn {
-            width: 36px;
-            height: 36px;
+        .user-btn{
+            padding-right:8px;
         }
 
-        .user-avatar {
-            width: 30px;
-            height: 30px;
-        }
-
-        .dropdown-menu {
-            min-width: 240px;
-            right: -10px !important;
-        }
-
-        .dropdown-header {
-            padding: 20px;
-        }
-
-        .dropdown-header .profile-img {
-            width: 50px;
-            height: 50px;
-        }
-
-        .profile-details h6 {
-            font-size: 14px;
-        }
-
-        .business-name {
-            font-size: 10px;
+        .user-name,
+        .dropdown-icon{
+            display:none;
         }
     }
 
-    /* Print Styles */
-    @media print {
-        .app-header {
-            display: none;
+    @media (max-width: 767.98px){
+        .app-header{
+            padding:0 12px;
+        }
+
+        .header-left{
+            gap:10px;
+        }
+
+        .brand-logo img{
+            height:24px;
+        }
+
+        .notification-btn,
+        .sidebar-toggle-btn,
+        .user-btn{
+            min-width:40px;
+            width:40px;
+            height:40px;
+        }
+
+        .user-btn{
+            padding:4px;
+            justify-content:center;
+            border-radius:50%;
+        }
+
+        .user-avatar{
+            width:30px;
+            height:30px;
+        }
+
+        .dropdown-menu{
+            min-width:250px !important;
+        }
+    }
+
+    @media (max-width: 480px){
+        .app-header{
+            height:58px;
+            padding:0 10px;
+        }
+
+        .notification-btn,
+        .sidebar-toggle-btn{
+            width:38px;
+            height:38px;
+            min-width:38px;
+            border-radius:12px;
+        }
+
+        .user-btn{
+            width:38px;
+            height:38px;
+            min-width:38px;
+        }
+
+        .dropdown-menu{
+            min-width:230px !important;
         }
     }
 </style>
 
-<header class="app-header" id="appHeader">
-    <!-- Left Section -->
+<header class="app-header">
     <div class="header-left">
-        <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-label="Toggle Menu">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button class="sidebar-toggle-btn" id="sidebarToggle" type="button" aria-label="Toggle Sidebar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="3" y1="12" x2="21" y2="12"></line>
                 <line x1="3" y1="6" x2="21" y2="6"></line>
                 <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -449,46 +459,41 @@
         </a>
     </div>
 
-    <!-- Center Section (Search) -->
     <div class="header-center">
         <div class="search-container">
-            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="11" cy="11" r="8"></circle>
                 <path d="m21 21-4.35-4.35"></path>
             </svg>
-            <input type="text" class="search-input" placeholder="Search products, orders, customers..." aria-label="Search" id="globalSearch">
+            <input type="text" class="search-input" placeholder="Search products, orders, customers..." aria-label="Search">
         </div>
     </div>
 
-    <!-- Right Section -->
     <div class="header-right">
-        <!-- Notifications Dropdown -->
         <div class="dropdown">
             <button class="notification-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                     <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                 </svg>
                 <span class="notification-badge" id="notificationCount">3</span>
             </button>
 
-            <div class="dropdown-menu dropdown-menu-end p-0" style="min-width: 320px;">
+            <div class="dropdown-menu dropdown-menu-end" style="min-width:320px;">
                 <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
                     <strong class="fs-6">Notifications</strong>
-                    <span class="badge bg-primary rounded-pill" id="notificationTotal">3 new</span>
+                    <span class="badge bg-primary rounded-pill">3 new</span>
                 </div>
-                <div class="p-3 text-muted text-center" id="notificationList">
+                <div class="p-3 text-muted text-center">
                     <p class="mb-0">No new notifications.</p>
-                </div>
-                <div class="p-2 border-top text-center">
-                    <a href="#" class="text-decoration-none small">View all notifications</a>
                 </div>
             </div>
         </div>
 
-        <!-- User Dropdown -->
         <div class="dropdown">
-            <button class="user-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="userMenuButton">
+            <button class="user-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <img
                     src="{{ $wholesaler?->img ? asset('storage/'.$wholesaler->img) : asset('asset/img/default-avatar.png') }}"
                     class="user-avatar"
@@ -499,12 +504,13 @@
                     {{ $wholesaler?->name ?? 'Guest' }}
                     <small>Wholesaler</small>
                 </span>
-                <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
             </button>
 
-            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
+            <div class="dropdown-menu dropdown-menu-end">
                 <div class="dropdown-header">
                     <img
                         src="{{ $wholesaler?->img ? asset('storage/'.$wholesaler->img) : asset('asset/img/default-avatar.png') }}"
@@ -512,11 +518,9 @@
                         class="profile-img"
                         onerror="this.src='{{ asset('asset/img/default-avatar.png') }}'"
                     >
-
                     <div class="profile-details">
                         <h6>{{ $wholesaler?->name ?? 'Guest' }}</h6>
                         <small><span class="status-dot"></span> Active Now</small>
-
                         @if($wholesaler?->business_name)
                             <div class="business-name">🏢 {{ $wholesaler->business_name }}</div>
                         @endif
@@ -525,178 +529,18 @@
 
                 <div class="dropdown-divider"></div>
 
-                <a class="dropdown-item" href="{{ route('wholesaler.profile') }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
-                    My Profile
-                </a>
-
-                <a class="dropdown-item" href="{{ route('wholesaler.dashboard') }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="7" height="7"></rect>
-                        <rect x="14" y="3" width="7" height="7"></rect>
-                        <rect x="14" y="14" width="7" height="7"></rect>
-                        <rect x="3" y="14" width="7" height="7"></rect>
-                    </svg>
-                    Dashboard
-                </a>
-
-                <a class="dropdown-item" href="{{ route('wholesaler.order.new') }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="9" cy="21" r="1"></circle>
-                        <circle cx="20" cy="21" r="1"></circle>
-                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                    </svg>
-                    Orders
-                </a>
-
-                <a class="dropdown-item" href="{{ route('wholesaler.products.index') }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="m7.5 4.27 9 5.15"></path>
-                        <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path>
-                        <path d="m3.3 7 8.7 5 8.7-5"></path>
-                        <path d="M12 22V12"></path>
-                    </svg>
-                    Products
-                </a>
-
-                <a class="dropdown-item" href="{{ route('wholesaler.shop.index') }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path>
-                        <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path>
-                        <path d="M7 21h10"></path>
-                        <path d="M12 3v18"></path>
-                        <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"></path>
-                    </svg>
-                    My Shop
-                </a>
+                <a class="dropdown-item" href="{{ route('wholesaler.profile') }}">My Profile</a>
+                <a class="dropdown-item" href="{{ route('wholesaler.dashboard') }}">Dashboard</a>
+                <a class="dropdown-item" href="{{ route('wholesaler.products.index') }}">Products</a>
+                <a class="dropdown-item" href="{{ route('wholesaler.shop.index') }}">My Shop</a>
 
                 <div class="dropdown-divider"></div>
 
                 <form action="{{ route('wholesaler.logout') }}" method="POST" class="m-0">
                     @csrf
-                    <button type="submit" class="dropdown-item logout-item">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                            <polyline points="16 17 21 12 16 7"></polyline>
-                            <line x1="21" y1="12" x2="9" y2="12"></line>
-                        </svg>
-                        Logout
-                    </button>
+                    <button type="submit" class="dropdown-item logout-item">Logout</button>
                 </form>
             </div>
         </div>
     </div>
 </header>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Header shadow effect on scroll (only visual, position remains fixed)
-        const header = document.querySelector('.app-header');
-        if (header) {
-            window.addEventListener('scroll', () => {
-                if (window.scrollY > 10) {
-                    header.classList.add('scrolled');
-                } else {
-                    header.classList.remove('scrolled');
-                }
-            });
-        }
-
-        // Search focus animation
-        const searchInput = document.querySelector('.search-input');
-        if (searchInput) {
-            searchInput.addEventListener('focus', () => {
-                searchInput.parentElement.style.transform = 'scale(1.02)';
-            });
-            searchInput.addEventListener('blur', () => {
-                searchInput.parentElement.style.transform = 'scale(1)';
-            });
-
-            // Search functionality with debounce
-            let searchTimeout;
-            searchInput.addEventListener('input', function(e) {
-                clearTimeout(searchTimeout);
-                const term = e.target.value.trim();
-
-                if (term.length >= 3) {
-                    searchTimeout = setTimeout(() => {
-                        performSearch(term);
-                    }, 500);
-                }
-            });
-
-            // Enter key search
-            searchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const term = e.target.value.trim();
-                    if (term) {
-                        performSearch(term);
-                    }
-                }
-            });
-        }
-
-        // Search function
-        function performSearch(term) {
-            console.log('Searching for:', term);
-            // Add your search logic here
-            // Example: window.location.href = `/wholesaler/search?q=${encodeURIComponent(term)}`;
-        }
-
-        // Mark current dropdown item active
-        const currentPath = window.location.pathname;
-        document.querySelectorAll('.dropdown-item[href]').forEach((a) => {
-            const href = a.getAttribute('href');
-            if (!href) return;
-
-            try {
-                const url = new URL(href, window.location.origin);
-                const path = url.pathname;
-
-                if (path === currentPath || (path !== '/' && currentPath.startsWith(path))) {
-                    a.style.background = 'linear-gradient(90deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)';
-                    a.style.color = '#667eea';
-                    a.style.borderLeft = '3px solid #667eea';
-                }
-            } catch (e) {
-                // ignore invalid href
-            }
-        });
-
-        // Notification badge update (example)
-        function updateNotificationBadge(count) {
-            const badge = document.getElementById('notificationCount');
-            const total = document.getElementById('notificationTotal');
-            if (badge) badge.textContent = count;
-            if (total) total.textContent = count + ' new';
-        }
-
-        // Simulate notification fetch (replace with actual AJAX)
-        setTimeout(() => {
-            // Example: updateNotificationBadge(5);
-        }, 3000);
-
-        // Close dropdowns when clicking outside
-        document.addEventListener('click', function(event) {
-            if (!event.target.closest('.dropdown')) {
-                document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
-                    menu.classList.remove('show');
-                });
-                document.querySelectorAll('.user-btn[aria-expanded="true"]').forEach(btn => {
-                    btn.setAttribute('aria-expanded', 'false');
-                });
-            }
-        });
-
-        // Prevent dropdown from closing when clicking inside
-        document.querySelectorAll('.dropdown-menu').forEach(menu => {
-            menu.addEventListener('click', function(e) {
-                e.stopPropagation();
-            });
-        });
-    });
-</script>

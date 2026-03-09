@@ -263,7 +263,7 @@
                     <a href="{{ route('employee.wholesaler.exchanges.create') }}" class="btn btn-light">
                         <span class="gicon">add</span> New Exchange
                     </a>
-                    <a href="{{ route('employee.wholesaler.exchanges.export') }}" class="btn btn-light">
+                    <a href="{{ route('employee.wholesaler.order-exchanges.export') }}" class="btn btn-light">
                         <span class="gicon">download</span> Export
                     </a>
                 </div>
