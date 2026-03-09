@@ -11,6 +11,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Seller\CallController;
+use App\Http\Controllers\Seller\SystemSellerDeliveryTrackingController;
 use App\Http\Controllers\Seller\SelfSellerDeliveryCallController;
 use App\Http\Controllers\Seller\SellerBrandController;
 use App\Http\Controllers\Seller\SellerCallController;
@@ -170,6 +171,132 @@ Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])-
 });
 
 // ========== SELLER ROUTES ==========
+Route::middleware('auth:seller')->group(function () {
+
+    Route::prefix('system-delivery')->name('seller.system_delivery.')->group(function () {
+
+        $ctrl = [\App\Http\Controllers\Seller\SystemSellerDeliveryTrackingController::class];
+        Route::get('/{id}', [...$ctrl, 'show'])->name('show')->whereNumber('id');
+        // Pipeline overview (read-only)
+        Route::get('/pipeline',              [...$ctrl, 'pipeline'])->name('pipeline');
+
+        // Tracking status pages
+        Route::get('/tracking',              [...$ctrl, 'index'])->name('tracking.index');
+        Route::get('/tracking/confirmed',    [...$ctrl, 'confirmed'])->name('tracking.confirmed');
+        Route::get('/tracking/completed',    [...$ctrl, 'completed'])->name('tracking.completed');
+        Route::get('/tracking/rescheduled',  [...$ctrl, 'rescheduled'])->name('tracking.rescheduled');
+        Route::get('/tracking/cancelled',    [...$ctrl, 'cancelled'])->name('tracking.cancelled');
+
+        // AJAX: waybill sync
+        Route::post('/sync-all',             [...$ctrl, 'syncAll'])->name('sync_all');
+        Route::post('/{id}/sync-waybill',    [...$ctrl, 'syncWaybill'])->name('sync_waybill')->whereNumber('id');
+
+        // AJAX: tracking timeline proxy
+        Route::post('/tracking-info',        [...$ctrl, 'tracking'])->name('tracking_info');
+    });
+
+    Route::prefix('seller')->name('seller.')->group(function () {
+
+
+
+
+        // Self Seller Delivery Management
+        Route::prefix('delivery-calls')->name('delivery_calls.')->group(function () {
+
+            Route::get('/tracking',           [SelfSellerDeliveryCallController::class, 'trackingIndex'])->name('tracking.index');
+            Route::get('/tracking/confirmed', [SelfSellerDeliveryCallController::class, 'trackingConfirmed'])->name('tracking.confirmed');
+            Route::get('/tracking/completed', [SelfSellerDeliveryCallController::class, 'trackingCompleted'])->name('tracking.completed');
+            Route::get('/tracking/rescheduled',[SelfSellerDeliveryCallController::class, 'trackingRescheduled'])->name('tracking.rescheduled');
+            Route::get('/tracking/cancelled', [SelfSellerDeliveryCallController::class, 'trackingCancelled'])->name('tracking.cancelled');
+
+// ── Waybill sync endpoints ─────────────────────────────────────────────────
+            Route::post('/sync-all-waybills',      [SelfSellerDeliveryCallController::class, 'syncAllWaybills'])->name('sync_all_waybills');
+            Route::post('/{id}/sync-waybill',      [SelfSellerDeliveryCallController::class, 'syncWaybill'])->name('sync_waybill')->whereNumber('id');
+
+
+
+            // Status pages
+            Route::get('/', [SelfSellerDeliveryCallController::class, 'index'])->name('index');
+            Route::get('/pending', [SelfSellerDeliveryCallController::class, 'pending'])->name('pending');
+            Route::get('/packing', [SelfSellerDeliveryCallController::class, 'packing'])->name('packing');
+            Route::get('/packed', [SelfSellerDeliveryCallController::class, 'packed'])->name('packed');
+            Route::get('/givedriver', [SelfSellerDeliveryCallController::class, 'givedriver'])->name('givedriver');
+
+            // Create
+            Route::get('/create', [SelfSellerDeliveryCallController::class, 'create'])->name('create');
+            Route::post('/', [SelfSellerDeliveryCallController::class, 'store'])->name('store');
+
+            // View
+            Route::get('/{id}', [SelfSellerDeliveryCallController::class, 'show'])->name('show');
+
+            // Status updates
+            Route::post('/{id}/status', [SelfSellerDeliveryCallController::class, 'updateStatus'])->name('update_status');
+            Route::post('/bulk-status', [SelfSellerDeliveryCallController::class, 'bulkUpdateStatus'])->name('bulk_status');
+
+            // Origin updates
+            Route::patch('/{id}/origin', [SelfSellerDeliveryCallController::class, 'updateOrigin'])->name('update_origin');
+            Route::patch('/bulk-origin', [SelfSellerDeliveryCallController::class, 'bulkUpdateOrigin'])->name('bulk_origin');
+
+            // Business
+            Route::post('/set-business', [SelfSellerDeliveryCallController::class, 'setBusiness'])->name('set_business');
+
+            // Tracking
+            Route::post('/tracking', [SelfSellerDeliveryCallController::class, 'tracking'])->name('tracking');
+        });
+
+        // ===== AUTHENTICATION =====
+        Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+        Route::get('/', [SellerController::class, 'dashboard'])->name('dashboard');
+
+        // ===== PROFILE MANAGEMENT =====
+        Route::prefix('profile')->name('profile.')->group(function () {
+            Route::get('/', [Sellerprofilecontroller::class, 'index'])->name('index');
+            Route::post('/update', [Sellerprofilecontroller::class, 'update'])->name('update');
+            Route::post('/password', [Sellerprofilecontroller::class, 'updatePassword'])->name('password');
+        });
+
+        // ===== CREATE NEW ORDER (Single & Bulk) =====
+        Route::prefix('create')->name('create.')->group(function () {
+            Route::get('/new-order', [SellerOrderController::class, 'index'])->name('new-order');
+        });
+
+        // ===== ORDER MANAGEMENT =====
+        Route::prefix('order')->name('order.')->group(function () {
+            // Order List Pages
+            Route::get('/pending',    [SellerOrderController::class, 'pendingOrder'])->name('pending');
+            Route::get('/confirmed',  [SellerOrderController::class, 'confirmedOrders'])->name('confirmed');
+            Route::get('/rescheduled',[SellerOrderController::class, 'rescheduledOrders'])->name('rescheduled');
+            Route::get('/completed',  [SellerOrderController::class, 'completedOrders'])->name('completed');
+            Route::get('/returned',   [SellerOrderController::class, 'returnedOrders'])->name('returned');
+            Route::get('/show/{id}',  [SellerOrderController::class, 'show'])->name('show');
+
+            // ─── NEW: Full-page edit route ────────────────────────────────────────
+            Route::get('/edit/{id}',  [SellerOrderController::class, 'edit'])->name('edit');
+
+            // Product Details API (for fetching product by code with slashes)
+            Route::get('/product/{code}/details', [SellerOrderController::class, 'getProductDetails'])
+                ->name('product.details')
+                ->where('code', '.*'); // CRITICAL: Allows slashes in product code (e.g., DX/ITM/0001)
+
+            // Order CRUD Operations
+            Route::post('/store',          [SellerOrderController::class, 'store'])->name('store');
+            Route::post('/bulk-store',     [SellerOrderController::class, 'bulkStore'])->name('bulk-store');
+            Route::post('/bulk-validate',  [SellerOrderController::class, 'bulkValidate'])->name('bulk-validate');
+            Route::put('/update/{id}',     [SellerOrderController::class, 'update'])->name('update');
+            Route::delete('/destroy/{id}', [SellerOrderController::class, 'destroy'])->name('destroy');
+
+            // Utilities
+            Route::get('/cities/json', [SellerOrderController::class, 'citiesJson'])->name('cities.json');
+        });
+
+        // ===== CALL MANAGEMENT =====
+        Route::prefix('call')->name('call.')->group(function () {
+            Route::get('/pending',     [SellerOrderController::class, 'pendingCalls'])->name('pending');
+            Route::get('/called',      [SellerOrderController::class, 'calledCalls'])->name('called');
+            Route::get('/confirmed',   [SellerOrderController::class, 'confirmedCalls'])->name('confirmed');
+            Route::get('/not-answered',[SellerOrderController::class, 'notAnsweredCalls'])->name('not-answered');
+            Route::get('/cancelled',   [SellerOrderController::class, 'cancelledCalls'])->name('cancelled');
+        });
 Route::middleware('auth:seller')->prefix('seller')->name('seller.')->group(function () {
     // Delivery Calls
     Route::prefix('delivery-calls')->name('delivery_calls.')->group(function () {
@@ -311,6 +438,45 @@ Route::middleware('auth:seller')->prefix('seller')->name('seller.')->group(funct
         Route::get('/recent-orders', [SellerController::class, 'getRecentOrders'])->name('recent-orders');
     });
 
+        // ===== SELF-SELLER DELIVERY MANAGEMENT =====
+        Route::prefix('delivery-calls')->name('delivery_calls.')->group(function () {
+
+            Route::get('/tracking',           [SelfSellerDeliveryCallController::class, 'trackingIndex'])->name('tracking.index');
+            Route::get('/tracking/confirmed', [SelfSellerDeliveryCallController::class, 'trackingConfirmed'])->name('tracking.confirmed');
+            Route::get('/tracking/completed', [SelfSellerDeliveryCallController::class, 'trackingCompleted'])->name('tracking.completed');
+            Route::get('/tracking/rescheduled',[SelfSellerDeliveryCallController::class, 'trackingRescheduled'])->name('tracking.rescheduled');
+            Route::get('/tracking/cancelled', [SelfSellerDeliveryCallController::class, 'trackingCancelled'])->name('tracking.cancelled');
+
+// ── Waybill sync endpoints ─────────────────────────────────────────────────
+            Route::post('/sync-all-waybills',      [SelfSellerDeliveryCallController::class, 'syncAllWaybills'])->name('sync_all_waybills');
+            Route::post('/{id}/sync-waybill',      [SelfSellerDeliveryCallController::class, 'syncWaybill'])->name('sync_waybill')->whereNumber('id');
+
+
+
+            // List pages
+            Route::get('/', [SelfSellerDeliveryCallController::class, 'index'])->name('index');
+            Route::get('/pending', [SelfSellerDeliveryCallController::class, 'pending'])->name('pending');
+            Route::get('/packing', [SelfSellerDeliveryCallController::class, 'packing'])->name('packing');
+            Route::get('/packed', [SelfSellerDeliveryCallController::class, 'packed'])->name('packed');
+            Route::get('/givedriver', [SelfSellerDeliveryCallController::class, 'givedriver'])->name('givedriver');
+            Route::get('/create', [SelfSellerDeliveryCallController::class, 'create'])->name('create');
+
+            // Bulk actions
+            Route::post('/bulk-status', [SelfSellerDeliveryCallController::class, 'bulkUpdateStatus'])->name('bulk_status');
+            Route::patch('/bulk-origin', [SelfSellerDeliveryCallController::class, 'bulkUpdateOrigin'])->name('bulk_origin');
+
+            // Business management
+            Route::get('/businesses', [SelfSellerDeliveryCallController::class, 'businessIndex'])->name('businesses');
+            Route::post('/business/create', [SelfSellerDeliveryCallController::class, 'businessCreate'])->name('business_create');
+            Route::post('/business/set-active', [SelfSellerDeliveryCallController::class, 'businessSetActive'])->name('business_set_active');
+            Route::delete('/business/{id}', [SelfSellerDeliveryCallController::class, 'businessDelete'])->name('business_delete');
+
+            // Store and individual actions
+            Route::post('/', [SelfSellerDeliveryCallController::class, 'store'])->name('store');
+            Route::get('/{id}', [SelfSellerDeliveryCallController::class, 'show'])->name('show')->whereNumber('id');
+            Route::post('/{id}/status', [SelfSellerDeliveryCallController::class, 'updateStatus'])->name('update_status')->whereNumber('id');
+            Route::patch('/{id}/origin', [SelfSellerDeliveryCallController::class, 'updateOrigin'])->name('update_origin')->whereNumber('id');
+        });
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/sales', [SellerController::class, 'salesReport'])->name('sales');
         Route::get('/inventory', [SellerController::class, 'inventoryReport'])->name('inventory');
@@ -322,6 +488,24 @@ Route::middleware('auth:seller')->prefix('seller')->name('seller.')->group(funct
 // ========== EMPLOYEE ROUTES ==========
 Route::prefix('employee')->middleware('auth:employee')->name('employee.')->group(function () {
     // Delivery Calls
+    Route::prefix('delivery-calls')->name('employee.delivery_calls.')->group(function () {
+
+        Route::get('/tracking',            [EmployeeDeliveryCallController::class, 'trackingIndex'])->name('tracking.index');
+        Route::get('/tracking/confirmed',  [EmployeeDeliveryCallController::class, 'trackingConfirmed'])->name('tracking.confirmed');
+        Route::get('/tracking/completed',  [EmployeeDeliveryCallController::class, 'trackingCompleted'])->name('tracking.completed');
+        Route::get('/tracking/rescheduled',[EmployeeDeliveryCallController::class, 'trackingRescheduled'])->name('tracking.rescheduled');
+        Route::get('/tracking/cancelled',  [EmployeeDeliveryCallController::class, 'trackingCancelled'])->name('tracking.cancelled');
+
+// ── Sync ──────────────────────────────────────────────────────────────────
+        Route::post('/sync-all-waybills',     [EmployeeDeliveryCallController::class, 'syncAllWaybills'])->name('sync_all_waybills');
+        Route::post('/{id}/sync-waybill',     [EmployeeDeliveryCallController::class, 'syncWaybill'])->name('sync_waybill')->whereNumber('id');
+
+
+        // ── GET list pages ────────────────────────────────────────────────────
+        Route::get('/',           [EmployeeDeliveryCallController::class, 'index'])->name('index');
+        Route::get('/pending',    [EmployeeDeliveryCallController::class, 'pending'])->name('pending');
+        Route::get('/packing',    [EmployeeDeliveryCallController::class, 'packing'])->name('packing');
+        Route::get('/packed',     [EmployeeDeliveryCallController::class, 'packed'])->name('packed');
     Route::prefix('delivery-calls')->name('delivery_calls.')->group(function () {
         Route::get('/', [EmployeeDeliveryCallController::class, 'index'])->name('index');
         Route::get('/pending', [EmployeeDeliveryCallController::class, 'pending'])->name('pending');

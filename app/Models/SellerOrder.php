@@ -23,6 +23,7 @@ class SellerOrder extends Model
 
         'customer_name',
         'customer_phone',
+        'customer_phone_2',
         'customer_email',
         'customer_address',
         'district',
@@ -36,6 +37,7 @@ class SellerOrder extends Model
         'platform',
         'call_status',
         'remark',
+        'delivery_remark',
         'order_date',
         'delivery_date',
         'rescheduling_date',
