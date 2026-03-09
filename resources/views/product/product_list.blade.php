@@ -86,6 +86,17 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
+
+                 <!-- Filter Dropdown -->
+    <form method="GET" action="{{ route('product.index') }}">
+        <label for="store">Filter by:</label>
+        <select name="store" id="store" onchange="this.form.submit()">
+            <option value="">All</option>
+            <option value="admin" {{ request('store') == 'admin' ? 'selected' : '' }}>Admin</option>
+            <option value="seller" {{ request('store') == 'seller' ? 'selected' : '' }}>Seller</option>
+            <option value="wholesaler" {{ request('store') == 'wholesaler' ? 'selected' : '' }}>Wholesaler</option>
+        </select>
+    </form>
                     <table id="product-table" class="display table table-striped" style="width:100%">
                         <thead>
                         <tr>
@@ -105,10 +116,13 @@
                             <tr>
                                 <td>{{$product->code}}</td>
                                 <td>{{$product->name}}</td>
-                                <td>Main</td>
-                                <td>{{$product->category}}</td>
-                                <td>{{$product->brand}}</td>
-                                <td>Rs. {{number_format($product->display_price, 2)}}</td>
+                                <td>{{ $product->store }}</td>
+                                <td>{{ $product->category->name ?? $product->category }}</td>
+<td>{{ $product->brand->name ?? $product->brand }}</td>
+                                <td>
+    Rs.
+    {{ number_format($product->display_price ?? $product->selling_price ?? 0 , 2) }}
+</td>
                                 <td>{{$product->qty}}</td>
                                 <td>
                                     <span class="{{ $product->status == 'active' ? 'status-active' : 'status-inactive' }}">
@@ -117,22 +131,24 @@
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        <a href="{{ route('product.view', $product->id) }}"
-                                           class="btn btn-dark btn-sm"
-                                           data-bs-toggle="tooltip" title="View">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="{{ route('product.edit', $product->id) }}"
+                                        <a href="{{ route('product.view',['type'=>strtolower($product->store),'id'=>$product->id]) }}"
+   class="btn btn-dark btn-sm"
+   data-bs-toggle="tooltip"
+   title="View">
+   <i class="fas fa-eye"></i>
+</a>
+                                        <a href="{{ route('product.edit', [$product->store, $product->id]) }}"
                                            class="btn btn-warning btn-sm"
                                            data-bs-toggle="tooltip" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="{{ route('product.delete', $product->id) }}"
-                                           class="btn btn-danger btn-sm delete-btn"
-                                           data-bs-toggle="tooltip"
-                                           title="Delete">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
+<a href="{{ route('product.delete',['type'=>strtolower($product->store),'id'=>$product->id]) }}"
+   class="btn btn-danger btn-sm"
+   data-bs-toggle="tooltip"
+   title="Delete">
+   <i class="fas fa-trash"></i>
+</a>
+
                                     </div>
                                 </td>
                             </tr>
