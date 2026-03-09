@@ -86,7 +86,7 @@
                     <span class="material-icons-round" style="font-size:18px">arrow_back</span>
                     Back
                 </a>
-                <a href="{{ route('seller.pending-order') }}" class="btn-back" style="background:#4f46e5">
+                <a href="{{ route('seller.order.pending') }}" class="btn-back" style="background:#4f46e5">
                     <span class="material-icons-round" style="font-size:18px">list</span>
                     All Orders
                 </a>

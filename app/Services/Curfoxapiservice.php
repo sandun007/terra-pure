@@ -60,11 +60,6 @@ class Curfoxapiservice
 
     // ── States & Cities ───────────────────────────────────────────────────
 
-    /**
-     * Return all states with their cities, cached 24 h.
-     *
-     * @return array{id: int, name: string, cities: array}[]
-     */
     public function getStatesWithCities(): array
     {
         return Cache::remember(self::CITIES_CACHE, now()->addHours(24), function () {
@@ -90,11 +85,6 @@ class Curfoxapiservice
         return $response->json('data') ?? [];
     }
 
-    /**
-     * Return a flat list of active cities across all states.
-     *
-     * @return array{id: int, name: string, state_id: int, state_name: string}[]
-     */
     public function getAllCities(): array
     {
         $states = $this->getStatesWithCities();
@@ -116,10 +106,6 @@ class Curfoxapiservice
         return $cities;
     }
 
-    /**
-     * Find a city by name (case-insensitive) and return its state info.
-     * Returns keys: city_id, city_name, state_id, state_name
-     */
     public function findCityByName(string $cityName): ?array
     {
         $lower = strtolower(trim($cityName));
@@ -140,9 +126,6 @@ class Curfoxapiservice
         return null;
     }
 
-    /**
-     * Find a city by its ID.
-     */
     public function findCityById(int $cityId): ?array
     {
         foreach ($this->getStatesWithCities() as $state) {
@@ -163,11 +146,6 @@ class Curfoxapiservice
 
     // ── Businesses ────────────────────────────────────────────────────────
 
-    /**
-     * Return the merchant's business list from Curfox, cached 1 h.
-     *
-     * @return array{id, ref_no, merchant_id, business_name, is_default}[]
-     */
     public function getBusinesses(): array
     {
         return Cache::remember(self::BIZ_CACHE, now()->addHour(), function () {
@@ -196,9 +174,6 @@ class Curfoxapiservice
         return $response->json('data') ?? [];
     }
 
-    /**
-     * Return the default business, or the first one available.
-     */
     public function getDefaultBusiness(): ?array
     {
         $businesses = $this->getBusinesses();
@@ -212,16 +187,56 @@ class Curfoxapiservice
         return $businesses[0] ?? null;
     }
 
+    /**
+     * Create a new business via Curfox API.
+     *
+     * POST /api/public/merchant/business
+     *
+     * Payload shape:
+     * {
+     *   "business_name": "...",
+     *   "business_bank_detail": { account_name, account_number, bank_name, branch_name },
+     *   "business_address": { address_line_1, address_line_2, city_id, phone, postal_code, type, is_default }
+     * }
+     *
+     * Returns the full response array (data key contains created business).
+     */
+    public function createBusiness(array $payload): array
+    {
+        $response = $this->authenticatedPost('/business', $payload);
+
+        if ($response->status() === 401) {
+            $this->refreshToken();
+            $response = $this->authenticatedPost('/business', $payload);
+        }
+
+        if (! $response->successful()) {
+            Log::error('Curfox create business failed', [
+                'payload'  => $payload,
+                'status'   => $response->status(),
+                'response' => $response->json(),
+            ]);
+
+            $body    = $response->json();
+            $message = $body['message'] ?? 'Curfox business creation failed';
+
+            if (! empty($body['errors'])) {
+                $flat = [];
+                array_walk_recursive($body['errors'], function ($v) use (&$flat) { $flat[] = $v; });
+                $message .= ': ' . implode('; ', $flat);
+            }
+
+            throw new \RuntimeException($message, $response->status());
+        }
+
+        // Invalidate business cache so getBusinesses() picks up the new one
+        Cache::forget(self::BIZ_CACHE);
+
+        return $response->json();
+    }
+
     // ── Order Creation ────────────────────────────────────────────────────
 
-    /**
-     * Create one or more orders via the Curfox bulk endpoint.
-     *
-     * @param  array  $generalData  Keys: merchant_business_id, origin_city_name/id, origin_state_name
-     * @param  array  $ordersData   Array of order objects
-     * @return array  API response body
-     * @throws \RuntimeException on HTTP errors
-     */
     public function createOrders(array $generalData, array $ordersData): array
     {
         $payload = [
@@ -232,7 +247,6 @@ class Curfoxapiservice
         $response = $this->authenticatedPost('/order/bulk', $payload);
 
         if ($response->status() === 401) {
-            // Token expired — refresh and retry once
             $this->refreshToken();
             $response = $this->authenticatedPost('/order/bulk', $payload);
         }
@@ -259,9 +273,6 @@ class Curfoxapiservice
         return $response->json();
     }
 
-    /**
-     * Convenience alias used by SellerOrderController.
-     */
     public function createOrder(array $payload): array
     {
         $response = $this->authenticatedPost('/order/single', $payload);
@@ -272,12 +283,6 @@ class Curfoxapiservice
         }
 
         if (! $response->successful()) {
-            Log::error('Curfox create single order failed', [
-                'payload'  => $payload,
-                'status'   => $response->status(),
-                'response' => $response->json(),
-            ]);
-
             $body    = $response->json();
             $message = $body['message'] ?? 'Curfox order creation failed';
 
@@ -293,9 +298,6 @@ class Curfoxapiservice
         return $response->json();
     }
 
-    /**
-     * Build a single order_data item from an EmployeeDeliveryCall model.
-     */
     public function buildOrderDataFromDeliveryCall(
         \App\Models\EmployeeDeliveryCall $call,
         ?int    $destinationCityId    = null,
@@ -334,6 +336,32 @@ class Curfoxapiservice
         }
 
         return $order;
+    }
+
+    // ── Tracking ──────────────────────────────────────────────────────────
+
+    public function getTrackingInfo(string $waybillNumber): array
+    {
+        $payload = json_encode(['waybill_number' => $waybillNumber]);
+
+        $response = Http::withHeaders($this->baseHeaders(true))
+            ->withBody($payload, 'application/json')
+            ->get(self::BASE_URL . '/order/tracking-info');
+
+        if ($response->status() === 401) {
+            $this->refreshToken();
+            $response = Http::withHeaders($this->baseHeaders(true))
+                ->withBody($payload, 'application/json')
+                ->get(self::BASE_URL . '/order/tracking-info');
+        }
+
+        if (! $response->successful()) {
+            $body    = $response->json();
+            $message = $body['message'] ?? "Tracking fetch failed (HTTP {$response->status()})";
+            throw new \RuntimeException($message, $response->status());
+        }
+
+        return $response->json();
     }
 
     // ── HTTP helpers ──────────────────────────────────────────────────────
