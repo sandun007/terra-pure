@@ -4,8 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 class SellerOrder extends Model
 {
@@ -22,11 +20,19 @@ class SellerOrder extends Model
         'product_code',
         'product_price',
         'product_image',
+
         'customer_name',
         'customer_phone',
         'customer_email',
         'customer_address',
         'district',
+
+        'destination_city_id',
+        'destination_city_name',
+        'destination_state_name',
+        'curfox_waybill',
+        'curfox_dispatched_at',
+
         'platform',
         'call_status',
         'remark',
@@ -54,14 +60,19 @@ class SellerOrder extends Model
         'rescheduling_date' => 'date',
         'return_date'       => 'date',
         'invoice_date'      => 'date',
-        'created_at'        => 'datetime',
-        'updated_at'        => 'datetime',
-        'product_price'     => 'decimal:2',
-        'subtotal'          => 'decimal:2',
-        'shipping'          => 'decimal:2',
-        'total_amount'      => 'decimal:2',
-        'discount'          => 'decimal:2',
-        'quantity'          => 'integer',
+
+        'curfox_dispatched_at' => 'datetime',
+        'destination_city_id'  => 'integer',
+
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+
+        'product_price' => 'decimal:2',
+        'subtotal'      => 'decimal:2',
+        'shipping'      => 'decimal:2',
+        'total_amount'  => 'decimal:2',
+        'discount'      => 'decimal:2',
+        'quantity'      => 'integer',
     ];
 
     public function seller()
@@ -79,7 +90,6 @@ class SellerOrder extends Model
         return $this->hasMany(SellerOrderItem::class, 'seller_order_id');
     }
 
-    // Scopes
     public function scopePending($query)
     {
         return $query->where('status', 'pending');
@@ -122,42 +132,5 @@ class SellerOrder extends Model
     public function getFinalTotalAttribute(): float
     {
         return $this->computedSubtotal - $this->discount_amount;
-    }
-
-    public static function generateOrderId(): string
-    {
-        $prefix = 'ORD/';
-
-        if (!Schema::hasTable('seller_orders')) {
-            return $prefix . '00001';
-        }
-
-        try {
-            $lastOrder = DB::table('seller_orders')
-                ->lockForUpdate()
-                ->orderBy('id', 'desc')
-                ->first(['id', 'order_id', 'order_number']);
-
-            if ($lastOrder) {
-                $lastNumber = 0;
-                $source = $lastOrder->order_id ?? $lastOrder->order_number ?? '';
-
-                if ($source && preg_match('/(\d+)$/', $source, $matches)) {
-                    $lastNumber = (int) $matches[1];
-                } elseif ($lastOrder->id) {
-                    $lastNumber = (int) $lastOrder->id;
-                }
-
-                $newNumber = str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
-            } else {
-                $newNumber = '00001';
-            }
-
-            return $prefix . $newNumber;
-
-        } catch (\Exception $e) {
-            \Log::error('Error generating order ID: ' . $e->getMessage());
-            return $prefix . date('ymdHis');
-        }
     }
 }

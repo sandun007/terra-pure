@@ -26,6 +26,7 @@ use App\Http\Controllers\Wholesaler\WholesalerCategoryController;
 use App\Http\Controllers\Wholesaler\WholesalerOrderController;
 use App\Http\Controllers\Wholesaler\WholesalerPaymentController;
 use App\Http\Controllers\Wholesaler\WholesalerProductController;
+use App\Http\Controllers\Employee\EmployeeDeliveryCallController;
 use App\Http\Controllers\Wholesaler\WholesalerShopController;
 use App\Http\Controllers\WholesalerController;
 use Illuminate\Support\Carbon;
@@ -40,8 +41,46 @@ use Maatwebsite\Excel\Facades\Excel;
 |--------------------------------------------------------------------------
 */
 
+use App\Services\Curfoxapiservice;
+
+
+Route::middleware('auth:seller')->get('/seller/debug/curfox', function (Curfoxapiservice $curfox) {
+    $tokenOk = false;
+    $statesCount = 0;
+    $citiesCount = 0;
+
+    try {
+        $token = $curfox->getToken();
+        $tokenOk = !empty($token);
+
+        $states = $curfox->getStatesWithCities();
+        $statesCount = count($states);
+
+        $cities = $curfox->getAllCities();
+        $citiesCount = count($cities);
+
+        return response()->json([
+            'success' => true,
+            'token_ok' => $tokenOk,
+            'states_count' => $statesCount,
+            'cities_count' => $citiesCount,
+            'sample_state' => $states[0]['name'] ?? null,
+            'sample_city' => $cities[0]['name'] ?? null,
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage(),
+        ], 500);
+    }
+});
+
+
 Route::get('/', [PageController::class, 'login'])->name('login');
 Route::post('/',[LoginController::class,'loginCheck'])->name('login.check');
+
+
+
 
 // ========== ADMIN ROUTES ==========
 Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])->group(function(){
@@ -74,7 +113,7 @@ Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])-
             Route::post('/', [BrandController::class, 'store'])->name('brand.store');
             Route::get('/view/{id}', [BrandController::class, 'show'])->name('brand.show');
             Route::get('/edit/{id}', [BrandController::class, 'edit'])->name('brand.edit');
-    Route::put('/update/{id}', [BrandController::class, 'update'])->name('brand.update');
+            Route::put('/update/{id}', [BrandController::class, 'update'])->name('brand.update');
             Route::get('/{id}', [BrandController::class, 'delete'])->name('brand.delete');
         });
 
@@ -119,6 +158,10 @@ Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])-
             Route::get('/',[EmployeeController::class,'index'])->name('employee.list');
             Route::get('/create',[EmployeeController::class,'create'])->name('employee.create');
             Route::post('/',[EmployeeController::class,'store'])->name('employee.store');
+            Route::delete('/destroy/{id}',[EmployeeController::class,'destroy'])->name('employee.delete');
+            Route::get('/edit/{id}',[EmployeeController::class,'edit'])->name('employee.edit');
+            Route::put('/update/{id}',[EmployeeController::class,'update'])->name('employee.update');
+            Route::get('/show/{id}',[EmployeeController::class,'show'])->name('employee.view');
         });
     });
 });
@@ -136,10 +179,10 @@ Route::middleware('auth:seller')->group(function(){
 
         // Shop Routes
         Route::prefix('shop')->name('seller.shop.')->group(function () {
-            Route::get('/', [SellerShopController::class, 'index'])->name('seller.index'); // Fixed: changed from seller.index to index
+            Route::get('/', [SellerShopController::class, 'index'])->name('seller.index');
             Route::get('/product/view/{product}', [\App\Http\Controllers\Seller\SellerShopController::class, 'showProduct'])->name('product.show');
             Route::get('/product/{code}/details', [SellerShopController::class, 'getProductDetails'])->name('product.details');
-            Route::get('/product/find/{code}', [SellerShopController::class, 'findByCode'])->name('product.find'); // FIXED: This route was missing
+            Route::get('/product/find/{code}', [SellerShopController::class, 'findByCode'])->name('product.find');
             Route::post('/product/copy/{code}', [SellerShopController::class, 'copyProductCode'])->name('product.copy');
             Route::post('/order-now', [SellerShopController::class, 'orderNow'])->name('order.now');
             Route::post('/quick-order', [SellerShopController::class, 'quickOrder'])->name('quick.order');
@@ -147,10 +190,17 @@ Route::middleware('auth:seller')->group(function(){
             Route::get('/redirect-to-order', [SellerShopController::class, 'redirectToNewOrder'])->name('redirect.order');
         });
 
+
         // Seller Order Routes
         Route::prefix('order')->name('seller.')->group(function () {
             Route::get('new-order', [SellerOrderController::class, 'index'])->name('new-order');
             Route::post('store', [SellerOrderController::class, 'store'])->name('order.store');
+
+            // ✅ bulk store for same page CSV import
+            Route::post('bulk-store', [SellerOrderController::class, 'bulkStore'])->name('order.bulk-store');
+            Route::post('bulk-validate', [SellerOrderController::class, 'bulkValidate'])->name('order.bulk-validate');
+            Route::post('{id}/dispatch', [SellerOrderController::class, 'dispatchToCurfox'])->name('order.dispatch');
+            Route::get('cities/json', [SellerOrderController::class, 'citiesJson'])->name('order.cities.json');
 
             // Order list views
             Route::get('pending-order', [SellerOrderController::class, 'pendingOrder'])->name('pending-order');
@@ -167,10 +217,6 @@ Route::middleware('auth:seller')->group(function(){
             Route::get('product/{code}/details', [SellerOrderController::class, 'getProductDetails'])
                 ->name('product.details')
                 ->where('code', '.*');
-
-            // CSV Upload routes
-            Route::get('csv-upload', [SellerOrderController::class, 'csvUploadPage'])->name('order.csv-upload');
-            Route::post('csv-insert', [SellerOrderController::class, 'csvInsert'])->name('order.csv-insert');
         });
 
         Route::prefix('product')->group(function () {
@@ -183,7 +229,7 @@ Route::middleware('auth:seller')->group(function(){
             Route::get('/history',[SellerPaymentController::class,'payment_history'])->name('seller.payment_history');
         });
 
-        //seller call
+        // Seller Call Routes
         Route::prefix('call')->name('call.')->group(function () {
             // List views
             Route::get('/', [SellerCallController::class, 'index'])->name('index');
@@ -211,12 +257,19 @@ Route::middleware('auth:seller')->group(function(){
             // Additional routes
             Route::get('/seller-products', [SellerCallController::class, 'getSellerProducts'])->name('seller_products');
             Route::get('/csrf-refresh', [SellerCallController::class, 'csrfRefresh'])->name('csrf_refresh');
+
+            // ── Curfox / delivery confirm routes ─────────────────────────
+            Route::post('/{id}/confirm', [SellerCallController::class, 'confirmCall'])->name('confirm');
+            Route::post('/bulk-confirm', [SellerCallController::class, 'bulkConfirmCalls'])->name('bulk_confirm');
+            Route::get('/curfox-cities', [SellerCallController::class, 'curfoxCitiesJson'])->name('curfox_cities');
+            // ─────────────────────────────────────────────────────────────
         });
-        // Seller Product Routes - UPDATED
+
+        // Seller Product Routes
         Route::prefix('product')->name('seller.product.')->group(function (){
             Route::get('/', [SellerProductController::class, 'index'])->name('index');
             Route::get('/create', [SellerProductController::class, 'create'])->name('create');
-            Route::post('/', [SellerProductController::class, 'store'])->name('store'); // Fixed
+            Route::post('/', [SellerProductController::class, 'store'])->name('store');
             Route::get('/{id}', [SellerProductController::class, 'show'])->name('show');
             Route::get('/{id}/edit', [SellerProductController::class, 'edit'])->name('edit');
             Route::put('/{id}', [SellerProductController::class, 'update'])->name('update');
@@ -244,8 +297,6 @@ Route::middleware('auth:seller')->group(function(){
             Route::get('/{id}/edit', [SellerCategoryController::class, 'edit'])->name('edit');
             Route::put('/{id}', [SellerCategoryController::class, 'update'])->name('update');
             Route::delete('/{id}', [SellerCategoryController::class, 'destroy'])->name('destroy');
-
-            // Add this if you want toggle functionality
             Route::patch('/{id}/toggle-status', [SellerCategoryController::class, 'toggleStatus'])->name('toggle-status');
         });
 
@@ -255,6 +306,29 @@ Route::middleware('auth:seller')->group(function(){
 
 // ========== EMPLOYEE ROUTES ==========
 Route::prefix('employee')->middleware('auth:employee')->group(function(){
+
+    // Delivery Calls
+    Route::prefix('delivery-calls')->name('employee.delivery_calls.')->group(function () {
+        Route::get('/',            [EmployeeDeliveryCallController::class, 'index'])->name('index');
+        Route::get('/pending',     [EmployeeDeliveryCallController::class, 'pending'])->name('pending');
+        Route::get('/packing',     [EmployeeDeliveryCallController::class, 'packing'])->name('packing');
+        Route::get('/packed',      [EmployeeDeliveryCallController::class, 'packed'])->name('packed');
+        Route::get('/givedriver',  [EmployeeDeliveryCallController::class, 'givedriver'])->name('givedriver');
+        Route::get('/{id}',        [EmployeeDeliveryCallController::class, 'show'])->name('show');
+
+        // Business selector
+        Route::post('/set-business', [EmployeeDeliveryCallController::class, 'setBusiness'])->name('set_business');
+
+        // Status transitions
+        Route::post('/{id}/status',  [EmployeeDeliveryCallController::class, 'updateStatus'])->name('update_status');
+        Route::post('/bulk-status',  [EmployeeDeliveryCallController::class, 'bulkUpdateStatus'])->name('bulk_status');
+
+        // Origin updates
+        Route::patch('/{id}/origin', [EmployeeDeliveryCallController::class, 'updateOrigin'])->name('update_origin');
+        Route::patch('/bulk-origin', [EmployeeDeliveryCallController::class, 'bulkUpdateOrigin'])->name('bulk_origin');
+    });
+
+
     // Dashboard
     Route::get('/', [EmployeeController::class, 'dashboard'])->name('employee.dashboard');
     Route::post('/logout', [LoginController::class, 'logout'])->name('employee.logout');
@@ -277,6 +351,9 @@ Route::prefix('employee')->middleware('auth:employee')->group(function(){
         // Seller Management (Existing)
         Route::prefix('seller')->name('seller.')->group(function() {
             Route::get('/orders', [EmployeeController::class, 'sellerOrders'])->name('employee.seller.orders');
+            Route::prefix('order')->name('order.')->group(function () {
+                Route::post('/bulk-store', [SellerOrderController::class, 'bulkStore'])->name('bulk-store');
+            });
             Route::post('/orders/status/update/{id}', [EmployeeController::class, 'updateOrderStatus'])->name('orders.status-update');
             Route::get('/orders/view/{id}', [EmployeeController::class, 'viewOrder'])->name('order-view');
         });

@@ -160,8 +160,8 @@
 
             <!-- Seller Orders (existing) -->
             <li>
-                <a href="{{ route('seller.employee.seller.orders') }}"
-                   class="{{ request()->routeIs('seller.employee.seller.orders') ? 'active' : '' }}">
+                <a href="{{ route('employee.delivery_calls.pending') }}"
+                   class="{{ request()->routeIs('employee.delivery_calls.*') ? 'active' : '' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="9" cy="21" r="1"></circle>
@@ -172,61 +172,10 @@
                 </a>
             </li>
 
-            <!-- Seller Calls (existing) -->
-            <li>
-                <a href="{{ route('call.index') }}"
-                   class="{{ request()->routeIs('call.*') ? 'active' : '' }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8 10a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.574 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                    </svg>
-                    <span>Seller Calls</span>
-                </a>
-            </li>
+
         </ul>
     </li>
-    <!-- REPORTS -->
-    <li class="submenu-open">
-        <h6 class="submenu-hdr">Reports</h6>
-        <ul>
-            <li>
-                <a href="{{ route('employee.analytics') }}"
-                   class="{{ request()->routeIs('employee.analytics') ? 'active' : '' }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" y1="20" x2="18" y2="10"></line>
-                        <line x1="12" y1="20" x2="12" y2="4"></line>
-                        <line x1="6" y1="20" x2="6" y2="14"></line>
-                    </svg>
-                    <span>Analytics</span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('price-changes.history') }}"
-                   class="{{ request()->routeIs('price-changes.history') ? 'active' : '' }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                    </svg>
-                    <span>Price Changes History</span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('employee.export.report') }}?type=wholesaler_orders"
-                   class="{{ request()->routeIs('employee.export.report') ? 'active' : '' }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                        <polyline points="10 9 9 9 8 9"></polyline>
-                    </svg>
-                    <span>Export Reports</span>
-                </a>
-            </li>
-        </ul>
-    </li>
+
 
     <!-- PRINT -->
     <li class="submenu-open">
