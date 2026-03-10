@@ -139,7 +139,7 @@ Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])-
         Route::prefix('order')->group(function () {
             Route::get('/new-order', [OrderController::class, 'new_order'])->name('admin.new_order');
             Route::get('/complete-order', [OrderController::class, 'completeOrder'])->name('admin.complete_order_list');
-            Route::get('/return-order', [OrderController::class, 'returnOrder'])->name('return-order');
+            Route::get('/return-order', [OrderController::class, 'returnOrder'])->name('admin.return_order_list');
             Route::get('/rescheduling-order', [OrderController::class, 'reschedulingOrder'])->name('admin.rescheduling_order_list');
             Route::get('/pending-order', [OrderController::class, 'pendingOrder'])->name('pending-order');
         });
