@@ -95,8 +95,10 @@
                         <tr>
                             <th>Order Number</th>
                             <th>Product Name</th>
+                            <th>Customer</th>
                             <th>Total Amount</th>
-                            <th>Completed Date</th>
+                            <th>Order Date</th>
+                            <th>Delivery Date</th>
                         </tr>
 
                         </thead>
@@ -104,6 +106,8 @@
                         <tbody>
 
                         <tr>
+                            <td></td>
+                            <td></td>
                             <td></td>
                             <td></td>
                             <td></td>

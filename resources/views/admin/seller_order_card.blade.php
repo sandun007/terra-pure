@@ -32,6 +32,12 @@
                 <span>{{ $order->customer_address }}</span>
             </li>
 
+            <li class="list-group-item d-flex justify-content-between">
+                <span class="fw-semibold">Order Status</span>
+                <span>{{ $order->status }}</span>
+            </li>
+
+
 
 
             <li class="list-group-item d-flex justify-content-between">

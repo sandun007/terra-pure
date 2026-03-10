@@ -95,9 +95,14 @@
                         <tr>
                             <th>Order Number</th>
                             <th>Product Name</th>
+                            <th>Customer</th>
                             <th>Total Amount</th>
                             <th>Rescheduled Reason</th>
+                            <th>Order Date</th>
+                            <th>Original Delivery</th>
+
                             <th>Rescheduled Date</th>
+                            <th>Status</th>
                         </tr>
 
                         </thead>
@@ -105,6 +110,10 @@
                         <tbody>
 
                         <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
                             <td></td>
                             <td></td>
                             <td></td>

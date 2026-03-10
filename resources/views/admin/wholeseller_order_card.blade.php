@@ -33,6 +33,11 @@
             </li>
 
             <li class="list-group-item d-flex justify-content-between">
+                <span class="fw-semibold">Order Status</span>
+                <span>{{ $order->status }}</span>
+            </li>
+
+            <li class="list-group-item d-flex justify-content-between">
                 <span class="fw-semibold">Date</span>
                 <span>{{ \Carbon\Carbon::parse($order->order_date)->format('M d, Y') }}</span>
             </li>
