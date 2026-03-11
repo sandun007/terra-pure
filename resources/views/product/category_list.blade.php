@@ -59,11 +59,21 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
+                    <div class="mb-3">
+    <label for="categoryStoreFilter" class="form-label">Filter by Store:</label>
+    <select id="categoryStoreFilter" class="form-select" style="width: 200px;">
+        <option value="">All</option>
+        <option value="Admin">Admin</option>
+        <option value="Seller">Seller</option>
+        <option value="Wholesaler">Wholesaler</option>
+    </select>
+</div>
                     <table id="product-table" class="display table table-striped" style="width:100%">
                         <thead>
                         <tr>
                             <th>Category Code</th>
                             <th>Category Name</th>
+                            <th>Store</th>
                             <th>Status</th>
                             <th>Action</th>
                         </tr>
@@ -73,6 +83,7 @@
                             <tr>
                                 <td>{{ $category->code }}</td>
                                 <td>{{ $category->name }}</td>
+                                <td>{{ $category->store }}</td>
                                 <td>
                                     <span class="{{ $category->status_badge }}">
                                         {{ $category->status_text }}
@@ -154,5 +165,21 @@
             });
         });
     </script>
+    <script>
+$(document).ready(function () {
+    // Initialize DataTable
+    var table = $('#product-table').DataTable();
+
+    // Filter by Store (Admin / Seller / Wholesaler)
+    $('#categoryStoreFilter').on('change', function () {
+        var selected = $(this).val();
+        if(selected) {
+            table.column(2).search('^' + selected + '$', true, false).draw(); // column 2 = Store
+        } else {
+            table.column(2).search('').draw();
+        }
+    });
+});
+</script>
 
 @endpush
