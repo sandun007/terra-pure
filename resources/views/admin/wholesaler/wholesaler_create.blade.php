@@ -115,18 +115,6 @@
                                     </div>
                                 </div>
 
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Type</label>
-                                        <select name="type" class="form-control">
-                                            <option value="">Select Type</option>
-                                            <option value="retailer"    {{ old('type') === 'retailer'    ? 'selected' : '' }}>Retailer</option>
-                                            <option value="distributor" {{ old('type') === 'distributor' ? 'selected' : '' }}>Distributor</option>
-                                            <option value="wholesaler"  {{ old('type') === 'wholesaler'  ? 'selected' : '' }}>Wholesaler</option>
-                                            <option value="other"       {{ old('type') === 'other'       ? 'selected' : '' }}>Other</option>
-                                        </select>
-                                    </div>
-                                </div>
 
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">

@@ -135,21 +135,6 @@
                                     </div>
                                 </div>
 
-                                {{-- Type --}}
-                                <div class="col-sm-6 col-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Type</label>
-                                        <select name="type" class="form-control">
-                                            <option value="">Select Type</option>
-                                            @foreach(['retailer' => 'Retailer', 'distributor' => 'Distributor', 'wholesaler' => 'Wholesaler', 'other' => 'Other'] as $val => $label)
-                                                <option value="{{ $val }}"
-                                                    {{ old('type', $wholesaler->type) === $val ? 'selected' : '' }}>
-                                                    {{ $label }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
 
                                 {{-- Phone --}}
                                 <div class="col-sm-6 col-12">

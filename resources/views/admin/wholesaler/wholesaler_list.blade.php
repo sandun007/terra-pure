@@ -52,7 +52,6 @@
                             <th>Email</th>
                             <th>City</th>
                             <th>District</th>
-                            <th>Type</th>
                             <th>Action</th>
                         </tr>
                         </thead>
@@ -66,13 +65,6 @@
                                 <td>{{ $wholesaler->email ?? '—' }}</td>
                                 <td>{{ $wholesaler->city ?? '—' }}</td>
                                 <td>{{ $wholesaler->district ?? '—' }}</td>
-                                <td>
-                                    @if($wholesaler->type)
-                                        <span class="badge bg-info text-dark">{{ $wholesaler->type }}</span>
-                                    @else
-                                        —
-                                    @endif
-                                </td>
                                 <td>
                                     <div class="btn-group" role="group">
                                         <a href="{{ route('admin.wholesaler.view', $wholesaler->id) }}"

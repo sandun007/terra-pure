@@ -1388,7 +1388,6 @@ class WholesalerController extends Controller
                 'password' => 'required|string|min:8',
                 'business_name' => 'nullable|string|max:255',
                 'img' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
-                'type' => 'nullable|string|max:255',
                 'stock' => 'nullable|integer'
             ]);
 
@@ -1413,7 +1412,6 @@ class WholesalerController extends Controller
                 'password' => bcrypt($validated['password']),
                 'business_name' => $validated['business_name'] ?? null,
                 'img' => null,
-                'type' => $validated['type'] ?? null,
                 'stock' => $validated['stock'] ?? 0,
             ];
 
@@ -1473,7 +1471,6 @@ class WholesalerController extends Controller
                 'password' => 'nullable|string|min:8',
                 'business_name' => 'nullable|string|max:255',
                 'img' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
-                'type' => 'nullable|string|max:255',
                 'stock' => 'nullable|integer'
             ]);
 
@@ -1496,7 +1493,6 @@ class WholesalerController extends Controller
                 'email' => $validated['email'] ?? null,
                 'username' => $validated['username'],
                 'business_name' => $validated['business_name'] ?? null,
-                'type' => $validated['type'] ?? null,
                 'password' => bcrypt($validated['password']),
                 'stock' => $validated['stock'] ?? null,
                 ];
