@@ -202,8 +202,8 @@
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">NIC No</label>
-                                        <input type="text" name="nic_no" class="form-control"
-                                               placeholder="NIC No" value="{{ old('nic_no') }}">
+                                        <input type="text" name="NIC_no" class="form-control"
+                                               placeholder="NIC No" value="{{ old('NIC_no') }}">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
@@ -248,10 +248,10 @@
                         <div class="row">
                             <div class="col-12">
                                 <div class="mb-3">
-                                    <div class="image-upload image-upload-two">
+                                    <div class="image-upload image-upload-two" style="max-width: 200px; max-height: 200px;">
                                         <input type="file" id="profileImg" name="img" accept="image/*">
-                                        <div class="image-uploads">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                        <div class="image-uploads" style="padding: 10px;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                                  viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                                                  class="feather feather-plus-circle plus-down-add me-0">
@@ -259,12 +259,14 @@
                                                 <line x1="12" y1="8" x2="12" y2="16"></line>
                                                 <line x1="8" y1="12" x2="16" y2="12"></line>
                                             </svg>
-                                            <h4>Upload Profile Image</h4>
+                                            <h4 style="font-size: 12px;">Upload Profile Image</h4>
                                         </div>
                                     </div>
                                 </div>
                                 <div id="profileImgPreview" class="preview-container"></div>
                             </div>
+                        </div>
+                    </div>
                         </div>
                     </div>
                 </div>

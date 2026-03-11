@@ -155,6 +155,10 @@
                             <label class="form-label info-label">WhatsApp</label>
                             <div class="view-field">{{ $wholesaler->whatsapp ?? '—' }}</div>
                         </div>
+                        <div class="col-sm-6 col-12">
+                            <label class="form-label info-label">NIC No</label>
+                            <div class="view-field">{{ $wholesaler->NIC_no ?? '—' }}</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -194,21 +198,6 @@
                     </div>
                 </div>
             </div>
-
-            {{-- Account Information --}}
-            <div class="accordion-item border mb-4">
-                <h2 class="accordion-header">
-                    <div class="d-flex align-items-center flex-fill p-3">
-                        <h5 class="d-flex align-items-center mb-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none"
-                                 viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="text-primary me-2">
-                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                            </svg>
-                            Account Information
-                        </h5>
-                    </div>
-                </h2>
                 <div class="accordion-body border-top">
                     <div class="row">
                         <div class="col-sm-6 col-12">

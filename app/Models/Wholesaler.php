@@ -23,7 +23,7 @@ class Wholesaler extends Authenticatable
         'whatsapp',
         'email',
         'username',
-        'nic_no',
+        'NIC_no',
         'password',
         'business_name',
         'img',

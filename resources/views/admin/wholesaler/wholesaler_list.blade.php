@@ -59,16 +59,8 @@
                         <tbody>
                         @foreach($wholesalers as $wholesaler)
                             <tr>
-                                <td>{{ $wholesaler->code }}</td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <img src="{{ $wholesaler->profile_image_url }}"
-                                             alt="{{ $wholesaler->name }}"
-                                             width="36" height="36"
-                                             style="border-radius:50%;object-fit:cover;border:1px solid #e2e6f0;">
-                                        {{ $wholesaler->name }}
-                                    </div>
-                                </td>
+                                <td>{{ $wholesaler->code ?? '—' }}</td>
+                                <td>{{ $wholesaler->name ?? '—' }}</td>
                                 <td>{{ $wholesaler->business_name ?? '—' }}</td>
                                 <td>{{ $wholesaler->phone ?? '—' }}</td>
                                 <td>{{ $wholesaler->email ?? '—' }}</td>

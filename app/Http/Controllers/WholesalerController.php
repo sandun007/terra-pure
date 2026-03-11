@@ -1381,7 +1381,7 @@ class WholesalerController extends Controller
                 'postal_code' => 'nullable|string|max:20',
                 'district' => 'nullable|string|max:255',
                 'phone' => 'nullable|string|max:20',
-                'nic_no'=>'nullable|string|max:20',
+                'NIC_no'=>'nullable|string|max:20',
                 'whatsapp' => 'nullable|string|max:20',
                 'email' => 'nullable|email|unique:wholesalers,email',
                 'username' => 'required|string|max:255|unique:wholesalers,username',
@@ -1389,8 +1389,7 @@ class WholesalerController extends Controller
                 'business_name' => 'nullable|string|max:255',
                 'img' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
                 'type' => 'nullable|string|max:255',
-                'stock' => 'nullable|string|max:20'
-
+                'stock' => 'nullable|integer'
             ]);
 
             if ($validator->fails()) {
@@ -1407,15 +1406,15 @@ class WholesalerController extends Controller
                 'postal_code' => $validated['postal_code'] ?? null,
                 'district' => $validated['district'] ?? null,
                 'phone' => $validated['phone'] ?? null,
-                'nic_no'=>$validated['nic_no']?? null,
+                'NIC_no'=>$validated['NIC_no'] ?? null,
                 'whatsapp' => $validated['whatsapp'] ?? null,
                 'email' => $validated['email'] ?? null,
                 'username' => $validated['username'],
-                'password' => $validated['password'],
+                'password' => bcrypt($validated['password']),
                 'business_name' => $validated['business_name'] ?? null,
                 'img' => null,
                 'type' => $validated['type'] ?? null,
-                'stock' => $request->input('stock', 1),
+                'stock' => $validated['stock'] ?? 0,
             ];
 
             if ($request->hasFile('img')) {
@@ -1467,7 +1466,7 @@ class WholesalerController extends Controller
                 'postal_code' => 'nullable|string|max:20',
                 'district' => 'nullable|string|max:255',
                 'phone' => 'nullable|string|max:20',
-                'nic_no'=>'nullable|string|max:20',
+                'NIC_no'=>'nullable|string|max:20',
                 'whatsapp' => 'nullable|string|max:20',
                 'email' => 'nullable|email|unique:wholesalers,email,' . $wholesaler->id,
                 'username' => 'required|string|max:255|unique:wholesalers,username,' . $wholesaler->id,
@@ -1475,7 +1474,7 @@ class WholesalerController extends Controller
                 'business_name' => 'nullable|string|max:255',
                 'img' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
                 'type' => 'nullable|string|max:255',
-                'stock' => 'nullable|boolean'
+                'stock' => 'nullable|integer'
             ]);
 
             if ($validator->fails()) {
@@ -1492,13 +1491,15 @@ class WholesalerController extends Controller
                 'postal_code' => $validated['postal_code'] ?? null,
                 'district' => $validated['district'] ?? null,
                 'phone' => $validated['phone'] ?? null,
-                'nic_no'=>$validated['nic_no']?? null,
+                'NIC_no'=>$validated['NIC_no'] ?? null,
                 'whatsapp' => $validated['whatsapp'] ?? null,
                 'email' => $validated['email'] ?? null,
                 'username' => $validated['username'],
                 'business_name' => $validated['business_name'] ?? null,
                 'type' => $validated['type'] ?? null,
-                'stock' => $request->input('stock', 1),            ];
+                'password' => bcrypt($validated['password']),
+                'stock' => $validated['stock'] ?? null,
+                ];
 
             if ($request->filled('password')) {
                 $wholesalerData['password'] = $validated['password'];

@@ -242,9 +242,9 @@
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">NIC No</label>
-                                        <input type="text" name="nic_no" class="form-control"
+                                        <input type="text" name="NIC_no" class="form-control"
                                                placeholder="NIC No"
-                                               value="{{ old('nic_no', $wholesaler->nic_no) }}">
+                                               value="{{ old('NIC_no', $wholesaler->NIC_no) }}">
                                     </div>
                                 </div>
 
