@@ -51,21 +51,6 @@
             <a href="{{ route('admin.wholesaler.list') }}" class="btn btn-secondary">View Wholesaler List</a>
         </div>
     </div>
-
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    @if (session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
-
     <form action="{{ route('admin.wholesaler.store') }}" class="add-product-form" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="add-product">
