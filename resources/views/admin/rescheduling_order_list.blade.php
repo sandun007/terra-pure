@@ -66,7 +66,7 @@
         <div class="tab-content mt-3">
 
             <!-- Company Orders Table -->
-            <div class="tab-pane fade show active" id="completedcompanyorders">
+            <div class="tab-pane fade show active" id="resheduledcompanyorders">
 
                 <div class="table-card">
 
@@ -130,7 +130,7 @@
 
 
             <!-- Wholeseller Orders Table -->
-            <div class="tab-pane fade" id="resheduledwholesellerorders">
+            <div class="tab-pane fade" id="resheduleddwholesellerorders">
 
                 <div class="table-card">
 
