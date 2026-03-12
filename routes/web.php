@@ -92,6 +92,9 @@ Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])-
     Route::prefix('admins')->group(function () {
         Route::get('/', [AdminController::class, 'index'])->name('admin.admins.index');
         Route::get('/{id}/view', [AdminController::class, 'show'])->name('admin.admins.view');
+        Route::get('/profile', [AdminController::class, 'profile'])->name('admin.profile');
+        Route::get('/profile/edit', [AdminController::class, 'profileEdit'])->name('admin.profile.edit');
+        Route::post('/profile/update', [AdminController::class, 'profileUpdate'])->name('admin.profile.update');
     });
 
     Route::get('/create', [AdminController::class, 'create'])->name('admin.create');

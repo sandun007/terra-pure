@@ -48,14 +48,32 @@ class SellerController extends Controller
 
     public function store(Request $request)
     {
+        $request->validate([
+            'username' => 'required|string|unique:salers,username|unique:users,username',
+            'email'    => 'required|email|unique:salers,email|unique:users,email',
+            'name'     => 'required|string',
+            'password' => 'required|min:6',
+        ], [
+            'username.unique' => 'The username has already been taken in either the seller or user records.',
+            'email.unique'    => 'The email has already been registered in either the seller or user records.',
+        ]);
+
         DB::beginTransaction();
 
         try {
+            // Handle multiple images if they come as an array (due to 'multiple' attribute in form)
             $NIC_front = ImageUploader::uploadImage($request->file('nic_front'), 'seller/nic_front');
+            if (is_array($NIC_front)) {
+                $NIC_front = $NIC_front[0] ?? null;
+            }
+
             $NIC_back  = ImageUploader::uploadImage($request->file('nic_back'),  'seller/nic_back');
+            if (is_array($NIC_back)) {
+                $NIC_back = $NIC_back[0] ?? null;
+            }
 
             $codeGenerate = new CodeGenerator;
-            $code = $codeGenerate->generateCode('seller');
+            $codeGenerate->generateCode('seller');
 
             $level_02_seller_01 = 0;
             $level_03_seller_01 = 0;
@@ -96,9 +114,6 @@ class SellerController extends Controller
                 ]);
             }
 
-            $codeGenerate = new CodeGenerator;
-            $codeGenerate->generateCode('seller'); // Increment the counter in InvPara
-
             Saler::create([
                 'code'          => $request->code,
                 'name'          => $request->name,
@@ -128,6 +143,14 @@ class SellerController extends Controller
                 'account_number'      => $request->account_number,
             ]);
 
+
+            $seller_type = 'retail';
+            if ($request->type == 'system_seller') {
+                $seller_type = 'system';
+            } elseif ($request->type == 'self_seller') {
+                $seller_type = 'retail';
+            }
+
             User::create([
                 'name'          => $request->name,
                 'email'         => $request->email,
@@ -136,6 +159,7 @@ class SellerController extends Controller
                 'view_password' => $request->password,
                 'type'          => 'seller',
                 'user_type'     => 'seller',
+                'seller_type'   => $seller_type,
             ]);
 
             DB::commit();

@@ -31,7 +31,6 @@
             background-color: var(--main-theme-color) !important;
         }
     </style>
-
 @endpush
 @section('content')
     <div class="page-header">
@@ -48,14 +47,14 @@
             </li>
             <li>
                 <a data-bs-toggle="tooltip" data-bs-placement="top" id="collapse-header" aria-label="Collapse"
-                   data-bs-original-title="Collapse"><i class="ti ti-chevron-up"></i></a>
+                    data-bs-original-title="Collapse"><i class="ti ti-chevron-up"></i></a>
             </li>
         </ul>
         <div class="page-btn mt-0">
-            <a href="{{route('seller.list')}}" class="btn btn-secondary">View Seller List</a>
+            <a href="{{ route('seller.list') }}" class="btn btn-secondary">View Seller List</a>
         </div>
     </div>
-    <form action="{{route('admin.seller.store')}}" class="add-product-form" method="post" enctype="multipart/form-data">
+    <form action="{{ route('admin.seller.store') }}" class="add-product-form" method="post" enctype="multipart/form-data">
         @csrf
         <div class="add-product">
             <div class="accordions-items-seperate" id="accordionSpacingExample">
@@ -64,8 +63,8 @@
                         <div class="d-flex align-items-center justify-content-between flex-fill p-3">
                             <h5 class="d-flex align-items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                     stroke-linejoin="round" class="feather feather-info text-primary me-2">
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" class="feather feather-info text-primary me-2">
                                     <circle cx="12" cy="12" r="10"></circle>
                                     <line x1="12" y1="16" x2="12" y2="12"></line>
                                     <line x1="12" y1="8" x2="12.01" y2="8"></line>
@@ -81,71 +80,83 @@
                                     <div class="mb-3">
                                         <label class="form-label">Seller Code<span class="text-danger ms-1">*</span></label>
                                         <input type="text" name="code" class="form-control" required
-                                               value="{{ $code }}">
+                                            value="{{ $code }}">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Full Name<span class="text-danger ms-1">*</span></label>
                                         <input type="text" name="name" class="form-control" placeholder="Full Name"
-                                               required>
+                                            value="{{ old('name') }}" required>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">NIC No<span class="text-danger ms-1">*</span></label>
                                         <input type="text" name="nic_no" class="form-control" placeholder="NIC NO"
-                                               required>
+                                            value="{{ old('nic_no') }}" required>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Mobile No<span class="text-danger ms-1">*</span></label>
                                         <input type="text" name="phone" class="form-control" placeholder="Mobile No 01"
-                                               required>
+                                            value="{{ old('phone') }}" required>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Whatsapp<span class="text-danger ms-1">*</span></label>
                                         <input type="text" name="whatsapp" class="form-control" placeholder="Whatsapp No"
-                                               required>
+                                            value="{{ old('whatsapp') }}" required>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Email<span class="text-danger ms-1">*</span></label>
-                                        <input type="email" name="email" class="form-control" placeholder="Email"
-                                               required>
+                                        <input type="email" name="email"
+                                            class="form-control @error('email') is-invalid @enderror" placeholder="Email"
+                                            value="{{ old('email') }}" required>
+                                        @error('email')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Address <span class="text-danger ms-1">*</span></label>
                                         <input type="text" name="address" class="form-control" placeholder="Address"
-                                               required>
+                                            value="{{ old('address') }}" required>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">City<span class="text-danger ms-1">*</span></label>
                                         <input type="text" name="city" class="form-control" placeholder="City"
-                                               required>
+                                            value="{{ old('city') }}" required>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Postal Code<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="postal_code" class="form-control"
-                                               placeholder="Postal Code" required>
+                                        <input type="text" name="postal_code"
+                                            class="form-control @error('postal_code') is-invalid @enderror"
+                                            placeholder="Postal Code" value="{{ old('postal_code') }}" required>
+                                        @error('postal_code')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Username<span class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="username" class="form-control"
-                                               placeholder="Username" required>
+                                        <input type="text" name="username"
+                                            class="form-control @error('username') is-invalid @enderror"
+                                            placeholder="Username" value="{{ old('username') }}" required>
+                                        @error('username')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
@@ -153,7 +164,7 @@
                                     <div class="mb-3">
                                         <label class="form-label">Password<span class="text-danger ms-1">*</span></label>
                                         <input type="password" name="password" class="form-control"
-                                               placeholder="Password" required>
+                                            placeholder="Password" required>
                                     </div>
                                 </div>
 
@@ -162,7 +173,7 @@
                                         <label class="form-label">Deposit Amount<span
                                                 class="text-danger ms-1">*</span></label>
                                         <input type="number" name="deposit" class="form-control"
-                                               placeholder="Deposit Amount" required>
+                                            placeholder="Deposit Amount" value="{{ old('deposit') }}" required>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
@@ -170,9 +181,11 @@
                                         <label class="form-label">Seller Type<span
                                                 class="text-danger ms-1">*</span></label>
                                         <select class="form-control" name="type" required>
-                                            <option value="self_seller">Self Seller</option>
-                                            <option value="system_seller">System Seller</option>
-                                            <option value="whole_seller">Whole Seller</option>
+                                            <option value="self_seller"
+                                                {{ old('type') == 'self_seller' ? 'selected' : '' }}>Self Seller</option>
+                                            <option value="system_seller"
+                                                {{ old('type') == 'system_seller' ? 'selected' : '' }}>System Seller
+                                            </option>
                                         </select>
                                     </div>
                                 </div>
@@ -181,7 +194,7 @@
                                         <label class="form-label">Referral Code<span
                                                 class="text-danger ms-1">*</span></label>
                                         <input type="text" name="ref_code" class="form-control"
-                                               placeholder="Referral Code" value="0" required>
+                                            placeholder="Referral Code" value="{{ old('ref_code', '0') }}" required>
                                     </div>
                                 </div>
 
@@ -190,31 +203,11 @@
                                         <label class="form-label">District</label>
                                         <select class="form-control" name="district" required>
                                             <option value="">Select</option>
-                                            <option value="Ampara">Ampara</option>
-                                            <option value="Anuradhapura">Anuradhapura</option>
-                                            <option value="Badulla">Badulla</option>
-                                            <option value="Batticaloa">Batticaloa</option>
-                                            <option value="Colombo">Colombo</option>
-                                            <option value="Galle">Galle</option>
-                                            <option value="Gampaha">Gampaha</option>
-                                            <option value="Hambantota">Hambantota</option>
-                                            <option value="Jaffna">Jaffna</option>
-                                            <option value="Kalutara">Kalutara</option>
-                                            <option value="Kandy">Kandy</option>
-                                            <option value="Kegalle">Kegalle</option>
-                                            <option value="Kilinochchi">Kilinochchi</option>
-                                            <option value="Kurunegala">Kurunegala</option>
-                                            <option value="Mannar">Mannar</option>
-                                            <option value="Matale">Matale</option>
-                                            <option value="Matara">Matara</option>
-                                            <option value="Monaragala">Monaragala</option>
-                                            <option value="Mullaitivu">Mullaitivu</option>
-                                            <option value="Nuwara Eliya">Nuwara Eliya</option>
-                                            <option value="Polonnaruwa">Polonnaruwa</option>
-                                            <option value="Puttalam">Puttalam</option>
-                                            <option value="Ratnapura">Ratnapura</option>
-                                            <option value="Trincomalee">Trincomalee</option>
-                                            <option value="Vavuniya">Vavuniya</option>
+                                            @foreach (['Ampara', 'Anuradhapura', 'Badulla', 'Batticaloa', 'Colombo', 'Galle', 'Gampaha', 'Hambantota', 'Jaffna', 'Kalutara', 'Kandy', 'Kegalle', 'Kilinochchi', 'Kurunegala', 'Mannar', 'Matale', 'Matara', 'Monaragala', 'Mullaitivu', 'Nuwara Eliya', 'Polonnaruwa', 'Puttalam', 'Ratnapura', 'Trincomalee', 'Vavuniya'] as $dist)
+                                                <option value="{{ $dist }}"
+                                                    {{ old('district') == $dist ? 'selected' : '' }}>{{ $dist }}
+                                                </option>
+                                            @endforeach
                                         </select>
                                     </div>
                                 </div>
@@ -229,9 +222,9 @@
                         <div class="d-flex align-items-center justify-content-between flex-fill p-3">
                             <h5 class="d-flex align-items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                     stroke-linecap="round" stroke-linejoin="round"
-                                     class="feather feather-credit-card text-primary me-2">
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round"
+                                    class="feather feather-credit-card text-primary me-2">
                                     <rect x="1" y="4" width="22" height="16" rx="2" ry="2">
                                     </rect>
                                     <line x1="1" y1="10" x2="23" y2="10"></line>
@@ -247,28 +240,28 @@
                                     <div class="mb-3">
                                         <label class="form-label">Bank Name</label>
                                         <input type="text" name="bank_name" class="form-control"
-                                               placeholder="Bank Name">
+                                            placeholder="Bank Name" value="{{ old('bank_name') }}">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Branch Name</label>
                                         <input type="text" name="branch_name" class="form-control"
-                                               placeholder="Branch Name">
+                                            placeholder="Branch Name" value="{{ old('branch_name') }}">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Account Holder Name</label>
                                         <input type="text" name="account_holder_name" class="form-control"
-                                               placeholder="Account Holder Name">
+                                            placeholder="Account Holder Name" value="{{ old('account_holder_name') }}">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Account Number</label>
                                         <input type="text" name="account_number" class="form-control"
-                                               placeholder="Account Number">
+                                            placeholder="Account Number" value="{{ old('account_number') }}">
                                     </div>
                                 </div>
                             </div>
@@ -281,9 +274,9 @@
                         <div class="d-flex align-items-center justify-content-between flex-fill p-3">
                             <h5 class="d-flex align-items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                     stroke-linecap="round" stroke-linejoin="round"
-                                     class="feather feather-image text-primary me-2">
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round"
+                                    class="feather feather-image text-primary me-2">
                                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2">
                                     </rect>
                                     <circle cx="8.5" cy="8.5" r="1.5"></circle>
@@ -303,18 +296,18 @@
                                                 <div class="mb-3">
                                                     <div class="image-upload image-upload-two">
                                                         <input type="file" id="nicFront" name="nic_front" multiple
-                                                               required>
+                                                            required>
                                                         <div class="image-uploads">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="24"
-                                                                 height="24" viewBox="0 0 24 24" fill="none"
-                                                                 stroke="currentColor" stroke-width="2"
-                                                                 stroke-linecap="round" stroke-linejoin="round"
-                                                                 class="feather feather-plus-circle plus-down-add me-0">
+                                                                height="24" viewBox="0 0 24 24" fill="none"
+                                                                stroke="currentColor" stroke-width="2"
+                                                                stroke-linecap="round" stroke-linejoin="round"
+                                                                class="feather feather-plus-circle plus-down-add me-0">
                                                                 <circle cx="12" cy="12" r="10"></circle>
                                                                 <line x1="12" y1="8" x2="12"
-                                                                      y2="16"></line>
+                                                                    y2="16"></line>
                                                                 <line x1="8" y1="12" x2="16"
-                                                                      y2="12"></line>
+                                                                    y2="12"></line>
                                                             </svg>
                                                             <h4>NIC Front</h4>
                                                         </div>
@@ -340,18 +333,18 @@
                                                 <div class="mb-3">
                                                     <div class="image-upload image-upload-two">
                                                         <input type="file" id="nicBack" name="nic_back" multiple
-                                                               required>
+                                                            required>
                                                         <div class="image-uploads">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="24"
-                                                                 height="24" viewBox="0 0 24 24" fill="none"
-                                                                 stroke="currentColor" stroke-width="2"
-                                                                 stroke-linecap="round" stroke-linejoin="round"
-                                                                 class="feather feather-plus-circle plus-down-add me-0">
+                                                                height="24" viewBox="0 0 24 24" fill="none"
+                                                                stroke="currentColor" stroke-width="2"
+                                                                stroke-linecap="round" stroke-linejoin="round"
+                                                                class="feather feather-plus-circle plus-down-add me-0">
                                                                 <circle cx="12" cy="12" r="10"></circle>
                                                                 <line x1="12" y1="8" x2="12"
-                                                                      y2="16"></line>
+                                                                    y2="16"></line>
                                                                 <line x1="8" y1="12" x2="16"
-                                                                      y2="12"></line>
+                                                                    y2="12"></line>
                                                             </svg>
                                                             <h4>NIC Front</h4>
                                                         </div>
@@ -466,5 +459,4 @@
             }
         });
     </script>
-
 @endpush

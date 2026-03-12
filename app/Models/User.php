@@ -33,7 +33,8 @@ class User extends Authenticatable
         'state',
         'country',
         'zip_code',
-        'commission_balance'
+        'commission_balance',
+        'seller_type'
     ];
 
     /**

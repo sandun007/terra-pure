@@ -25,48 +25,70 @@
 
     <div class="card">
         <div class="card-body">
+            <div class="row mb-3 align-items-center">
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="form-label fw-bold mb-0" style="min-width: 100px;">Seller Type:</label>
+                        <select id="type-filter" class="form-control" style="max-width: 200px;">
+                            <option value="">All Sellers</option>
+                            <option value="System Seller">System Seller</option>
+                            <option value="Self Seller">Self Seller</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4 text-end" id="search-container">
+                    <!-- DataTables search box will be moved here -->
+                </div>
+            </div>
             <table id="product-table" class="display table table-striped" style="width:100%">
                 <thead>
-                <tr>
-                    <th>Seller Code</th>
-                    <th>Seller Name</th>
-                    <th>NIC</th>
-                    <th>Mobile</th>
-                    <th>Address</th>
-                    <th>District</th>
-                    <th class="text-center">Action</th>
-                </tr>
+                    <tr>
+                        <th>Seller Code</th>
+                        <th>Seller Name</th>
+                        <th>NIC</th>
+                        <th>Mobile</th>
+                        <th>Address</th>
+                        <th>District</th>
+                        <th>Type</th>
+                        <th class="text-center">Action</th>
+                    </tr>
                 </thead>
                 <tbody>
-                @foreach($sellers as $seller)
-                    <tr>
-                        <td>{{ $seller->code }}</td>
-                        <td>{{ $seller->name }}</td>
-                        <td>{{ $seller->NIC_no }}</td>
-                        <td>{{ $seller->phone }}</td>
-                        <td>{{ $seller->address }}</td>
-                        <td>{{ $seller->district }}</td>
-                        <td class="text-center">
+                    @foreach ($sellers as $seller)
+                        <tr>
+                            <td>{{ $seller->code }}</td>
+                            <td>{{ $seller->name }}</td>
+                            <td>{{ $seller->NIC_no }}</td>
+                            <td>{{ $seller->phone }}</td>
+                            <td>{{ $seller->address }}</td>
+                            <td>{{ $seller->district }}</td>
+                            <td>
+                                @if ($seller->type == 'system_seller')
+                                    System Seller
+                                @elseif($seller->type == 'self_seller')
+                                    Self Seller
+                                @else
+                                    {{ ucfirst(str_replace('_', ' ', $seller->type)) }}
+                                @endif
+                            </td>
+                            <td class="text-center">
 
-                            <a href="{{ route('admin.seller.view', $seller->id) }}"
-                               class="btn btn-dark btn-sm">
-                                <i class="ti ti-eye"></i>
-                            </a>
+                                <a href="{{ route('admin.seller.view', $seller->id) }}" class="btn btn-dark btn-sm">
+                                    <i class="ti ti-eye"></i>
+                                </a>
 
-                            <a href="{{ route('admin.seller.edit', $seller->id) }}"
-                               class="btn btn-warning btn-sm">
-                                <i class="ti ti-edit"></i>
-                            </a>
+                                <a href="{{ route('admin.seller.edit', $seller->id) }}" class="btn btn-warning btn-sm">
+                                    <i class="ti ti-edit"></i>
+                                </a>
 
-                            <button type="button"
-                                    class="btn btn-danger btn-sm delete-confirm"
+                                <button type="button" class="btn btn-danger btn-sm delete-confirm"
                                     data-url="{{ route('seller.delete', $seller->id) }}">
-                                <i class="ti ti-trash"></i>
-                            </button>
+                                    <i class="ti ti-trash"></i>
+                                </button>
 
-                        </td>
-                    </tr>
-                @endforeach
+                            </td>
+                        </tr>
+                    @endforeach
                 </tbody>
             </table>
         </div>
@@ -80,33 +102,43 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
 
             // DataTable
-            $('#product-table').DataTable();
+            var table = $('#product-table').DataTable();
+
+            // Move search box to the custom container next to the filter
+            $('#product-table_filter').appendTo('#search-container');
+            $('#product-table_filter label').addClass('mb-0 d-flex align-items-center gap-2');
+            $('#product-table_filter input').addClass('form-control form-control-sm').css('margin-left', '0');
+
+            // Type Filter
+            $('#type-filter').on('change', function() {
+                table.column(6).search(this.value).draw();
+            });
 
             //  SUCCESS MESSAGE (Update / Create)
-            @if(session('success'))
-            Swal.fire({
-                icon: 'success',
-                title: 'Success',
-                text: "{{ session('success') }}",
-                timer: 2500,
-                showConfirmButton: false
-            });
+            @if (session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: "{{ session('success') }}",
+                    timer: 2500,
+                    showConfirmButton: false
+                });
             @endif
 
             //  ERROR MESSAGE
-            @if(session('error'))
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: "{{ session('error') }}",
-            });
+            @if (session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: "{{ session('error') }}",
+                });
             @endif
 
             // 🗑 Delete Confirmation
-            $(document).on('click', '.delete-confirm', function (e) {
+            $(document).on('click', '.delete-confirm', function(e) {
                 e.preventDefault();
                 let deleteUrl = $(this).data('url');
 
