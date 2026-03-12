@@ -144,6 +144,18 @@ Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])-
         Route::post('/update', [SellerController::class, 'update'])->name('admin.seller.update');
     });
 
+    // Wholesaler Management
+    Route::prefix('wholesaler')->group(function () {
+        Route::get('/',               [WholesalerController::class, 'index'])->name('admin.wholesaler.index');
+        Route::get('/list',           [WholesalerController::class, 'index'])->name('admin.wholesaler.list');
+        Route::get('/create',         [WholesalerController::class, 'create'])->name('admin.wholesaler.create');
+        Route::post('/store',         [WholesalerController::class, 'store'])->name('admin.wholesaler.store');
+        Route::get('/view/{id}',      [WholesalerController::class, 'show'])->name('admin.wholesaler.view');
+        Route::get('/edit/{id}',      [WholesalerController::class, 'edit'])->name('admin.wholesaler.edit');
+        Route::post('/update/{id}',   [WholesalerController::class, 'update'])->name('admin.wholesaler.update');
+        Route::delete('/delete/{id}', [WholesalerController::class, 'destroy'])->name('admin.wholesaler.delete');
+    });
+
     // Order Management
     Route::prefix('order')->group(function () {
         Route::get('new-order', [OrderController::class, 'new_order'])->name('admin.new_order');
