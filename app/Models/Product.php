@@ -93,4 +93,5 @@ public function category()
             return 'in-stock';
         }
     }
+    
 }
