@@ -50,9 +50,14 @@ class LoginController extends Controller
             }
         }
 
-        // Fallback for Wholesaler login, since they are largely stored only in wholesalers table
+        //  Wholesaler login
         if (Auth::guard('wholesaler')->attempt(['username' => $request->username, 'password' => $request->password])) {
             return redirect()->route('wholesaler.dashboard');
+        }
+
+        //  Employee login
+        if (Auth::guard('employee')->attempt(['username' => $request->username, 'password' => $request->password])) {
+            return redirect()->route('employee.dashboard');
         }
 
         // If authentication fails for any guard
