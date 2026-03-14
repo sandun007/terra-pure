@@ -14,6 +14,14 @@
         <div class="page-title d-flex align-items-center gap-3">
             <h4 class="fw-bold mb-0">Seller List</h4>
             <span class="badge bg-primary rounded-pill">{{ $sellers->count() }}</span>
+            <div class="ms-4 d-none d-md-flex gap-2">
+                <span class="badge bg-light text-dark border shadow-sm">
+                    <i class="ti ti-user-check me-1"></i> Direct: {{ $sellers->where('referrer_seller', null)->count() }}
+                </span>
+                <span class="badge bg-soft-primary text-primary border shadow-sm">
+                    <i class="ti ti-users me-1"></i> Referred: {{ $sellers->where('referrer_seller', '!=', null)->count() }}
+                </span>
+            </div>
         </div>
 
         <div class="page-btn mt-0">
@@ -50,6 +58,7 @@
                         <th>Address</th>
                         <th>District</th>
                         <th>Type</th>
+                        <th>Referrer</th>
                         <th class="text-center">Action</th>
                     </tr>
                 </thead>
@@ -69,6 +78,15 @@
                                     Self Seller
                                 @else
                                     {{ ucfirst(str_replace('_', ' ', $seller->type)) }}
+                                @endif
+                            </td>
+                            <td>
+                                @if($seller->referrer_seller)
+                                    <span class="fw-bold">{{ $seller->referrer_seller->name }}</span>
+                                @else
+                                    <span class="badge bg-light text-dark shadow-sm">
+                                        <i class="ti ti-user-check me-1"></i> Direct
+                                    </span>
                                 @endif
                             </td>
                             <td class="text-center">

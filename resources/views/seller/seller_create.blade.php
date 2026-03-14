@@ -193,8 +193,9 @@
                                     <div class="mb-3">
                                         <label class="form-label">Referral Code<span
                                                 class="text-danger ms-1">*</span></label>
-                                        <input type="text" name="ref_code" class="form-control"
-                                            placeholder="Referral Code" value="{{ old('ref_code', '0') }}" required>
+                                        <input type="text" name="ref_code" id="ref_code" class="form-control"
+                                            placeholder="Enter Referral Code / Leave Empty to Direct Registration" value="{{ old('ref_code') }}" required>
+                                        <div id="ref_code_msg" class="mt-2 fw-bold h6"></div>
                                     </div>
                                 </div>
 
@@ -456,6 +457,54 @@
                     previewContainer.appendChild(imgDiv);
                 };
                 reader.readAsDataURL(file);
+            }
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            var inputTimeout = null;
+
+            $('#ref_code').on('input change', function() {
+                var code = $(this).val().trim();
+                var msgDiv = $('#ref_code_msg');
+
+                // Clear previous timeout
+                if (inputTimeout) clearTimeout(inputTimeout);
+
+                if (code == '0' || code == '') {
+                    msgDiv.html('<span class="text-muted">No referrer (Direct Registration)</span>');
+                    return;
+                }
+
+                msgDiv.html('<span class="text-info"><i class="fa fa-spinner fa-spin"></i> Checking...</span>');
+
+                // Wait for user to stop typing
+                inputTimeout = setTimeout(function() {
+                    $.ajax({
+                        url: "{{ route('admin.seller.check-referral') }}",
+                        method: "GET",
+                        data: { code: code },
+                        success: function(response) {
+                            if (response.success) {
+                                msgDiv.html('<span class="text-success"><i class="fa fa-check-circle"></i> Referrer: ' + response.name + '</span>');
+                            } else {
+                                msgDiv.html('<span class="text-danger"><i class="fa fa-times-circle"></i> ' + response.message + '</span>');
+                            }
+                        },
+                        error: function(xhr) {
+                            var errorMsg = "Error linking referral";
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                errorMsg = xhr.responseJSON.message;
+                            }
+                            msgDiv.html('<span class="text-warning"><i class="fa fa-exclamation-triangle"></i> ' + errorMsg + '</span>');
+                        }
+                    });
+                }, 200); // 200ms delay for faster checking
+            });
+
+            // Trigger once on page load to check initial value
+            if ($('#ref_code').val() != '0') {
+                $('#ref_code').trigger('change');
             }
         });
     </script>

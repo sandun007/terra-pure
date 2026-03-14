@@ -29,12 +29,12 @@ class SellerController extends Controller
 
     public function index()
     {
-        $sellers = Saler::all();
+        $sellers = Saler::with('referrer_seller')->get();
         return view('seller.seller_list', compact('sellers'));
     }
     public function show($id)
     {
-        $seller = Saler::findOrFail($id);
+        $seller = Saler::with(['referrer_seller', 'referred_sellers'])->findOrFail($id);
 
         return view('seller.seller_view', compact('seller'));
     }
@@ -43,7 +43,8 @@ class SellerController extends Controller
     {
         $codeGenerate = new CodeGenerator();
         $code = $codeGenerate->newCodeLoad('seller');
-        return view('seller.seller_create', compact('code'));
+        $sellers = Saler::orderBy('name', 'asc')->get();
+        return view('seller.seller_create', compact('code', 'sellers'));
     }
 
     public function store(Request $request)
@@ -376,6 +377,30 @@ class SellerController extends Controller
             }
 
             return back()->with('error', $e->getMessage())->withInput();
+        }
+    }
+
+    public function checkReferral(Request $request)
+    {
+        try {
+            $code = $request->code;
+            if (!$code || $code == '0' || $code == '') {
+                return response()->json(['success' => false, 'message' => 'No referrer']);
+            }
+
+            $seller = Saler::where('code', '=', $code)->first();
+
+            if ($seller) {
+                return response()->json([
+                    'success' => true,
+                    'name'    => $seller->name,
+                    'code'    => $seller->code
+                ]);
+            }
+
+            return response()->json(['success' => false, 'message' => 'Seller doesn\'t exist']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 }

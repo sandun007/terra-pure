@@ -193,6 +193,87 @@
                 </div>
             </div>
 
+            <!-- 2. Referral Information -->
+            <div class="accordion-item border mb-4">
+                <h2 class="accordion-header" id="headingReferralInfo">
+                    <div class="d-flex align-items-center justify-content-between flex-fill p-3">
+                        <h5 class="d-flex align-items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                 stroke-linejoin="round" class="feather feather-users text-primary me-2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                            <span>Referral Information</span>
+                        </h5>
+                    </div>
+                </h2>
+                <div class="accordion-body border-top">
+                    <div class="row">
+                        <div class="col-sm-12 col-12 mb-4">
+                            <h6 class="fw-bold mb-3">Referrer (Who referred this seller)</h6>
+                            <div class="view-field">
+                                @if($seller->referrer_seller)
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            <span class="badge bg-soft-primary text-primary px-3 py-2">
+                                                Code: {{ $seller->referrer_seller->code }}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">{{ $seller->referrer_seller->name }}</h6>
+                                            <small class="text-muted">{{ $seller->referrer_seller->email }} | {{ $seller->referrer_seller->phone }}</small>
+                                        </div>
+                                        <div class="ms-auto">
+                                            <a href="{{ route('admin.seller.view', $seller->referrer_seller->id) }}" class="btn btn-sm btn-outline-primary">View Referrer</a>
+                                        </div>
+                                    </div>
+                                @else
+                                    <span class="text-muted italic">Registered without a referral code (Direct)</span>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="col-sm-12 col-12">
+                            <h6 class="fw-bold mb-3">Referred Sellers (People referred by this seller)</h6>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Code</th>
+                                            <th>Name</th>
+                                            <th>Joined At</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @php
+                                            $referredSellers = $seller->referred_sellers;
+                                        @endphp
+                                        @forelse($referredSellers as $referred)
+                                            <tr>
+                                                <td>{{ $referred->code }}</td>
+                                                <td>{{ $referred->name }}</td>
+                                                <td>{{ $referred->created_at->format('Y-m-d') }}</td>
+                                                <td>
+                                                    <a href="{{ route('admin.seller.view', $referred->id) }}" class="btn btn-sm btn-dark">View</a>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted">This seller hasn't referred anyone yet.</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- 2. Bank Details -->
             <div class="accordion-item border mb-4">
                 <h2 class="accordion-header" id="headingBankDetails">

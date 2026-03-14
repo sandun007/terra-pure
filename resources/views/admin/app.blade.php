@@ -36,7 +36,7 @@
     <link rel="stylesheet" href="{{ asset('asset/css/theme/animate.css') }}">
 
     <!-- Select2 CSS -->
-    <link rel="stylesheet" href="{{ asset('asset/css/theme/select2.min.css') }}select2.min.css">
+    <link rel="stylesheet" href="{{ asset('asset/css/theme/select2.min.css') }}">
 
     <!-- Fontawesome CSS -->
     <link rel="stylesheet" href="{{ asset('asset/css/theme/fontawesome.min.css') }}">
@@ -359,19 +359,6 @@
         data-cf-beacon="{&quot;rayId&quot;:&quot;915e573e4f14513a&quot;,&quot;serverTiming&quot;:{&quot;name&quot;:{&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfSpeedBrain&quot;:true,&quot;cfCacheStatus&quot;:true}},&quot;version&quot;:&quot;2025.1.0&quot;,&quot;token&quot;:&quot;3ca157e612a14eccbb30cf6db6691c29&quot;}"
         crossorigin="anonymous"></script>
 
-    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
-        integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous">
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
-        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous">
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.min.js"
-        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous">
-    </script>
-    <script defer="defer" src="{{ asset('asset/vcd15cbe7772f49c399c6a5babf22c1241717689176015') }}"
-        integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ=="
-        data-cf-beacon="{&quot;rayId&quot;:&quot;915e573e4f14513a&quot;,&quot;serverTiming&quot;:{&quot;name&quot;:{&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfSpeedBrain&quot;:true,&quot;cfCacheStatus&quot;:true}},&quot;version&quot;:&quot;2025.1.0&quot;,&quot;token&quot;:&quot;3ca157e612a14eccbb30cf6db6691c29&quot;}"
-        crossorigin="anonymous"></script>
 
     <!-- comp scripts -->
     <script src="{{ asset('asset/js/component/sidebar-toggle.js') }}"></script>

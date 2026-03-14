@@ -87,6 +87,35 @@ class Saler extends Authenticatable
         return $this->hasMany(Referral::class, 'level_01_seller_01', 'code');
     }
 
+    public function referrer_record()
+    {
+        return $this->hasOne(Referral::class, 'level_01_seller_02', 'code');
+    }
+
+    public function referrer_seller()
+    {
+        return $this->hasOneThrough(
+            Saler::class,
+            Referral::class,
+            'level_01_seller_02',
+            'code',
+            'code',
+            'level_01_seller_01'
+        );
+    }
+
+    public function referred_sellers()
+    {
+        return $this->hasManyThrough(
+            Saler::class,
+            Referral::class,
+            'level_01_seller_01',
+            'code',
+            'code',
+            'level_01_seller_02'
+        );
+    }
+
     // ─── Accessors ────────────────────────────────────────────────────────────
 
     /**

@@ -139,6 +139,7 @@ Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])-
         Route::get('/', [SellerController::class, 'create'])->name('seller.create');
         Route::post('/', [SellerController::class, 'store'])->name('admin.seller.store');
         Route::get('/delete/{id}', [SellerController::class, 'delete'])->name('seller.delete');
+        Route::get('/check-referral', [SellerController::class, 'checkReferral'])->name('admin.seller.check-referral');
         Route::get('/{id}', [SellerController::class, 'edit'])->name('admin.seller.edit');
         Route::get('seller/{id}', [SellerController::class, 'show'])->name('admin.seller.view');
         Route::post('/update', [SellerController::class, 'update'])->name('admin.seller.update');
