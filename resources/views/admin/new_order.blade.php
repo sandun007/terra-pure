@@ -1,187 +1,231 @@
 @extends('admin.app')
+
 @push('title')
- Create Order
+    New Order
 @endpush
+
 @push('css')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <style>
 
-
-        .pro-card {
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 5px 5px 10px  rgba(0,0,0,0.3);
-
+        .table-card{
+            border-radius:10px;
+            padding:15px;
+            box-shadow:5px 5px 10px rgba(0,0,0,0.2);
+            background:white;
         }
-        .pro-row {
-            padding: 10px;
-        }
-
-
 
     </style>
-
 @endpush
+
+
 @section('content')
+
     <div class="page-header">
         <div class="d-flex">
             <div>
-                <h4 class="">Create Order</h4>
+                <h4>New Orders</h4>
             </div>
         </div>
+
         <ul class="table-top-head">
             <li>
-                <a data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Refresh"
-                   data-bs-original-title="Refresh"><i class="ti ti-refresh"></i></a>
+                <a data-bs-toggle="tooltip" title="Refresh">
+                    <i class="ti ti-refresh"></i>
+                </a>
             </li>
             <li>
-                <a data-bs-toggle="tooltip" data-bs-placement="top" id="collapse-header" aria-label="Collapse"
-                   data-bs-original-title="Collapse"><i class="ti ti-chevron-up"></i></a>
+                <a data-bs-toggle="tooltip" id="collapse-header" title="Collapse">
+                    <i class="ti ti-chevron-up"></i>
+                </a>
             </li>
         </ul>
     </div>
 
+
     <div class="row">
 
+        <!-- Tabs -->
+        <nav class="nav nav-pills flex-column flex-sm-row">
 
-            <form action="" method="POST">
-                @csrf
-                <div class="row">
-                    <div class="col-lg-8">
-                        <div class="form-card bg-white p-4 mb-4 rounded-3 shadow-sm">
-                            <div class="section-header border-bottom mb-3 pb-2 d-flex align-items-center">
+            <a class="flex-sm-fill text-sm-center nav-link active m-1"
+               data-bs-toggle="pill"
+               href="#companyorders">
+                Company Orders
+            </a>
 
-                                <h5 class="mb-0">Add Order Information</h5>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label required">Product Id</label>
-                                    <input type="text" name="product_id" class="form-control" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label required">Customer Name</label>
-                                    <input type="text" name="customer_name" class="form-control" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label required">Phone Number 1</label>
-                                    <input type="text" name="customer_phone1" class="form-control" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label required">Phone Number 2</label>
-                                    <input type="text" name="customer_phone2" class="form-control" >
-                                </div>
+            <a class="flex-sm-fill text-sm-center nav-link m-1"
+               data-bs-toggle="pill"
+               href="#wholesellerorders">
+                Wholeseller Orders
+            </a>
+
+        </nav>
 
 
-                                <div class="col-12 mb-3">
-                                    <label class="form-label">Shipping Address</label>
-                                    <textarea name="shipping_address" class="form-control" rows="3"></textarea>
-                                </div>
+        <div class="tab-content mt-3">
 
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label required">Remarks</label>
-                                    <input type="text" name="remarks" class="form-control" required>
-                                </div>
+            <!-- Company Orders Table -->
+            <div class="tab-pane fade show active" id="companyorders">
 
-                                <div class="mb-3">
-                                    <label class="form-label">District</label>
-                                    <select class="form-control" name="district" required>
-                                        <option value="">Select</option>
-                                        <option>Ampara</option>
-                                        <option>Anuradhapura</option>
-                                        <option>Badulla</option>
-                                        <option>Batticaloa</option>
-                                        <option>Colombo</option>
-                                        <option>Galle</option>
-                                        <option>Gampaha</option>
-                                        <option>Hambantota</option>
-                                        <option>Jaffna</option>
-                                        <option>Kalutara</option>
-                                        <option>Kandy</option>
-                                        <option>Kegalle</option>
-                                        <option>Kilinochchi</option>
-                                        <option>Kurunegala</option>
-                                        <option>Mannar</option>
-                                        <option>Matale</option>
-                                        <option>Matara</option>
-                                        <option>Monaragala</option>
-                                        <option>Mullaitivu</option>
-                                        <option>Nuwara Eliya</option>
-                                        <option>Polonnaruwa</option>
-                                        <option>Puttalam</option>
-                                        <option>Ratnapura</option>
-                                        <option>Trincomalee</option>
-                                        <option>Vavuniya</option>
-                                    </select>
-                                </div>
+                <div class="table-card">
 
+                    <table id="companyTable" class="table table-bordered table-striped">
 
-                            </div>
-                        </div>
+                        <thead class="table-dark">
 
-                        <div class="form-card bg-white p-4 rounded-3 shadow-sm">
-                            <div class="section-header border-bottom mb-3 pb-2 d-flex align-items-center">
+                        <tr>
+                            <th>Order Number</th>
+                            <th>Product</th>
+                            <th>Customer</th>
+                            <th>Qty</th>
+                            <th>Total Amount</th>
+                            <th>Shipping Address</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
 
-                                <h5 class="mb-0">Additional Notes</h5>
-                            </div>
-                            <textarea name="notes" class="form-control" rows="4" placeholder="Any special notes..."></textarea>
-                        </div>
-                    </div>
+                        </thead>
 
-                    <div class="col-lg-4 px-4">
+                        <tbody>
 
-                        <div class="pro-card card">
-                        <div>
-                            <div class="pro-row">
-                                <span>Product Id:</span>
-                                <span id="" ></span>
-                            </div>
-                            <div class="pro-row">
-                                <span>Product Name:</span>
-                                <span id=""></span>
-                            </div>
-                            <div class="pro-row">
-                                <span>Brand:</span>
-                                <span id=""></span>
-                            </div>
-                            <div class="pro-row">
-                                <span>Product Price:</span>
-                                <span id=""></span>
-                            </div>
-                            <div class="pro-row">
-                                <span>Final Price:</span>
-                                <span id=""></span>
-                            </div>
-                        </div>
-                    </div>
+                        @forelse($sellerorders as $order)
 
-                    </div>
-                    <div class="col-lg-12">
-                        <div class="d-flex align-items-center justify-content-end mb-4">
-                            <button type="button" class="btn btn-secondary me-2" >Cancel</button>
-                            <button type="submit" class="btn btn-primary" >Save</button>
-                        </div>
+                            <tr>
 
-                    </div>
+                                <td>{{ $order->order_number }}</td>
 
+                                <td>{{ $order->product_name }}</td>
+
+                                <td>{{ $order->customer_name }}</td>
+
+                                <td>{{ $order->quantity }}</td>
+
+                                <td>{{ $order->total_amount }}</td>
+
+                                <td>{{ $order->customer_address }}</td>
+
+                                <td>{{ $order->status }}</td>
+
+                                <td>
+                                    {{ \Carbon\Carbon::parse($order->order_date)->format('M d, Y') }}
+                                </td>
+
+                            </tr>
+
+                        @empty
+
+                            <tr>
+                                <td colspan="8" class="text-center">
+                                    No Company Orders Found
+                                </td>
+                            </tr>
+
+                            @endforelse
+
+                        </tbody>
+
+                    </table>
 
                 </div>
 
-
-
-            </form>
-
+            </div>
 
 
 
+            <!-- Wholeseller Orders Table -->
+            <div class="tab-pane fade" id="wholesellerorders">
+
+                <div class="table-card">
+
+                    <table id="wholesellerTable" class="table table-bordered table-striped">
+
+                        <thead class="table-dark">
+
+                        <tr>
+                            <th>Order Number</th>
+                            <th>Product</th>
+                            <th>Customer</th>
+                            <th>Qty</th>
+                            <th>Total Amount</th>
+                            <th>Shipping Address</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                        @forelse($wholesellerorders as $order)
+
+                            <tr>
+
+                                <td>{{ $order->order_number }}</td>
+
+                                <td>{{ $order->product_name }}</td>
+
+                                <td>{{ $order->customer_name }}</td>
+
+                                <td>{{ $order->quantity }}</td>
+
+                                <td>{{ $order->total_amount }}</td>
+
+                                <td>{{ $order->customer_address }}</td>
+
+                                <td>{{ $order->status }}</td>
+
+                                <td>
+                                    {{ \Carbon\Carbon::parse($order->order_date)->format('M d, Y') }}
+                                </td>
+
+                            </tr>
+
+                        @empty
+
+                            <tr>
+                                <td colspan="8" class="text-center">
+                                    No Wholeseller Orders Found
+                                </td>
+                            </tr>
+
+                        @endforelse
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
 
 
+        </div>
 
-
-
-
-
-
-
-
-
+    </div>
 
 @endsection
+
+@push('script')
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+
+
+    <script>
+
+        $(document).ready(function () {
+
+            $('#companyTable').DataTable({
+                pageLength: 5
+            });
+
+            $('#wholesellerTable').DataTable({
+                pageLength: 5
+            });
+
+        });
+
+    </script>
+@endpush

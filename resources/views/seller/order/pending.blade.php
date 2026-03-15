@@ -136,6 +136,13 @@
             outline: none;
             box-shadow: 0 0 0 3px rgba(79,70,229,.1);
         }
+        /* Active filter highlight */
+        .filter-select.filter-active {
+            border-color: var(--primary);
+            background: rgba(79,70,229,.04);
+            color: var(--primary);
+            font-weight: 600;
+        }
         .clear-filters {
             background: var(--bg);
             color: var(--mid);
@@ -148,6 +155,67 @@
             display: inline-flex;
             align-items: center;
             gap: 4px;
+        }
+
+        /* Call status filter pill row */
+        .call-filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 8px 14px;
+            margin-bottom: 1.5rem;
+        }
+        .call-filter-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            color: #64748b;
+            margin-right: 4px;
+            white-space: nowrap;
+        }
+        .call-filter-pill {
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1.5px solid transparent;
+            cursor: pointer;
+            transition: all .2s;
+            background: white;
+            color: #475569;
+            border-color: #e2e8f0;
+        }
+        .call-filter-pill:hover { border-color: #cbd5e1; color: #334155; }
+        .call-filter-pill.active { border-color: currentColor; }
+        .pill-all        { color: #4f46e5; }
+        .pill-all.active { background: #ede9fe; border-color: #a5b4fc; color: #4338ca; }
+        .pill-not-confirmed        { color: #dc2626; }
+        .pill-not-confirmed.active { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
+        .pill-pending-call        { color: #92400e; }
+        .pill-pending-call.active { background: #fef3c7; border-color: #fde68a; color: #92400e; }
+        .pill-called        { color: #1e40af; }
+        .pill-called.active { background: #dbeafe; border-color: #93c5fd; color: #1e40af; }
+        .pill-confirmed        { color: #065f46; }
+        .pill-confirmed.active { background: #d1fae5; border-color: #6ee7b7; color: #065f46; }
+        .pill-not-answered        { color: #475569; }
+        .pill-not-answered.active { background: #f1f5f9; border-color: #cbd5e1; color: #334155; }
+        .pill-cancelled        { color: #991b1b; }
+        .pill-cancelled.active { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }
+
+        .call-filter-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,.07);
+            border-radius: 10px;
+            padding: 1px 6px;
+            font-size: 11px;
+            margin-left: 4px;
         }
 
         /* Bulk Actions */
@@ -435,6 +503,7 @@
             .page-header h1 { font-size: 22px; }
             .filter-section { flex-direction: column; }
             .filter-group { width: 100%; }
+            .call-filter-bar { gap: 6px; }
         }
     </style>
 @endpush
@@ -559,6 +628,76 @@
             </div>
         </div>
 
+        {{-- ── Call Status Filter Pills ────────────────────────────────── --}}
+        @if($count > 0)
+            <div class="call-filter-bar" id="callFilterBar">
+            <span class="call-filter-label">
+                <span class="material-icons-round" style="font-size:14px;vertical-align:middle;">call</span>
+                Call Status:
+            </span>
+
+                {{-- Count per call status from PHP so pills show correct numbers --}}
+                @php
+                    $csGroups = $orders->groupBy(function($o) {
+                        return strtolower(str_replace(' ', '-', $o->call_status ?? 'pending-call'));
+                    });
+                @endphp
+
+                <button class="call-filter-pill pill-not-confirmed active"
+                        data-call-filter="not-confirmed"
+                        onclick="setCallFilter('not-confirmed', this)">
+                    🚫 Not Confirmed
+                    <span class="call-filter-count" id="cnt-not-confirmed">
+                    {{ $orders->filter(fn($o) => strtolower($o->call_status ?? '') !== 'confirmed')->count() }}
+                </span>
+                </button>
+
+                <button class="call-filter-pill pill-all"
+                        data-call-filter="all"
+                        onclick="setCallFilter('all', this)">
+                    All
+                    <span class="call-filter-count" id="cnt-all">{{ $count }}</span>
+                </button>
+
+                <button class="call-filter-pill pill-pending-call"
+                        data-call-filter="pending-call"
+                        onclick="setCallFilter('pending-call', this)">
+                    ⏳ Pending Call
+                    <span class="call-filter-count" id="cnt-pending-call">
+                    {{ $csGroups->get('pending-call', collect())->count() + $csGroups->get('pending call', collect())->count() }}
+                </span>
+                </button>
+
+                <button class="call-filter-pill pill-called"
+                        data-call-filter="called"
+                        onclick="setCallFilter('called', this)">
+                    📞 Called
+                    <span class="call-filter-count" id="cnt-called">{{ $csGroups->get('called', collect())->count() }}</span>
+                </button>
+
+                <button class="call-filter-pill pill-not-answered"
+                        data-call-filter="not-answered"
+                        onclick="setCallFilter('not-answered', this)">
+                    📵 Not Answered
+                    <span class="call-filter-count" id="cnt-not-answered">{{ $csGroups->get('not-answered', collect())->count() }}</span>
+                </button>
+
+                <button class="call-filter-pill pill-confirmed"
+                        data-call-filter="confirmed"
+                        onclick="setCallFilter('confirmed', this)">
+                    ✅ Confirmed
+                    <span class="call-filter-count" id="cnt-confirmed">{{ $csGroups->get('confirmed', collect())->count() }}</span>
+                </button>
+
+                <button class="call-filter-pill pill-cancelled"
+                        data-call-filter="cancelled"
+                        onclick="setCallFilter('cancelled', this)">
+                    ❌ Cancelled
+                    <span class="call-filter-count" id="cnt-cancelled">{{ $csGroups->get('cancelled', collect())->count() }}</span>
+                </button>
+            </div>
+        @endif
+
         <!-- Bulk Actions -->
         <div id="bulkActions" class="bulk-actions" style="display: none;">
             <div class="d-flex align-items-center gap-3">
@@ -637,7 +776,7 @@
                             @foreach($orders as $order)
                                 <tr data-order-id="{{ $order->id }}"
                                     data-status="{{ $order->status ?? 'pending' }}"
-                                    data-call-status="{{ $order->call_status ?? 'Pending Call' }}"
+                                    data-call-status="{{ strtolower(str_replace(' ', '-', $order->call_status ?? 'pending-call')) }}"
                                     data-platform="{{ $order->platform ?? 'manual' }}">
                                     <td>
                                         <input type="checkbox" class="order-checkbox row-checkbox" value="{{ $order->id }}" onchange="updateBulkActions()">
@@ -796,6 +935,9 @@
         const CSRF_TOKEN = '{{ csrf_token() }}';
         const UPDATE_URL = (id) => `/seller/order/update/${id}`;
 
+        // ── Active call status filter (default: hide confirmed orders) ──────
+        let activeCallFilter = 'not-confirmed';
+
         // Store orders data
         let orders = [];
         @foreach($orders as $order)
@@ -803,13 +945,30 @@
             id: {{ $order->id }},
             row: document.querySelector(`tr[data-order-id="{{ $order->id }}"]`),
             status: '{{ $order->status ?? "pending" }}',
-            callStatus: '{{ $order->call_status ?? "Pending Call" }}',
+            callStatus: '{{ strtolower(str_replace(' ', '-', $order->call_status ?? 'pending-call')) }}',
             platform: '{{ $order->platform ?? "manual" }}',
             text: `{{ $order->order_number }} {{ $order->product_name }} {{ $order->customer_name }} {{ $order->customer_phone }}`.toLowerCase()
         });
         @endforeach
 
-        // Initialize DataTable
+        // ── Call Status Filter ────────────────────────────────────────────────
+        function setCallFilter(filter, el) {
+            activeCallFilter = filter;
+
+            // Update pill active states
+            document.querySelectorAll('.call-filter-pill').forEach(p => p.classList.remove('active'));
+            if (el) el.classList.add('active');
+
+            filterTable();
+        }
+
+        function callStatusMatches(orderCallStatus, filter) {
+            if (filter === 'all')           return true;
+            if (filter === 'not-confirmed') return orderCallStatus !== 'confirmed';
+            return orderCallStatus === filter;
+        }
+
+        // ── Initialize DataTable + apply default filter ───────────────────────
         $(document).ready(function () {
             @if($count > 0)
             $('#ordersTable').DataTable({
@@ -830,14 +989,60 @@
             $('#modalStatusSelect').on('change', function() {
                 const status = this.value;
                 $('#deliveryDateField, #reschedulingDateField, #returnDateField').hide();
-
-                if (status === 'complete') $('#deliveryDateField').show();
+                if (status === 'complete')      $('#deliveryDateField').show();
                 else if (status === 'rescheduling') $('#reschedulingDateField').show();
-                else if (status === 'return') $('#returnDateField').show();
+                else if (status === 'return')   $('#returnDateField').show();
             });
+
+            // Apply the default "not-confirmed" filter on page load
+            filterTable();
         });
 
-        // Update Order Status (Order Management only)
+        // ── Core filter function ──────────────────────────────────────────────
+        function filterTable() {
+            const searchTerm     = document.getElementById('searchInput')?.value.toLowerCase() || '';
+            const platformFilter = document.getElementById('platformFilter')?.value || 'all';
+
+            let visibleCount = 0;
+            orders.forEach(order => {
+                const row = order.row;
+                if (!row) return;
+
+                const matchesSearch   = searchTerm === '' || order.text.includes(searchTerm);
+                const matchesPlatform = platformFilter === 'all' || order.platform === platformFilter;
+                const matchesCall     = callStatusMatches(order.callStatus, activeCallFilter);
+
+                if (matchesSearch && matchesPlatform && matchesCall) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                    const checkbox = row.querySelector('.row-checkbox');
+                    if (checkbox) checkbox.checked = false;
+                }
+            });
+
+            document.getElementById('filteredCount').textContent = visibleCount;
+            document.getElementById('totalOrdersCount').textContent = visibleCount;
+            updateBulkActions();
+            updateHeaderCheckbox();
+        }
+
+        function clearAllFilters() {
+            document.getElementById('platformFilter').value = 'all';
+            document.getElementById('searchInput').value = '';
+            // Reset call filter to "not-confirmed" (default)
+            activeCallFilter = 'not-confirmed';
+            document.querySelectorAll('.call-filter-pill').forEach(p => p.classList.remove('active'));
+            const notConfirmedPill = document.querySelector('[data-call-filter="not-confirmed"]');
+            if (notConfirmedPill) notConfirmedPill.classList.add('active');
+            filterTable();
+        }
+
+        document.getElementById('searchInput')?.addEventListener('keyup', filterTable);
+        document.getElementById('platformFilter')?.addEventListener('change', filterTable);
+
+        // ── Update Order Status ───────────────────────────────────────────────
         async function updateOrderStatus(orderId, newStatus) {
             const row = document.querySelector(`tr[data-order-id="${orderId}"]`);
             if (!row) return;
@@ -853,14 +1058,9 @@
                 form.append('_method', 'PUT');
                 form.append('status', newStatus);
 
-                // Add date fields based on status
-                if (newStatus === 'complete') {
-                    form.append('delivery_date', new Date().toISOString().split('T')[0]);
-                } else if (newStatus === 'return') {
-                    form.append('return_date', new Date().toISOString().split('T')[0]);
-                } else if (newStatus === 'rescheduling') {
-                    form.append('rescheduling_date', new Date().toISOString().split('T')[0]);
-                }
+                if (newStatus === 'complete')      form.append('delivery_date',     new Date().toISOString().split('T')[0]);
+                else if (newStatus === 'return')    form.append('return_date',       new Date().toISOString().split('T')[0]);
+                else if (newStatus === 'rescheduling') form.append('rescheduling_date', new Date().toISOString().split('T')[0]);
 
                 const res = await fetch(UPDATE_URL(orderId), {
                     method: 'POST',
@@ -881,55 +1081,13 @@
 
             } catch (e) {
                 selectEl.value = oldStatus;
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Update Failed',
-                    text: e.message
-                });
+                Swal.fire({ icon: 'error', title: 'Update Failed', text: e.message });
             } finally {
                 selectEl.disabled = false;
             }
         }
 
-        // Filter functions
-        function filterTable() {
-            const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
-            const platformFilter = document.getElementById('platformFilter')?.value || 'all';
-
-            let visibleCount = 0;
-            orders.forEach(order => {
-                const row = order.row;
-                if (!row) return;
-
-                const matchesSearch = searchTerm === '' || order.text.includes(searchTerm);
-                const matchesPlatform = platformFilter === 'all' || order.platform === platformFilter;
-
-                if (matchesSearch && matchesPlatform) {
-                    row.style.display = '';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
-                    const checkbox = row.querySelector('.row-checkbox');
-                    if (checkbox) checkbox.checked = false;
-                }
-            });
-
-            document.getElementById('filteredCount').textContent = visibleCount;
-            document.getElementById('totalOrdersCount').textContent = visibleCount;
-            updateBulkActions();
-            updateHeaderCheckbox();
-        }
-
-        function clearAllFilters() {
-            document.getElementById('platformFilter').value = 'all';
-            document.getElementById('searchInput').value = '';
-            filterTable();
-        }
-
-        document.getElementById('searchInput')?.addEventListener('keyup', filterTable);
-        document.getElementById('platformFilter')?.addEventListener('change', filterTable);
-
-        // Bulk actions
+        // ── Bulk Actions ──────────────────────────────────────────────────────
         function getVisibleRowCheckboxes() {
             return Array.from(document.querySelectorAll('.row-checkbox'))
                 .filter(cb => {
@@ -948,14 +1106,13 @@
 
         function updateBulkActions() {
             const selectedCount = getSelectedCheckboxes().length;
-            const bulkActions = document.getElementById('bulkActions');
-            const selectedCountSpan = document.getElementById('selectedCount');
-            const bulkApplyBtn = document.getElementById('bulkApplyBtn');
-            const bulkStatus = document.getElementById('bulkStatusSelect').value;
+            const bulkActions   = document.getElementById('bulkActions');
+            const bulkApplyBtn  = document.getElementById('bulkApplyBtn');
+            const bulkStatus    = document.getElementById('bulkStatusSelect').value;
 
             if (selectedCount > 0) {
                 bulkActions.style.display = 'flex';
-                selectedCountSpan.textContent = `${selectedCount} selected`;
+                document.getElementById('selectedCount').textContent = `${selectedCount} selected`;
                 bulkApplyBtn.disabled = !bulkStatus;
             } else {
                 bulkActions.style.display = 'none';
@@ -983,11 +1140,11 @@
 
         function updateHeaderCheckbox() {
             const visibleCheckboxes = getVisibleRowCheckboxes();
-            const checkedVisible = visibleCheckboxes.filter(cb => cb.checked);
-            const headerCheckbox = document.getElementById('headerCheckbox');
+            const checkedVisible    = visibleCheckboxes.filter(cb => cb.checked);
+            const headerCheckbox    = document.getElementById('headerCheckbox');
 
             if (visibleCheckboxes.length > 0) {
-                headerCheckbox.checked = visibleCheckboxes.length === checkedVisible.length;
+                headerCheckbox.checked       = visibleCheckboxes.length === checkedVisible.length;
                 headerCheckbox.indeterminate = checkedVisible.length > 0 && checkedVisible.length < visibleCheckboxes.length;
             } else {
                 headerCheckbox.checked = false;
@@ -995,10 +1152,8 @@
             }
         }
 
-        // Bulk update
         async function applyBulkUpdate() {
             const selectedStatus = document.getElementById('bulkStatusSelect').value;
-
             if (!selectedStatus) {
                 Swal.fire({ title: 'No Update Selected', text: 'Please select a status', icon: 'warning' });
                 return;
@@ -1014,7 +1169,6 @@
                 showCancelButton: true,
                 confirmButtonText: 'Yes, Update'
             });
-
             if (!result.isConfirmed) return;
 
             const bulkApplyBtn = document.getElementById('bulkApplyBtn');
@@ -1031,13 +1185,9 @@
                     form.append('_method', 'PUT');
                     form.append('status', selectedStatus);
 
-                    if (selectedStatus === 'complete') {
-                        form.append('delivery_date', new Date().toISOString().split('T')[0]);
-                    } else if (selectedStatus === 'return') {
-                        form.append('return_date', new Date().toISOString().split('T')[0]);
-                    } else if (selectedStatus === 'rescheduling') {
-                        form.append('rescheduling_date', new Date().toISOString().split('T')[0]);
-                    }
+                    if (selectedStatus === 'complete')       form.append('delivery_date',     new Date().toISOString().split('T')[0]);
+                    else if (selectedStatus === 'return')    form.append('return_date',        new Date().toISOString().split('T')[0]);
+                    else if (selectedStatus === 'rescheduling') form.append('rescheduling_date', new Date().toISOString().split('T')[0]);
 
                     const res = await fetch(UPDATE_URL(orderId), {
                         method: 'POST',
@@ -1058,9 +1208,7 @@
                     } else {
                         failCount++;
                     }
-                } catch {
-                    failCount++;
-                }
+                } catch { failCount++; }
             }
 
             selectedCheckboxes.forEach(cb => cb.checked = false);
@@ -1076,7 +1224,7 @@
             showToast(`Updated ${okCount} orders, ${failCount} failed`);
         }
 
-        // Other functions
+        // ── Other ─────────────────────────────────────────────────────────────
         function editOrder(id) {
             window.location.href = `/seller/order/edit/${id}`;
         }
@@ -1095,13 +1243,9 @@
                     form.method = 'POST';
                     form.action = `/seller/order/destroy/${id}`;
                     const csrf = document.createElement('input');
-                    csrf.type = 'hidden';
-                    csrf.name = '_token';
-                    csrf.value = CSRF_TOKEN;
+                    csrf.type = 'hidden'; csrf.name = '_token'; csrf.value = CSRF_TOKEN;
                     const method = document.createElement('input');
-                    method.type = 'hidden';
-                    method.name = '_method';
-                    method.value = 'DELETE';
+                    method.type = 'hidden'; method.name = '_method'; method.value = 'DELETE';
                     form.appendChild(csrf);
                     form.appendChild(method);
                     document.body.appendChild(form);
@@ -1116,14 +1260,10 @@
             toast.style.display = 'flex';
             setTimeout(() => {
                 toast.style.opacity = '0';
-                setTimeout(() => {
-                    toast.style.display = 'none';
-                    toast.style.opacity = '1';
-                }, 300);
+                setTimeout(() => { toast.style.display = 'none'; toast.style.opacity = '1'; }, 300);
             }, 3000);
         }
 
-        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.row-checkbox').forEach(cb => {
                 cb.addEventListener('change', function() {

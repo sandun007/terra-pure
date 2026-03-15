@@ -1258,6 +1258,10 @@
                             <i class="fas fa-file-csv"></i>
                             <span>Prices</span>
                         </a>
+{{--                        <a href="#" onclick="window.open('{{ route('', 0) }}'.replace('/0', ''), '_blank')" class="quick-action-btn">--}}
+{{--                            <i class="fas fa-print quick-action-icon"></i>--}}
+{{--                            <span>Print Labels</span>--}}
+{{--                        </a>--}}
 
                         <a href="{{ route('employee.wholesaler.order-exchanges.export') }}" class="action-btn">
                             <i class="fas fa-exchange-alt"></i>

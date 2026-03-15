@@ -74,4 +74,16 @@ class Category extends Model
         $status = $this->status ?? 'active';
         return ucfirst($status);
     }
+    public function getStoreAttribute()
+{
+    if ($this->seller_code == 1 || $this->seller_id) {
+        return 'Seller';
+    }
+    
+    if ($this->wholesaler_id || ($this->add_by ?? '') === 'wholesaler') {
+        return 'Wholesaler';
+    }
+
+    return 'Admin';
+}
 }

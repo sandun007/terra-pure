@@ -66,20 +66,6 @@
         </div>
     </div>
 
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    @if (session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
-
     <form action="{{ route('admin.wholesaler.update', $wholesaler->id) }}" class="add-product-form" method="POST" enctype="multipart/form-data">
         @csrf
         @method('POST')

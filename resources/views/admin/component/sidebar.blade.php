@@ -138,7 +138,7 @@
                                     <span>New Order</span>
                                 </a>
                             </li>
-                            <li><a href="{{route('seller.order.completed')}}">
+                            <li><a href="{{route('admin.complete_order_list')}}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                          stroke-linecap="round" stroke-linejoin="round"
@@ -150,7 +150,7 @@
                                     <span>Complete Order</span>
                                 </a>
                             </li>
-                            <li><a href="{{route('seller.order.rescheduled')}}">
+                            <li><a href="{{route('admin.rescheduling_order_list')}}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                          stroke-linecap="round" stroke-linejoin="round"
@@ -162,7 +162,7 @@
                                     <span>Rescheduling Order</span>
                                 </a>
                             </li>
-                            <li><a href="{{route('seller.order.returned')}}">
+                            <li><a href="{{route('admin.return_order_list')}}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                          stroke-linecap="round" stroke-linejoin="round"

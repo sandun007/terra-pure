@@ -296,10 +296,10 @@
                     </div>
                 </div>
                 <div class="dc-tabs">
-                    <a class="dc-tab {{ request()->routeIs('employee.delivery_calls.pending') ? 'active' : '' }}" href="{{ route('employee.delivery_calls.pending') }}">Pending</a>
-                    <a class="dc-tab {{ request()->routeIs('employee.delivery_calls.packing') ? 'active' : '' }}" href="{{ route('employee.delivery_calls.packing') }}">Packing</a>
-                    <a class="dc-tab {{ request()->routeIs('employee.delivery_calls.packed') ? 'active' : '' }}" href="{{ route('employee.delivery_calls.packed') }}">Packed</a>
-                    <a class="dc-tab {{ request()->routeIs('employee.delivery_calls.givedriver') ? 'active' : '' }}" href="{{ route('employee.delivery_calls.givedriver') }}">Give Driver</a>
+                    <a class="dc-tab {{ request()->routeIs('employee.delivery_calls.pe') ? 'active' : '' }}" href="{{ route('employee.employee.delivery_calls.pending') }}">Pending</a>
+                    <a class="dc-tab {{ request()->routeIs('employee.delivery_calls.packing') ? 'active' : '' }}" href="{{ route('employee.employee.delivery_calls.packing') }}">Packing</a>
+                    <a class="dc-tab {{ request()->routeIs('employee.delivery_calls.packed') ? 'active' : '' }}" href="{{ route('employee.employee.delivery_calls.packed') }}">Packed</a>
+                    <a class="dc-tab {{ request()->routeIs('employee.delivery_calls.givedriver') ? 'active' : '' }}" href="{{ route('employee.employee.delivery_calls.givedriver') }}">Give Driver</a>
                 </div>
             </div>
 
@@ -347,10 +347,10 @@
 
             {{-- Stats Grid --}}
             <div class="stats-grid">
-                <div class="stat-card pending"    onclick="window.location='{{ route('employee.delivery_calls.pending') }}'"><div class="stat-value">{{ $counts['pending'] ?? 0 }}</div><div class="stat-label">Pending</div></div>
-                <div class="stat-card packing"    onclick="window.location='{{ route('employee.delivery_calls.packing') }}'"><div class="stat-value">{{ $counts['packing'] ?? 0 }}</div><div class="stat-label">Packing</div></div>
-                <div class="stat-card packed"     onclick="window.location='{{ route('employee.delivery_calls.packed') }}'"><div class="stat-value">{{ $counts['packed'] ?? 0 }}</div><div class="stat-label">Packed</div></div>
-                <div class="stat-card givedriver" onclick="window.location='{{ route('employee.delivery_calls.givedriver') }}'"><div class="stat-value">{{ $counts['givedriver'] ?? 0 }}</div><div class="stat-label">Give Driver</div></div>
+                <div class="stat-card pending"    onclick="window.location='{{ route('employee.employee.delivery_calls.pending') }}'"><div class="stat-value">{{ $counts['pending'] ?? 0 }}</div><div class="stat-label">Pending</div></div>
+                <div class="stat-card packing"    onclick="window.location='{{ route('employee.employee.delivery_calls.packing') }}'"><div class="stat-value">{{ $counts['packing'] ?? 0 }}</div><div class="stat-label">Packing</div></div>
+                <div class="stat-card packed"     onclick="window.location='{{ route('employee.employee.delivery_calls.packed') }}'"><div class="stat-value">{{ $counts['packed'] ?? 0 }}</div><div class="stat-label">Packed</div></div>
+                <div class="stat-card givedriver" onclick="window.location='{{ route('employee.employee.delivery_calls.givedriver') }}'"><div class="stat-value">{{ $counts['givedriver'] ?? 0 }}</div><div class="stat-label">Give Driver</div></div>
             </div>
 
             @php $pageSubtotal = $calls->sum(fn($c) => ($c->price ?? 0) * ($c->qty ?? 1)); @endphp
@@ -531,7 +531,7 @@
                                     @endif
                                     <td>
                                         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-                                            <a class="action-btn view" href="{{ route('employee.delivery_calls.show', $c->id) }}" title="View">
+                                            <a class="action-btn view" href="{{ route('employee.employee.delivery_calls.show', $c->id) }}" title="View">
                                                 <span class="material-icons-round" style="font-size:18px">visibility</span>
                                             </a>
 
@@ -555,7 +555,7 @@
                                                     </button>
                                                 @else
                                                     <form method="POST"
-                                                          action="{{ route('employee.delivery_calls.update_status', $c->id) }}"
+                                                          action="{{ route('employee.employee.delivery_calls.update_status', $c->id) }}"
                                                           onsubmit="return confirm('Update to {{ ucfirst($nextStatus) }}?')"
                                                           style="display:contents">
                                                         @csrf
@@ -712,7 +712,7 @@
     </div>
 
     {{-- Hidden form for business POST --}}
-    <form id="bizSetForm" action="{{ route('employee.delivery_calls.set_business') }}" method="POST" style="display:none">
+    <form id="bizSetForm" action="{{ route('employee.employee.delivery_calls.set_business') }}" method="POST" style="display:none">
         @csrf
         <input type="hidden" name="merchant_business_id" id="bizFormInput">
     </form>
@@ -722,7 +722,7 @@
         const CURFOX_CITIES = @json($curfoxCities ?? []);
         const CSRF           = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         const BASE_URL       = '{{ url("/employee/delivery-calls") }}';
-        const BULK_ORIG_URL  = '{{ route("employee.delivery_calls.bulk_origin") }}';
+        const BULK_ORIG_URL  = '{{ route("employee.employee.delivery_calls.bulk_origin") }}';
         const nextStatus     = @json($nextStatus);
 
         // ── City autocomplete helper ──────────────────────────────────────────
