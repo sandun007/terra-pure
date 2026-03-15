@@ -23,10 +23,12 @@ class Wholesaler extends Authenticatable
         'whatsapp',
         'email',
         'username',
+        'NIC_no',
         'password',
         'business_name',
         'img',
-        'type'
+        'type',
+        'stock'
     ];
 
     protected $hidden = [

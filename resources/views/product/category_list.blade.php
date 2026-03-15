@@ -59,6 +59,15 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
+                    <div class="mb-3">
+    <label for="categoryStoreFilter" class="form-label">Filter by Store:</label>
+    <select id="categoryStoreFilter" class="form-select" style="width: 200px;">
+        <option value="">All</option>
+        <option value="Admin">Admin</option>
+        <option value="Seller">Seller</option>
+        <option value="Wholesaler">Wholesaler</option>
+    </select>
+</div>
                     <table id="product-table" class="display table table-striped" style="width:100%">
                         <thead>
                             <tr>

@@ -15,15 +15,18 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class WholesalerController extends Controller
 {
-    protected $storageService;
-
     public function __construct()
     {
-        $this->middleware('auth:wholesaler');
+        $this->middleware('auth:wholesaler')->except([
+            'index', 'create', 'store', 'show', 'edit', 'update', 'destroy'
+        ]);
+
         $this->storageService = new WholesalerStorageService();
     }
 
@@ -1014,10 +1017,10 @@ class WholesalerController extends Controller
             $wholesaler = Auth::guard('wholesaler')->user();
 
             $payments = WholesalerPayment::where('wholesaler_id', $wholesaler->id)
-                ->when($request->date_from, function($query) use ($request) {
+                ->when($request->date_from, function ($query) use ($request) {
                     return $query->whereDate('created_at', '>=', $request->date_from);
                 })
-                ->when($request->date_to, function($query) use ($request) {
+                ->when($request->date_to, function ($query) use ($request) {
                     return $query->whereDate('created_at', '<=', $request->date_to);
                 })
                 ->orderBy('created_at', 'desc')
@@ -1029,7 +1032,7 @@ class WholesalerController extends Controller
                 'Content-Disposition' => "attachment; filename=$fileName",
             ];
 
-            $callback = function() use ($payments) {
+            $callback = function () use ($payments) {
                 $file = fopen('php://output', 'w');
 
                 // Add headers
@@ -1308,43 +1311,229 @@ class WholesalerController extends Controller
     }
 
     public function uploadAvatar(Request $request)
-{
-    try {
-        $wholesaler = Auth::guard('wholesaler')->user();
+    {
+        try {
+            $wholesaler = Auth::guard('wholesaler')->user();
 
-        $request->validate([
-            'img' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-        ]);
+            $request->validate([
+                'img' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            ]);
 
-        // delete old image if exists
-        if ($wholesaler->img && Storage::disk('public')->exists($wholesaler->img)) {
-            Storage::disk('public')->delete($wholesaler->img);
+            // delete old image if exists
+            if ($wholesaler->img && Storage::disk('public')->exists($wholesaler->img)) {
+                Storage::disk('public')->delete($wholesaler->img);
+            }
+
+            $path = $this->storageService->getStorageLocations()['profile_images'];
+            $newPath = $request->file('img')->store($path, 'public');
+
+            $wholesaler->update(['img' => $newPath]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile image updated successfully!',
+                'img_path' => $newPath,
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->validator->errors()->first(),
+                'errors' => $e->validator->errors(),
+            ], 422);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error uploading image: ' . $e->getMessage()
+            ], 500);
         }
-
-        $path = $this->storageService->getStorageLocations()['profile_images'];
-        $newPath = $request->file('img')->store($path, 'public');
-
-        $wholesaler->update(['img' => $newPath]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Profile image updated successfully!',
-            'img_path' => $newPath,
-        ]);
-
-    } catch (\Illuminate\Validation\ValidationException $e) {
-        return response()->json([
-            'success' => false,
-            'message' => $e->validator->errors()->first(),
-            'errors' => $e->validator->errors(),
-        ], 422);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Error uploading image: ' . $e->getMessage()
-        ], 500);
     }
-}
 
+
+// ========== Wholesaler Management Methods (for admin) ==========
+
+    public function index()
+    {
+        try {
+            $wholesalers = Wholesaler::latest()->get();
+            return view('admin.wholesaler.wholesaler_list', compact('wholesalers'));
+        } catch (\Exception $e) {
+            Log::error('Wholesaler index error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error loading wholesalers: ' . $e->getMessage());
+        }
+    }
+
+    public function create()
+    {
+        $code = 'WHS' . time() . rand(100, 999);
+        return view('admin.wholesaler.wholesaler_create', compact('code'));
+    }
+
+    public function store(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'code' => 'required|string|unique:wholesalers,code',
+                'name' => 'required|string|max:255',
+                'address' => 'nullable|string',
+                'city' => 'nullable|string|max:255',
+                'postal_code' => 'nullable|string|max:20',
+                'district' => 'nullable|string|max:255',
+                'phone' => 'nullable|string|max:20',
+                'NIC_no'=>'nullable|string|max:20',
+                'whatsapp' => 'nullable|string|max:20',
+                'email' => 'nullable|email|unique:wholesalers,email',
+                'username' => 'required|string|max:255|unique:wholesalers,username',
+                'password' => 'required|string|min:8',
+                'business_name' => 'nullable|string|max:255',
+                'img' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
+                'stock' => 'nullable|integer'
+            ]);
+
+            if ($validator->fails()) {
+                return redirect()->back()->withErrors($validator)->withInput();
+            }
+
+            $validated = $validator->validated();
+
+            $wholesalerData = [
+                'code' => $validated['code'],
+                'name' => $validated['name'],
+                'address' => $validated['address'] ?? null,
+                'city' => $validated['city'] ?? null,
+                'postal_code' => $validated['postal_code'] ?? null,
+                'district' => $validated['district'] ?? null,
+                'phone' => $validated['phone'] ?? null,
+                'NIC_no'=>$validated['NIC_no'] ?? null,
+                'whatsapp' => $validated['whatsapp'] ?? null,
+                'email' => $validated['email'] ?? null,
+                'username' => $validated['username'],
+                'password' => bcrypt($validated['password']),
+                'business_name' => $validated['business_name'] ?? null,
+                'img' => null,
+                'stock' => $validated['stock'] ?? 0,
+            ];
+
+            if ($request->hasFile('img')) {
+                $wholesalerData['img'] = $request->file('img')->store('wholesalers/profile', 'public');
+            }
+
+            Wholesaler::create($wholesalerData);
+
+            return redirect()->route('admin.wholesaler.list')->with('success', 'Wholesaler created successfully!');
+
+        } catch (\Exception $e) {
+            Log::error('Create wholesaler error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error creating wholesaler: ' . $e->getMessage());
+        }
+    }
+
+    public function show($id)
+    {
+        try {
+            $wholesaler = Wholesaler::findOrFail($id);
+            return view('admin.wholesaler.wholesaler_view', compact('wholesaler'));
+        } catch (\Exception $e) {
+            Log::error('Show wholesaler error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error loading wholesaler: ' . $e->getMessage());
+        }
+    }
+
+    public function edit($id)
+    {
+        try {
+            $wholesaler = Wholesaler::findOrFail($id);
+            return view('admin.wholesaler.wholesaler_update', compact('wholesaler'));
+        } catch (\Exception $e) {
+            Log::error('Edit wholesaler error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error loading wholesaler: ' . $e->getMessage());
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        try {
+            $wholesaler = Wholesaler::findOrFail($id);
+
+            $validator = Validator::make($request->all(), [
+                'code' => 'required|string|unique:wholesalers,code,' . $wholesaler->id,
+                'name' => 'required|string|max:255',
+                'address' => 'nullable|string',
+                'city' => 'nullable|string|max:255',
+                'postal_code' => 'nullable|string|max:20',
+                'district' => 'nullable|string|max:255',
+                'phone' => 'nullable|string|max:20',
+                'NIC_no'=>'nullable|string|max:20',
+                'whatsapp' => 'nullable|string|max:20',
+                'email' => 'nullable|email|unique:wholesalers,email,' . $wholesaler->id,
+                'username' => 'required|string|max:255|unique:wholesalers,username,' . $wholesaler->id,
+                'password' => 'nullable|string|min:8',
+                'business_name' => 'nullable|string|max:255',
+                'img' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
+                'stock' => 'nullable|integer'
+            ]);
+
+            if ($validator->fails()) {
+                return redirect()->back()->withErrors($validator)->withInput();
+            }
+
+            $validated = $validator->validated();
+
+            $wholesalerData = [
+                'code' => $validated['code'],
+                'name' => $validated['name'],
+                'address' => $validated['address'] ?? null,
+                'city' => $validated['city'] ?? null,
+                'postal_code' => $validated['postal_code'] ?? null,
+                'district' => $validated['district'] ?? null,
+                'phone' => $validated['phone'] ?? null,
+                'NIC_no'=>$validated['NIC_no'] ?? null,
+                'whatsapp' => $validated['whatsapp'] ?? null,
+                'email' => $validated['email'] ?? null,
+                'username' => $validated['username'],
+                'business_name' => $validated['business_name'] ?? null,
+                'password' => bcrypt($validated['password']),
+                'stock' => $validated['stock'] ?? null,
+                ];
+
+            if ($request->filled('password')) {
+                $wholesalerData['password'] = $validated['password'];
+            }
+
+            if ($request->hasFile('img')) {
+                if ($wholesaler->img) {
+                    Storage::disk('public')->delete($wholesaler->img);
+                }
+                $wholesalerData['img'] = $request->file('img')->store('wholesalers/profile', 'public');
+            }
+
+            $wholesaler->update($wholesalerData);
+
+            return redirect()->route('admin.wholesaler.list')->with('success', 'Wholesaler updated successfully!');
+
+        } catch (\Exception $e) {
+            Log::error('Update wholesaler error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error updating wholesaler: ' . $e->getMessage());
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $wholesaler = Wholesaler::findOrFail($id);
+
+            if ($wholesaler->img) {
+                Storage::disk('public')->delete($wholesaler->img);
+            }
+
+            $wholesaler->delete();
+
+            return redirect()->route('admin.wholesaler.list')->with('success', 'Wholesaler deleted successfully!');
+
+        } catch (\Exception $e) {
+            Log::error('Delete wholesaler error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error deleting wholesaler: ' . $e->getMessage());
+        }
+    }
 }

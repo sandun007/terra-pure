@@ -59,11 +59,21 @@ Brand List
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
+                   <div class="mb-3">
+    <label for="brandFilter" class="form-label">Filter by Store:</label>
+    <select id="brandFilter" class="form-select" style="width: 200px;">
+        <option value="">All</option>
+        <option value="Admin">Admin</option>
+        <option value="Seller">Seller</option>
+        <option value="Wholesaler">Wholesaler</option>
+    </select>
+</div>
                     <table id="product-table" class="display table table-striped" style="width:100%">
                         <thead>
                         <tr>
                             <th>Brand Code</th>
                             <th>Brand Name</th>
+                            <th>Store</th>
                             <th>Status</th>
                             <th>Action</th>
                         </tr>
@@ -73,6 +83,7 @@ Brand List
     <tr>
         <td>{{ $brand->code }}</td>
         <td>{{ $brand->name }}</td>
+        <td>{{ $brand->store }}</td>
         <td>
     @if($brand->status == 1)
         <span class="badge bg-success">Active</span>
@@ -161,6 +172,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
+    });
+});
+</script>
+<script>
+$(document).ready(function () {
+    var table = $('#product-table').DataTable();
+
+    // Filter by Store
+    $('#brandFilter').on('change', function () {
+        var selected = $(this).val();
+        if(selected) {
+            table.column(2).search('^' + selected + '$', true, false).draw(); // column 2 = Store
+        } else {
+            table.column(2).search('').draw();
+        }
     });
 });
 </script>

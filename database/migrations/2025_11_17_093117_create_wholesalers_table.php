@@ -8,45 +8,34 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('wholesaler_products', function (Blueprint $table) {
+        Schema::create('wholesalers', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('wholesaler_id')->constrained('wholesalers')->onDelete('cascade');
             $table->string('code')->unique();
             $table->string('name');
-            $table->text('description')->nullable();
-
-            // Pricing fields
-            $table->decimal('cost_price', 15, 2)->default(0);
-            $table->decimal('selling_price', 15, 2)->default(0);
-            $table->decimal('discount', 5, 2)->default(0);
-            $table->decimal('packaging_cost', 15, 2)->default(0);
-
-            // Inventory fields
-            $table->integer('qty')->default(0);
-            $table->integer('min_stock_level')->default(10);
-
-            // Relations
-            $table->foreignId('category_id')->nullable()->constrained()->onDelete('set null');
-            $table->foreignId('brand_id')->nullable()->constrained()->onDelete('set null');
-
-            // Other fields
-            $table->text('features')->nullable();
-            $table->string('barcode')->nullable()->unique();
-            $table->string('image')->nullable();
-            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->string('address');
+            $table->string('city')->nullable();
+            $table->string('postal_code')->nullable();
+            $table->string('district');
+            $table->string('phone');
+            $table->string('whatsapp')->nullable();
+            $table->string('email')->unique();
+            $table->string('NIC_no')->unique()->nullable();
+            $table->string('NIC_front')->nullable();
+            $table->string('NIC_back')->nullable();
+            $table->string('username')->unique();
+            $table->string('password');
+            $table->string('business_name')->nullable();
+            $table->string('img')->nullable();
+            $table->string('view_password')->nullable();
+            $table->string('type')->default('wholesaler');
+            $table->integer('stock')->default(0);
+            $table->rememberToken();
             $table->timestamps();
-
-            // Indexes
-            $table->index(['wholesaler_id', 'status']);
-            $table->index('category_id');
-            $table->index('brand_id');
-            $table->index('qty');
-            $table->index(['selling_price', 'discount']);
         });
     }
 
     public function down()
     {
-        Schema::dropIfExists('wholesaler_products');
+        Schema::dropIfExists('wholesalers');
     }
 };
