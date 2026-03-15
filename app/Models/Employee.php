@@ -19,7 +19,10 @@ class Employee extends Authenticatable
         'code',
         'name',
         'email',
+        'mobile_no',
+        'whatsapp_no',
         'phone',
+        'whatsapp',
         'address',
         'nic_no',
         'post_code',
@@ -30,10 +33,11 @@ class Employee extends Authenticatable
         'img',
         'role',
         'status',
+        'nic_front',
+        'nic_back',
         'last_login_at',
         'last_login_ip'
     ];
-
     protected $hidden = [
         'password',
         'remember_token',

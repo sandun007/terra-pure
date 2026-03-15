@@ -20,19 +20,19 @@ return new class extends Migration
                 $table->foreign('product_id')->references('id')->on('wholesaler_products')->onDelete('set null');
             }
 
-            // Check and add product_image if missing
+            // Check and add product_image if missing - FIXED: removed 'after' clause
             if (!Schema::hasColumn('wholesaler_orders', 'product_image')) {
-                $table->string('product_image')->nullable()->after('product_price');
+                $table->string('product_image')->nullable();
             }
 
-            // Check and add call_status if missing
+            // Check and add call_status if missing - FIXED: removed 'after' clause
             if (!Schema::hasColumn('wholesaler_orders', 'call_status')) {
-                $table->string('call_status')->default('Pending Call')->after('platform');
+                $table->string('call_status')->default('Pending Call');
             }
 
-            // Check and add payment_status if missing
+            // Check and add payment_status if missing - FIXED: removed 'after' clause
             if (!Schema::hasColumn('wholesaler_orders', 'payment_status')) {
-                $table->string('payment_status')->default('pending')->after('payment_method');
+                $table->string('payment_status')->default('pending');
             }
         });
     }

@@ -18,41 +18,46 @@ class LoginController extends Controller
             ->where('view_password', $request->password)
             ->first();
 
-        if (!$check) {
-            return redirect()->route('login')->withErrors([
-                'login' => 'Invalid credentials.',
-            ]);
-        }
-
-        // Admin login
-        if ($check->type === 'admin') {
-            if (Auth::guard('admin')->attempt(['username' => $request->username, 'password' => $request->password])) {
-                return redirect()->route('admin.dashboard');
-            }
-        }
-        // Seller login
-        elseif ($check->type === 'seller') {
-            if (Auth::guard('seller')->attempt(['username' => $request->username, 'password' => $request->password])) {
-                if($check->seller_type == 'system'){
-                    return redirect()->route('seller.dashboard');
-                }
-                else if($check->seller_type == 'self'){
-                    return redirect()->route('seller.dashboard');
+        if ($check) {
+            // Admin login
+            if ($check->type === 'admin') {
+                if (Auth::guard('admin')->attempt(['username' => $request->username, 'password' => $request->password])) {
+                    return redirect()->route('admin.dashboard');
                 }
             }
+            // Seller login
+            elseif ($check->type === 'seller') {
+                if (Auth::guard('seller')->attempt(['username' => $request->username, 'password' => $request->password])) {
+                    if($check->seller_type == 'system'){
+                        return redirect()->route('seller.dashboard');
+                    }
+                    else if($check->seller_type == 'self'){
+                        return redirect()->route('seller.dashboard');
+                    }
+                }
+            }
+            // Wholesaler login (if they somehow exist in users table)
+            elseif ($check->type === 'wholesalers') {
+                if (Auth::guard('wholesaler')->attempt(['username' => $request->username, 'password' => $request->password])) {
+                    return redirect()->route('wholesaler.dashboard');
+                }
+            }
+            // Employee login
+            elseif ($check->type === 'employee') {
+                if (Auth::guard('employee')->attempt(['username' => $request->username, 'password' => $request->password])) {
+                    return redirect()->route('employee.dashboard');
+                }
+            }
         }
-        // Wholesaler login
-        elseif ($check->type === 'wholesalers') {
 
-            if (Auth::guard('wholesaler')->attempt(['username' => $request->username, 'password' => $request->password])) {
-                return redirect()->route('wholesaler.dashboard');
-            }
+        //  Wholesaler login
+        if (Auth::guard('wholesaler')->attempt(['username' => $request->username, 'password' => $request->password])) {
+            return redirect()->route('wholesaler.dashboard');
         }
-        // Employee login
-        elseif ($check->type === 'employee') {
-            if (Auth::guard('employee')->attempt(['username' => $request->username, 'password' => $request->password])) {
-                return redirect()->route('employee.dashboard');
-            }
+
+        //  Employee login
+        if (Auth::guard('employee')->attempt(['username' => $request->username, 'password' => $request->password])) {
+            return redirect()->route('employee.dashboard');
         }
 
         // If authentication fails for any guard

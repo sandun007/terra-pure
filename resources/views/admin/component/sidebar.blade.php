@@ -71,7 +71,7 @@
                                     </svg>
                                     <span>Low Stocks</span></a></li>
                             <li>
-                                <a href="{{route('category.create')}}">
+                                <a href="{{route('category.index')}}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                          stroke-linecap="round" stroke-linejoin="round"
@@ -83,7 +83,7 @@
                                         <line x1="12" y1="2" x2="12" y2="8.5"></line>
                                     </svg>
                                     <span>Category</span></a></li>
-                            <li><a href="{{route('brand.create')}}">
+                            <li><a href="{{route('brand.index')}}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                          stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag">
@@ -93,7 +93,7 @@
                                     </svg>
                                     <span>Brands</span></a></li>
                             <li>
-                                <a href="{{route('seller.create')}}">
+                                <a href="{{route('seller.list')}}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                          stroke-linecap="round" stroke-linejoin="round"
@@ -103,17 +103,15 @@
                                         <line x1="12" y1="6" x2="12.01" y2="6"></line>
                                     </svg>
                                     <span>Seller</span></a></li>
-                            <li>
-                                <a href="{{route('shop.index')}}">
+                            <li><a href="{{ route('admin.wholesaler.list') }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                          stroke-linecap="round" stroke-linejoin="round"
-                                         class="feather feather-layers">
-                                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-                                        <polyline points="2 17 12 22 22 17"></polyline>
-                                        <polyline points="2 12 12 17 22 12"></polyline>
+                                         class="feather feather-bookmark">
+                                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                                     </svg>
-                                    <span>Shop</span></a></li>
+                                    <span>Wholesaler</span>
+                                </a></li>
                             <li><a href="">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -304,7 +302,7 @@
                     <li class="submenu-open">
                         <h6 class="submenu-hdr">Peoples</h6>
                         <ul>
-                            <li><a href="{{route('admin.create')}}">
+                            <li><a href="{{route('admin.admins.index')}}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                          stroke-linecap="round" stroke-linejoin="round"

@@ -49,6 +49,16 @@ class Product extends Model
         return $this->belongsTo(Wholesaler::class);
     }
 
+    public function brand()
+{
+    return $this->belongsTo(Brand::class, 'brand_id');
+}
+
+public function category()
+{
+    return $this->belongsTo(Category::class, 'category_id');
+}
+
     // Relationship with Order Items
     public function orderItems(): HasMany
     {
@@ -83,4 +93,5 @@ class Product extends Model
             return 'in-stock';
         }
     }
+    
 }

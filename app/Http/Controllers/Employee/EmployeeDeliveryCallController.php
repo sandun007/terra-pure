@@ -7,11 +7,13 @@ use App\Models\EmployeeDeliveryCall;
 use App\Models\Saler;
 use App\Services\Curfoxapiservice;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class EmployeeDeliveryCallController extends Controller
 {
+    // ── Local Pipeline Flow ────────────────────────────────────────────────
     private const FLOW = [
         'Pending'    => 'packing',
         'packing'    => 'packed',
@@ -21,9 +23,38 @@ class EmployeeDeliveryCallController extends Controller
 
     private const DEFAULT_MERCHANT_BUSINESS_ID = '7809';
 
+    // ── Curfox Delivery Status → Local Category Map ────────────────────────
+    private const CURFOX_CATEGORY_MAP = [
+        'DRAFT'                                            => 'confirmed',
+        'CONFIRMED'                                        => 'confirmed',
+        'DEFAULT WAREHOUSE CHANGE'                         => 'confirmed',
+        'PICKUP RIDER ASSIGNED'                            => 'confirmed',
+        'PICKED UP'                                        => 'confirmed',
+        'DELIVERED BY PICKUP RIDER'                        => 'completed',
+        'DISPATCH TO ORIGIN WAREHOUSE'                     => 'confirmed',
+        'RECEIVED TO ORIGIN WAREHOUSE'                     => 'confirmed',
+        'DISPATCHED FROM ORIGIN WAREHOUSE'                 => 'confirmed',
+        'RECEIVED AT DESTINATION WAREHOUSE'                => 'confirmed',
+        'ASSIGNED TO DESTINATION RIDER'                    => 'confirmed',
+        'DELIVERED'                                        => 'completed',
+        'PARTIALLY DELIVERED'                              => 'completed',
+        'RETURN TO DESTINATION WAREHOUSE'                  => 'rescheduled',
+        'RESCHEDULED'                                      => 'rescheduled',
+        'FAILED TO DELIVER'                                => 'cancelled',
+        'RETURN TO ORIGIN WAREHOUSE'                       => 'cancelled',
+        'RECEIVED TO ORIGIN WAREHOUSE (FAILED TO DELIVER)' => 'cancelled',
+        'RETURN TO CLIENT'                                 => 'cancelled',
+        'RECEIVED FAILED ORDER'                            => 'cancelled',
+        'CANCELLED'                                        => 'cancelled',
+    ];
+
+    private const TRACKING_CACHE_MINUTES = 30;
+
     public function __construct(private Curfoxapiservice $curfox) {}
 
-    // ── Status pages ──────────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
+    // ── LOCAL PIPELINE STATUS PAGES ────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
 
     public function index()
     {
@@ -38,13 +69,11 @@ class EmployeeDeliveryCallController extends Controller
     private function statusPage(Request $request, string $status)
     {
         $q = trim((string) $request->get('q', ''));
-
-        // Get system seller IDs first
         $systemSellerIds = Saler::where('type', 'system_seller')->pluck('id')->toArray();
 
         $callsQuery = EmployeeDeliveryCall::query()
             ->where('status', $status)
-            ->whereIn('seller_id', $systemSellerIds) // Only system sellers
+            ->whereIn('seller_id', $systemSellerIds)
             ->latest('id');
 
         if ($q !== '') {
@@ -62,21 +91,24 @@ class EmployeeDeliveryCallController extends Controller
         $calls      = $callsQuery->paginate(20)->withQueryString();
         $nextStatus = self::FLOW[$status] ?? null;
 
+        $pipelineCounts = [
+            'Pending'    => EmployeeDeliveryCall::whereIn('seller_id', $systemSellerIds)->where('status', 'Pending')->count(),
+            'packing'    => EmployeeDeliveryCall::whereIn('seller_id', $systemSellerIds)->where('status', 'packing')->count(),
+            'packed'     => EmployeeDeliveryCall::whereIn('seller_id', $systemSellerIds)->where('status', 'packed')->count(),
+            'givedriver' => EmployeeDeliveryCall::whereIn('seller_id', $systemSellerIds)->where('status', 'givedriver')->count(),
+        ];
+
+        $trackingCounts = $this->getTrackingCounts($systemSellerIds);
+
         $curfoxCities = [];
-        try {
-            $curfoxCities = $this->curfox->getAllCities();
-        } catch (\Exception $e) {
-            Log::warning('Could not load Curfox cities for origin picker: ' . $e->getMessage());
-        }
+        try { $curfoxCities = $this->curfox->getAllCities(); } catch (\Exception $e) {}
 
         $curfoxBusinesses      = [];
         $curfoxDefaultBusiness = null;
         try {
             $curfoxBusinesses      = $this->curfox->getBusinesses();
             $curfoxDefaultBusiness = $this->curfox->getDefaultBusiness();
-        } catch (\Exception $e) {
-            Log::warning('Could not load Curfox businesses: ' . $e->getMessage());
-        }
+        } catch (\Exception $e) {}
 
         $selectedBusinessId = session(
             'curfox_merchant_business_id',
@@ -84,37 +116,233 @@ class EmployeeDeliveryCallController extends Controller
         );
 
         return view('employee.delivery_calls.index', compact(
-            'calls',
-            'status',
-            'nextStatus',
-            'curfoxCities',
-            'curfoxBusinesses',
-            'curfoxDefaultBusiness',
-            'selectedBusinessId'
+            'calls', 'status', 'nextStatus', 'curfoxCities', 'curfoxBusinesses',
+            'curfoxDefaultBusiness', 'selectedBusinessId', 'pipelineCounts', 'trackingCounts'
         ));
     }
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // ── CURFOX TRACKING STATUS PAGES ──────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
+
+    public function trackingIndex(Request $request)
+    {
+        return redirect()->route('employee.delivery_calls.tracking.confirmed');
+    }
+
+    public function trackingConfirmed(Request $request)  { return $this->trackingPage($request, 'confirmed'); }
+    public function trackingCompleted(Request $request)   { return $this->trackingPage($request, 'completed'); }
+    public function trackingRescheduled(Request $request) { return $this->trackingPage($request, 'rescheduled'); }
+    public function trackingCancelled(Request $request)   { return $this->trackingPage($request, 'cancelled'); }
+
+    private function trackingPage(Request $request, string $category)
+    {
+        $q = trim((string) $request->get('q', ''));
+        $systemSellerIds = Saler::where('type', 'system_seller')->pluck('id')->toArray();
+
+        $dispatchedCalls = EmployeeDeliveryCall::query()
+            ->whereIn('seller_id', $systemSellerIds)
+            ->whereNotNull('curfox_waybill')
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($qq) use ($q) {
+                    $qq->where('order_code',      'like', "%{$q}%")
+                        ->orWhere('call_number',    'like', "%{$q}%")
+                        ->orWhere('customer_name',  'like', "%{$q}%")
+                        ->orWhere('curfox_waybill', 'like', "%{$q}%")
+                        ->orWhere('item_name',      'like', "%{$q}%");
+                });
+            })
+            ->latest('id')
+            ->get();
+
+        $categorized = [
+            'confirmed'  => collect(),
+            'completed'  => collect(),
+            'rescheduled' => collect(),
+            'cancelled'  => collect(),
+        ];
+
+        foreach ($dispatchedCalls as $call) {
+            $info = $this->getCachedWaybillInfo($call->curfox_waybill);
+            $call->tracking_category    = $info['category'];
+            $call->tracking_status_name = $info['status_name'];
+            $call->tracking_checked_at  = $info['checked_at'];
+
+            // Attach seller name
+            $call->seller_name = Saler::find($call->seller_id)?->name ?? 'Unknown';
+
+            if (isset($categorized[$info['category']])) {
+                $categorized[$info['category']]->push($call);
+            }
+        }
+
+        $calls = $categorized[$category] ?? collect();
+
+        $trackingCounts = [
+            'confirmed'  => $categorized['confirmed']->count(),
+            'completed'  => $categorized['completed']->count(),
+            'rescheduled' => $categorized['rescheduled']->count(),
+            'cancelled'  => $categorized['cancelled']->count(),
+        ];
+
+        $pipelineCounts = [
+            'Pending'    => EmployeeDeliveryCall::whereIn('seller_id', $systemSellerIds)->where('status', 'Pending')->count(),
+            'packing'    => EmployeeDeliveryCall::whereIn('seller_id', $systemSellerIds)->where('status', 'packing')->count(),
+            'packed'     => EmployeeDeliveryCall::whereIn('seller_id', $systemSellerIds)->where('status', 'packed')->count(),
+            'givedriver' => EmployeeDeliveryCall::whereIn('seller_id', $systemSellerIds)->where('status', 'givedriver')->count(),
+        ];
+
+        return view('employee.delivery_calls.tracking', compact(
+            'calls', 'category', 'trackingCounts', 'pipelineCounts', 'q'
+        ));
+    }
+
+    // ── Sync single waybill (AJAX) ──────────────────────────────────────────
+    public function syncWaybill(Request $request, int $id)
+    {
+        $systemSellerIds = Saler::where('type', 'system_seller')->pluck('id')->toArray();
+        $call = EmployeeDeliveryCall::whereIn('seller_id', $systemSellerIds)->findOrFail($id);
+
+        if (! $call->curfox_waybill) {
+            return response()->json(['success' => false, 'message' => 'No waybill assigned.'], 400);
+        }
+
+        $info = $this->refreshWaybillInfo($call->curfox_waybill);
+
+        return response()->json([
+            'success'     => true,
+            'category'    => $info['category'],
+            'status_name' => $info['status_name'],
+            'checked_at'  => $info['checked_at'],
+        ]);
+    }
+
+    // ── Sync all dispatched waybills (AJAX) ────────────────────────────────
+    public function syncAllWaybills(Request $request)
+    {
+        $systemSellerIds = Saler::where('type', 'system_seller')->pluck('id')->toArray();
+
+        $calls = EmployeeDeliveryCall::whereIn('seller_id', $systemSellerIds)
+            ->whereNotNull('curfox_waybill')
+            ->get(['id', 'curfox_waybill']);
+
+        $results = [];
+        foreach ($calls as $call) {
+            $info = $this->refreshWaybillInfo($call->curfox_waybill);
+            $results[] = [
+                'id'          => $call->id,
+                'waybill'     => $call->curfox_waybill,
+                'category'    => $info['category'],
+                'status_name' => $info['status_name'],
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'synced'  => count($results),
+            'results' => $results,
+        ]);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // ── WAYBILL TRACKING HELPERS ───────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
+
+    private function getCachedWaybillInfo(string $waybill): array
+    {
+        $cacheKey = 'curfox_waybill_info_' . $waybill;
+
+        return Cache::remember($cacheKey, now()->addMinutes(self::TRACKING_CACHE_MINUTES), function () use ($waybill) {
+            return $this->fetchWaybillInfo($waybill);
+        });
+    }
+
+    private function refreshWaybillInfo(string $waybill): array
+    {
+        $cacheKey = 'curfox_waybill_info_' . $waybill;
+        Cache::forget($cacheKey);
+        $info = $this->fetchWaybillInfo($waybill);
+        Cache::put($cacheKey, $info, now()->addMinutes(self::TRACKING_CACHE_MINUTES));
+        return $info;
+    }
+
+    private function fetchWaybillInfo(string $waybill): array
+    {
+        try {
+            $response  = $this->curfox->getTrackingInfo($waybill);
+            $trackings = $response['data'] ?? [];
+
+            if (empty($trackings)) {
+                return ['status_name' => 'Unknown', 'category' => 'confirmed', 'checked_at' => now()->toDateTimeString(), 'error' => null];
+            }
+
+            $latestStatus = $trackings[0]['status']['name'] ?? null;
+            $category     = self::CURFOX_CATEGORY_MAP[$latestStatus] ?? 'confirmed';
+
+            return [
+                'status_name' => $latestStatus ?? 'Unknown',
+                'category'    => $category,
+                'checked_at'  => now()->toDateTimeString(),
+                'error'       => null,
+            ];
+        } catch (\Exception $e) {
+            Log::warning("Tracking error for waybill {$waybill}: " . $e->getMessage());
+            return ['status_name' => 'Error', 'category' => 'confirmed', 'checked_at' => now()->toDateTimeString(), 'error' => $e->getMessage()];
+        }
+    }
+
+    private function getTrackingCounts(array $systemSellerIds): array
+    {
+        $waybills = EmployeeDeliveryCall::whereIn('seller_id', $systemSellerIds)
+            ->whereNotNull('curfox_waybill')
+            ->pluck('curfox_waybill');
+
+        $counts = ['confirmed' => 0, 'completed' => 0, 'rescheduled' => 0, 'cancelled' => 0];
+
+        foreach ($waybills as $waybill) {
+            $cacheKey = 'curfox_waybill_info_' . $waybill;
+            if (Cache::has($cacheKey)) {
+                $info = Cache::get($cacheKey);
+                $cat  = $info['category'] ?? 'confirmed';
+                if (isset($counts[$cat])) {
+                    $counts[$cat]++;
+                }
+            }
+        }
+
+        return $counts;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // ── SHOW ───────────────────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
+
     public function show($id)
     {
-        $call = EmployeeDeliveryCall::findOrFail($id);
-
-        // Check if this belongs to a system seller
+        $call   = EmployeeDeliveryCall::findOrFail($id);
         $seller = Saler::find($call->seller_id);
-        if (!$seller || $seller->type !== 'system_seller') {
+
+        if (! $seller || $seller->type !== 'system_seller') {
             abort(403, 'Unauthorized access to non-system seller order');
+        }
+
+        if ($call->curfox_waybill) {
+            $info = $this->getCachedWaybillInfo($call->curfox_waybill);
+            $call->tracking_status_name = $info['status_name'];
+            $call->tracking_category    = $info['category'];
+            $call->tracking_checked_at  = $info['checked_at'];
         }
 
         return view('employee.delivery_calls.view', compact('call'));
     }
 
-    // ── Business selector ─────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
+    // ── BUSINESS SELECTOR ─────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
 
     public function setBusiness(Request $request)
     {
-        $v = $request->validate([
-            'merchant_business_id' => 'required|string|max:50',
-        ]);
-
+        $v = $request->validate(['merchant_business_id' => 'required|string|max:50']);
         session(['curfox_merchant_business_id' => $v['merchant_business_id']]);
 
         if ($request->expectsJson()) {
@@ -128,7 +356,9 @@ class EmployeeDeliveryCallController extends Controller
         return back()->with('success', 'Active Curfox business updated.');
     }
 
-    // ── Origin city update ────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
+    // ── ORIGIN UPDATES ─────────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
 
     public function updateOrigin(Request $request, int $id)
     {
@@ -138,15 +368,11 @@ class EmployeeDeliveryCallController extends Controller
             'origin_state_name' => 'required|string|max:150',
         ]);
 
-        $call = EmployeeDeliveryCall::findOrFail($id);
-
-        // Check if this belongs to a system seller
+        $call   = EmployeeDeliveryCall::findOrFail($id);
         $seller = Saler::find($call->seller_id);
-        if (!$seller || $seller->type !== 'system_seller') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized: This order does not belong to a system seller'
-            ], 403);
+
+        if (! $seller || $seller->type !== 'system_seller') {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
         $call->update([
@@ -175,10 +401,8 @@ class EmployeeDeliveryCallController extends Controller
             'origin_state_name' => 'required|string|max:150',
         ]);
 
-        // Get system seller IDs
         $systemSellerIds = Saler::where('type', 'system_seller')->pluck('id')->toArray();
 
-        // Only update calls that belong to system sellers
         $updated = EmployeeDeliveryCall::whereIn('id', $v['ids'])
             ->whereIn('seller_id', $systemSellerIds)
             ->update([
@@ -192,29 +416,26 @@ class EmployeeDeliveryCallController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "Origin updated to {$v['origin_city_name']} for {$updated} system seller call(s)." .
-                ($skipped > 0 ? " {$skipped} non-system seller call(s) skipped." : ""),
+            'message' => "Origin updated for {$updated} call(s)." . ($skipped > 0 ? " {$skipped} skipped." : ''),
             'updated' => $updated,
             'skipped' => $skipped,
         ]);
     }
 
-    // ── Status transitions ────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
+    // ── STATUS TRANSITIONS ─────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
 
     public function updateStatus(Request $request, $id)
     {
-        $call = EmployeeDeliveryCall::findOrFail($id);
-
-        // Check if this belongs to a system seller
+        $call   = EmployeeDeliveryCall::findOrFail($id);
         $seller = Saler::find($call->seller_id);
-        if (!$seller || $seller->type !== 'system_seller') {
+
+        if (! $seller || $seller->type !== 'system_seller') {
             if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized: This order does not belong to a system seller'
-                ], 403);
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
             }
-            return back()->with('error', 'Unauthorized: This order does not belong to a system seller');
+            return back()->with('error', 'Unauthorized: Not a system seller order');
         }
 
         $from = $call->status;
@@ -237,6 +458,7 @@ class EmployeeDeliveryCallController extends Controller
                     'curfox_error'         => null,
                     'status_date'          => now(),
                 ]);
+                $this->getCachedWaybillInfo($waybill);
 
                 if ($request->expectsJson()) {
                     return response()->json([
@@ -252,10 +474,7 @@ class EmployeeDeliveryCallController extends Controller
                 Log::error('Curfox dispatch failed for call ' . $id, ['error' => $e->getMessage()]);
 
                 if ($request->expectsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Courier dispatch failed: ' . $e->getMessage(),
-                    ], 422);
+                    return response()->json(['success' => false, 'message' => 'Dispatch failed: ' . $e->getMessage()], 422);
                 }
                 return back()->with('error', 'Courier dispatch failed: ' . $e->getMessage());
             }
@@ -271,17 +490,11 @@ class EmployeeDeliveryCallController extends Controller
 
     public function bulkUpdateStatus(Request $request)
     {
-        $data = $request->validate([
-            'ids'   => 'required|array|min:1',
-            'ids.*' => 'integer',
-        ]);
+        $data = $request->validate(['ids' => 'required|array|min:1', 'ids.*' => 'integer']);
+        $ids  = $data['ids'];
 
-        $ids = $data['ids'];
-
-        // Get system seller IDs
         $systemSellerIds = Saler::where('type', 'system_seller')->pluck('id')->toArray();
 
-        // First, verify all selected calls belong to system sellers
         $nonSystemCalls = EmployeeDeliveryCall::whereIn('id', $ids)
             ->whereNotIn('seller_id', $systemSellerIds)
             ->count();
@@ -289,7 +502,7 @@ class EmployeeDeliveryCallController extends Controller
         if ($nonSystemCalls > 0) {
             return response()->json([
                 'success' => false,
-                'message' => "Cannot process: {$nonSystemCalls} selected call(s) do not belong to system sellers.",
+                'message' => "{$nonSystemCalls} selected call(s) do not belong to system sellers.",
             ], 403);
         }
 
@@ -300,10 +513,7 @@ class EmployeeDeliveryCallController extends Controller
             ->toArray();
 
         if (count($statuses) !== 1) {
-            return response()->json([
-                'success' => false,
-                'message' => 'All selected rows must share the same current status.',
-            ], 422);
+            return response()->json(['success' => false, 'message' => 'All selected rows must share the same status.'], 422);
         }
 
         $from = $statuses[0];
@@ -331,18 +541,20 @@ class EmployeeDeliveryCallController extends Controller
                         'curfox_error'         => null,
                         'status_date'          => now(),
                     ]);
+                    $this->getCachedWaybillInfo($waybill);
                     $ok++;
                     $details[] = ['id' => $call->id, 'waybill' => $waybill];
                 } catch (\RuntimeException $e) {
                     $call->update(['curfox_error' => $e->getMessage()]);
                     $fail++;
                     $details[] = ['id' => $call->id, 'error' => $e->getMessage()];
-                    Log::error('Bulk Curfox dispatch failed for call ' . $call->id, ['error' => $e->getMessage()]);
+                    Log::error('Bulk dispatch failed for call ' . $call->id);
                 }
             }
+
             return response()->json([
                 'success' => true,
-                'message' => "Dispatched {$ok} orders. {$fail} failed.",
+                'message' => "Dispatched {$ok}. {$fail} failed.",
                 'ok'      => $ok,
                 'fail'    => $fail,
                 'details' => $details,
@@ -358,12 +570,14 @@ class EmployeeDeliveryCallController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "Updated {$ok} system seller row(s): {$from} → {$next}",
+            'message' => "Updated {$ok} row(s): {$from} → {$next}",
             'ok'      => $ok,
         ]);
     }
 
-    // ── Curfox dispatch ───────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
+    // ── CURFOX DISPATCH ────────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
 
     private function dispatchToCurfox(EmployeeDeliveryCall $call): string
     {
@@ -375,7 +589,6 @@ class EmployeeDeliveryCallController extends Controller
                 $merchantBusinessId = $default ? (string) $default['id'] : self::DEFAULT_MERCHANT_BUSINESS_ID;
             } catch (\Exception $e) {
                 $merchantBusinessId = self::DEFAULT_MERCHANT_BUSINESS_ID;
-                Log::warning('Could not fetch Curfox default business, using fallback: ' . $e->getMessage());
             }
         }
 
@@ -397,7 +610,7 @@ class EmployeeDeliveryCallController extends Controller
 
         if (! $destCityId && ! $destCityName) {
             throw new \RuntimeException(
-                "Cannot determine destination city for call #{$call->id}. Please set a valid city before dispatching."
+                "Cannot determine destination city for call #{$call->id}."
             );
         }
 
@@ -437,7 +650,6 @@ class EmployeeDeliveryCallController extends Controller
         }
 
         $response = $this->curfox->createOrders($generalData, [$orderData]);
-
         $waybills = $response['data'] ?? [];
         $waybill  = is_array($waybills) ? ($waybills[0] ?? null) : ($waybills ?: null);
 
@@ -448,17 +660,13 @@ class EmployeeDeliveryCallController extends Controller
         return (string) $waybill;
     }
 
-    // ── Tracking proxy ────────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
+    // ── TRACKING PROXY ─────────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
 
-    /**
-     * POST /employee/delivery-calls/tracking
-     * Proxies the Curfox GET tracking-info endpoint.
-     */
     public function tracking(Request $request)
     {
-        $v = $request->validate([
-            'waybill_number' => 'required|string|max:100',
-        ]);
+        $v = $request->validate(['waybill_number' => 'required|string|max:100']);
 
         try {
             $response = $this->curfox->getTrackingInfo($v['waybill_number']);
@@ -468,9 +676,6 @@ class EmployeeDeliveryCallController extends Controller
         }
     }
 
-    /**
-     * Helper method to check if a call belongs to a system seller
-     */
     private function isSystemSellerCall(EmployeeDeliveryCall $call): bool
     {
         $seller = Saler::find($call->seller_id);

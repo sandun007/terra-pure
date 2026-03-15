@@ -1,10 +1,13 @@
 @extends('wholesaler.layouts.app')
+
 @push('title')
     Category Management
 @endpush
+
 @push('css')
     <link href="https://fonts.googleapis.com/css2?family=Material+Icons+Outlined" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
     <style>
         .page-header {
             background: linear-gradient(135deg, var(--main-theme-color) 0%, #2c5282 100%);
@@ -12,190 +15,65 @@
             border-radius: 12px;
             padding: 2rem;
             margin-bottom: 2rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 20px rgba(0,0,0,.1);
         }
 
-        .category-card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
-            overflow: hidden;
-            height: 100%;
-        }
-
-        .category-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .category-image-container {
-            height: 150px;
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .category-image {
-            width: 100%;
-            height: 100%;
+        .table-category-image {
+            width: 56px;
+            height: 56px;
             object-fit: contain;
-            padding: 20px;
-            transition: transform 0.3s ease;
-        }
-
-        .category-card:hover .category-image {
-            transform: scale(1.05);
-        }
-
-        .no-image {
-            font-size: 3rem;
-            color: #94a3b8;
-        }
-
-        .category-code {
-            background: rgba(102, 126, 234, 0.1);
-            color: var(--main-theme-color);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 6px;
+            border: 2px solid #e2e8f0;
         }
 
         .status-badge {
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: .85rem;
+            font-weight: 700;
             display: inline-flex;
             align-items: center;
             gap: 6px;
+            color: #fff;
         }
+        .status-active { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .status-inactive { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
 
-        .status-active {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-        }
-
-        .status-inactive {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-        }
-
-        .product-count-badge {
-            background: rgba(59, 130, 246, 0.1);
-            color: #3b82f6;
+        .count-badge {
+            background: rgba(59, 130, 246, 0.12);
+            color: #2563eb;
             padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
+            border-radius: 999px;
+            font-weight: 700;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn-action {
-            flex: 1;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             gap: 6px;
-            transition: all 0.3s ease;
-            border: none;
         }
 
-        .btn-edit {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
-        }
-
-        .btn-delete {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-        }
-
-        .btn-action:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            border-radius: 12px;
-            border: 2px dashed #cbd5e1;
-        }
-
-        .empty-state i {
-            font-size: 4rem;
-            color: #94a3b8;
-            margin-bottom: 1rem;
-        }
-
-        /* Table Styles */
-        .table-category-image {
-            width: 60px;
-            height: 60px;
-            object-fit: contain;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            padding: 5px;
-            border: 2px solid #e2e8f0;
-        }
-
-        #categories-table_filter input {
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 10px 15px;
-            width: 300px !important;
-            transition: all 0.3s ease;
-            padding-left: 45px;
-        }
-
-        #categories-table_filter input:focus {
-            border-color: var(--main-theme-color);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-            outline: none;
-        }
-
-        #categories-table_filter {
-            position: relative;
-        }
-
+        /* DataTable search styling */
+        #categories-table_filter { position: relative; }
         #categories-table_filter:before {
             content: "search";
             font-family: 'Material Icons Outlined';
             position: absolute;
-            left: 15px;
+            left: 14px;
             top: 50%;
             transform: translateY(-50%);
             color: #94a3b8;
             z-index: 10;
         }
-
-        table.dataTable tbody tr {
-            transition: all 0.3s ease;
+        #categories-table_filter input {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 10px 14px 10px 44px;
+            width: 320px !important;
+            outline: none;
         }
-
-        table.dataTable tbody tr:hover {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-        }
-
-        /* Loading overlay */
-        .swal2-container .swal2-loader {
-            border-color: var(--main-theme-color) transparent var(--main-theme-color) transparent;
+        #categories-table_filter input:focus {
+            border-color: var(--main-theme-color);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
         }
     </style>
 @endpush
@@ -204,16 +82,16 @@
     <div class="page-header">
         <div class="d-flex justify-content-between align-items-start">
             <div>
-                <h3 class="fw-bold d-flex align-items-center">
-                    <span class="material-icons-outlined me-2" style="font-size: 2.5rem;">category</span>
+                <h3 class="fw-bold d-flex align-items-center mb-1">
+                    <span class="material-icons-outlined me-2" style="font-size:2.4rem;">category</span>
                     Category Management
                 </h3>
                 <p class="mb-0 opacity-90 d-flex align-items-center">
-                    <span class="material-icons-outlined me-2" style="font-size: 1.2rem;">format_list_bulleted</span>
+                    <span class="material-icons-outlined me-2">format_list_bulleted</span>
                     {{ $count }} Categories in Catalog
                 </p>
             </div>
-            <div class="page-actions">
+            <div>
                 <a href="{{ route('wholesaler.categories.create') }}" class="btn btn-light d-flex align-items-center">
                     <span class="material-icons-outlined me-2">add_circle</span>
                     Add New Category
@@ -228,7 +106,7 @@
                 <span class="material-icons-outlined me-2">check_circle</span>
                 <div>{{ session('success') }}</div>
             </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
@@ -238,88 +116,33 @@
                 <span class="material-icons-outlined me-2">error</span>
                 <div>{{ session('error') }}</div>
             </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
     @if($categories->isEmpty())
-        <div class="empty-state">
-            <span class="material-icons-outlined">category</span>
-            <h4 class="text-muted mb-3">No Categories Found</h4>
-            <p class="text-muted mb-4">Start by creating your first category for your products</p>
-            <a href="{{ route('wholesaler.categories.create') }}" class="btn btn-primary d-flex align-items-center mx-auto" style="width: fit-content;">
+        <div class="text-center p-5 bg-light rounded-4 border border-2 border-dashed">
+            <span class="material-icons-outlined" style="font-size:64px;color:#94a3b8;">category</span>
+            <h4 class="text-muted mt-3">No Categories Found</h4>
+            <p class="text-muted">Start by creating your first category.</p>
+            <a href="{{ route('wholesaler.categories.create') }}" class="btn btn-primary d-inline-flex align-items-center">
                 <span class="material-icons-outlined me-2">add_circle</span>
                 Create First Category
             </a>
         </div>
     @else
-        <!-- Grid View -->
-        <div class="row mb-4">
-            @foreach($categories as $category)
-                <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
-                    <div class="category-card">
-                        <div class="category-image-container">
-                            @if($category->image)
-                                <img src="{{ asset('storage/' . $category->image) }}"
-                                     alt="{{ $category->name }}"
-                                     class="category-image"
-                                     onerror="this.src='{{ asset('images/default-category.png') }}'">
-                            @else
-                                <span class="material-icons-outlined no-image">category</span>
-                            @endif
-                        </div>
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h5 class="card-title mb-0">{{ $category->name }}</h5>
-                                <span class="category-code">{{ $category->code }}</span>
-                            </div>
-
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <span class="product-count-badge">
-                                    <span class="material-icons-outlined" style="font-size: 1rem;">inventory</span>
-                                    {{ \App\Models\WholesalerProduct::where('category_id', $category->id)->where('wholesaler_id', Auth::guard('wholesaler')->id())->count() }} products
-                                </span>
-                                <span class="status-badge {{ $category->status == 'active' ? 'status-active' : 'status-inactive' }}">
-                                    <span class="material-icons-outlined" style="font-size: 1rem;">
-                                        {{ $category->status == 'active' ? 'check_circle' : 'cancel' }}
-                                    </span>
-                                    {{ ucfirst($category->status) }}
-                                </span>
-                            </div>
-
-                            <div class="action-buttons">
-                                <a href="{{ route('wholesaler.categories.edit', $category->id) }}"
-                                   class="btn-action btn-edit">
-                                    <span class="material-icons-outlined">edit</span>
-                                    Edit
-                                </a>
-                                <button type="button"
-                                        class="btn-action btn-delete delete-category"
-                                        data-id="{{ $category->id }}"
-                                        data-name="{{ $category->name }}">
-                                    <span class="material-icons-outlined">delete</span>
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
-        </div>
-
-        <!-- Table View -->
         <div class="card">
             <div class="card-body">
-                <table id="categories-table" class="display table table-hover" style="width:100%">
+                <table id="categories-table" class="display table table-hover align-middle" style="width:100%">
                     <thead>
                     <tr>
-                        <th>Image</th>
+                        <th style="width:80px;">Image</th>
                         <th>Category Name</th>
                         <th>Code</th>
-                        <th>Products</th>
-                        <th>Status</th>
-                        <th>Created</th>
-                        <th>Actions</th>
+                        <th style="width:120px;">Products</th>
+                        <th style="width:130px;">Status</th>
+                        <th style="width:140px;">Created</th>
+                        <th style="width:180px;">Actions</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -327,9 +150,9 @@
                         <tr>
                             <td>
                                 @if($category->image)
-                                    <img src="{{ asset('storage/' . $category->image) }}"
+                                    <img class="table-category-image"
+                                         src="{{ asset('storage/' . $category->image) }}"
                                          alt="{{ $category->name }}"
-                                         class="table-category-image"
                                          onerror="this.src='{{ asset('images/default-category.png') }}'">
                                 @else
                                     <div class="table-category-image d-flex align-items-center justify-content-center">
@@ -338,33 +161,47 @@
                                 @endif
                             </td>
                             <td>
-                                <strong>{{ $category->name }}</strong>
+                                <div class="fw-bold">{{ $category->name }}</div>
+                            </td>
+                            <td><code>{{ $category->code }}</code></td>
+                            <td>
+                                <span class="count-badge">
+                                    <span class="material-icons-outlined" style="font-size:18px;">inventory</span>
+                                    {{ $category->products_count ?? 0 }}
+                                </span>
                             </td>
                             <td>
-                                <code>{{ $category->code }}</code>
-                            </td>
-                            <td>
-                                    <span class="product-count-badge">
-                                        {{ \App\Models\WholesalerProduct::where('category_id', $category->id)->where('wholesaler_id', Auth::guard('wholesaler')->id())->count() }}
+                                <span class="status-badge {{ $category->status == 'active' ? 'status-active' : 'status-inactive' }}">
+                                    <span class="material-icons-outlined" style="font-size:18px;">
+                                        {{ $category->status == 'active' ? 'check_circle' : 'cancel' }}
                                     </span>
+                                    {{ ucfirst($category->status) }}
+                                </span>
                             </td>
-                            <td>
-                                    <span class="status-badge {{ $category->status == 'active' ? 'status-active' : 'status-inactive' }}">
-                                        {{ ucfirst($category->status) }}
-                                    </span>
-                            </td>
-                            <td>{{ $category->created_at->format('M d, Y') }}</td>
+                            <td>{{ $category->created_at?->format('M d, Y') }}</td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <a href="{{ route('wholesaler.categories.edit', $category->id) }}"
-                                       class="btn btn-sm btn-outline-warning d-flex align-items-center">
-                                        <span class="material-icons-outlined" style="font-size: 1rem;">edit</span>
+                                    {{-- ✅ VIEW BUTTON --}}
+                                    <a href="{{ route('wholesaler.categories.show', $category->id) }}"
+                                       class="btn btn-sm btn-outline-primary d-flex align-items-center"
+                                       title="View">
+                                        <span class="material-icons-outlined" style="font-size:18px;">visibility</span>
                                     </a>
+
+                                    {{-- EDIT --}}
+                                    <a href="{{ route('wholesaler.categories.edit', $category->id) }}"
+                                       class="btn btn-sm btn-outline-warning d-flex align-items-center"
+                                       title="Edit">
+                                        <span class="material-icons-outlined" style="font-size:18px;">edit</span>
+                                    </a>
+
+                                    {{-- DELETE --}}
                                     <button type="button"
                                             class="btn btn-sm btn-outline-danger d-flex align-items-center delete-category"
                                             data-id="{{ $category->id }}"
-                                            data-name="{{ $category->name }}">
-                                        <span class="material-icons-outlined" style="font-size: 1rem;">delete</span>
+                                            data-name="{{ $category->name }}"
+                                            title="Delete">
+                                        <span class="material-icons-outlined" style="font-size:18px;">delete</span>
                                     </button>
                                 </div>
                             </td>
@@ -376,7 +213,6 @@
         </div>
     @endif
 
-    <!-- CSRF Token Meta Tag -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 @endsection
 
@@ -384,16 +220,24 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
         $(document).ready(function () {
-            // Initialize DataTable
-            $('#categories-table').DataTable({
+
+            const table = $('#categories-table').DataTable({
                 responsive: true,
+                order: [[1, 'asc']],
+                pageLength: 10,
+                lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+                columnDefs: [
+                    { orderable: false, targets: [0, 6] },
+                    { className: "align-middle", targets: "_all" }
+                ],
                 language: {
                     search: "",
                     searchPlaceholder: "Search categories...",
-                    lengthMenu: "Show _MENU_ categories",
-                    info: "Showing _START_ to _END_ of _TOTAL_ categories",
+                    lengthMenu: "Show _MENU_",
+                    info: "Showing _START_ to _END_ of _TOTAL_",
                     infoEmpty: "No categories available",
                     zeroRecords: "No matching categories found",
                     paginate: {
@@ -403,13 +247,6 @@
                         last: '<span class="material-icons-outlined">last_page</span>'
                     }
                 },
-                columnDefs: [
-                    { orderable: false, targets: [0, 6] },
-                    { className: "align-middle", targets: "_all" }
-                ],
-                order: [[1, 'asc']],
-                pageLength: 10,
-                lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
                 dom: '<"row"<"col-md-6"l><"col-md-6"f>>rt<"row"<"col-md-6"i><"col-md-6"p>>',
                 initComplete: function() {
                     $('.dataTables_filter input').addClass('form-control');
@@ -417,50 +254,38 @@
                 }
             });
 
-            // Get CSRF token from meta tag
             const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-            // SweetAlert for delete confirmation
+            // ✅ SweetAlert Delete
             $(document).on('click', '.delete-category', function() {
                 const categoryId = $(this).data('id');
                 const categoryName = $(this).data('name');
                 const deleteUrl = "{{ route('wholesaler.categories.destroy', ':id') }}".replace(':id', categoryId);
 
                 Swal.fire({
-                    title: 'Are you sure?',
-                    html: `<strong>Category:</strong> ${categoryName}<br><br>
-                           This action will permanently delete the category and cannot be undone.`,
+                    title: 'Delete Category?',
+                    html: `<div style="text-align:left">
+                            <b>Category:</b> ${categoryName}<br>
+                            <span style="color:#64748b">This action cannot be undone.</span>
+                           </div>`,
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Yes, delete it!',
+                    confirmButtonText: 'Yes, Delete',
                     cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#64748b',
                     showLoaderOnConfirm: true,
                     preConfirm: () => {
                         return $.ajax({
                             url: deleteUrl,
                             type: 'DELETE',
-                            data: {
-                                _token: csrfToken
-                            },
-                            dataType: 'json',
-                            success: function(response) {
-                                if (response.success) {
-                                    return response;
-                                } else {
-                                    throw new Error(response.message || 'Delete failed');
-                                }
-                            },
-                            error: function(xhr) {
-                                let errorMessage = 'Request failed';
-                                if (xhr.responseJSON && xhr.responseJSON.message) {
-                                    errorMessage = xhr.responseJSON.message;
-                                } else if (xhr.statusText) {
-                                    errorMessage = xhr.statusText;
-                                }
-                                throw new Error(errorMessage);
-                            }
+                            data: { _token: csrfToken },
+                            dataType: 'json'
+                        }).then(res => {
+                            if (!res.success) throw new Error(res.message || 'Delete failed');
+                            return res;
+                        }).catch(err => {
+                            Swal.showValidationMessage(err.responseJSON?.message || err.message || 'Request failed');
                         });
                     },
                     allowOutsideClick: () => !Swal.isLoading()
@@ -468,27 +293,17 @@
                     if (result.isConfirmed) {
                         Swal.fire({
                             title: 'Deleted!',
-                            text: 'Category has been deleted successfully.',
+                            text: 'Category deleted successfully.',
                             icon: 'success',
-                            timer: 2000,
-                            timerProgressBar: true,
+                            timer: 1500,
                             showConfirmButton: false
-                        }).then(() => {
-                            location.reload();
-                        });
+                        }).then(() => location.reload());
                     }
                 });
             });
 
-            // Image error handling
-            $('.category-image, .table-category-image').on('error', function() {
-                $(this).attr('src', '{{ asset("images/default-category.png") }}');
-            });
-
-            // Auto-hide alerts after 5 seconds
-            setTimeout(() => {
-                $('.alert').alert('close');
-            }, 5000);
+            // auto-hide alerts
+            setTimeout(() => $('.alert').alert('close'), 5000);
         });
     </script>
 @endpush

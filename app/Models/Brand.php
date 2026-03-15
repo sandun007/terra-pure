@@ -62,4 +62,18 @@ class Brand extends Model
     {
         return $query->where('wholesaler_id', $wholesalerId);
     }
+    public function getStoreAttribute()
+{
+    if ($this->seller_id) {
+        return 'Seller';
+    }
+
+    if ($this->wholesaler_id) {
+        return 'Wholesaler';
+    }
+
+    return 'Admin';
+}
+
+
 }

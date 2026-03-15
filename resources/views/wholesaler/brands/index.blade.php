@@ -1,11 +1,12 @@
 @extends('wholesaler.layouts.app')
+
 @push('title')
-    Brand Management
+    Brand List
 @endpush
 
 @push('css')
-    <link href="https://fonts.googleapis.com/css2?family=Material+Icons+Outlined" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         .page-header {
             background: linear-gradient(135deg, var(--main-theme-color) 0%, #2c5282 100%);
@@ -16,55 +17,14 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
 
-        .brand-card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
-            overflow: hidden;
-            height: 100%;
-            background: white;
-        }
-
-        .brand-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .brand-image-container {
-            height: 150px;
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            position: relative;
-        }
-
         .brand-image {
-            width: 100%;
-            height: 100%;
+            width: 60px;
+            height: 60px;
             object-fit: contain;
-            padding: 20px;
-            transition: transform 0.3s ease;
-        }
-
-        .brand-card:hover .brand-image {
-            transform: scale(1.05);
-        }
-
-        .no-image {
-            font-size: 3rem;
-            color: #94a3b8;
-        }
-
-        .brand-code {
-            background: rgba(102, 126, 234, 0.1);
-            color: var(--main-theme-color);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 5px;
+            border: 2px solid #e2e8f0;
         }
 
         .status-badge {
@@ -101,20 +61,26 @@
 
         .action-buttons {
             display: flex;
-            gap: 10px;
+            gap: 8px;
+            justify-content: center;
         }
 
         .btn-action {
-            flex: 1;
-            padding: 8px 16px;
+            width: 36px;
+            height: 36px;
             border-radius: 8px;
-            font-weight: 600;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
             transition: all 0.3s ease;
             border: none;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .btn-view {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
         }
 
         .btn-edit {
@@ -132,28 +98,16 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            border-radius: 12px;
-            border: 2px dashed #cbd5e1;
+        .btn-view:hover {
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
         }
 
-        .empty-state i {
-            font-size: 4rem;
-            color: #94a3b8;
-            margin-bottom: 1rem;
+        .btn-edit:hover {
+            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
         }
 
-        .table-brand-image {
-            width: 60px;
-            height: 60px;
-            object-fit: contain;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            padding: 5px;
-            border: 2px solid #e2e8f0;
+        .btn-delete:hover {
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
         }
 
         #brands-table_wrapper {
@@ -182,49 +136,57 @@
             background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
         }
 
-        .view-toggle {
-            display: flex;
-            gap: 10px;
-            background: white;
-            padding: 10px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        .material-icons {
+            font-size: 18px;
+            vertical-align: middle;
         }
 
-        .view-toggle-btn {
-            padding: 8px 16px;
+        .brand-code {
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--main-theme-color);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 12px;
+            border: 2px dashed #cbd5e1;
+        }
+
+        .empty-state .material-icons {
+            font-size: 4rem;
+            color: #94a3b8;
+            margin-bottom: 1rem;
+        }
+
+        /* DataTable customization */
+        .dataTables_length select {
             border: 2px solid #e2e8f0;
             border-radius: 8px;
-            background: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            padding: 5px 10px;
+            margin: 0 5px;
         }
 
-        .view-toggle-btn.active {
-            background: var(--main-theme-color);
-            color: white;
-            border-color: var(--main-theme-color);
+        .dataTables_paginate .paginate_button {
+            border-radius: 8px !important;
+            margin: 0 3px !important;
         }
 
-        .view-toggle-btn:hover {
-            border-color: var(--main-theme-color);
+        .dataTables_paginate .paginate_button.current {
+            background: var(--main-theme-color) !important;
+            color: white !important;
+            border: none !important;
         }
 
-        @media (max-width: 768px) {
-            .brand-card {
-                margin-bottom: 1.5rem;
-            }
-
-            .action-buttons {
-                flex-direction: column;
-            }
-
-            .btn-action {
-                width: 100%;
-            }
+        .dataTables_info {
+            color: #64748b;
+            font-size: 0.9rem;
         }
     </style>
 @endpush
@@ -234,17 +196,17 @@
         <div class="d-flex justify-content-between align-items-start flex-wrap">
             <div>
                 <h3 class="fw-bold d-flex align-items-center mb-2">
-                    <span class="material-icons-outlined me-2" style="font-size: 2.5rem;">branding_watermark</span>
+                    <span class="material-icons me-2" style="font-size: 2.5rem;">branding_watermark</span>
                     Brand Management
                 </h3>
                 <p class="mb-0 opacity-90 d-flex align-items-center">
-                    <span class="material-icons-outlined me-2" style="font-size: 1.2rem;">format_list_bulleted</span>
+                    <span class="material-icons me-2" style="font-size: 1.2rem;">format_list_bulleted</span>
                     {{ $brands->count() }} Brands in Catalog
                 </p>
             </div>
             <div class="page-actions d-flex gap-2 mt-3 mt-md-0">
                 <a href="{{ route('wholesaler.brands.create') }}" class="btn btn-light d-flex align-items-center">
-                    <span class="material-icons-outlined me-2">add_circle</span>
+                    <span class="material-icons me-2">add_circle</span>
                     Add New Brand
                 </a>
             </div>
@@ -253,92 +215,26 @@
 
     @if($brands->isEmpty())
         <div class="empty-state">
-            <span class="material-icons-outlined">branding_watermark</span>
+            <span class="material-icons">branding_watermark</span>
             <h4 class="text-muted mb-3">No Brands Found</h4>
             <p class="text-muted mb-4">Start by creating your first brand for your products</p>
             <a href="{{ route('wholesaler.brands.create') }}" class="btn btn-primary d-flex align-items-center mx-auto" style="width: fit-content;">
-                <span class="material-icons-outlined me-2">add_circle</span>
+                <span class="material-icons me-2">add_circle</span>
                 Create First Brand
             </a>
         </div>
     @else
-        <!-- View Toggle -->
-        <div class="d-flex justify-content-end mb-3">
-            <div class="view-toggle">
-                <button class="view-toggle-btn active" id="gridViewBtn" onclick="toggleView('grid')">
-                    <span class="material-icons-outlined">grid_view</span>
-                    Grid
-                </button>
-                <button class="view-toggle-btn" id="tableViewBtn" onclick="toggleView('table')">
-                    <span class="material-icons-outlined">table_rows</span>
-                    Table
-                </button>
-            </div>
-        </div>
-
-        <!-- Grid View -->
-        <div id="gridView" class="row mb-4">
-            @foreach($brands as $brand)
-                <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
-                    <div class="brand-card">
-                        <div class="brand-image-container">
-                            @if($brand->image)
-                                <img src="{{ asset('storage/' . $brand->image) }}"
-                                     alt="{{ $brand->name }}"
-                                     class="brand-image"
-                                     onerror="this.parentElement.innerHTML='<span class=\'material-icons-outlined no-image\'>category</span>'">
-                            @else
-                                <span class="material-icons-outlined no-image">category</span>
-                            @endif
-                        </div>
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h5 class="card-title mb-0">{{ $brand->name }}</h5>
-                                <span class="brand-code">{{ $brand->code }}</span>
-                            </div>
-
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <span class="product-count-badge">
-                                    <span class="material-icons-outlined" style="font-size: 1rem;">inventory</span>
-                                    {{ \App\Models\WholesalerProduct::where('brand_id', $brand->id)->where('wholesaler_id', Auth::guard('wholesaler')->id())->count() }} products
-                                </span>
-                                <span class="status-badge {{ $brand->status == 'active' ? 'status-active' : 'status-inactive' }}">
-                                    <span class="material-icons-outlined" style="font-size: 1rem;">
-                                        {{ $brand->status == 'active' ? 'check_circle' : 'cancel' }}
-                                    </span>
-                                    {{ ucfirst($brand->status) }}
-                                </span>
-                            </div>
-
-                            <div class="action-buttons">
-                                <a href="{{ route('wholesaler.brands.edit', $brand->id) }}"
-                                   class="btn-action btn-edit">
-                                    <span class="material-icons-outlined">edit</span>
-                                    Edit
-                                </a>
-                                <button type="button" class="btn-action btn-delete" onclick="deleteBrand({{ $brand->id }}, '{{ $brand->name }}')">
-                                    <span class="material-icons-outlined">delete</span>
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
-        </div>
-
-        <!-- Table View (Hidden by default) -->
-        <div id="tableView" class="card" style="display: none;">
+        <div class="card">
             <div class="card-body">
                 <table id="brands-table" class="display table table-hover" style="width:100%">
                     <thead>
                     <tr>
                         <th>Image</th>
+                        <th>Brand Code</th>
                         <th>Brand Name</th>
-                        <th>Code</th>
                         <th>Products</th>
                         <th>Status</th>
-                        <th>Created</th>
+                        <th>Created At</th>
                         <th>Actions</th>
                     </tr>
                     </thead>
@@ -349,36 +245,52 @@
                                 @if($brand->image)
                                     <img src="{{ asset('storage/' . $brand->image) }}"
                                          alt="{{ $brand->name }}"
-                                         class="table-brand-image"
-                                         onerror="this.parentElement.innerHTML='<div class=\'table-brand-image d-flex align-items-center justify-content-center\'><span class=\'material-icons-outlined text-muted\'>image</span></div>'">
+                                         class="brand-image"
+                                         onerror="this.onerror=null; this.src='{{ asset('images/no-image.png') }}';">
                                 @else
-                                    <div class="table-brand-image d-flex align-items-center justify-content-center">
-                                        <span class="material-icons-outlined text-muted">image</span>
+                                    <div class="brand-image d-flex align-items-center justify-content-center">
+                                        <span class="material-icons text-muted">image</span>
                                     </div>
                                 @endif
                             </td>
-                            <td><strong>{{ $brand->name }}</strong></td>
-                            <td><code>{{ $brand->code }}</code></td>
                             <td>
-                                <span class="product-count-badge">
-                                    {{ \App\Models\WholesalerProduct::where('brand_id', $brand->id)->where('wholesaler_id', Auth::guard('wholesaler')->id())->count() }}
-                                </span>
+                                <span class="brand-code">{{ $brand->code }}</span>
                             </td>
                             <td>
-                                <span class="status-badge {{ $brand->status == 'active' ? 'status-active' : 'status-inactive' }}">
-                                    {{ ucfirst($brand->status) }}
-                                </span>
+                                <strong>{{ $brand->name }}</strong>
+                            </td>
+                            <td>
+                                    <span class="product-count-badge">
+                                        <span class="material-icons" style="font-size: 16px;">inventory</span>
+                                        {{ \App\Models\WholesalerProduct::where('brand_id', $brand->id)->where('wholesaler_id', Auth::guard('wholesaler')->id())->count() }}
+                                    </span>
+                            </td>
+                            <td>
+                                    <span class="status-badge {{ $brand->status == 'active' ? 'status-active' : 'status-inactive' }}">
+                                        <span class="material-icons" style="font-size: 16px;">
+                                            {{ $brand->status == 'active' ? 'check_circle' : 'cancel' }}
+                                        </span>
+                                        {{ ucfirst($brand->status) }}
+                                    </span>
                             </td>
                             <td>{{ $brand->created_at->format('M d, Y') }}</td>
                             <td>
-                                <div class="d-flex gap-2">
-                                    <a href="{{ route('wholesaler.brands.edit', $brand->id) }}"
-                                       class="btn btn-sm btn-outline-warning d-flex align-items-center">
-                                        <span class="material-icons-outlined" style="font-size: 1rem;">edit</span>
+                                <div class="action-buttons">
+                                    <a href="{{ route('wholesaler.brands.show', $brand->id) }}"
+                                       class="btn-action btn-view"
+                                       title="View Brand">
+                                        <span class="material-icons">visibility</span>
                                     </a>
-                                    <button type="button" class="btn btn-sm btn-outline-danger d-flex align-items-center"
-                                            onclick="deleteBrand({{ $brand->id }}, '{{ $brand->name }}')">
-                                        <span class="material-icons-outlined" style="font-size: 1rem;">delete</span>
+                                    <a href="{{ route('wholesaler.brands.edit', $brand->id) }}"
+                                       class="btn-action btn-edit"
+                                       title="Edit Brand">
+                                        <span class="material-icons">edit</span>
+                                    </a>
+                                    <button type="button"
+                                            class="btn-action btn-delete"
+                                            onclick="deleteBrand({{ $brand->id }}, '{{ $brand->name }}')"
+                                            title="Delete Brand">
+                                        <span class="material-icons">delete</span>
                                     </button>
                                 </div>
                             </td>
@@ -412,13 +324,19 @@
                     lengthMenu: "Show _MENU_ brands",
                     info: "Showing _START_ to _END_ of _TOTAL_ brands",
                     infoEmpty: "No brands available",
-                    zeroRecords: "No matching brands found"
+                    zeroRecords: "No matching brands found",
+                    paginate: {
+                        first: "First",
+                        last: "Last",
+                        next: "Next",
+                        previous: "Previous"
+                    }
                 },
                 columnDefs: [
                     { orderable: false, targets: [0, 6] },
                     { className: "align-middle", targets: "_all" }
                 ],
-                order: [[1, 'asc']],
+                order: [[2, 'asc']],
                 pageLength: 10,
                 lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]]
             });
@@ -432,7 +350,8 @@
                 showConfirmButton: false,
                 timer: 3000,
                 toast: true,
-                position: 'top-end'
+                position: 'top-end',
+                showCloseButton: true
             });
             @endif
 
@@ -442,30 +361,12 @@
                 icon: 'error',
                 title: 'Error!',
                 text: '{{ session('error') }}',
-                showConfirmButton: true
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'OK',
+                confirmButtonText: '<span class="material-icons" style="font-size: 18px; vertical-align: middle;">check</span> OK'
             });
             @endif
         });
-
-        // Toggle between grid and table view
-        function toggleView(view) {
-            const gridView = document.getElementById('gridView');
-            const tableView = document.getElementById('tableView');
-            const gridBtn = document.getElementById('gridViewBtn');
-            const tableBtn = document.getElementById('tableViewBtn');
-
-            if (view === 'grid') {
-                gridView.style.display = 'flex';
-                tableView.style.display = 'none';
-                gridBtn.classList.add('active');
-                tableBtn.classList.remove('active');
-            } else {
-                gridView.style.display = 'none';
-                tableView.style.display = 'block';
-                tableBtn.classList.add('active');
-                gridBtn.classList.remove('active');
-            }
-        }
 
         // Delete brand with SweetAlert
         function deleteBrand(brandId, brandName) {
@@ -476,8 +377,17 @@
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',
                 cancelButtonColor: '#6b7280',
-                confirmButtonText: '<span class="material-icons-outlined" style="font-size: 1rem; vertical-align: middle;">delete</span> Yes, delete it!',
-                cancelButtonText: '<span class="material-icons-outlined" style="font-size: 1rem; vertical-align: middle;">cancel</span> Cancel'
+                confirmButtonText: '<span class="material-icons" style="font-size: 18px; vertical-align: middle;">delete</span> Yes, delete it!',
+                cancelButtonText: '<span class="material-icons" style="font-size: 18px; vertical-align: middle;">cancel</span> Cancel',
+                background: '#fff',
+                backdrop: `
+                    rgba(0,0,0,0.4)
+                    left top
+                    no-repeat
+                `,
+                customClass: {
+                    popup: 'animated fadeInDown faster'
+                }
             }).then((result) => {
                 if (result.isConfirmed) {
                     const form = document.getElementById('delete-form');
