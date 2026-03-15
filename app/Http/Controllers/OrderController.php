@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Imports\OrderImport;
+use App\Models\Order;
+use App\Models\SellerOrder;
+use App\Models\WholesalerOrder;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -13,11 +16,16 @@ class OrderController extends Controller
         $user = auth()->user();
         $import = 0;
 
+
+        $sellerorders = SellerOrder::all();
+        $wholesellerorders = WholesalerOrder::all();
+
+
         // Check if user is seller or admin to return appropriate view
         if (auth()->guard('seller')->check()) {
             return view('seller.new_order', compact('import', 'user'));
         } else {
-            return view('admin.new_order', compact('import', 'user'));
+            return view('admin.new_order', compact('import', 'user','sellerorders','wholesellerorders'));
         }
     }
 
