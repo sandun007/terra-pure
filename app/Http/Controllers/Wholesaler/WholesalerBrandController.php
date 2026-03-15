@@ -124,6 +124,47 @@ class WholesalerBrandController extends Controller
         }
     }
 
+    public function show($id)
+    {
+        try {
+            $wholesaler = Auth::guard('wholesaler')->user();
+            $brand = Brand::where('wholesaler_id', $wholesaler->id)
+                ->withCount('products')
+                ->findOrFail($id);
+
+            // Get products count for this brand
+            $productsCount = WholesalerProduct::where('brand_id', $brand->id)
+                ->where('wholesaler_id', $wholesaler->id)
+                ->count();
+
+            // Get columns to check what's available
+            $columns = \Schema::getColumnListing('wholesaler_products');
+
+            $productsInStock = $productsCount; // Default to total count
+
+            // If stock column exists, use it
+            if (in_array('stock', $columns)) {
+                $productsInStock = WholesalerProduct::where('brand_id', $brand->id)
+                    ->where('wholesaler_id', $wholesaler->id)
+                    ->where('stock', '>', 0)
+                    ->count();
+            }
+            // If quantity column exists, use that instead
+            elseif (in_array('quantity', $columns)) {
+                $productsInStock = WholesalerProduct::where('brand_id', $brand->id)
+                    ->where('wholesaler_id', $wholesaler->id)
+                    ->where('quantity', '>', 0)
+                    ->count();
+            }
+
+            return view('wholesaler.brands.show', compact('brand', 'productsCount', 'productsInStock'));
+        } catch (\Exception $e) {
+            \Log::error('Error loading brand details: ' . $e->getMessage());
+            return redirect()->route('wholesaler.brands.index')
+                ->with('error', 'Brand not found or you do not have permission to view it.');
+        }
+    }
+
     public function edit($id)
     {
         try {

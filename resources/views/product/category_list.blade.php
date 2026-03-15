@@ -1,6 +1,6 @@
 @extends('admin.app')
 @push('title')
- Category List
+    Category List
 @endpush
 @push('css')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
@@ -27,11 +27,11 @@
             border-radius: 50%;
             padding: 2px;
         }
-        .bg-green{
+
+        .bg-green {
             background-color: var(--main-theme-color) !important;
         }
     </style>
-
 @endpush
 @section('content')
     <div class="page-header">
@@ -43,12 +43,12 @@
         </div>
         <ul class="table-top-head">
             <li>
-                <a data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Refresh"
-                   data-bs-original-title="Refresh"><i class="ti ti-refresh"></i></a>
+                <a data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Refresh" data-bs-original-title="Refresh"><i
+                        class="ti ti-refresh"></i></a>
             </li>
             <li>
                 <a data-bs-toggle="tooltip" data-bs-placement="top" id="collapse-header" aria-label="Collapse"
-                   data-bs-original-title="Collapse"><i class="ti ti-chevron-up"></i></a>
+                    data-bs-original-title="Collapse"><i class="ti ti-chevron-up"></i></a>
             </li>
         </ul>
         <div class="page-btn mt-0">
@@ -70,38 +70,38 @@
 </div>
                     <table id="product-table" class="display table table-striped" style="width:100%">
                         <thead>
-                        <tr>
-                            <th>Category Code</th>
-                            <th>Category Name</th>
-                            <th>Store</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
+                            <tr>
+                                <th>Category Code</th>
+                                <th>Category Name</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
                         </thead>
                         <tbody>
-                        @foreach($categories as $category)
-                            <tr>
-                                <td>{{ $category->code }}</td>
-                                <td>{{ $category->name }}</td>
-                                <td>{{ $category->store }}</td>
-                                <td>
-                                    <span class="{{ $category->status_badge }}">
-                                        {{ $category->status_text }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <a href="{{ route('category.show', $category->id) }}" class="btn btn-dark btn-sm">
-                                        <i class="bi bi-eye"></i> View
-                                    </a>
-                                    <a href="{{ route('category.edit', $category->id) }}" class="btn btn-warning btn-sm">
-                                        <i class="bi bi-pencil-square"></i> Update
-                                    </a>
-                                    <a href="{{ route('category.delete',$category->id) }}" class="btn btn-danger btn-sm confirm-delete">
-                                        <i class="bi bi-trash"></i> Delete
-                                    </a>
-                                </td>
-                            </tr>
-                        @endforeach
+                            @foreach ($categories as $category)
+                                <tr>
+                                    <td>{{ $category->code }}</td>
+                                    <td>{{ $category->name }}</td>
+                                    <td>
+                                        <span class="{{ $category->status_badge }}">
+                                            {{ $category->status_text }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ route('category.show', $category->id) }}" class="btn btn-dark btn-sm">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                        <a href="{{ route('category.edit', $category->id) }}"
+                                            class="btn btn-warning btn-sm">
+                                            <i class="bi bi-pencil-square"></i> Update
+                                        </a>
+                                        <a href="{{ route('category.delete', $category->id) }}"
+                                            class="btn btn-danger btn-sm confirm-delete">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </a>
+                                    </td>
+                                </tr>
+                            @endforeach
 
                         </tbody>
 
@@ -110,34 +110,36 @@
             </div>
         </div>
     </div>
-
-
 @endsection
 @push('script')
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
             $('#product-table').DataTable({
                 info: false // removes "Showing 1 to X of Y entries"
             });
 
-            @if(session('success'))
+            @if (session('success'))
                 Swal.fire({
                     title: 'Success!',
                     text: "{{ session('success') }}",
                     icon: 'success',
-                    confirmButtonClass: 'btn btn-primary',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    },
                     buttonsStyling: false
                 });
             @endif
 
-            @if(session('error'))
+            @if (session('error'))
                 Swal.fire({
                     title: 'Error!',
                     text: "{{ session('error') }}",
                     icon: 'error',
-                    confirmButtonClass: 'btn btn-primary',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    },
                     buttonsStyling: false
                 });
             @endif
@@ -154,8 +156,10 @@
                     confirmButtonColor: '#3085d6',
                     cancelButtonColor: '#d33',
                     confirmButtonText: 'Yes, delete it!',
-                    confirmButtonClass: 'btn btn-primary',
-                    cancelButtonClass: 'btn btn-danger ml-1',
+                    customClass: {
+                        confirmButton: 'btn btn-primary',
+                        cancelButton: 'btn btn-danger ml-1'
+                    },
                     buttonsStyling: false,
                 }).then((result) => {
                     if (result.isConfirmed) {
@@ -165,21 +169,4 @@
             });
         });
     </script>
-    <script>
-$(document).ready(function () {
-    // Initialize DataTable
-    var table = $('#product-table').DataTable();
-
-    // Filter by Store (Admin / Seller / Wholesaler)
-    $('#categoryStoreFilter').on('change', function () {
-        var selected = $(this).val();
-        if(selected) {
-            table.column(2).search('^' + selected + '$', true, false).draw(); // column 2 = Store
-        } else {
-            table.column(2).search('').draw();
-        }
-    });
-});
-</script>
-
 @endpush

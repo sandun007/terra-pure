@@ -56,9 +56,9 @@
                                 <div class="dropdown-menu" aria-labelledby="orderDropdown">
                                     <a class="dropdown-item" href="{{route('admin.new_order')}}">New Order</a>
                                     <a class="dropdown-item" href="{{route('admin.complete_order_list')}}">Complete Order</a>
-                                    <a class="dropdown-item" href="{{route('seller.rescheduling-order')}}">Reschedule
+                                    <a class="dropdown-item" href="{{route('seller.order.rescheduled')}}">Reschedule
                                         Order</a>
-                                    <a class="dropdown-item" href="{{route('seller.return-order')}}">Return Order</a>
+                                    <a class="dropdown-item" href="{{route('seller.order.returned')}}">Return Order</a>
                                 </div>
                             </li>
                             <li><a href="{{route('low-stock')}}">
@@ -83,7 +83,7 @@
                                         <line x1="12" y1="2" x2="12" y2="8.5"></line>
                                     </svg>
                                     <span>Category</span></a></li>
-                            <li><a href="{{route('brand.create')}}">
+                            <li><a href="{{route('brand.index')}}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                          stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag">
@@ -93,7 +93,7 @@
                                     </svg>
                                     <span>Brands</span></a></li>
                             <li>
-                                <a href="{{route('seller.create')}}">
+                                <a href="{{route('seller.list')}}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                          stroke-linecap="round" stroke-linejoin="round"
@@ -126,7 +126,7 @@
                     <li class="submenu-open">
                         <h6 class="submenu-hdr">Order</h6>
                         <ul>
-                            <li><a href="{{route('admin.new_order')}}">
+                            <li><a href="{{ route('admin.new_order') }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                          stroke-linecap="round" stroke-linejoin="round"
@@ -138,7 +138,7 @@
                                     <span>New Order</span>
                                 </a>
                             </li>
-                            <li><a href="{{route('seller.complete-order')}}">
+                            <li><a href="{{route('seller.order.completed')}}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                          stroke-linecap="round" stroke-linejoin="round"
@@ -150,7 +150,7 @@
                                     <span>Complete Order</span>
                                 </a>
                             </li>
-                            <li><a href="{{route('seller.rescheduling-order')}}">
+                            <li><a href="{{route('seller.order.rescheduled')}}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                          stroke-linecap="round" stroke-linejoin="round"
@@ -162,7 +162,7 @@
                                     <span>Rescheduling Order</span>
                                 </a>
                             </li>
-                            <li><a href="{{route('seller.return-order')}}">
+                            <li><a href="{{route('seller.order.returned')}}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                          stroke-linecap="round" stroke-linejoin="round"
