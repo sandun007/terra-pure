@@ -16,7 +16,7 @@
         </div>
     </div>
 
-    <form action="{{ route('category.update', $category->id) }}" method="post" enctype="multipart/form-data"
+    <form action="{{ route('category.update', ['id' => $category->id, 'type' => request('type')]) }}" method="post" enctype="multipart/form-data"
         class="add-product-form">
         @csrf
         <div class="add-product">

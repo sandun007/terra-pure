@@ -36,7 +36,7 @@ class SellerCategory extends Model
 
     public function seller()
     {
-        return $this->belongsTo(Seller::class);
+        return $this->belongsTo(Saler::class);
     }
 
     public function wholesaler()

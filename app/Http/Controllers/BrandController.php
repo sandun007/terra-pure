@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Brand;
+use App\Models\SellerBrand;
 use Illuminate\Http\Request;
 
 // If these are in App\Helpers or App\Services, import accordingly:
@@ -16,10 +17,28 @@ class BrandController extends Controller
     public function index()
     {
         try {
-            $brands = Brand::where(function ($q) {
+            $adminBrands = Brand::with('wholesaler')->where(function ($q) {
                 $q->where('seller_code', 0)
                   ->orWhereNull('seller_code');
             })->get();
+
+            $sellerBrands = SellerBrand::with('seller')->get();
+
+            $brands = $adminBrands->concat($sellerBrands)->map(function ($brand) {
+                if ($brand instanceof SellerBrand) {
+                    $brand->setAttribute('store', 'Seller');
+                    $brand->setAttribute('creator_name', $brand->seller ? $brand->seller->name . ' (Seller)' : 'Seller');
+                } else {
+                    if ($brand->wholesaler_id && $brand->wholesaler) {
+                        $brand->setAttribute('creator_name', $brand->wholesaler->name . ' (Wholesaler)');
+                    } else {
+                        $brand->setAttribute('creator_name', 'Admin');
+                    }
+                    // store attribute is handled by getStoreAttribute on Brand.php, but let's ensure it's explicitly set for the view
+                    $brand->setAttribute('store', $brand->store);
+                }
+                return $brand;
+            });
 
             $brandCount = $brands->count();
 
@@ -69,16 +88,26 @@ class BrandController extends Controller
         }
     }
 
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
-        $brand = Brand::findOrFail($id);
+        $type = $request->query('type');
+        if ($type === 'seller') {
+            $brand = SellerBrand::findOrFail($id);
+        } else {
+            $brand = Brand::findOrFail($id);
+        }
         return view('product.brand_update', compact('brand'));
     }
 
     public function update(Request $request, $id)
     {
         try {
-            $brand = Brand::findOrFail($id);
+            $type = $request->query('type');
+            if ($type === 'seller') {
+                $brand = SellerBrand::findOrFail($id);
+            } else {
+                $brand = Brand::findOrFail($id);
+            }
 
             $request->validate([
                 'name'   => 'required|string|max:255',
@@ -99,7 +128,11 @@ class BrandController extends Controller
             }
 
             $brand->name = $request->name;
-            $brand->status = (int) $request->status;
+            if ($brand instanceof \App\Models\SellerBrand) {
+                $brand->status = $request->status == 1 ? 'active' : 'inactive';
+            } else {
+                $brand->status = (int) $request->status;
+            }
             $brand->save();
 
             return redirect()->route('brand.index')
@@ -110,10 +143,15 @@ class BrandController extends Controller
         }
     }
 
-    public function delete($id)
+    public function delete(Request $request, $id)
     {
         try {
-            $brand = Brand::findOrFail($id);
+            $type = $request->query('type');
+            if ($type === 'seller') {
+                $brand = SellerBrand::findOrFail($id);
+            } else {
+                $brand = Brand::findOrFail($id);
+            }
 
             // Optional: delete image file also
             if ($brand->image && file_exists(storage_path('app/public/' . $brand->image))) {
@@ -128,9 +166,43 @@ class BrandController extends Controller
         }
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        $brand = Brand::findOrFail($id);
+        $type = $request->query('type');
+        if ($type === 'seller') {
+            $brand = SellerBrand::findOrFail($id);
+        } else {
+            $brand = Brand::findOrFail($id);
+        }
         return view('product.brand_view', compact('brand'));
+    }
+
+    public function getCreators(Request $request)
+    {
+        try {
+            $type = $request->input('type');
+
+            if ($type === 'Seller') {
+                $sellerIds = SellerBrand::whereNotNull('seller_id')
+                    ->distinct()
+                    ->pluck('seller_id');
+                $creators = \App\Models\Saler::whereIn('id', $sellerIds)
+                    ->select('id', 'name')
+                    ->get();
+            } elseif ($type === 'Wholesaler') {
+                $wholesalerIds = Brand::whereNotNull('wholesaler_id')
+                    ->distinct()
+                    ->pluck('wholesaler_id');
+                $creators = \App\Models\Wholesaler::whereIn('id', $wholesalerIds)
+                    ->select('id', 'name')
+                    ->get();
+            } else {
+                $creators = [];
+            }
+
+            return response()->json($creators);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

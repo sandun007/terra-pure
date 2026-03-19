@@ -105,7 +105,7 @@
     </div>
 </div>
 
-<form action="{{ route('brand.update', $brand->id) }}" method="POST" enctype="multipart/form-data">
+<form action="{{ route('brand.update', ['id' => $brand->id, 'type' => request()->query('type')]) }}" method="POST" enctype="multipart/form-data">
     @csrf
     @method('PUT')
 
@@ -132,8 +132,8 @@
                 <div class="mb-3">
                     <label class="form-label">Status</label>
                     <select name="status" class="form-select">
-                        <option value="1" {{ $brand->status == 1 ? 'selected' : '' }}>Active</option>
-                        <option value="0" {{ $brand->status == 0 ? 'selected' : '' }}>Inactive</option>
+                        <option value="1" {{ $brand->status == 1 || $brand->status === 'active' ? 'selected' : '' }}>Active</option>
+                        <option value="0" {{ $brand->status === 0 || $brand->status === '0' || $brand->status === 'inactive' ? 'selected' : '' }}>Inactive</option>
                     </select>
                 </div>
             </div>

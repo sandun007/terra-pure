@@ -13,7 +13,7 @@
         </div>
         <div class="page-btn mt-0">
             <a href="{{ route('category.index') }}" class="btn btn-secondary">Back to Category List</a>
-            <a href="{{ route('category.edit', $category->id) }}" class="btn btn-warning">Edit Category</a>
+            <a href="{{ route('category.edit', ['id' => $category->id, 'type' => request('type')]) }}" class="btn btn-warning">Edit Category</a>
         </div>
     </div>
 

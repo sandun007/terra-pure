@@ -45,7 +45,7 @@ class LoginController extends Controller
                 if (Auth::guard('employee')->attempt(['username' => $request->username, 'password' => $request->password])) {
                     return redirect()->route('employee.dashboard');
                 }
-                
+
                 // Default fallback for sellers
                 return redirect()->route('seller.dashboard');
             }
@@ -56,14 +56,14 @@ class LoginController extends Controller
             return redirect()->route('wholesaler.dashboard');
         }
 
+        //  Seller login
+        if (Auth::guard('seller')->attempt(['username' => $request->username, 'password' => $request->password])) {
+            return redirect()->route('seller.dashboard');
+        }
+
         //  Employee login
         if (Auth::guard('employee')->attempt(['username' => $request->username, 'password' => $request->password])) {
             return redirect()->route('employee.dashboard');
-        }
-
-        // Fallback for Wholesaler login, since they are largely stored only in wholesalers table
-        if (Auth::guard('wholesaler')->attempt(['username' => $request->username, 'password' => $request->password])) {
-            return redirect()->route('wholesaler.dashboard');
         }
 
         // If authentication fails for any guard

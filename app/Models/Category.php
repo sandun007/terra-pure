@@ -31,7 +31,7 @@ class Category extends Model
     // Relationship with Wholesaler
     public function wholesaler()
     {
-        return $this->belongsTo(Wholesaler::class);
+        return $this->belongsTo(Wholesaler::class, 'wholesaler_id');
     }
 
     // Relationship with Products
@@ -76,12 +76,25 @@ class Category extends Model
     }
     public function getStoreAttribute()
 {
-    if ($this->seller_code == 1 || $this->seller_id) {
+    if ($this->seller_code == 1) {
         return 'Seller';
     }
-    
+
     if ($this->wholesaler_id || ($this->add_by ?? '') === 'wholesaler') {
         return 'Wholesaler';
+    }
+
+    return 'Admin';
+}
+
+public function getCreatorNameAttribute()
+{
+    if ($this->wholesaler_id && $this->wholesaler) {
+        return $this->wholesaler->name . ' (Wholesaler)';
+    }
+
+    if ($this->seller_code == 1) {
+        return 'Global Seller Category';
     }
 
     return 'Admin';

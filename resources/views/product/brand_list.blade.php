@@ -59,33 +59,49 @@ Brand List
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                   <div class="mb-3">
-    <label for="brandFilter" class="form-label">Filter by Store:</label>
-    <select id="brandFilter" class="form-select" style="width: 200px;">
-        <option value="">All</option>
-        <option value="Admin">Admin</option>
-        <option value="Seller">Seller</option>
-        <option value="Wholesaler">Wholesaler</option>
-    </select>
-</div>
+                    <div class="mb-3 d-flex flex-wrap align-items-end gap-3">
+                        <div>
+                            <label for="brandTypeFilter" class="form-label mb-1 fw-semibold">Filter by Type</label>
+                            <select id="brandTypeFilter" class="form-select" style="min-width:160px;">
+                                <option value="">All Types</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Seller">Seller</option>
+                                <option value="Wholesaler">Wholesaler</option>
+                            </select>
+                        </div>
+                        <div id="creatorContainer" style="display:none;">
+                            <label for="brandCreatorFilter" class="form-label mb-1 fw-semibold">Select <span id="creatorTypeLabel">Creator</span></label>
+                            <select id="brandCreatorFilter" class="form-select" style="min-width:180px;">
+                                <option value="">All</option>
+                            </select>
+                        </div>
+                        <div class="ms-auto">
+                            <label for="brandSearch" class="form-label mb-1 fw-semibold">Search</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="ti ti-search"></i></span>
+                                <input type="text" id="brandSearch" class="form-control" placeholder="Search brands..." style="min-width:200px;">
+                            </div>
+                        </div>
+                    </div>
                     <table id="product-table" class="display table table-striped" style="width:100%">
                         <thead>
                         <tr>
                             <th>Brand Code</th>
                             <th>Brand Name</th>
-                            <th>Store</th>
+                            <th>Created By</th>
                             <th>Status</th>
                             <th>Action</th>
                         </tr>
                         </thead>
                         <tbody>
 @foreach($brands as $brand)
-    <tr>
+    <tr data-type="{{ $brand->store }}" 
+        data-creator="{{ $brand->creator_name }}">
         <td>{{ $brand->code }}</td>
         <td>{{ $brand->name }}</td>
-        <td>{{ $brand->store }}</td>
+        <td>{{ $brand->creator_name }}</td>
         <td>
-    @if($brand->status == 1)
+    @if($brand->status == 1 || strtolower($brand->status) == 'active')
         <span class="badge bg-success">Active</span>
     @else
         <span class="badge bg-danger">Inactive</span>
@@ -93,19 +109,22 @@ Brand List
 </td>
 
         <td>
+            @php
+                $typeParam = strtolower($brand->store);
+            @endphp
             <!-- View Button -->
-            <a href="{{ route('brand.show', $brand->id) }}" class="btn btn-dark btn-sm">
+            <a href="{{ route('brand.show', ['id' => $brand->id, 'type' => $typeParam]) }}" class="btn btn-dark btn-sm">
     <i class="bi bi-eye"> View</i>
 </a>
 
             <!-- Edit Button -->
-            <a href="{{ route('brand.edit', $brand->id) }}" 
+            <a href="{{ route('brand.edit', ['id' => $brand->id, 'type' => $typeParam]) }}" 
                class="btn btn-warning btn-sm">
                 <i class="bi bi-pencil-square"> Update</i>
             </a>
 
             <!-- Delete Button -->
-            <a href="{{ route('brand.delete', $brand->id) }}" 
+            <a href="{{ route('brand.delete', ['id' => $brand->id, 'type' => $typeParam]) }}" 
    class="btn btn-danger btn-sm delete-brand">
     <i class="bi bi-trash"></i> Delete
 </a>
@@ -127,29 +146,88 @@ Brand List
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script>
         $(document).ready(function () {
-            $('#product-table').DataTable();
+            var table = $('#product-table').DataTable({
+                info: false,
+                searching: true,
+                dom: 'lrtip',
+                columnDefs: [{
+                    targets: 2,
+                    render: function(data, type, row) {
+                        if (type === 'filter' || type === 'sort') {
+                            return $('<div>').html(data).text().trim();
+                        }
+                        return data;
+                    }
+                }]
+            });
+            
+            // Wire custom search input to DataTable global search
+            $('#brandSearch').on('keyup', function() {
+                table.search($(this).val()).draw();
+            });
+
+            // Helper: escape regex special chars
+            function escapeRegex(str) {
+                return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+
+            // Cascading Filter Logic
+            $('#brandTypeFilter').on('change', function() {
+                var type = $(this).val();
+
+                // Reset Creator Filter
+                $('#brandCreatorFilter').html('<option value="">All</option>').val('');
+
+                if (type === 'Seller' || type === 'Wholesaler') {
+                    $('#creatorTypeLabel').text(type);
+                    $('#creatorContainer').show();
+
+                    // Fetch only creators who have categories
+                    $.ajax({
+                        url: "{{ route('brand.get-creators') }}",
+                        method: "GET",
+                        data: { type: type },
+                        dataType: 'json',
+                        success: function(data) {
+                            if (data.length > 0) {
+                                $.each(data, function(index, item) {
+                                    var fullName = item.name + ' (' + type + ')';
+                                    $('#brandCreatorFilter').append(
+                                        '<option value="' + fullName + '">' + item.name + '</option>'
+                                    );
+                                });
+                            }
+                        }
+                    });
+
+                    // Filter table to show only this type
+                    table.column(2).search('\\(' + type + '\\)', true, false).draw();
+                } else if (type === 'Admin') {
+                    $('#creatorContainer').hide();
+                    table.column(2).search('^Admin$', true, false).draw();
+                } else {
+                    $('#creatorContainer').hide();
+                    table.column(2).search('').draw();
+                }
+            });
+
+            $('#brandCreatorFilter').on('change', function() {
+                var creator = $(this).val();
+                if (creator) {
+                    table.column(2).search('^' + escapeRegex(creator) + '$', true, false).draw();
+                } else {
+                    var type = $('#brandTypeFilter').val();
+                    if (type) {
+                        table.column(2).search('\\(' + type + '\\)', true, false).draw();
+                    } else {
+                        table.column(2).search('').draw();
+                    }
+                }
+            });
         });
     </script>
 
-<script>
-    @if(session('success'))
-        Swal.fire({
-            icon: 'success',
-            title: 'Success!',
-            text: '{{ session("success") }}',
-            confirmButtonColor: '#3085d6'
-        });
-    @endif
 
-    @if(session('error'))
-        Swal.fire({
-            icon: 'error',
-            title: 'Oops...',
-            text: '{{ session("error") }}',
-            confirmButtonColor: '#d33'
-        });
-    @endif
-</script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.delete-brand').forEach(function(button) {
@@ -175,19 +253,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-<script>
-$(document).ready(function () {
-    var table = $('#product-table').DataTable();
 
-    // Filter by Store
-    $('#brandFilter').on('change', function () {
-        var selected = $(this).val();
-        if(selected) {
-            table.column(2).search('^' + selected + '$', true, false).draw(); // column 2 = Store
-        } else {
-            table.column(2).search('').draw();
-        }
-    });
-});
-</script>
 @endpush

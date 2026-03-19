@@ -74,10 +74,10 @@
         <a href="{{ route('brand.index') }}" class="btn btn-outline-secondary me-2">
             <i class="fas fa-arrow-left me-2"></i>Back to Brands
         </a>
-        <a href="{{ route('brand.edit', $brand->id) }}" class="btn btn-warning me-2">
+        <a href="{{ route('brand.edit', ['id' => $brand->id, 'type' => request()->query('type')]) }}" class="btn btn-warning me-2">
             <i class="fas fa-edit me-2"></i>Edit Brand
         </a>
-        <a href="{{ route('brand.delete', $brand->id) }}" 
+        <a href="{{ route('brand.delete', ['id' => $brand->id, 'type' => request()->query('type')]) }}" 
    class="btn btn-danger delete-brand" 
    data-id="{{ $brand->id }}">
    <i class="fas fa-trash me-2"></i>Delete
@@ -119,8 +119,8 @@
 
             <div class="info-row">
                 <span class="info-label">Status:</span>
-                <span class="status-badge {{ $brand->status == 1 ? 'status-active' : 'status-inactive' }}">
-                    {{ $brand->status == 1 ? 'Active' : 'Inactive' }}
+                <span class="status-badge {{ $brand->status == 1 || $brand->status === 'active' ? 'status-active' : 'status-inactive' }}">
+                    {{ $brand->status == 1 || $brand->status === 'active' ? 'Active' : 'Inactive' }}
                 </span>
             </div>
 

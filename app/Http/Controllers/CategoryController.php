@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\SellerCategory;
 use Illuminate\Http\Request;
 
 // Make sure these namespaces are correct in your project:
@@ -16,9 +17,39 @@ class CategoryController extends Controller
     public function index()
     {
         try {
-            $categories = Category::query()
-                ->where('seller_code', 0)
-                ->get();
+            // Get Admin and Wholesaler categories from main table
+            $adminCategories = Category::with('wholesaler')->get();
+
+            // Get Seller categories from seller_categories table
+            $sellerCategories = SellerCategory::with(['seller', 'wholesaler'])->get();
+
+            // Combine and map them to assign required view attributes explicitly for seller categories
+            $categories = $adminCategories->concat($sellerCategories)->map(function ($category) {
+                if ($category instanceof SellerCategory) {
+                    $status = $category->status ?? 'active';
+                    $category->setAttribute('status_badge', $status == 'active' ? 'badge bg-success' : 'badge bg-danger');
+                    $category->setAttribute('status_text', ucfirst($status));
+                    
+                    if ($category->seller_id) {
+                        $category->setAttribute('store', 'Seller');
+                    } elseif ($category->wholesaler_id) {
+                        $category->setAttribute('store', 'Wholesaler');
+                    } else {
+                        $category->setAttribute('store', 'Admin');
+                    }
+
+                    if ($category->seller_id && $category->seller) {
+                        $category->setAttribute('creator_name', $category->seller->name . ' (Seller)');
+                    } elseif ($category->wholesaler_id && $category->wholesaler) {
+                        $category->setAttribute('creator_name', $category->wholesaler->name . ' (Wholesaler)');
+                    } elseif ($category->seller_code == 1 && !$category->seller_id) {
+                        $category->setAttribute('creator_name', 'Admin (Global Seller)');
+                    } else {
+                        $category->setAttribute('creator_name', 'Admin');
+                    }
+                }
+                return $category;
+            });
 
             $count = $categories->count();
 
@@ -76,20 +107,34 @@ class CategoryController extends Controller
         }
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         try {
-            $category = Category::query()->findOrFail($id);
+            if ($request->input('type') === 'seller') {
+                $category = SellerCategory::query()->findOrFail($id);
+                $status = $category->status ?? 'active';
+                $category->setAttribute('status_badge', $status == 'active' ? 'badge bg-success' : 'badge bg-danger');
+                $category->setAttribute('status_text', ucfirst($status));
+            } else {
+                $category = Category::query()->findOrFail($id);
+            }
             return view('product.category_view', compact('category'));
         } catch (\Exception $e) {
             return $e->getMessage();
         }
     }
 
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
         try {
-            $category = Category::query()->findOrFail($id);
+            if ($request->input('type') === 'seller') {
+                $category = SellerCategory::query()->findOrFail($id);
+                $status = $category->status ?? 'active';
+                $category->setAttribute('status_badge', $status == 'active' ? 'badge bg-success' : 'badge bg-danger');
+                $category->setAttribute('status_text', ucfirst($status));
+            } else {
+                $category = Category::query()->findOrFail($id);
+            }
             return view('product.category_edit', compact('category'));
         } catch (\Exception $e) {
             return $e->getMessage();
@@ -99,14 +144,19 @@ class CategoryController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            $category = Category::query()->findOrFail($id);
-
-            // Determine if this is a wholesaler category
-            $isWholesalerCategory = ($category->wholesaler_id !== null) || ($category->add_by === 'wholesaler');
-
-            // Choose column and path based on category type
-            $imageColumn = $isWholesalerCategory ? 'image' : 'img';
-            $storagePath = $isWholesalerCategory ? 'wholesaler/categories' : 'category';
+            if ($request->input('type') === 'seller') {
+                $category = SellerCategory::query()->findOrFail($id);
+                $isWholesalerCategory = false;
+                $imageColumn = 'image';
+                $storagePath = 'seller/categories/' . ($category->seller_id ?? 'global');
+            } else {
+                $category = Category::query()->findOrFail($id);
+                // Determine if this is a wholesaler category
+                $isWholesalerCategory = ($category->wholesaler_id !== null) || ($category->add_by === 'wholesaler');
+                // Choose column and path based on category type
+                $imageColumn = $isWholesalerCategory ? 'image' : 'img';
+                $storagePath = $isWholesalerCategory ? 'wholesaler/categories' : 'category';
+            }
 
             // Handle image upload if present
             if ($request->hasFile('img')) {
@@ -139,10 +189,14 @@ class CategoryController extends Controller
         }
     }
 
-    public function delete($id)
+    public function delete(Request $request, $id)
     {
         try {
-            $category = Category::query()->findOrFail($id);
+            if ($request->input('type') === 'seller') {
+                $category = SellerCategory::query()->findOrFail($id);
+            } else {
+                $category = Category::query()->findOrFail($id);
+            }
 
             // Optional: delete image also (safe)
             // If you want to delete both possible columns:
@@ -158,6 +212,37 @@ class CategoryController extends Controller
             return redirect()->back()->with('success', 'Category deleted successfully!');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error deleting category: ' . $e->getMessage());
+        }
+    }
+
+    public function getCreators(Request $request)
+    {
+        try {
+            $type = $request->input('type');
+
+            if ($type === 'Seller') {
+                // Only sellers who have created categories in seller_categories table
+                $sellerIds = SellerCategory::whereNotNull('seller_id')
+                    ->distinct()
+                    ->pluck('seller_id');
+                $creators = \App\Models\Saler::whereIn('id', $sellerIds)
+                    ->select('id', 'name')
+                    ->get();
+            } elseif ($type === 'Wholesaler') {
+                // Only wholesalers who have created categories in categories table
+                $wholesalerIds = \App\Models\Category::whereNotNull('wholesaler_id')
+                    ->distinct()
+                    ->pluck('wholesaler_id');
+                $creators = \App\Models\Wholesaler::whereIn('id', $wholesalerIds)
+                    ->select('id', 'name')
+                    ->get();
+            } else {
+                $creators = [];
+            }
+
+            return response()->json($creators);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 }

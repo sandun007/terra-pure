@@ -18,6 +18,7 @@ use App\Http\Controllers\Seller\SellerOrderController;
 use App\Http\Controllers\Seller\SellerPaymentController;
 use App\Http\Controllers\Seller\SellerProductController;
 use App\Http\Controllers\Seller\SellerShopController;
+use App\Http\Controllers\Seller\Sellerprofilecontroller;
 use App\Http\Controllers\SellerController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\StockController;
@@ -85,13 +86,13 @@ Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])
 
         // Products
         Route::prefix('product')->group(function () {
-            Route::get('/',           [ProductController::class, 'index'])->name('product.index');
-            Route::get('/create',     [ProductController::class, 'create'])->name('product.create');
-            Route::post('/create',    [ProductController::class, 'store'])->name('product.store');
-            Route::get('/edit/{id}',  [ProductController::class, 'edit'])->name('product.edit');
-            Route::put('/update/{id}',[ProductController::class, 'update'])->name('product.update');
-            Route::get('/view/{id}',  [ProductController::class, 'product_view'])->name('product.view');
-            Route::get('/delete/{id}',[ProductController::class, 'delete'])->name('product.delete');
+            Route::get('/', [ProductController::class, 'index'])->name('product.index');
+            Route::get('/create', [ProductController::class, 'create'])->name('product.create');
+            Route::post('/create', [ProductController::class, 'store'])->name('product.store');
+            Route::get('/edit/{type}/{id}', [ProductController::class, 'edit'])->name('product.edit');
+            Route::put('/update/{type}/{id}', [ProductController::class, 'update'])->name('product.update');
+            Route::get('/view/{type}/{id}', [ProductController::class, 'product_view'])->name('product.view');
+            Route::get('/delete/{type}/{id}', [ProductController::class, 'delete'])->name('product.delete');
         });
 
         // Brands
@@ -102,6 +103,7 @@ Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])
             Route::get('/view/{id}',    [BrandController::class, 'show'])->name('brand.show');
             Route::get('/edit/{id}',    [BrandController::class, 'edit'])->name('brand.edit');
             Route::put('/update/{id}',  [BrandController::class, 'update'])->name('brand.update');
+            Route::get('/get-creators', [BrandController::class, 'getCreators'])->name('brand.get-creators');
             Route::get('/{id}',         [BrandController::class, 'delete'])->name('brand.delete');
         });
 
@@ -113,27 +115,41 @@ Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])
             Route::get('/view/{id}',      [CategoryController::class, 'show'])->name('category.show');
             Route::get('/edit/{id}',      [CategoryController::class, 'edit'])->name('category.edit');
             Route::post('/update/{id}',   [CategoryController::class, 'update'])->name('category.update');
+            Route::get('/get-creators',   [CategoryController::class, 'getCreators'])->name('category.get-creators');
             Route::get('/{id}',           [CategoryController::class, 'delete'])->name('category.delete');
         });
 
         // Sellers
         Route::prefix('seller')->group(function () {
-            Route::get('/list',         [SellerController::class, 'index'])->name('seller.list');
-            Route::get('/',             [SellerController::class, 'create'])->name('seller.create');
-            Route::post('/',            [SellerController::class, 'store'])->name('admin.seller.store');
-            Route::get('/delete/{id}',  [SellerController::class, 'delete'])->name('seller.delete');
-            Route::post('/update',      [SellerController::class, 'update'])->name('admin.seller.update');
-            Route::get('/{id}',         [SellerController::class, 'edit'])->name('admin.seller.edit');
-            Route::get('seller/{id}',   [SellerController::class, 'show'])->name('admin.seller.view');
+            Route::get('/list', [SellerController::class, 'index'])->name('seller.list');
+            Route::get('/', [SellerController::class, 'create'])->name('seller.create');
+            Route::post('/', [SellerController::class, 'store'])->name('admin.seller.store');
+            Route::get('/delete/{id}', [SellerController::class, 'delete'])->name('seller.delete');
+            Route::get('/check-referral', [SellerController::class, 'checkReferral'])->name('admin.seller.check-referral');
+            Route::get('/{id}', [SellerController::class, 'edit'])->name('admin.seller.edit');
+            Route::get('seller/{id}', [SellerController::class, 'show'])->name('admin.seller.view');
+            Route::post('/update', [SellerController::class, 'update'])->name('admin.seller.update');
+        });
+
+        // Wholesalers
+        Route::prefix('wholesaler')->group(function () {
+            Route::get('/',               [WholesalerController::class, 'index'])->name('admin.wholesaler.index');
+            Route::get('/list',           [WholesalerController::class, 'index'])->name('admin.wholesaler.list');
+            Route::get('/create',         [WholesalerController::class, 'create'])->name('admin.wholesaler.create');
+            Route::post('/store',         [WholesalerController::class, 'store'])->name('admin.wholesaler.store');
+            Route::get('/view/{id}',      [WholesalerController::class, 'show'])->name('admin.wholesaler.view');
+            Route::get('/edit/{id}',      [WholesalerController::class, 'edit'])->name('admin.wholesaler.edit');
+            Route::post('/update/{id}',   [WholesalerController::class, 'update'])->name('admin.wholesaler.update');
+            Route::delete('/delete/{id}', [WholesalerController::class, 'destroy'])->name('admin.wholesaler.delete');
         });
 
         // Orders
         Route::prefix('order')->group(function () {
             Route::get('new-order',           [OrderController::class, 'new_order'])->name('admin.new_order');
             Route::get('/complete-order',     [OrderController::class, 'completeOrder'])->name('admin.complete_order_list');
-            Route::get('/return-order',       [OrderController::class, 'returnOrder'])->name('return-order');
-            Route::get('/rescheduling-order', [OrderController::class, 'reschedulingOrder'])->name('rescheduling-order');
-            Route::get('/pending-order',      [OrderController::class, 'pendingOrder'])->name('pending-order');
+            Route::get('/return-order',       [OrderController::class, 'returnOrder'])->name('admin.return_order_list');
+            Route::get('/rescheduling-order', [OrderController::class, 'reschedulingOrder'])->name('admin.rescheduling_order_list');
+            Route::get('/pending-order',      [OrderController::class, 'pendingOrder'])->name('admin.pending_order_list');
         });
 
         // Stock
@@ -149,9 +165,13 @@ Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])
 
         // Employees
         Route::prefix('employee')->group(function () {
-            Route::get('/',        [EmployeeController::class, 'index'])->name('employee.list');
-            Route::get('/create',  [EmployeeController::class, 'create'])->name('employee.create');
-            Route::post('/',       [EmployeeController::class, 'store'])->name('employee.store');
+            Route::get('/', [EmployeeController::class, 'index'])->name('employee.list');
+            Route::get('/create', [EmployeeController::class, 'create'])->name('employee.create');
+            Route::post('/', [EmployeeController::class, 'store'])->name('employee.store');
+            Route::delete('/destroy/{id}',[EmployeeController::class,'destroy'])->name('employee.delete');
+            Route::get('/edit/{id}',[EmployeeController::class,'edit'])->name('employee.edit');
+            Route::put('/update/{id}',[EmployeeController::class,'update'])->name('employee.update');
+            Route::get('/show/{id}',[EmployeeController::class,'show'])->name('employee.view');
         });
     });
 

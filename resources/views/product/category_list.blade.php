@@ -59,43 +59,64 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                    <div class="mb-3">
-    <label for="categoryStoreFilter" class="form-label">Filter by Store:</label>
-    <select id="categoryStoreFilter" class="form-select" style="width: 200px;">
-        <option value="">All</option>
-        <option value="Admin">Admin</option>
-        <option value="Seller">Seller</option>
-        <option value="Wholesaler">Wholesaler</option>
-    </select>
-</div>
+                    <div class="mb-3 d-flex flex-wrap align-items-end gap-3">
+                        <div>
+                            <label for="categoryTypeFilter" class="form-label mb-1 fw-semibold">Filter by Type</label>
+                            <select id="categoryTypeFilter" class="form-select" style="min-width:160px;">
+                                <option value="">All Types</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Seller">Seller</option>
+                                <option value="Wholesaler">Wholesaler</option>
+                            </select>
+                        </div>
+                        <div id="creatorContainer" style="display:none;">
+                            <label for="categoryCreatorFilter" class="form-label mb-1 fw-semibold">Select <span id="creatorTypeLabel">Creator</span></label>
+                            <select id="categoryCreatorFilter" class="form-select" style="min-width:180px;">
+                                <option value="">All</option>
+                            </select>
+                        </div>
+                        <div class="ms-auto">
+                            <label for="categorySearch" class="form-label mb-1 fw-semibold">Search</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="ti ti-search"></i></span>
+                                <input type="text" id="categorySearch" class="form-control" placeholder="Search categories..." style="min-width:200px;">
+                            </div>
+                        </div>
+                    </div>
                     <table id="product-table" class="display table table-striped" style="width:100%">
                         <thead>
                             <tr>
                                 <th>Category Code</th>
                                 <th>Category Name</th>
+                                <th>Created By</th>
                                 <th>Status</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($categories as $category)
-                                <tr>
+                                <tr data-type="{{ $category->store }}" 
+                                    data-creator="{{ $category->creator_name }}">
                                     <td>{{ $category->code }}</td>
                                     <td>{{ $category->name }}</td>
+                                    <td>{{ $category->creator_name }}</td>
                                     <td>
                                         <span class="{{ $category->status_badge }}">
                                             {{ $category->status_text }}
                                         </span>
                                     </td>
                                     <td>
-                                        <a href="{{ route('category.show', $category->id) }}" class="btn btn-dark btn-sm">
+                                        @php
+                                            $typeParam = strtolower($category->store);
+                                        @endphp
+                                        <a href="{{ route('category.show', ['id' => $category->id, 'type' => $typeParam]) }}" class="btn btn-dark btn-sm">
                                             <i class="bi bi-eye"></i> View
                                         </a>
-                                        <a href="{{ route('category.edit', $category->id) }}"
+                                        <a href="{{ route('category.edit', ['id' => $category->id, 'type' => $typeParam]) }}"
                                             class="btn btn-warning btn-sm">
                                             <i class="bi bi-pencil-square"></i> Update
                                         </a>
-                                        <a href="{{ route('category.delete', $category->id) }}"
+                                        <a href="{{ route('category.delete', ['id' => $category->id, 'type' => $typeParam]) }}"
                                             class="btn btn-danger btn-sm confirm-delete">
                                             <i class="bi bi-trash"></i> Delete
                                         </a>
@@ -116,33 +137,91 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('#product-table').DataTable({
-                info: false // removes "Showing 1 to X of Y entries"
+            var table = $('#product-table').DataTable({
+                info: false,
+                searching: true,
+                dom: 'lrtip', // removes built-in search box (f = filter/search)
+                columnDefs: [{
+                    targets: 2,
+                    render: function(data, type, row) {
+                        if (type === 'filter' || type === 'sort') {
+                            return $('<div>').html(data).text().trim();
+                        }
+                        return data;
+                    }
+                }]
             });
 
-            @if (session('success'))
-                Swal.fire({
-                    title: 'Success!',
-                    text: "{{ session('success') }}",
-                    icon: 'success',
-                    customClass: {
-                        confirmButton: 'btn btn-primary'
-                    },
-                    buttonsStyling: false
-                });
-            @endif
+            // Wire custom search input to DataTable global search
+            $('#categorySearch').on('keyup', function() {
+                table.search($(this).val()).draw();
+            });
 
-            @if (session('error'))
-                Swal.fire({
-                    title: 'Error!',
-                    text: "{{ session('error') }}",
-                    icon: 'error',
-                    customClass: {
-                        confirmButton: 'btn btn-primary'
-                    },
-                    buttonsStyling: false
-                });
-            @endif
+            // Helper: escape regex special chars
+            function escapeRegex(str) {
+                return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+
+            // Cascading Filter Logic
+            $('#categoryTypeFilter').on('change', function() {
+                var type = $(this).val();
+
+                // Reset Creator Filter
+                $('#categoryCreatorFilter').html('<option value="">All</option>').val('');
+
+                if (type === 'Seller' || type === 'Wholesaler') {
+                    $('#creatorTypeLabel').text(type);
+                    $('#creatorContainer').show();
+
+                    // Fetch only creators who have categories
+                    $.ajax({
+                        url: "{{ route('category.get-creators') }}",
+                        method: "GET",
+                        data: { type: type },
+                        dataType: 'json',
+                        success: function(data) {
+                            if (data.length > 0) {
+                                $.each(data, function(index, item) {
+                                    var fullName = item.name + ' (' + type + ')';
+                                    $('#categoryCreatorFilter').append(
+                                        '<option value="' + fullName + '">' + item.name + '</option>'
+                                    );
+                                });
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('AJAX Error:', status, error, xhr.responseText);
+                        }
+                    });
+
+                    // Filter table to show only this type
+                    table.column(2).search('\\(' + type + '\\)', true, false).draw();
+                } else if (type === 'Admin') {
+                    $('#creatorContainer').hide();
+                    table.column(2).search('^Admin$', true, false).draw();
+                } else {
+                    $('#creatorContainer').hide();
+                    table.column(2).search('').draw();
+                }
+            });
+
+            $('#categoryCreatorFilter').on('change', function() {
+                var creator = $(this).val();
+                if (creator) {
+                    // Exact match, escape regex special chars (like parentheses)
+                    table.column(2).search('^' + escapeRegex(creator) + '$', true, false).draw();
+                } else {
+                    // Fallback to type filter
+                    var type = $('#categoryTypeFilter').val();
+                    if (type) {
+                        table.column(2).search('\\(' + type + '\\)', true, false).draw();
+                    } else {
+                        table.column(2).search('').draw();
+                    }
+                }
+            });
+
+
 
             $(document).on('click', '.confirm-delete', function(e) {
                 e.preventDefault();
