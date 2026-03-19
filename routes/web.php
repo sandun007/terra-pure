@@ -92,6 +92,7 @@ Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])
             Route::get('/edit/{type}/{id}', [ProductController::class, 'edit'])->name('product.edit');
             Route::put('/update/{type}/{id}', [ProductController::class, 'update'])->name('product.update');
             Route::get('/view/{type}/{id}', [ProductController::class, 'product_view'])->name('product.view');
+            Route::get('/get-creators', [ProductController::class, 'getCreators'])->name('product.get-creators');
             Route::get('/delete/{type}/{id}', [ProductController::class, 'delete'])->name('product.delete');
         });
 

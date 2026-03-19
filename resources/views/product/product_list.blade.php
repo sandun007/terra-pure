@@ -86,23 +86,38 @@
             <div class="card">
                 <div class="card-body">
 
-                    <!-- Filter Dropdown -->
-                    <form method="GET" action="{{ route('product.index') }}">
-                        <label for="store">Filter by:</label>
-                        <select name="store" id="store" onchange="this.form.submit()">
-                            <option value="">All</option>
-                            <option value="admin" {{ request('store') == 'admin' ? 'selected' : '' }}>Admin</option>
-                            <option value="seller" {{ request('store') == 'seller' ? 'selected' : '' }}>Seller</option>
-                            <option value="wholesaler" {{ request('store') == 'wholesaler' ? 'selected' : '' }}>Wholesaler
-                            </option>
-                        </select>
-                    </form>
+                    <!-- Filter Dropdowns -->
+                    <div class="mb-3 d-flex flex-wrap align-items-end gap-3">
+                        <div>
+                            <label for="productTypeFilter" class="form-label mb-1 fw-semibold">Filter by Type</label>
+                            <select id="productTypeFilter" class="form-select" style="min-width:160px;">
+                                <option value="">All Types</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Seller">Seller</option>
+                                <option value="Wholesaler">Wholesaler</option>
+                            </select>
+                        </div>
+                        <div id="creatorContainer" style="display:none;">
+                            <label for="productCreatorFilter" class="form-label mb-1 fw-semibold">Select <span id="creatorTypeLabel">Creator</span></label>
+                            <select id="productCreatorFilter" class="form-select" style="min-width:180px;">
+                                <option value="">All</option>
+                            </select>
+                        </div>
+                        <div class="ms-auto">
+                            <label for="productSearch" class="form-label mb-1 fw-semibold">Search</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="ti ti-search"></i></span>
+                                <input type="text" id="productSearch" class="form-control" placeholder="Search products..." style="min-width:200px;">
+                            </div>
+                        </div>
+                    </div>
                     <table id="product-table" class="display table table-striped" style="width:100%">
                         <thead>
                             <tr>
                                 <th>Product Code</th>
                                 <th>Product Name</th>
                                 <th>Store</th>
+                                <th>Created By</th>
                                 <th>Category</th>
                                 <th>Brand</th>
                                 <th>Price</th>
@@ -113,10 +128,13 @@
                         </thead>
                         <tbody>
                             @foreach ($products as $product)
-                                <tr>
+                                <tr data-type="{{ $product->store }}" data-creator="{{ $product->creator_name }}">
                                     <td>{{ $product->code }}</td>
-                                    <td>{{ $product->name }}</td>
+                                    <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $product->name }}">
+                                        {{ $product->name }}
+                                    </td>
                                     <td>{{ $product->store }}</td>
+                                    <td>{{ $product->creator_name }}</td>
                                     <td>{{ $product->category->name ?? $product->category }}</td>
                                     <td>{{ $product->brand->name ?? $product->brand }}</td>
                                     <td>
@@ -136,7 +154,7 @@
                                                 class="btn btn-dark btn-sm" data-bs-toggle="tooltip" title="View">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <a href="{{ route('product.edit', [$product->store, $product->id]) }}"
+                                            <a href="{{ route('product.edit', ['type' => strtolower($product->store), 'id' => $product->id]) }}"
                                                 class="btn btn-warning btn-sm" data-bs-toggle="tooltip" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </a>
@@ -165,11 +183,90 @@
 
     <script>
         $(document).ready(function() {
-            $('#product-table').DataTable({
+            var table = $('#product-table').DataTable({
+                info: false,
+                searching: true,
+                dom: 'lrtip',
                 responsive: true,
-                language: {
-                    search: "_INPUT_",
-                    searchPlaceholder: "Search products..."
+                columnDefs: [
+                    {
+                        targets: [2],
+                        visible: false,
+                        searchable: true
+                    },
+                    {
+                        targets: [2, 3],
+                        render: function(data, type, row) {
+                            if (type === 'filter' || type === 'sort') {
+                                return $('<div>').html(data).text().trim();
+                            }
+                            return data;
+                        }
+                    }
+                ]
+            });
+
+            // Helper: escape regex special chars
+            function escapeRegex(str) {
+                return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+
+            // Wire custom search input to DataTable global search
+            $('#productSearch').on('keyup', function() {
+                table.search($(this).val()).draw();
+            });
+
+            // Cascading Filter Logic
+            $('#productTypeFilter').on('change', function() {
+                var type = $(this).val();
+
+                // Reset Creator Filter
+                $('#productCreatorFilter').html('<option value="">All</option>').val('');
+
+                if (type === 'Seller' || type === 'Wholesaler') {
+                    $('#creatorTypeLabel').text(type);
+                    $('#creatorContainer').show();
+
+                    // Fetch creators via AJAX
+                    $.ajax({
+                        url: "{{ route('product.get-creators') }}",
+                        method: "GET",
+                        data: { type: type },
+                        dataType: 'json',
+                        success: function(data) {
+                            if (data.length > 0) {
+                                $.each(data, function(index, item) {
+                                    var fullName = item.name + ' (' + type + ')';
+                                    $('#productCreatorFilter').append(
+                                        '<option value="' + fullName + '">' + item.name + '</option>'
+                                    );
+                                });
+                            }
+                        }
+                    });
+
+                    // Filter table to show only this type (Column index 2 is Store)
+                    table.column(2).search('^' + escapeRegex(type) + '$', true, false).draw();
+                } else if (type === 'Admin') {
+                    $('#creatorContainer').hide();
+                    table.column(2).search('^Admin$', true, false).draw();
+                } else {
+                    $('#creatorContainer').hide();
+                    table.column(2).search('').draw();
+                }
+                
+                // Clear the created by filter whenever type changes
+                table.column(3).search('').draw();
+            });
+
+            $('#productCreatorFilter').on('change', function() {
+                var creator = $(this).val();
+                if (creator) {
+                    // Column index 3 is Created By
+                    table.column(3).search('^' + escapeRegex(creator) + '$', true, false).draw();
+                } else {
+                    // If no creator selected, revert to just type filter
+                    table.column(3).search('').draw();
                 }
             });
 

@@ -9,6 +9,8 @@ use App\Models\SellerProduct;
 use App\Models\SellerBrand;
 use App\Models\SellerCategory;
 use App\Models\WholesalerProduct;
+use App\Models\Saler;
+use App\Models\Wholesaler;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -22,7 +24,8 @@ class ProductController extends Controller
             ->where('seller_code', 0)
             ->get()
             ->map(function ($product) {
-                $product->store = 'admin'; // use lowercase for easier filtering
+                $product->store = 'Admin';
+                $product->creator_name = 'Admin';
                 return $product;
             });
 
@@ -30,8 +33,9 @@ class ProductController extends Controller
         $sellerProducts = SellerProduct::with('seller')
             ->get()
             ->map(function ($product) {
-                $product->store = 'seller';
+                $product->store = 'Seller';
                 $product->display_price = $product->display_price ?? $product->selling_price;
+                $product->creator_name = $product->seller ? $product->seller->name . ' (Seller)' : 'Unknown (Seller)';
                 return $product;
             });
 
@@ -39,8 +43,9 @@ class ProductController extends Controller
         $wholesalerProducts = WholesalerProduct::with('wholesaler')
             ->get()
             ->map(function ($product) {
-                $product->store = 'wholesaler';
+                $product->store = 'Wholesaler';
                 $product->display_price = $product->selling_price;
+                $product->creator_name = $product->wholesaler ? $product->wholesaler->name . ' (Wholesaler)' : 'Unknown (Wholesaler)';
                 return $product;
             });
 
@@ -48,14 +53,6 @@ class ProductController extends Controller
         $products = $adminProducts
             ->merge($sellerProducts)
             ->merge($wholesalerProducts);
-
-        // Apply filter if dropdown is selected
-        if ($request->filled('store')) {
-            $store = strtolower($request->store);
-            $products = $products->filter(function ($product) use ($store) {
-                return $product->store === $store;
-            });
-        }
 
         $count = $products->count();
 
@@ -65,6 +62,23 @@ class ProductController extends Controller
         return redirect()->back()->with('error', $e->getMessage());
     }
 }
+
+    public function getCreators(Request $request)
+    {
+        $type = $request->input('type');
+
+        if ($type === 'Seller') {
+            $sellerIds = SellerProduct::pluck('seller_id')->unique();
+            $creators = Saler::whereIn('id', $sellerIds)->select('id', 'name')->get();
+            return response()->json($creators);
+        } elseif ($type === 'Wholesaler') {
+            $wholesalerIds = WholesalerProduct::pluck('wholesaler_id')->unique();
+            $creators = Wholesaler::whereIn('id', $wholesalerIds)->select('id', 'name')->get();
+            return response()->json($creators);
+        }
+
+        return response()->json([]);
+    }
 
     public function create()
 {
