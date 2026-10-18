@@ -54,7 +54,7 @@ Route::middleware('auth:seller')->get('/seller/debug/curfox', function (Curfoxap
             'sample_state'  => $states[0]['name'] ?? null,
             'sample_city'   => $cities[0]['name'] ?? null,
         ]);
-    } catch (\Throwable $e) {
+    } catch (\Throwable $e ) {
         return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
     }
 });
@@ -71,18 +71,18 @@ Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])
     ->prefix('admin')
     ->group(function () {
 
-        Route::post('/logout',    [LoginController::class, 'logout'])->name('admin.logout');
-        Route::get('/',           [PageController::class, 'dashboard'])->name('admin.dashboard');
-        Route::get('/dashboard',  [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('admin.dashboard.index');
+        Route::post('/logout', [LoginController::class, 'logout'])->name('admin.logout');
+        Route::get('/', [PageController::class, 'dashboard'])->name('admin.dashboard');
+        Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('admin.dashboard.index');
         Route::get('/dashboard/chart-data', [App\Http\Controllers\Admin\DashboardController::class, 'getChartData'])->name('admin.dashboard.chart-data');
 
         // Admins
         Route::prefix('admins')->group(function () {
-            Route::get('/',         [AdminController::class, 'index'])->name('admin.admins.index');
+            Route::get('/', [AdminController::class, 'index'])->name('admin.admins.index');
             Route::get('/{id}/view',[AdminController::class, 'show'])->name('admin.admins.view');
         });
-        Route::get('/create',  [AdminController::class, 'create'])->name('admin.create');
-        Route::post('/store',  [AdminController::class, 'store'])->name('admin.store');
+        Route::get('/create', [AdminController::class, 'create'])->name('admin.create');
+        Route::post('/store', [AdminController::class, 'store'])->name('admin.store');
 
         // Products
         Route::prefix('product')->group(function () {
@@ -98,26 +98,26 @@ Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])
 
         // Brands
         Route::prefix('brand')->group(function () {
-            Route::get('/list',         [BrandController::class, 'index'])->name('brand.index');
-            Route::get('/',             [BrandController::class, 'create'])->name('brand.create');
-            Route::post('/',            [BrandController::class, 'store'])->name('brand.store');
-            Route::get('/view/{id}',    [BrandController::class, 'show'])->name('brand.show');
-            Route::get('/edit/{id}',    [BrandController::class, 'edit'])->name('brand.edit');
-            Route::put('/update/{id}',  [BrandController::class, 'update'])->name('brand.update');
+            Route::get('/list', [BrandController::class, 'index'])->name('brand.index');
+            Route::get('/', [BrandController::class, 'create'])->name('brand.create');
+            Route::post('/', [BrandController::class, 'store'])->name('brand.store');
+            Route::get('/view/{id}', [BrandController::class, 'show'])->name('brand.show');
+            Route::get('/edit/{id}', [BrandController::class, 'edit'])->name('brand.edit');
+            Route::put('/update/{id}', [BrandController::class, 'update'])->name('brand.update');
             Route::get('/get-creators', [BrandController::class, 'getCreators'])->name('brand.get-creators');
-            Route::get('/{id}',         [BrandController::class, 'delete'])->name('brand.delete');
+            Route::get('/{id}', [BrandController::class, 'delete'])->name('brand.delete');
         });
 
         // Categories
         Route::prefix('category')->group(function () {
-            Route::get('/list',           [CategoryController::class, 'index'])->name('category.index');
-            Route::get('/',               [CategoryController::class, 'create'])->name('category.create');
-            Route::post('/',              [CategoryController::class, 'store'])->name('category.store');
-            Route::get('/view/{id}',      [CategoryController::class, 'show'])->name('category.show');
-            Route::get('/edit/{id}',      [CategoryController::class, 'edit'])->name('category.edit');
-            Route::post('/update/{id}',   [CategoryController::class, 'update'])->name('category.update');
-            Route::get('/get-creators',   [CategoryController::class, 'getCreators'])->name('category.get-creators');
-            Route::get('/{id}',           [CategoryController::class, 'delete'])->name('category.delete');
+            Route::get('/list', [CategoryController::class, 'index'])->name('category.index');
+            Route::get('/', [CategoryController::class, 'create'])->name('category.create');
+            Route::post('/', [CategoryController::class, 'store'])->name('category.store');
+            Route::get('/view/{id}', [CategoryController::class, 'show'])->name('category.show');
+            Route::get('/edit/{id}', [CategoryController::class, 'edit'])->name('category.edit');
+            Route::post('/update/{id}', [CategoryController::class, 'update'])->name('category.update');
+            Route::get('/get-creators', [CategoryController::class, 'getCreators'])->name('category.get-creators');
+            Route::get('/{id}', [CategoryController::class, 'delete'])->name('category.delete');
         });
 
         // Sellers
@@ -134,23 +134,23 @@ Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])
 
         // Wholesalers
         Route::prefix('wholesaler')->group(function () {
-            Route::get('/',               [WholesalerController::class, 'index'])->name('admin.wholesaler.index');
-            Route::get('/list',           [WholesalerController::class, 'index'])->name('admin.wholesaler.list');
-            Route::get('/create',         [WholesalerController::class, 'create'])->name('admin.wholesaler.create');
-            Route::post('/store',         [WholesalerController::class, 'store'])->name('admin.wholesaler.store');
-            Route::get('/view/{id}',      [WholesalerController::class, 'show'])->name('admin.wholesaler.view');
-            Route::get('/edit/{id}',      [WholesalerController::class, 'edit'])->name('admin.wholesaler.edit');
-            Route::post('/update/{id}',   [WholesalerController::class, 'update'])->name('admin.wholesaler.update');
+            Route::get('/', [WholesalerController::class, 'index'])->name('admin.wholesaler.index');
+            Route::get('/list', [WholesalerController::class, 'index'])->name('admin.wholesaler.list');
+            Route::get('/create', [WholesalerController::class, 'create'])->name('admin.wholesaler.create');
+            Route::post('/store', [WholesalerController::class, 'store'])->name('admin.wholesaler.store');
+            Route::get('/view/{id}', [WholesalerController::class, 'show'])->name('admin.wholesaler.view');
+            Route::get('/edit/{id}', [WholesalerController::class, 'edit'])->name('admin.wholesaler.edit');
+            Route::post('/update/{id}', [WholesalerController::class, 'update'])->name('admin.wholesaler.update');
             Route::delete('/delete/{id}', [WholesalerController::class, 'destroy'])->name('admin.wholesaler.delete');
         });
 
         // Orders
         Route::prefix('order')->group(function () {
-            Route::get('new-order',           [OrderController::class, 'new_order'])->name('admin.new_order');
-            Route::get('/complete-order',     [OrderController::class, 'completeOrder'])->name('admin.complete_order_list');
-            Route::get('/return-order',       [OrderController::class, 'returnOrder'])->name('admin.return_order_list');
+            Route::get('new-order', [OrderController::class, 'new_order'])->name('admin.new_order');
+            Route::get('/complete-order', [OrderController::class, 'completeOrder'])->name('admin.complete_order_list');
+            Route::get('/return-order', [OrderController::class, 'returnOrder'])->name('admin.return_order_list');
             Route::get('/rescheduling-order', [OrderController::class, 'reschedulingOrder'])->name('admin.rescheduling_order_list');
-            Route::get('/pending-order',      [OrderController::class, 'pendingOrder'])->name('admin.pending_order_list');
+            Route::get('/pending-order', [OrderController::class, 'pendingOrder'])->name('admin.pending_order_list');
         });
 
         // Stock
@@ -160,8 +160,8 @@ Route::middleware(['auth:admin', \App\Http\Middleware\LastUserActivity::class])
 
         // Shop
         Route::prefix('shop')->group(function () {
-            Route::get('/',              [ShopController::class, 'index'])->name('shop.index');
-            Route::get('product/{id}',   [ProductController::class, 'product_view'])->name('product.product_view');
+            Route::get('/', [ShopController::class, 'index'])->name('shop.index');
+            Route::get('product/{id}', [ProductController::class, 'product_view'])->name('product.product_view');
         });
 
         // Employees
